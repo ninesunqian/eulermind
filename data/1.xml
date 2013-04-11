@@ -1,0 +1,900 @@
+<tree>
+ <declarations>
+   <attributeDecl name="name" type="String"/>
+ </declarations>
+ <branch>
+  <attribute name="name" value="Categories"/>
+  <branch>
+   <attribute name="name" value="Events"/>
+   <leaf>
+    <attribute name="name" value="Contemporary"/>
+   </leaf>
+   <branch>
+    <attribute name="name" value="Historical"/>
+    <branch>
+     <attribute name="name" value="Cultural Eras"/>
+     <branch>
+      <attribute name="name" value="Chinese Dynasties"/>
+      <leaf>
+       <attribute name="name" value="Ch in"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Ch ing"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Chin"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Chou"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Han"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Hsia"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Ming"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="People s Repulic of China"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Republic of China"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Shang"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Sui"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Sung"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Yuan"/>
+      </leaf>
+      <branch>
+       <attribute name="name" value="Five Dynasties"/>
+       <leaf>
+        <attribute name="name" value="Later Liang"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Later T ang"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Later Chin"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Later Han"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Later Chou"/>
+       </leaf>
+      </branch>
+      <leaf>
+       <attribute name="name" value="Norhtern"/>
+      </leaf>
+      <branch>
+       <attribute name="name" value="Northern"/>
+       <leaf>
+        <attribute name="name" value="Eastern Wei"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Later Wei"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Northern Ch i"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Northern Chou"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Western Wei"/>
+       </leaf>
+      </branch>
+      <branch>
+       <attribute name="name" value="Southern"/>
+       <leaf>
+        <attribute name="name" value="Ch en"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Ch i Liang"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Liu Sung"/>
+       </leaf>
+      </branch>
+      <branch>
+       <attribute name="name" value="Ten Kingdoms"/>
+       <leaf>
+        <attribute name="name" value="Ch u"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Earlier Shu"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Later Shu"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Min"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Northern Han"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Southern T ang"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Southern P ing"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Southern Han"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Wu"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Wu-yueh"/>
+       </leaf>
+      </branch>
+      <branch>
+       <attribute name="name" value="Three Kingdoms"/>
+       <leaf>
+        <attribute name="name" value="Shu"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Wei"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Wu"/>
+       </leaf>
+      </branch>
+     </branch>
+     <branch>
+      <attribute name="name" value="Japanese"/>
+      <leaf>
+       <attribute name="name" value="Ashikaga"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Asuka"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Edo"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Heian"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Heisei"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Kamakura"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Meiji"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Momoyama"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Namboku"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Nara"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Showa"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Taisho"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Yamato"/>
+      </leaf>
+     </branch>
+     <branch>
+      <attribute name="name" value="Prehistoric"/>
+      <leaf>
+       <attribute name="name" value="Early Civilizations"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Mesolithic"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Neolithic"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Paleolithic"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Stone Age"/>
+      </leaf>
+     </branch>
+     <branch>
+      <attribute name="name" value="Western Civilization"/>
+      <leaf>
+       <attribute name="name" value="Bronze Age"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Early Middle Ages"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Enlightenment"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Iron Age"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Medieval Period"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Reformation"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Renaissance"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Roman Empire"/>
+      </leaf>
+      <branch>
+       <attribute name="name" value="Modern"/>
+       <branch>
+        <attribute name="name" value="Popular  Fads"/>
+        <leaf>
+         <attribute name="name" value="Hula Hoops"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Pole Sitting"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Pet Rocks"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Disco"/>
+        </leaf>
+       </branch>
+      </branch>
+     </branch>
+    </branch><branch>
+     <attribute name="name" value="Stylistic Periods"/>
+     <branch>
+      <attribute name="name" value="Artistic"/>
+      <branch>
+       <attribute name="name" value="Painting and Sculpture"/>
+       <branch>
+        <attribute name="name" value="Prehistoric"/>
+        <leaf>
+         <attribute name="name" value="Paleolithic"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Mesopotamian"/>
+        </leaf>
+       </branch>
+       <branch>
+        <attribute name="name" value="Classical"/>
+        <leaf>
+         <attribute name="name" value="Egyptian"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Ancient Greek"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Hellenistic"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Roman"/>
+        </leaf>
+       </branch>
+       <branch>
+        <attribute name="name" value="Middle Ages"/>
+        <leaf>
+         <attribute name="name" value="Byzantine"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Carolingian"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Ottonian"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Romanesque"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Islamic"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Gothic"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Renaissance"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Mannerism"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Baroque"/>
+        </leaf>
+       </branch>
+       <branch>
+        <attribute name="name" value="Nineteenth Century"/>
+        <leaf>
+         <attribute name="name" value="Rococo"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Neo-classicism"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Romanticism"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Realism"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Pre-Raphaelite"/>
+        </leaf>
+       </branch>
+       <branch>
+        <attribute name="name" value="Early Twentieth Century"/>
+        <leaf>
+         <attribute name="name" value="De Stijl"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Art Noveau"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Arts and Crafts Movement"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Symbolism"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Impressionism"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Pointillism"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Post-Impressionism"/>
+        </leaf>
+       </branch>
+       <branch>
+        <attribute name="name" value="Modern"/>
+        <leaf>
+         <attribute name="name" value="Naive"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Fauvism"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Die Brucke - The Bridge"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Expressionism"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Cubism"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Futurism"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Dada"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Modernism"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Surrealism"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Kinetic"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Abstract Expressionism"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="New York School"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Op Art"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Pop"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Minimalism"/>
+        </leaf>
+       </branch>
+      </branch>
+     </branch>
+    </branch>
+    <branch>
+     <attribute name="name" value="Tragedies"/>
+     <branch>
+      <attribute name="name" value="Earthquakes"/>
+      <leaf>
+       <attribute name="name" value="1906 San Francisco"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="1985 Mexico City"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="1989 San Francisco"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="1994 Northridge"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="1995 Kobe"/>
+      </leaf>
+     </branch>
+     <branch>
+      <attribute name="name" value="Fires"/>
+      <leaf>
+       <attribute name="name" value="Chicago"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Dresden"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="London"/>
+      </leaf>
+      <leaf>
+       <attribute name="name" value="Rome"/>
+      </leaf>
+     </branch>
+     <branch>
+      <attribute name="name" value="Floods"/>
+      <leaf>
+       <attribute name="name" value="Jonestown"/>
+      </leaf>
+     </branch>
+     <branch>
+      <attribute name="name" value="Hurricanes"/>
+      <branch>
+       <attribute name="name" value="1995"/>
+       <leaf>
+        <attribute name="name" value="Hurricane Erin"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Hurricane Felix"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Hurricane Humberto"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Hurricane Iris"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Hurricane Luis"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Hurricane Marilyn"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Hurricane Opal"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Hurricane Roxanne"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Tropical Storm Karen"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Tropical Storm Roxanne"/>
+       </leaf>
+      </branch>
+      <branch>
+       <attribute name="name" value="1996"/>
+       <leaf>
+        <attribute name="name" value="Hurricane Bertha"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Hurricane Cesar"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Hurricane Dolly"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Hurricane Edouard"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Hurricane Fausto"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Hurricane Fran"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Hurricane Hortense"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Hurricane Isidore"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Hurricane Josephine"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Hurricane Lili"/>
+       </leaf>
+      </branch>
+     </branch>
+     <branch>
+      <attribute name="name" value="Tornadoes"/>
+      <leaf>
+       <attribute name="name" value="Xenia"/>
+      </leaf>
+     </branch>
+     <branch>
+      <attribute name="name" value="Typhoons"/>
+      <branch>
+       <attribute name="name" value="1996"/>
+       <leaf>
+        <attribute name="name" value="Typhoon Herb"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Typhoon Kirk"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Typhoon Sally"/>
+       </leaf>
+      </branch>
+     </branch>
+    </branch>
+    <branch>
+     <attribute name="name" value="Triumphs"/>
+     <branch>
+      <attribute name="name" value="Space Flights"/>
+      <branch>
+       <attribute name="name" value="American"/>
+       <branch>
+        <attribute name="name" value="Apollo"/>
+        <leaf>
+         <attribute name="name" value="1"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="10"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="11"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="12"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="13"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="14"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="15"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="16"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="17"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="7"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="8"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="9"/>
+        </leaf>
+       </branch>
+       <branch>
+        <attribute name="name" value="Gemini"/>
+        <leaf>
+         <attribute name="name" value="10"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="11"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="12"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="3"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="4"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="5"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="6"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="7"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="8"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="9"/>
+        </leaf>
+       </branch>
+       <branch>
+        <attribute name="name" value="Mercury"/>
+        <leaf>
+         <attribute name="name" value="Aurora 7"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Freedom 7"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Friendship 7"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Liberty Bell 7"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Sigma 7"/>
+        </leaf>
+       </branch>
+       <branch>
+        <attribute name="name" value="Skylab"/>
+        <leaf>
+         <attribute name="name" value="2"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="3"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="4"/>
+        </leaf>
+       </branch>
+      </branch>
+      <branch>
+       <attribute name="name" value="Soviet"/>
+       <branch>
+        <attribute name="name" value="Soyuz"/>
+        <leaf>
+         <attribute name="name" value="1"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="10"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="11"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="12"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="13"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="2"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="3"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="4"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="5"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="6"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="7"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="8"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="9"/>
+        </leaf>
+       </branch>
+       <branch>
+        <attribute name="name" value="Voshkod"/>
+        <leaf>
+         <attribute name="name" value="1"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="2"/>
+        </leaf>
+       </branch>
+       <branch>
+        <attribute name="name" value="Vostok"/>
+        <leaf>
+         <attribute name="name" value="1"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="2"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="3"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="4"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="5"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="6"/>
+        </leaf>
+       </branch>
+      </branch>
+     </branch>
+    </branch>
+    <branch>
+     <attribute name="name" value="Wars"/>
+     <branch>
+      <attribute name="name" value="Global Wars"/>
+      <branch>
+       <attribute name="name" value="The Cold War"/>
+       <leaf>
+        <attribute name="name" value="Angola"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Cuban Missile Crisis"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="El Salvador"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Guatemala"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Nicaraugua"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Suez Crisis"/>
+       </leaf>
+       <leaf>
+        <attribute name="name" value="Vietnam War"/>
+       </leaf>
+      </branch>
+      <branch>
+       <attribute name="name" value="World War II"/>
+       <branch>
+        <attribute name="name" value="European Theatre"/>
+        <branch>
+         <attribute name="name" value="Land"/>
+         <leaf>
+          <attribute name="name" value="Invasion of Poland"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Finnish War"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Phoney War"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Invasion of the Low Countries"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Fall of France"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Operation Barbarossa"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Battle of El Alamein"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Battle of Tobruk"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Seige of Tunis"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Seige of Leningrad"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Battle of Kursk"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Invasion of Europe"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Battle of the Bulge"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Fall of Berlin"/>
+         </leaf>
+        </branch>
+        <branch>
+         <attribute name="name" value="Sea"/>
+         <leaf>
+          <attribute name="name" value="Evacuation at Dunkirk"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Battle of the Atlantic"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Sinking of the Bismarck"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Invasion of North Africa"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Invasion of Sicily"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Invasion of Europe"/>
+         </leaf>
+        </branch>
+        <branch>
+         <attribute name="name" value="Air"/>
+         <leaf>
+          <attribute name="name" value="Battle of Britain"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Invasion of Crete"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Big Week"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Invasion of Europe"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Operation Market Garden"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Operation Bodenplatte"/>
+         </leaf>
+        </branch>
+        <branch>
+         <attribute name="name" value="Political"/>
+         <leaf>
+          <attribute name="name" value="Remilitarization of the Ruhr"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Annexation of Austria"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Sudetenland Takeover"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Munich Pact"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Hitler-Stalin Nonagression Pact"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Hitler Assasination Attempt"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Hitler Suicide"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="German Surrender"/>
+         </leaf>
+         <leaf>
+          <attribute name="name" value="Nuremberg Trials"/>
+         </leaf>
+        </branch>
+       </branch>
+       <branch>
+        <attribute name="name" value="Pacific Theatre"/>
+        <leaf>
+         <attribute name="name" value="Invasion of China"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Fall of the Phillipines"/>
+        </leaf>
+        <leaf>
+         <attribute name="name" value="Battle of the Coral Sea"/>
+        </leaf><leaf>
+         <attribute name="name" value="Battle of Midway"/>
+        </leaf>
+       </branch>
+      </branch>
+     </branch>
+    </branch>
+   </branch>
+  </branch>
+ </branch>
+</tree>
