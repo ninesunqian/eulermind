@@ -1,0 +1,271 @@
+package excitedmind;
+
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+
+
+import prefuse.Constants;
+import prefuse.Visualization;
+import prefuse.action.GroupAction;
+import prefuse.data.Graph;
+import prefuse.data.Node;
+import prefuse.data.Tree;
+import prefuse.data.expression.Predicate;
+import prefuse.util.PrefuseLib;
+import prefuse.util.collections.CopyOnWriteArrayList;
+import prefuse.visual.EdgeItem;
+import prefuse.visual.NodeItem;
+import prefuse.visual.VisualItem;
+import prefuse.visual.expression.InGroupPredicate;
+import prefuse.visual.tuple.TableNodeItem;
+
+/**
+ * <p>Filter Action that computes a fisheye degree-of-interest function over
+ * a tree structure (or the spanning tree of a graph structure). Visibility
+ * and DOI (degree-of-interest) values are set for the nodes in the
+ * structure. This function includes current focus nodes, and includes 
+ * neighbors only in a limited window around these foci. The size of this
+ * window is determined by the distance value set for this action. All
+ * ancestors of a focus up to the root of the tree are considered foci as well.
+ * By convention, DOI values start at zero for focus nodes, with decreasing
+ * negative numbers for each hop away from a focus.</p>
+ * 
+ * <p>This form of filtering was described by George Furnas as early as 1981.
+ * For more information about Furnas' fisheye view calculation and DOI values,
+ * take a look at G.W. Furnas, "The FISHEYE View: A New Look at Structured 
+ * Files," Bell Laboratories Tech. Report, Murray Hill, New Jersey, 1981. 
+ * Available online at <a href="http://citeseer.nj.nec.com/furnas81fisheye.html">
+ * http://citeseer.nj.nec.com/furnas81fisheye.html</a>.</p>
+ *  
+ * @author <a href="http://jheer.org">jeffrey heer</a>
+ */
+public class FisheyeDBTreeFilter extends GroupAction {
+
+    private String m_sources;
+    private Predicate m_groupP;
+    
+    private int m_threshold;
+    
+    private NodeItem m_root;
+    private double m_divisor;
+    private LinkedHashSet<NodeItem> m_invisibleNodes = new LinkedHashSet<NodeItem>();
+    /**
+     * Create a new FisheyeTreeFilter that processes the given group.
+     * @param group the data group to process. This should resolve to
+     * a Graph instance, otherwise exceptions will result when this
+     * Action is run.
+     */
+    public FisheyeDBTreeFilter(String group) {
+        this(group, 1);
+    }
+
+    /**
+     * Create a new FisheyeTreeFilter that processes the given group.
+     * @param group the data group to process. This should resolve to
+     * a Graph instance, otherwise exceptions will result when this
+     * Action is run.
+     * @param distance the graph distance threshold from high-interest
+     * nodes past which nodes will not be visible nor expanded.
+     */
+    public FisheyeDBTreeFilter(String group, int distance) {
+        this(group, Visualization.FOCUS_ITEMS, distance);
+    }
+    
+    /**
+     * Create a new FisheyeTreeFilter that processes the given group.
+     * @param group the data group to process. This should resolve to
+     * a Graph instance, otherwise exceptions will result when this
+     * Action is run.
+     * @param sources the group to use as source nodes, representing the
+     * nodes of highest degree-of-interest.
+     * @param distance the graph distance threshold from high-interest
+     * nodes past which nodes will not be visible nor expanded.
+     */
+    public FisheyeDBTreeFilter(String group, String sources, int distance)
+    {
+        super(group);
+        m_sources = sources;
+        m_threshold = -distance;
+        m_groupP = new InGroupPredicate(
+                PrefuseLib.getGroupName(group, Graph.NODES));
+    }
+    
+    /**
+     * Get the graph distance threshold used by this filter. This
+     * is the threshold for high-interest nodes, past which nodes will
+     * not be visible nor expanded.
+     * @return the graph distance threshold
+     */
+    public int getDistance() {
+        return -m_threshold;
+    }
+
+    /**
+     * Set the graph distance threshold used by this filter. This
+     * is the threshold for high-interest nodes, past which nodes will
+     * not be visible nor expanded.
+     * @param distance the graph distance threshold to use
+     */
+    public void setDistance(int distance) {
+        m_threshold = -distance;
+    }
+    
+    /**
+     * Get the name of the group to use as source nodes for measuring
+     * graph distance. These form the roots from which the graph distance
+     * is measured.
+     * @return the source data group
+     */
+    public String getSources() {
+        return m_sources;
+    }
+    
+    /**
+     * Set the name of the group to use as source nodes for measuring
+     * graph distance. These form the roots from which the graph distance
+     * is measured.
+     * @param sources the source data group
+     */
+    public void setSources(String sources) {
+        m_sources = sources;
+    }
+    
+    /**
+     * @see prefuse.action.GroupAction#run(double)
+     */
+    public void run(double frac) {
+        Tree tree = ((Graph)m_vis.getGroup(m_group)).getSpanningTree();
+        m_divisor = tree.getNodeCount();
+        m_root = (NodeItem)tree.getRoot();
+        
+        System.out.println ("------------------------------");
+        // mark the items
+        Iterator items = m_vis.visibleItems(m_group);
+        while ( items.hasNext() ) {
+            TableNodeItem item = (TableNodeItem)items.next();
+            item.setDOI(Constants.MINIMUM_DOI);
+            
+            item.setStartExpanded(item.isExpanded());
+            item.setExpanded(false);
+        }
+        
+        // compute the fisheye over nodes
+        Iterator iter = m_vis.items(m_sources, m_groupP);
+        while ( iter.hasNext() ) {
+            System.out.println ("a source node {");
+            visitFocus((NodeItem)iter.next(), null);
+            System.out.println ("}");
+        }
+        
+        visitFocus(m_root, null);
+
+        // mark unreached items
+        items = m_vis.visibleItems(m_group);
+        while ( items.hasNext() ) {
+            VisualItem item = (VisualItem)items.next();
+            if ( item.getDOI() == Constants.MINIMUM_DOI )
+            {
+                PrefuseLib.updateVisible(item, false);
+                
+                if (item instanceof NodeItem && item.isStartExpanded())
+                {
+                	NodeItem nodeItem = (NodeItem)item;
+                	if (m_invisibleNodes.contains(nodeItem))
+                	{
+		                m_invisibleNodes.remove(nodeItem);
+                	}
+                	
+	                m_invisibleNodes.add(nodeItem);
+                }
+            }
+        }
+        
+        
+        //TODO add Listener to remove ealiest Node in m_invisibleNodes;
+        
+        int deleteCount = Math.min (tree.getNodeCount()-2000, m_invisibleNodes.size());
+        while (tree.getNodeCount() > 2000 && m_invisibleNodes.size())
+        {
+        	Iterator<NodeItem> invisibleNodesIter = m_invisibleNodes.iterator();
+        	NodeItem earliestExpandedNode = invisibleNodesIter.next();
+        	invisibleNodesIter = null;
+        	m_DBTree.collpaseNode (earliestExpandedNode );
+        }
+    }
+
+    /**
+     * Visit a focus node.
+     */
+    private void visitFocus(NodeItem n, NodeItem c) {
+    	// 由于需要展开多个节点的子节点。如果一个“开始节点”位于某个“开始节点” 的底部，需要从这个新开始节点重新计算展开层次。
+    	// getDOI <= -1 的，都不是“开始节点”，都需要重新计算
+        if ( n.getDOI() <= -1 ) {
+        	//以当前节点为开始，计算一次, 开始节点的DOI是0
+            visit(n, c, 0, 0);
+            if ( m_threshold < 0 )                 
+                visitDescendants(n, c);
+            
+            //以父亲节点为开始，计算一次
+            visitAncestors(n);
+        }
+    }
+    
+    /**
+     * Visit a specific node and update its degree-of-interest.
+     */
+    private void visit(NodeItem n, NodeItem c, int doi, int ldist) {
+        PrefuseLib.updateVisible(n, true);
+        double localDOI = -ldist / Math.min(1000.0, m_divisor);
+        //localDOI 肯定小于 -1
+        //如果 doi >= 1, 节点的doi > -1 
+        n.setDOI(doi+localDOI);
+        
+        System.out.println (n.getString("name") + "--doi---:  " + n.getDOI());
+        
+        if ( c != null ) {
+            EdgeItem e = (EdgeItem)c.getParentEdge();
+            e.setDOI(c.getDOI());
+            PrefuseLib.updateVisible(e, true);
+        }
+    }
+    
+    /**
+     * Visit tree ancestors and their other descendants.
+     */
+    private void visitAncestors(NodeItem n) {
+        if ( n == m_root ) return;
+        System.out.println ("a Ancestor node {");
+        visitFocus((NodeItem)n.getParent(), n);
+        System.out.println ("}");
+    }
+    
+    MindTree m_DBTree;
+    /**
+     * Traverse tree descendents.
+     */
+    private void visitDescendants(NodeItem p, NodeItem skip) {
+        int lidx = ( skip == null ? 0 : p.getChildIndex(skip) );
+        
+        if (p.getChildCount() == 0)
+        {
+        	m_DBTree.attachChildren(p);
+        }
+        
+        Iterator children = p.children();
+        
+        p.setExpanded(children.hasNext());
+        
+        for ( int i=0; children.hasNext(); ++i ) {
+            NodeItem c = (NodeItem)children.next();
+            if ( c == skip ) { continue; }             
+            
+            //向下一层，doi 减1, 到doi为0处，是最低的一层
+            int doi = (int)(p.getDOI()-1);            
+            visit(c, c, doi, Math.abs(lidx-i));      
+            
+            //m_threshhold 是个负值。doi 递减到0,然后再减几层，到达 m_threshold
+            if ( doi > m_threshold )
+                visitDescendants(c, null);   
+        }
+    }
+} // end of class FisheyeTreeFilter
