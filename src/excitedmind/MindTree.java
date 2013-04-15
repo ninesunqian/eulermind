@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import prefuse.Visualization;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
+import prefuse.visual.tuple.TableNodeItem;
 
 import java.util.Arrays;
 import java.util.BitSet;
@@ -61,7 +62,6 @@ public class MindTree {
 	Table m_nodeTable;
 	Table m_edgeTable;
 	
-	Visualization m_vis;
 	String m_groupNameInVis;
 	
 	private HashSet<String> m_nodePropNames;
@@ -264,9 +264,16 @@ public class MindTree {
 		}
 	}
 	
-	public void unfoldNode (Node node)
+	void deepTraverse (Node node, Processor proc)
 	{
-		VisualItem visualItem =  m_vis.getVisualItem(m_groupNameInVis, node);
+		deepTraverse(node, proc, 0);
+	}
+	
+	public void unfoldNode (VisualItem visualItem)
+	{
+		
+		final Visualization vis = visualItem.getVisualization();
+		Node node = (Node)visualItem.getSourceTuple();
 		
 		if (visualItem.isExpanded())
 		{
@@ -285,7 +292,7 @@ public class MindTree {
 			//unfold descendants deeply, to the folded descendants
 			deepTraverse(node,new Processor() {
 				public boolean run(Node node, int level) {
-					VisualItem visualItem =  m_vis.getVisualItem(m_groupNameInVis, node);
+					VisualItem visualItem = vis.getVisualItem(m_groupNameInVis, node);
 					visualItem.setStartVisible(false);
 					visualItem.setVisible(true);
 					
@@ -303,9 +310,10 @@ public class MindTree {
 		}
 	}
 	
-	public void foldNode (Node node)
+	public void foldNode (VisualItem visualItem)
 	{
-		VisualItem visualItem =  m_vis.getVisualItem(m_groupNameInVis, node);
+		final Visualization vis = visualItem.getVisualization();
+		Node node = (Node)visualItem.getSourceTuple();
 		
 		if (! visualItem.isExpanded())
 		{
@@ -320,7 +328,7 @@ public class MindTree {
 		//set descendants unvisible deeply, to the folded descendants
 		deepTraverse(node,new Processor() {
 			public boolean run(Node node, int level) {
-				VisualItem visualItem =  m_vis.getVisualItem(m_groupNameInVis, node);
+				VisualItem visualItem = vis.getVisualItem(m_groupNameInVis, node);
 				visualItem.setStartVisible(true);
 				visualItem.setVisible(false);
 				
@@ -341,6 +349,18 @@ public class MindTree {
 			m_foldedNodes.remove(toRemovedNode);
 			
 			m_tree.removeDescendants(toRemovedNode);
+		}
+	}
+	
+	public void ToggleFoldNode (VisualItem visualItem )
+	{
+		if (visualItem.isExpanded())
+		{
+			foldNode(visualItem);
+		}
+		else
+		{
+			unfoldNode(visualItem);
 		}
 	}
 	
@@ -422,7 +442,6 @@ public class MindTree {
 	}
 
 	public Node addChild(Node parent, int pos) {
-		unfoldNode (parent);
 		Vertex dbParent = getVertex(parent);
 		EdgeVertex edgeVertex = m_dbTree.addChild(dbParent, pos);
 		
@@ -432,7 +451,6 @@ public class MindTree {
 	}
 
 	public Node addReference(Node node, Vertex referee, int pos) {
-		unfoldNode (node);
 		
 		Vertex referer = getVertex(node);
 		com.tinkerpop.blueprints.Edge refEdge = m_dbTree.setRefEdge(referer, referee, pos);

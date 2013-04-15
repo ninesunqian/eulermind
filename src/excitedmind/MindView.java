@@ -2,6 +2,7 @@ package excitedmind;
 
 import java.awt.event.ActionEvent;
 import java.awt.geom.Point2D;
+import java.awt.event.MouseEvent;
 import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 import prefuse.Constants;
@@ -22,6 +23,7 @@ import prefuse.action.filter.FisheyeTreeFilter;
 import prefuse.action.layout.CollapsedSubtreeLayout;
 import prefuse.action.layout.graph.NodeLinkTreeLayout;
 import prefuse.activity.SlowInSlowOutPacer;
+import prefuse.controls.ControlAdapter;
 import prefuse.controls.FocusControl;
 import prefuse.controls.PanControl;
 import prefuse.controls.WheelZoomControl;
@@ -63,7 +65,6 @@ public class MindView extends Display {
     private static final String sm_layoutAction = "layoutAction";
     private static final String sm_layoutAnimator = "layoutAnimator";
     
-    private FisheyeTreeFilter m_fisheyeFilter;
     
     private NodeLinkTreeLayout m_treeLayout;
     private CollapsedSubtreeLayout m_subTreeLayout;
@@ -130,7 +131,21 @@ public class MindView extends Display {
         addControlListener(new ZoomControl());
         addControlListener(new WheelZoomControl());
         addControlListener(new PanControl());
-        addControlListener(new FocusControl(1, sm_layoutAction));
+        addControlListener(new ControlAdapter() {
+
+        	public void itemClicked(VisualItem item, MouseEvent e) {
+    			System.out.println ("mouse Clicked");
+    			System.out.println (item.getGroup());
+    			System.out.println (sm_treeNodesGroupName);
+    			
+    			System.out.println (item.getGroup() == sm_treeNodesGroupName);
+        		if (item.getGroup() == sm_treeNodesGroupName)
+        		{
+	        		m_mindTree.ToggleFoldNode(item);
+        		}
+        	} 
+        }
+        );
         
         setKey ();
 
@@ -285,16 +300,20 @@ public class MindView extends Display {
     
     private void addItemPositionActions ()
     {
+        m_subTreeLayout = new CollapsedSubtreeLayout(sm_treeGroupName, m_orientation);
+        
+    	/*
+    	FisheyeTreeFilter m_fisheyeFilter;
     	m_fisheyeFilter = new FisheyeTreeFilter(sm_treeGroupName, 2);
+    	*/
     	
         m_treeLayout = new NodeLinkTreeLayout(sm_treeGroupName,
                 m_orientation, 50, 0, 8);
         m_treeLayout.setLayoutAnchor(new Point2D.Double(25, 300));
 
-        m_subTreeLayout = new CollapsedSubtreeLayout(sm_treeGroupName, m_orientation);
         
         ActionList actions = new ActionList();
-        actions.add(m_fisheyeFilter);
+        //actions.add(m_fisheyeFilter);
         actions.add(m_treeLayout);
         actions.add(m_subTreeLayout);
         
