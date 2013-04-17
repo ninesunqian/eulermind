@@ -317,26 +317,6 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
         setBoolean(row, VisualItem.INTERACTIVE, value);
     }
     
-    public boolean isStartExpanded(int row)
-    {
-        return getBoolean(row, VisualItem.START_EXPANDED);
-    }
-
-    public void setStartExpanded(int row, boolean value)
-    {
-        setBoolean(row, VisualItem.START_EXPANDED, value);
-    }
-    
-    public boolean isEndExpanded(int row)
-    {
-        return getBoolean(row, VisualItem.END_EXPANDED);
-    }
-
-    public void setEndExpanded(int row, boolean value)
-    {
-        setBoolean(row, VisualItem.END_EXPANDED, value);
-    }
-    
     /**
      * Indicates the given row is expanded. Only used for items that are
      * part of a graph structure. 

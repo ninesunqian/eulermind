@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import prefuse.Visualization;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
+import prefuse.visual.tuple.TableEdgeItem;
 import prefuse.visual.tuple.TableNodeItem;
 
 import java.util.Arrays;
@@ -61,8 +62,6 @@ public class MindTree {
 	Tree m_tree;
 	Table m_nodeTable;
 	Table m_edgeTable;
-	
-	String m_groupNameInVis;
 	
 	private HashSet<String> m_nodePropNames;
 	private HashSet<String> m_edgePropNames;
@@ -274,6 +273,7 @@ public class MindTree {
 		
 		final Visualization vis = visualItem.getVisualization();
 		Node node = (Node)visualItem.getSourceTuple();
+		final String group = visualItem.getGroup();
 		
 		if (visualItem.isExpanded())
 		{
@@ -281,20 +281,27 @@ public class MindTree {
 		}
 		
 		visualItem.setExpanded(true);
-		visualItem.setStartExpanded(true);
 		
 		if (m_tree.getChildCount(node.getRow()) > 0) // node is not a leaf node
 		{
 			assert (m_foldedNodes.contains(node));
 			
 			m_foldedNodes.remove(node);
+			final Node unfoldTreeRoot = node;
 			
 			//unfold descendants deeply, to the folded descendants
 			deepTraverse(node,new Processor() {
 				public boolean run(Node node, int level) {
-					VisualItem visualItem = vis.getVisualItem(m_groupNameInVis, node);
-					visualItem.setStartVisible(false);
-					visualItem.setVisible(true);
+					
+					if (node == unfoldTreeRoot) {
+						return true;
+					}
+					
+					TableNodeItem visualNode = (TableNodeItem)vis.getVisualItem(group, node);
+					TableEdgeItem visualEdge = (TableEdgeItem)visualNode.getParentEdge();
+					
+					PrefuseLib.updateVisible(visualNode, true);
+					PrefuseLib.updateVisible(visualEdge, true);
 					
 					if (m_foldedNodes.contains(node)) {
 						return false;
@@ -314,23 +321,34 @@ public class MindTree {
 	{
 		final Visualization vis = visualItem.getVisualization();
 		Node node = (Node)visualItem.getSourceTuple();
-		
+		final String group = visualItem.getGroup();
+	
 		if (! visualItem.isExpanded())
 		{
 			return;
 		}
 		
 		visualItem.setExpanded(false);
-		visualItem.setStartExpanded(false);
 		
 		m_foldedNodes.add(node);
+		
+		final Node foldTreeRoot = node;
 		
 		//set descendants unvisible deeply, to the folded descendants
 		deepTraverse(node,new Processor() {
 			public boolean run(Node node, int level) {
-				VisualItem visualItem = vis.getVisualItem(m_groupNameInVis, node);
-				visualItem.setStartVisible(true);
-				visualItem.setVisible(false);
+				if (node == foldTreeRoot)
+				{
+					return true;
+				}
+				
+				TableNodeItem visualNode = (TableNodeItem)vis.getVisualItem(group, node);
+				TableEdgeItem visualEdge = (TableEdgeItem)visualNode.getParentEdge();
+				
+				PrefuseLib.updateVisible(visualNode, false);
+				PrefuseLib.updateVisible(visualEdge, false);
+					
+				System.out.println ("invisable node: " + node.getString("text"));
 				
 				if (m_foldedNodes.contains(node)) {
 					return false;

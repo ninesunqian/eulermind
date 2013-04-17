@@ -145,7 +145,7 @@ public class FisheyeDBTreeFilter extends GroupAction {
             TableNodeItem item = (TableNodeItem)items.next();
             item.setDOI(Constants.MINIMUM_DOI);
             
-            item.setStartExpanded(item.isExpanded());
+            //item.setStartExpanded(item.isExpanded());
             item.setExpanded(false);
         }
         

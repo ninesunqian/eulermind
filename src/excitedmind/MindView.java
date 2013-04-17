@@ -135,11 +135,8 @@ public class MindView extends Display {
 
         	public void itemClicked(VisualItem item, MouseEvent e) {
     			System.out.println ("mouse Clicked");
-    			System.out.println (item.getGroup());
-    			System.out.println (sm_treeNodesGroupName);
     			
-    			System.out.println (item.getGroup() == sm_treeNodesGroupName);
-        		if (item.getGroup() == sm_treeNodesGroupName)
+        		if (item.isInGroup(sm_treeNodesGroupName))
         		{
 	        		m_mindTree.ToggleFoldNode(item);
         		}
