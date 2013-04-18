@@ -112,7 +112,7 @@ public class MindView extends Display {
         layoutAction.add(m_vis.getAction(sm_itemStyleActions));
         m_vis.putAction(sm_layoutAction, layoutAction);
 
-        ActionList layoutAnimator = new ActionList(1000);
+        ActionList layoutAnimator = new ActionList(500);
         layoutAnimator.setPacingFunction(new SlowInSlowOutPacer());
         addItemStyleAnimatorsTo(layoutAnimator);
         addItemPositionAnimatorsTo(layoutAnimator);
@@ -139,10 +139,12 @@ public class MindView extends Display {
         		if (item.isInGroup(sm_treeNodesGroupName))
         		{
 	        		m_mindTree.ToggleFoldNode(item);
+	        		m_vis.run(sm_layoutAction);
         		}
         	} 
         }
         );
+        
         
         setKey ();
 
@@ -320,7 +322,7 @@ public class MindView extends Display {
     private void addItemPositionAnimatorsTo (ActionList animators)
     {
         animators.add(new VisibilityAnimator(sm_treeGroupName));
-        animators.add(new AutoPanAction());
+        //animators.add(new AutoPanAction());
         animators.add(new LocationAnimator(sm_treeNodesGroupName));
     }
     
@@ -371,7 +373,6 @@ public class MindView extends Display {
         }
 
         public int getColor(VisualItem item) {
-            System.out.println ("getColorrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
             if (m_vis.isInGroup(item, Visualization.SEARCH_ITEMS))
                 return ColorLib.rgb(255, 190, 190);
             else if (m_vis.isInGroup(item, Visualization.FOCUS_ITEMS))

@@ -205,26 +205,6 @@ public class TableVisualItem extends TableTuple implements VisualItem {
         ((VisualTable)m_table).setInteractive(m_row, value);
     }
     
-    public boolean isStartExpanded()
-    {
-        return ((VisualTable)m_table).isStartExpanded(m_row);
-    }
-
-    public void setStartExpanded(boolean value)
-    {
-        ((VisualTable)m_table).setStartExpanded(m_row, value);
-    }
-    
-    public boolean isEndExpanded()
-    {
-        return ((VisualTable)m_table).isEndExpanded(m_row);
-    }
-
-    public void setEndExpanded(boolean value)
-    {
-        ((VisualTable)m_table).setEndExpanded(m_row, value);
-    }
-    
     /**
      * @see prefuse.visual.VisualItem#isExpanded()
      */

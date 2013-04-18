@@ -191,14 +191,6 @@ public interface VisualItem extends Tuple {
      */
     public void setInteractive(boolean value);
     
-    public boolean isStartExpanded();
-
-    public void setStartExpanded(boolean value);
-    
-    public boolean isEndExpanded();
-
-    public void setEndExpanded(boolean value);
-    
     /**
      * Indicates this item is expanded. Only used for items that are
      * part of a graph structure. 
