@@ -293,7 +293,7 @@ public class TreeView extends Display {
         
         Tree t = null;
         try {
-            //t = (Tree)new TreeMLReader().readGraph(datafile);
+        	/*
         	t = new Tree();
             Table nodes = t.getNodeTable();
             nodes.addColumn("name", String.class);
@@ -301,11 +301,10 @@ public class TreeView extends Display {
         	Node root = t.addRoot();
         	root.set("name",  "root");
         	
-        	/*
         	Node ch1 = t.addChild(root);
         	ch1.set("name",  "child1");
         	
-        	for (int i=0; i<301; i++)
+        	for (int i=0; i<10; i++)
         	{
         	Node ch2 = t.addChild(root);
         	ch2.set("name",  "child2");

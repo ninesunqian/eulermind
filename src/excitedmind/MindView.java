@@ -5,6 +5,8 @@ import java.awt.geom.Point2D;
 import java.awt.event.MouseEvent;
 import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
+import javax.swing.undo.UndoManager;
+
 import prefuse.Constants;
 import prefuse.Display;
 import prefuse.Visualization;
@@ -75,6 +77,7 @@ public class MindView extends Display {
     private int m_orientation = Constants.ORIENT_LEFT_RIGHT;
     
     private MindTree m_mindTree;
+    private VisualItem m_curFocus;
     
     public MindView(String path, Object rootId) {
         super(new Visualization());
@@ -83,6 +86,55 @@ public class MindView extends Display {
 
         m_vis.add(sm_treeGroupName, m_mindTree.m_tree);
 
+        setPefuseAction ();
+
+        setSearchAnimation ();
+        
+        // initialize the display
+        setSize(700, 600);
+        setItemSorter(new TreeDepthItemSorter());
+        
+        addControlListener(new ZoomToFitControl());
+        addControlListener(new ZoomControl());
+        addControlListener(new WheelZoomControl());
+        addControlListener(new PanControl());
+        addControlListener(new ControlAdapter() {
+        	
+        	public void itemEntered(VisualItem item, MouseEvent e) {
+        		if (item.isInGroup(sm_treeNodesGroupName))
+        		{
+        			m_vis.cancel(sm_layoutAnimator);
+	    			System.out.println ("mouse entered");
+        			m_curFocus = item;
+	        		m_vis.run(sm_layoutAction);
+        		}
+        		
+        	}
+        	
+        	public void itemClicked(VisualItem item, MouseEvent e) {
+    			System.out.println ("mouse Clicked");
+    			
+        		if (item.isInGroup(sm_treeNodesGroupName))
+        		{
+        			m_vis.cancel(sm_layoutAnimator);
+	        		m_mindTree.ToggleFoldNode(item);
+	        		m_vis.run(sm_layoutAction);
+        		}
+        	} 
+        }
+        );
+//        addControlListener(new FocusControl(1, sm_layoutAction));
+        
+        
+        setKey ();
+
+        // filter graph and perform layout
+        setOrientation(m_orientation);
+        m_vis.run(sm_layoutAction);
+    }
+    
+    private void setPefuseAction ()
+    {
         setItemRenderer ();
 
         addItemStyleActions();
@@ -120,37 +172,7 @@ public class MindView extends Display {
         m_vis.putAction(sm_layoutAnimator, layoutAnimator);
         
         m_vis.alwaysRunAfter(sm_layoutAction, sm_layoutAnimator);
-
-        setSearchAnimation ();
-        
-        // initialize the display
-        setSize(700, 600);
-        setItemSorter(new TreeDepthItemSorter());
-        
-        addControlListener(new ZoomToFitControl());
-        addControlListener(new ZoomControl());
-        addControlListener(new WheelZoomControl());
-        addControlListener(new PanControl());
-        addControlListener(new ControlAdapter() {
-
-        	public void itemClicked(VisualItem item, MouseEvent e) {
-    			System.out.println ("mouse Clicked");
-    			
-        		if (item.isInGroup(sm_treeNodesGroupName))
-        		{
-	        		m_mindTree.ToggleFoldNode(item);
-	        		m_vis.run(sm_layoutAction);
-        		}
-        	} 
-        }
-        );
-        
-        
-        setKey ();
-
-        // filter graph and perform layout
-        setOrientation(m_orientation);
-        m_vis.run(sm_layoutAction);
+    	
     }
     
     private void setItemRenderer ()
@@ -301,18 +323,12 @@ public class MindView extends Display {
     {
         m_subTreeLayout = new CollapsedSubtreeLayout(sm_treeGroupName, m_orientation);
         
-    	/*
-    	FisheyeTreeFilter m_fisheyeFilter;
-    	m_fisheyeFilter = new FisheyeTreeFilter(sm_treeGroupName, 2);
-    	*/
-    	
         m_treeLayout = new NodeLinkTreeLayout(sm_treeGroupName,
                 m_orientation, 50, 0, 8);
         m_treeLayout.setLayoutAnchor(new Point2D.Double(25, 300));
 
         
         ActionList actions = new ActionList();
-        //actions.add(m_fisheyeFilter);
         actions.add(m_treeLayout);
         actions.add(m_subTreeLayout);
         
@@ -366,23 +382,25 @@ public class MindView extends Display {
     	animators.add(new RepaintAction());
     }
 
-    public static class NodeColorAction extends ColorAction {
+    public class NodeColorAction extends ColorAction {
 
         public NodeColorAction(String group) {
             super(group, VisualItem.FILLCOLOR);
         }
 
         public int getColor(VisualItem item) {
-            if (m_vis.isInGroup(item, Visualization.SEARCH_ITEMS))
-                return ColorLib.rgb(255, 190, 190);
+        	if (item == m_curFocus)
+                return ColorLib.rgb(255, 255, 0);
+        	else if (m_vis.isInGroup(item, Visualization.SEARCH_ITEMS))
+                return ColorLib.rgb(255, 0, 0);
             else if (m_vis.isInGroup(item, Visualization.FOCUS_ITEMS))
-                return ColorLib.rgb(198, 229, 229);
-            else if (item.getDOI() > -1)
-                return ColorLib.rgb(164, 193, 193);
+                return ColorLib.rgb(0, 255, 0);
             else
-                return ColorLib.rgba(255, 255, 255, 0);
+                return ColorLib.rgb(255, 255, 255);
         }
 
     } // end of inner class TreeMapColorAction
+    
+    public UndoManager m_undoManager = new UndoManager();
 
 } // end of class TreeMap

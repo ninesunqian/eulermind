@@ -450,17 +450,19 @@ public class Graph extends CompositeTupleSet {
         	
 	        if (edgePosInNode > degree)
 	        	edgePosInNode = degree;
+	        
+	        assert (degree <= array.length);
         
         	if ( degree == array.length ) {
-        		int[] narray = new int[Math.max(3*array.length/2, degree+1)];
-        		System.arraycopy(array, 0, narray, 0, edgePosInNode);
-        		System.arraycopy(array, edgePosInNode, narray, edgePosInNode+1, array.length - edgePosInNode);
-	        	narray[edgePosInNode] = e;
-        		nodeTable.set(n, edgesColName, narray);
+        		int[] newArray = new int[Math.max(3*array.length/2, degree+1)];
+        		System.arraycopy(array, 0, newArray, 0, edgePosInNode);
+        		System.arraycopy(array, edgePosInNode, newArray, edgePosInNode+1, degree - edgePosInNode);
+	        	newArray[edgePosInNode] = e;
+        		nodeTable.set(n, edgesColName, newArray);
         	}
         	else
         	{
-        		System.arraycopy(array, edgePosInNode, array, edgePosInNode+1, array.length - edgePosInNode);
+        		System.arraycopy(array, edgePosInNode, array, edgePosInNode+1, degree - edgePosInNode);
 	        	array[edgePosInNode] = e;
         	}
         }
