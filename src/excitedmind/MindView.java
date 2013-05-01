@@ -45,6 +45,7 @@ import prefuse.util.FontLib;
 import prefuse.visual.VisualItem;
 import prefuse.visual.expression.InGroupPredicate;
 import prefuse.visual.sort.TreeDepthItemSorter;
+import prefuse.visual.tuple.TableNodeItem;
 
 /**
  * Demonstration of a node-link tree viewer
@@ -401,6 +402,21 @@ public class MindView extends Display {
 
     } // end of inner class TreeMapColorAction
     
-    public UndoManager m_undoManager = new UndoManager();
+    private UndoManager m_undoManager = new UndoManager();
+    
+    public UndoManager getUndoManager ()
+    {
+    	return m_undoManager;
+    }
+    
+    public MindTree getMindTree ()
+    {
+    	return m_mindTree;
+    }
+    
+    public TableNodeItem getFocusNode ()
+    {
+    	return null;
+    }
 
 } // end of class TreeMap

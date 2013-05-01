@@ -99,7 +99,7 @@ public class MindTree {
 		}
 	};
 	
-	TableListener m_m_edgeTableListener = new TableListener() {
+	TableListener m_edgeTableListener = new TableListener() {
 
 		@Override
 		public void tableChanged(Table t, int start, int end, int col, int type) {
@@ -179,7 +179,7 @@ public class MindTree {
 		}, 0);
 		
 		m_nodeTable.addTableListener(m_nodeTableListener);
-		m_edgeTable.addTableListener(m_m_edgeTableListener);
+		m_edgeTable.addTableListener(m_edgeTableListener);
 		
 		m_tableListenerEnabled = true;
 	}
@@ -497,5 +497,25 @@ public class MindTree {
 	{
 		//source1 // OUTDEGREE, OUTEDGES
 		//source2 //OUTDEGEEE, OUTEDGES
+	}
+	
+	public void setNodeProperty (final Object bpId, final String key, final Object value)
+	{
+		assert (m_nodePropNames.contains(key));
+		
+		Vertex dbNode = m_dbTree.getVertex(bpId);
+		dbNode.setProperty(key, value);
+		
+		visitAllAvataresOfNode(bpId, new Visiter () {
+			public void visit (Node node) {
+				node.set(key, value);
+			}
+		});
+		
+	}
+	
+	public void setNodeProperty (final Node node, final String key, final Object value)
+	{
+		setNodeProperty (node.get(BP_ID_COL_KEY), key, value);
 	}
 }
