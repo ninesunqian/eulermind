@@ -7,29 +7,34 @@ import javax.swing.Action;
 import javax.swing.undo.AbstractUndoableEdit;
 
 import prefuse.data.Node;
+import prefuse.visual.VisualItem;
 import prefuse.visual.tuple.TableNodeItem;
 
 import excitedmind.MindTree;
 import excitedmind.MindView;
 
-public class Editor extends AbstractAction {
+public class EditAction extends AbstractAction {
 	
 	MindView m_mindView;
 	
-	Editor (MindView mindView)
+	public EditAction (MindView mindView)
 	{
 		m_mindView = mindView;
-		
-		//TODO get editor
-		//set text
-		
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		Node node = m_mindView.getFocusNode ();
+		TableNodeItem node = m_mindView.getFocusNode ();
 		String oldText = node.getString (MindTree.sm_textPropName);
+		//m_mindView.editText(node, MindTree.sm_textPropName) ;
+		String newText = "newText";
+		MindTree mindTree = m_mindView.getMindTree();
+		mindTree.setNodeProperty(
+				mindTree.getDBItemId(m_mindView.getVisualization().getSourceTuple(node)),
+				MindTree.sm_textPropName, 
+				newText);
 		// TODO Auto-generated method stub
+		m_mindView.getVisualization().run(MindView.sm_layoutAction);
 	}
 	
 	static class Executor extends AbstractUndoableEdit 

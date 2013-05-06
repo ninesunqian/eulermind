@@ -7,6 +7,8 @@ import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 import javax.swing.undo.UndoManager;
 
+import excitedmind.operators.EditAction;
+
 import prefuse.Constants;
 import prefuse.Display;
 import prefuse.Visualization;
@@ -65,7 +67,7 @@ public class MindView extends Display {
     private static final String sm_searchAnimator = "searchAnimator";
     private static final String sm_orientAnimator = "orientAnimator";
 
-    private static final String sm_layoutAction = "layoutAction";
+    public static final String sm_layoutAction = "layoutAction";
     private static final String sm_layoutAnimator = "layoutAnimator";
     
     
@@ -78,7 +80,7 @@ public class MindView extends Display {
     private int m_orientation = Constants.ORIENT_LEFT_RIGHT;
     
     private MindTree m_mindTree;
-    private VisualItem m_curFocus;
+    private TableNodeItem m_curFocus;
     
     public MindView(String path, Object rootId) {
         super(new Visualization());
@@ -106,7 +108,7 @@ public class MindView extends Display {
         		{
         			m_vis.cancel(sm_layoutAnimator);
 	    			System.out.println ("mouse entered");
-        			m_curFocus = item;
+        			m_curFocus = (TableNodeItem)item;
 	        		m_vis.run(sm_layoutAction);
         		}
         		
@@ -215,6 +217,8 @@ public class MindView extends Display {
                 "right-to-left", KeyStroke.getKeyStroke("ctrl 3"), WHEN_FOCUSED);
         registerKeyboardAction(new OrientAction(Constants.ORIENT_BOTTOM_TOP),
                 "bottom-to-top", KeyStroke.getKeyStroke("ctrl 4"), WHEN_FOCUSED);
+        
+        registerKeyboardAction(new EditAction(this), "edit", KeyStroke.getKeyStroke("F2"), WHEN_FOCUSED);
     }
 
     public void setOrientation(int orientation) {
@@ -416,7 +420,7 @@ public class MindView extends Display {
     
     public TableNodeItem getFocusNode ()
     {
-    	return null;
+    	return m_curFocus;
     }
 
 } // end of class TreeMap

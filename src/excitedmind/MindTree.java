@@ -144,8 +144,8 @@ public class MindTree {
 		m_dbTree = new DBTree (dbPath);
 		m_maxLevel = 4;
 		
-		Table m_nodeTable = m_tree.getNodeTable();
-		Table m_edgeTable = m_tree.getEdgeTable();
+		m_nodeTable = m_tree.getNodeTable();
+		m_edgeTable = m_tree.getEdgeTable();
 		
 		String nodePropNames [] = {
 			sm_textPropName,
@@ -423,6 +423,7 @@ public class MindTree {
 		IntIterator allRows = m_nodeTable.rows();
 
 		ArrayList<Integer> aimRows = new ArrayList<Integer> ();
+		System.out.println ("need node's bpId is" + bpId);
 
 		//collect the node with the same parentBpId to aimRows
 		while (allRows.hasNext()) {
@@ -517,5 +518,11 @@ public class MindTree {
 	public void setNodeProperty (final Node node, final String key, final Object value)
 	{
 		setNodeProperty (node.get(BP_ID_COL_KEY), key, value);
+	}
+	
+	public Object getDBItemId (final Tuple tuple)
+	{
+		assert(m_tree.containsTuple(tuple));
+		return tuple.get(BP_ID_COL_KEY);
 	}
 }
