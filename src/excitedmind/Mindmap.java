@@ -22,59 +22,17 @@ import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 
-import com.tinkerpop.blueprints.CloseableIterable;
-import com.tinkerpop.blueprints.Direction;
-import com.tinkerpop.blueprints.Index;
 import com.tinkerpop.blueprints.Vertex;
-import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 
-import prefuse.Constants;
 import prefuse.Display;
 import prefuse.Visualization;
-import prefuse.action.Action;
-import prefuse.action.ActionList;
-import prefuse.action.ItemAction;
-import prefuse.action.RepaintAction;
-import prefuse.action.animate.ColorAnimator;
-import prefuse.action.animate.LocationAnimator;
-import prefuse.action.animate.QualityControlAnimator;
-import prefuse.action.animate.VisibilityAnimator;
-import prefuse.action.assignment.ColorAction;
-import prefuse.action.assignment.FontAction;
-import prefuse.action.filter.FisheyeTreeFilter;
-import prefuse.action.layout.CollapsedSubtreeLayout;
-import prefuse.action.layout.graph.NodeLinkTreeLayout;
-import prefuse.activity.SlowInSlowOutPacer;
 import prefuse.controls.ControlAdapter;
-import prefuse.controls.FocusControl;
-import prefuse.controls.PanControl;
-import prefuse.controls.WheelZoomControl;
-import prefuse.controls.ZoomControl;
-import prefuse.controls.ZoomToFitControl;
-import prefuse.data.Edge;
-import prefuse.data.Node;
-import prefuse.data.Schema;
-import prefuse.data.Table;
-import prefuse.data.Tree;
-import prefuse.data.Tuple;
-import prefuse.data.event.TupleSetListener;
-import prefuse.data.io.TreeMLReader;
-import prefuse.data.search.PrefixSearchTupleSet;
-import prefuse.data.tuple.TupleSet;
-import prefuse.render.DefaultRendererFactory;
-import prefuse.render.EdgeRenderer;
-import prefuse.render.AbstractShapeRenderer;
-import prefuse.render.LabelRenderer;
-import prefuse.util.ColorLib;
 import prefuse.util.FontLib;
 import prefuse.util.ui.JFastLabel;
 import prefuse.util.ui.JSearchPanel;
 import prefuse.visual.VisualItem;
-import prefuse.visual.expression.InGroupPredicate;
-import prefuse.visual.sort.TreeDepthItemSorter;
 
 /**
  * Demonstration of a node-link tree viewer
@@ -82,7 +40,7 @@ import prefuse.visual.sort.TreeDepthItemSorter;
  * @version 1.0
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
-public class Mindmap extends Display {
+public class Mindmap {
 
 	public static void main(String argv[]) {
 		

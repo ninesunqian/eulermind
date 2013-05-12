@@ -1,9 +1,12 @@
 package excitedmind.operators;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.text.JTextComponent;
 import javax.swing.undo.AbstractUndoableEdit;
 
 import prefuse.data.Node;
@@ -24,10 +27,48 @@ public class EditAction extends AbstractAction {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		TableNodeItem node = m_mindView.getFocusNode ();
+		final TableNodeItem node = m_mindView.getFocusNode ();
 		String oldText = node.getString (MindTree.sm_textPropName);
-		//m_mindView.editText(node, MindTree.sm_textPropName) ;
-		String newText = "newText";
+		
+		final JTextComponent editor = m_mindView.getTextEditor();
+		editor.addKeyListener(new KeyListener() {
+			
+			@Override
+			public void keyTyped(KeyEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void keyReleased(KeyEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER)
+				{
+					String text = editor.getText();
+					m_mindView.stopEditing();
+					MindTree mindTree = m_mindView.getMindTree();
+					
+					mindTree.setNodeProperty(
+							mindTree.getDBItemId(m_mindView.getVisualization().getSourceTuple(node)),
+							MindTree.sm_textPropName, 
+							text);
+					m_mindView.getVisualization().run(MindView.sm_layoutAction);
+				}
+				
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		m_mindView.editText(node, MindTree.sm_textPropName) ;
+		
+		/*
+		String newText = node.getString (MindTree.sm_textPropName);;
+		//String newText = "newText";
 		MindTree mindTree = m_mindView.getMindTree();
 		mindTree.setNodeProperty(
 				mindTree.getDBItemId(m_mindView.getVisualization().getSourceTuple(node)),
@@ -35,6 +76,7 @@ public class EditAction extends AbstractAction {
 				newText);
 		// TODO Auto-generated method stub
 		m_mindView.getVisualization().run(MindView.sm_layoutAction);
+		*/
 	}
 	
 	static class Executor extends AbstractUndoableEdit 
