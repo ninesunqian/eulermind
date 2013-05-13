@@ -20,18 +20,7 @@ public class EditAction extends AbstractAction {
 	
 	MindView m_mindView;
 	
-	public EditAction (MindView mindView)
-	{
-		m_mindView = mindView;
-	}
-
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		final TableNodeItem node = m_mindView.getFocusNode ();
-		String oldText = node.getString (MindTree.sm_textPropName);
-		
-		final JTextComponent editor = m_mindView.getTextEditor();
-		editor.addKeyListener(new KeyListener() {
+	KeyListener keyListener = new KeyListener() {
 			
 			@Override
 			public void keyTyped(KeyEvent e) {
@@ -49,48 +38,52 @@ public class EditAction extends AbstractAction {
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER)
 				{
-					String text = editor.getText();
+					//FIXME: curFocus moveing, while edit
+					final TableNodeItem node = m_mindView.getFocusNode ();
+					String oldText = node.getString (MindTree.sm_textPropName);
+
+					m_mindView.removeKeyListener(keyListener);
+
+					String text = m_mindView.getTextEditor().getText();
 					m_mindView.stopEditing();
-					MindTree mindTree = m_mindView.getMindTree();
 					
-					mindTree.setNodeProperty(
-							mindTree.getDBItemId(m_mindView.getVisualization().getSourceTuple(node)),
-							MindTree.sm_textPropName, 
-							text);
-					m_mindView.getVisualization().run(MindView.sm_layoutAction);
+					MindTree mindTree = m_mindView.getMindTree();
+					Object bpId = mindTree.getDBItemId(m_mindView.getVisualization().getSourceTuple(node));
+					
+					Executor executor = new Executor (m_mindView, bpId, oldText, text);
+					executor.redo();
+					
+					m_mindView.getUndoManager().addEdit(executor);
 				}
 				
-				// TODO Auto-generated method stub
-				
 			}
-		});
+		};
+	
+	public EditAction (MindView mindView)
+	{
+		m_mindView = mindView;
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		final TableNodeItem node = m_mindView.getFocusNode ();
+		m_mindView.getTextEditor().addKeyListener(keyListener);
 		m_mindView.editText(node, MindTree.sm_textPropName) ;
-		
-		/*
-		String newText = node.getString (MindTree.sm_textPropName);;
-		//String newText = "newText";
-		MindTree mindTree = m_mindView.getMindTree();
-		mindTree.setNodeProperty(
-				mindTree.getDBItemId(m_mindView.getVisualization().getSourceTuple(node)),
-				MindTree.sm_textPropName, 
-				newText);
-		// TODO Auto-generated method stub
-		m_mindView.getVisualization().run(MindView.sm_layoutAction);
-		*/
 	}
 	
 	static class Executor extends AbstractUndoableEdit 
 	{
 		private static final long serialVersionUID = 1L;
 		
+		MindView m_mindView;
+		Object m_bpId;
+		
 		String m_newText;
 		String m_oldText;
-		Object m_bpId;
-		MindTree m_mindTree;
 
-		Executor (MindTree mindTree, Object bpId, String oldText, String newText)
+		Executor (MindView mindView, Object bpId, String oldText, String newText)
 		{
-			m_mindTree = mindTree;
+			m_mindView = mindView;
 			m_bpId = bpId;
 			m_oldText = oldText;
 			m_newText = newText;
@@ -98,12 +91,14 @@ public class EditAction extends AbstractAction {
 
 		public void redo ()
 		{
-			m_mindTree.setNodeProperty(m_bpId, MindTree.sm_textPropName, m_newText);
+			m_mindView.getMindTree().setNodeProperty(m_bpId, MindTree.sm_textPropName, m_newText);
+			m_mindView.getVisualization().run(MindView.sm_layoutAction);
 		}
 		
 		public void undo ()
 		{
-			m_mindTree.setNodeProperty(m_bpId, MindTree.sm_textPropName, m_oldText);
+			m_mindView.getMindTree().setNodeProperty(m_bpId, MindTree.sm_textPropName, m_oldText);
+			m_mindView.getVisualization().run(MindView.sm_layoutAction);
 		}
 	}
 }

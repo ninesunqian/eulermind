@@ -114,6 +114,7 @@ public class Mindmap {
 		mindView.setForeground(FOREGROUND);
 
 		// create a search panel for the tree map
+		/*
 		JSearchPanel search = new JSearchPanel(mindView.getVisualization(),
 				MindView.sm_treeNodesGroupName, Visualization.SEARCH_ITEMS, label, true, true);
 		search.setShowResultCount(true);
@@ -121,6 +122,7 @@ public class Mindmap {
 		search.setFont(FontLib.getFont("Tahoma", Font.PLAIN, 11));
 		search.setBackground(BACKGROUND);
 		search.setForeground(FOREGROUND);
+		*/
 
 		final JFastLabel title = new JFastLabel("                 ");
 		title.setPreferredSize(new Dimension(350, 20));
@@ -146,7 +148,7 @@ public class Mindmap {
 		box.add(Box.createHorizontalStrut(10));
 		box.add(title);
 		box.add(Box.createHorizontalGlue());
-		box.add(search);
+		//box.add(search);
 		box.add(Box.createHorizontalStrut(3));
 		box.setBackground(BACKGROUND);
 

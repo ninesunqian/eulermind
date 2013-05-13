@@ -1,6 +1,7 @@
 package excitedmind;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
 import java.awt.event.MouseEvent;
 import javax.swing.AbstractAction;
@@ -219,6 +220,31 @@ public class MindView extends Display {
                 "bottom-to-top", KeyStroke.getKeyStroke("ctrl 4"), WHEN_FOCUSED);
         
         registerKeyboardAction(new EditAction(this), "edit", KeyStroke.getKeyStroke("F2"), WHEN_FOCUSED);
+        registerKeyboardAction(new ActionListener() {
+
+        	@Override
+        	public void actionPerformed(ActionEvent e) {
+        		if (m_undoManager.canUndo())
+	        		m_undoManager.undo();
+
+        	}
+        }, 
+        "back", 
+        KeyStroke.getKeyStroke("F3"), 
+        WHEN_FOCUSED);
+        
+        registerKeyboardAction(new ActionListener() {
+
+        	@Override
+        	public void actionPerformed(ActionEvent e) {
+        		if (m_undoManager.canRedo())
+	        		m_undoManager.redo();
+
+        	}
+        }, 
+        "redo", 
+        KeyStroke.getKeyStroke("F4"), 
+        WHEN_FOCUSED);
     }
 
     public void setOrientation(int orientation) {
