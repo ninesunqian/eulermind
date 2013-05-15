@@ -356,9 +356,11 @@ public class DBTree implements Graph {
 	public void removeRefEdge (Vertex referer, Vertex referee)
 	{
 		Object edgeId = removeEdgeIDFromArray(referer, referee);
-		commit ();
+		
 		Edge edge = getEdge (edgeId);
 		assert ((Integer)edge.getProperty(EDGE_TYPE_PROP_NAME) == EDGE_TYPE_REFERENCE);
+		removeEdge(edge);
+		commit ();
 	}
 	
 	
@@ -376,15 +378,86 @@ public class DBTree implements Graph {
 		}
 	}
 	
-	//remove vertex, the children append to 
-	public void removeSubTree (Vertex vertex)
+	private interface Processor 
 	{
+		//return: true: continue deeper, false stop
+	 	abstract public boolean run (Vertex vertex, int level);
+	}
+	
+	private void deepTraverse (Vertex vertex, Processor proc, int level)
+	{
+		if (proc.run(vertex, level))
+		{
+			EdgeVertex [] children = getChildren(vertex);
+	
+			if (children != null)
+			{
+				for (int i=0; i<children.length; i++)
+				{
+					EdgeVertex child = children[i];
+					if (getEdgeType(child.m_edge) == EDGE_TYPE_INCLUDE)
+					{
+						deepTraverse(child.m_vertex, proc, level+1);
+					}
+				}
+			}
+		}
+	}
+	
+	private void deepTraverse (Vertex vertex, Processor proc)
+	{
+		deepTraverse (vertex, proc, 0);
+	}
+	
+	//remove vertex, the children append to 
+	static class RefLinkInfo {
+		final Vertex m_source;
+		final Vertex m_target;
+		final int m_pos;
 		
+		RefLinkInfo (Vertex source, Vertex target, int pos)
+		{
+			m_source = source;
+			m_target = target;
+			m_pos = pos;
+		}
+		
+	}
+	
+	//return the reference link info to the sub tree
+	public ArrayList<RefLinkInfo> removeSubTree (Vertex vertex)
+	{
+		final ArrayList<RefLinkInfo> refLinkInfos = new ArrayList<RefLinkInfo> ();
+		deepTraverse(vertex, new Processor() {
+			
+			@Override
+			public boolean run(Vertex vertex, int level) {
+				EdgeVertex[] children = getChildren(vertex);
+				for (int i=0; i<children.length; i++)
+				{
+					EdgeVertex child = children[i];
+					
+					if (getEdgeType(child.m_edge) == EDGE_TYPE_REFERENCE)
+					{
+						refLinkInfos.add(new RefLinkInfo(vertex, child.m_vertex, i));
+					}
+					
+					removeRefEdge(vertex, child.m_vertex);
+				}
+				return true;
+			}
+		});
+		return refLinkInfos;
 	}
 	
 	public EdgeVertex restoreSubTree (Vertex vertex)
 	{
 		return null;
+	}
+	
+	public int getNodeNumber (Vertex root)
+	{
+		return 0;
 	}
 	
 	private void cleanTrash ()
