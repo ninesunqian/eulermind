@@ -98,7 +98,7 @@ public class Mindmap {
 			edgeVertex.m_vertex.setProperty(MindTree.sm_textPropName, parentText + "c");
 			createTree (dbTree, edgeVertex.m_vertex, parentText + "c", level + 1);
 			
-			dbTree.setRefEdge(parent, m_rootVertex, 3);
+			dbTree.addRefEdge(parent, m_rootVertex, 3);
 		}
 	}
 

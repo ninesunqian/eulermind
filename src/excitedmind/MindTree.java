@@ -142,7 +142,7 @@ public class MindTree {
 		m_tree = new Tree();
 		
 		m_dbTree = new DBTree (dbPath);
-		m_maxLevel = 4;
+		m_maxLevel = 2;
 		
 		m_nodeTable = m_tree.getNodeTable();
 		m_edgeTable = m_tree.getEdgeTable();
@@ -227,9 +227,9 @@ public class MindTree {
 
 	private void attachChildren (Node parent)
 	{
-		EdgeVertex [] edgeVertexArray = m_dbTree.getChildren(getVertex(parent));
+		ArrayList<EdgeVertex> edgeVertexArray = m_dbTree.getChildrenAndReferees(getVertex(parent));
 		
-		if (edgeVertexArray == null || edgeVertexArray.length == 0)
+		if (edgeVertexArray == null || edgeVertexArray.size() == 0)
 		{
 			return;
 		}
@@ -398,7 +398,7 @@ public class MindTree {
 	public void ascendRootParent ()
 	{
 		Node root = m_tree.getRoot();
-		EdgeVertex edgeVertex = m_dbTree.getBioParent(getVertex(root));
+		EdgeVertex edgeVertex = m_dbTree.getParent(getVertex(root));
 		
 		if (edgeVertex == null)
 		{
@@ -472,7 +472,7 @@ public class MindTree {
 	public Node addReference(Node node, Vertex referee, int pos) {
 		
 		Vertex referer = getVertex(node);
-		com.tinkerpop.blueprints.Edge refEdge = m_dbTree.setRefEdge(referer, referee, pos);
+		com.tinkerpop.blueprints.Edge refEdge = m_dbTree.addRefEdge(referer, referee, pos);
 		
         if (refEdge == null) {
         	return null;

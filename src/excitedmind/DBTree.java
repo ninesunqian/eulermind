@@ -1,6 +1,7 @@
 package excitedmind;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import prefuse.util.PrefuseLib;
 
@@ -21,8 +22,7 @@ public class DBTree implements Graph {
 	public final static String EDGE_TYPE_PROP_NAME = PrefuseLib.FIELD_PREFIX + "edgeType";
 	private final static String CHILD_EDGES_PROP_NAME = PrefuseLib.FIELD_PREFIX + "childEdges";
 	
-	private final static int EDGE_TYPE_INCLUDE = 0;
-	private final static int EDGE_TYPE_REFERENCE = 1;
+	enum EdgeType { INCLUDE, REFERENCE};
 	
     protected static final int ADDING_EDGE_END = 0x7FFFFFFF;
 	
@@ -137,6 +137,128 @@ public class DBTree implements Graph {
 	}
 
 	
+	private Vertex getEdgeSource (Edge edge)
+	{
+		return edge.getVertex(Direction.OUT);
+	}
+	
+	private Vertex getEdgeTarget (Edge edge)
+	{
+		return edge.getVertex(Direction.IN);
+	}
+	
+	private ArrayList<Object> getEdgeIDsToChildren (Vertex source, boolean ifNullCreat)
+	{
+		//Because outEdgeArray must be convert to ORecordLazyList, so its type is not ArrayList.
+		Object outEdgeArray = source.getProperty(CHILD_EDGES_PROP_NAME);
+		if (outEdgeArray == null)
+		{
+			if (ifNullCreat)
+			{
+				outEdgeArray = new ArrayList<Object> ();
+				source.setProperty(CHILD_EDGES_PROP_NAME, outEdgeArray);
+			}
+			else
+			{
+				return null;
+			}
+		}
+		
+		if (outEdgeArray instanceof ORecordLazyList)
+		{
+			ORecordLazyList implArray = (ORecordLazyList)outEdgeArray;
+			implArray.setAutoConvertToRecord(false);
+		}
+		
+		return (ArrayList<Object>)outEdgeArray;
+	}
+	
+	public EdgeType getEdgeType (Edge edge)
+	{
+		return (EdgeType)edge.getProperty(EDGE_TYPE_PROP_NAME);
+	}
+	
+	private Edge addEdge (Vertex source, Vertex target, int pos, EdgeType edgeType)
+	{
+		Edge edge = m_graph.addEdge(null, source, target, null);
+		edge.setProperty(EDGE_TYPE_PROP_NAME, edgeType); 
+		
+		//to make the edge'id is to local db
+		commit ();
+		
+		ArrayList<Object> outEdgeArray = getEdgeIDsToChildren(source, true);
+		
+		if (pos == ADDING_EDGE_END || pos >= outEdgeArray.size())
+		{
+			outEdgeArray.add(edge.getId());
+		}
+		else
+		{
+			outEdgeArray.add(pos, edge.getId());
+		}
+		
+		//NOTICE: the container property must be reset to Vertex.
+		//If not, the last item will not be save to db.
+		//it is the bug of blueprints or orientdb
+		
+		source.setProperty(CHILD_EDGES_PROP_NAME, outEdgeArray);
+		commit ();
+		return edge;
+	}
+	
+	private void removeEdge (Vertex source, int pos)
+	{
+		ArrayList<Object> outEdgeArray = getEdgeIDsToChildren(source, false);
+		Object edgeId = outEdgeArray.get(pos);
+		
+		m_graph.removeEdge(m_graph.getEdge(edgeId));
+		outEdgeArray.remove(pos);
+		
+		//NOTICE: the container property must be reset to Vertex.
+		//If not, the last item will not be save to db.
+		//it is the bug of blueprints or orientdb
+		source.setProperty(CHILD_EDGES_PROP_NAME, outEdgeArray);
+		commit ();
+	}
+	
+	
+	//only addRefEdge and removeRefEdge is public
+	
+	public Edge addRefEdge (Vertex referer, Vertex referee, int pos)
+	{
+		assert (referer.getId() != referee.getId());
+		return addEdge (referer, referee, pos, EdgeType.REFERENCE);
+	}
+	
+	public void removeRefEdge (Vertex source, int pos)
+	{
+		ArrayList<Object> outEdgeArray = getEdgeIDsToChildren(source, false);
+		Object edgeId = outEdgeArray.get(pos);
+		
+		Edge edge = m_graph.getEdge(edgeId);
+		assert (getEdgeType(edge) == EdgeType.REFERENCE);
+		
+		m_graph.removeEdge(edge);
+		outEdgeArray.remove(pos);
+		commit ();
+	}
+	
+	private Edge getEdge (Vertex source, int pos)
+	{
+		ArrayList<Object> childEdgeArray = getEdgeIDsToChildren(source, false);
+		
+		if (childEdgeArray == null)
+		{
+			return null;
+		}
+		else
+		{
+			return getEdge(childEdgeArray.get(pos));
+		}
+	}
+	
+	
+	
 	public class EdgeVertex {
 		final public Vertex m_vertex;
 		final public Edge m_edge;
@@ -147,235 +269,91 @@ public class DBTree implements Graph {
 		}
 	};
 	
-	private Vertex getParentOnEdge (Edge edge)
+	public EdgeVertex addChild (Vertex parent, int pos)
 	{
-		return edge.getVertex(Direction.OUT);
+		Vertex child = addVertex(null);
+		commit ();
+		Edge edge = addEdge(parent, child, pos, EdgeType.INCLUDE);
+		return new EdgeVertex(edge, child);
 	}
 	
-	private Vertex getChildOnEdge (Edge edge)
+	public EdgeVertex getChildOrReferee(Vertex parent, int pos)
 	{
-		return edge.getVertex(Direction.IN);
-	}
-	
-	private ArrayList<Object> getEdgeIDsToChildren (Vertex parent)
-	{
-		Object obj = parent.getProperty(CHILD_EDGES_PROP_NAME);
-		if (obj == null)
-			return null;
-		
-		ORecordLazyList implArray = (ORecordLazyList)obj;
-		implArray.setAutoConvertToRecord(false);
-		
-		return (ArrayList<Object>)obj;
-	}
-	
-	private int getEdgePos (ArrayList<Object> edgeIds, Vertex outVertex)
-	{
-		for (int i=0; i<edgeIds.size(); i++)
-		{
-			Object edgeId = edgeIds.get(i);
-			Edge edge = getEdge (edgeId);
-			if (edge.getVertex(Direction.OUT) == outVertex)
-			{
-				return i;
-			}
-		}
-		return -1;
-	}
-	
-	public Edge getEdge (Vertex start, Vertex end)
-	{
-		ArrayList<Object> childEdgeArray = getEdgeIDsToChildren(start);
-		int pos = getEdgePos(childEdgeArray, end);
-		
-		if (pos == -1)
+		Edge edge = getEdge(parent, pos);
+		if (edge == null)
 		{
 			return null;
 		}
 		else
 		{
-			return getEdge(childEdgeArray.get(pos));
+			Vertex child = getEdgeTarget(edge);
+			return new EdgeVertex(edge, child);
 		}
 	}
 	
-	public int getEdgeType (Edge edge)
+	public ArrayList<EdgeVertex> getChildrenAndReferees(Vertex parent)
 	{
-		return (Integer)edge.getProperty(EDGE_TYPE_PROP_NAME);
+		ArrayList<Object> edgeIDsToChildren = getEdgeIDsToChildren(parent, false);
+		
+		if (edgeIDsToChildren == null)
+			return null;
+		
+		ArrayList<EdgeVertex> children = new ArrayList<EdgeVertex>();
+
+		children.ensureCapacity(edgeIDsToChildren.size());
+
+		for (Object edgeId : edgeIDsToChildren)
+		{
+			Edge edgeToChild = getEdge(edgeId);
+			Vertex child = getEdgeTarget(edgeToChild);
+			children.add(new EdgeVertex(edgeToChild, child));
+		}
+
+		return children;
 	}
 	
-	
-	public EdgeVertex getBioParent(Vertex vertex)
+	public EdgeVertex getParent(Vertex vertex)
 	{
-		Edge parentToVertex = vertex.getEdges(Direction.IN).iterator().next();
+		Iterator<Edge> edgeIterator = vertex.getEdges(Direction.IN).iterator();
+		Edge parentToVertex = null;
+		
+		while (edgeIterator.hasNext())
+		{
+			parentToVertex = edgeIterator.next();
+			
+			if (getEdgeType(parentToVertex) == EdgeType.INCLUDE)
+				break;
+		}
 		
 		if (parentToVertex == null) {
 			return null;
 			
 		} else {
-			Vertex parent = getParentOnEdge(parentToVertex);
+			Vertex parent = getEdgeSource(parentToVertex);
 			return new EdgeVertex(parentToVertex, parent);
 		}
 	}
 	
-	public EdgeVertex getChild(Vertex parent, int pos)
-	{
-		Edge childRelation = getEdgeToChild(parent, pos);
-		if (childRelation == null)
-		{
-			return null;
-		}
-		else
-		{
-			Vertex child = getChildOnEdge(childRelation);
-			return new EdgeVertex(childRelation, child);
-		}
-	}
 	
-	public EdgeVertex[] getChildren(Vertex parent)
+	public ArrayList<EdgeVertex> getReferers(Vertex referee)
 	{
-		ArrayList<Object> edgeIDsToChildren = getEdgeIDsToChildren(parent);
-		if (edgeIDsToChildren == null)
+		Iterator<Edge> edgeIterator = referee.getEdges(Direction.IN).iterator();
+		Edge refEdge = null;
+		ArrayList<EdgeVertex> refererArray = new ArrayList<EdgeVertex> ();
+		
+		
+		while (edgeIterator.hasNext())
 		{
-			return null;
-		}
-		else
-		{
-			EdgeVertex [] children = new EdgeVertex[edgeIDsToChildren.size()];
-			System.out.println (edgeIDsToChildren);
-			System.out.println (edgeIDsToChildren.get(0));
-			System.out.println (edgeIDsToChildren);
-			System.out.println (edgeIDsToChildren.get(1));
-			for (int i=0; i<children.length; i++)
-			{
-				Edge edgeToChild = getEdge(edgeIDsToChildren.get(i));
-				Vertex child = getChildOnEdge(edgeToChild);
-				children [i] = new EdgeVertex(edgeToChild, child);
-				System.out.println ("BBBPPP:  "+parent+"->"+child + "  : " + edgeToChild);
-			}
+			refEdge = edgeIterator.next();
 			
-			return children;
-		}
-	}
-	
-	public EdgeVertex addChild (Vertex parent, int pos)
-	{
-		Vertex child = addVertex(null);
-		commit ();
-		Edge edge = setParentChildEdge(parent, child, pos);
-		return new EdgeVertex(edge, child);
-	}
-	
-	private void copyProperty(Element from, Element to)
-	{
-		for (String key : from.getPropertyKeys())
-		{
-			if (key != CHILD_EDGES_PROP_NAME)
+			if (getEdgeType(refEdge) == EdgeType.REFERENCE)
 			{
-				to.setProperty(key, from.getProperty(key));
+				Vertex referer = getEdgeSource(refEdge);
+				refererArray.add(new EdgeVertex(refEdge, referer));
 			}
 		}
 		
-	}
-	
-	
-	private Edge setParentChildEdge (Vertex parent, Vertex child, int pos)
-	{
-		Edge edge = m_graph.addEdge(null, parent, child, null);
-		edge.setProperty(EDGE_TYPE_PROP_NAME, EDGE_TYPE_INCLUDE); 
-		
-		ArrayList<Object> childEdgeArray = (ArrayList<Object>)parent.getProperty(CHILD_EDGES_PROP_NAME);
-		
-		//FIXME: to make the edge'id is to local db
-		commit ();
-		
-		if (childEdgeArray == null)
-		{
-			childEdgeArray = new ArrayList<Object> ();
-			parent.setProperty(CHILD_EDGES_PROP_NAME, childEdgeArray);
-		}
-		
-		if (pos == ADDING_EDGE_END || pos >= childEdgeArray.size())
-		{
-			childEdgeArray.add(edge.getId());
-		}
-		else
-		{
-			childEdgeArray.add(pos, edge.getId());
-		}
-		
-		System.out.println (parent.getId().toString() + "-" + child.getId().toString() 
-				+ "   : " + edge.getId().toString() +  "  pos:" + pos);
-		commit ();
-		System.out.println ("table = " + (ArrayList<Object>)parent.getProperty(CHILD_EDGES_PROP_NAME));
-		return edge;
-	}
-	
-	private void removeChildEdge (Vertex parent, int childPos)
-	{
-		ArrayList<Object> childEdgeArray = getEdgeIDsToChildren(parent);
-		Object edgeId = childEdgeArray.get(childPos);
-		m_graph.removeEdge(m_graph.getEdge(edgeId));
-		childEdgeArray.remove(childPos);
-		commit ();
-	}
-	
-	
-	public Edge setRefEdge (Vertex referer, Vertex referee, int pos)
-	{
-		if (referer.getId() == referee.getId())
-		{
-			return null;
-		}
-		
-		Edge edge = setParentChildEdge(referer, referee, pos);
-		edge.setProperty(EDGE_TYPE_PROP_NAME, EDGE_TYPE_REFERENCE);
-		commit ();
-		return edge;
-	}
-	
-	private Object removeEdgeIDFromArray (Vertex startVertex, Vertex endVertex)
-	{
-		ArrayList<Object> childEdgeArray = getEdgeIDsToChildren(startVertex);
-		
-		for (Object edgeId : childEdgeArray)
-		{
-			Edge edge = getEdge(edgeId);
-			if (edge.getVertex(Direction.OUT) == endVertex)
-			{
-				childEdgeArray.remove(edgeId);
-				//FIXME: need to reset the property to vertex ?
-				commit ();
-				return edgeId;
-			}
-		}
-		
-		assert (false);
-		return null;
-	}
-	
-	public void removeRefEdge (Vertex referer, Vertex referee)
-	{
-		Object edgeId = removeEdgeIDFromArray(referer, referee);
-		
-		Edge edge = getEdge (edgeId);
-		assert ((Integer)edge.getProperty(EDGE_TYPE_PROP_NAME) == EDGE_TYPE_REFERENCE);
-		removeEdge(edge);
-		commit ();
-	}
-	
-	
-	private Edge getEdgeToChild (Vertex parent, int pos)
-	{
-		ArrayList<Object> childEdgeArray = (ArrayList<Object>)parent.getProperty(CHILD_EDGES_PROP_NAME);
-		
-		if (childEdgeArray == null)
-		{
-			return null;
-		}
-		else
-		{
-			return getEdge(childEdgeArray.get(pos));
-		}
+		return refererArray.size() == 0 ? null : refererArray;
 	}
 	
 	private interface Processor 
@@ -388,17 +366,13 @@ public class DBTree implements Graph {
 	{
 		if (proc.run(vertex, level))
 		{
-			EdgeVertex [] children = getChildren(vertex);
-	
-			if (children != null)
+			ArrayList<EdgeVertex> children = getChildrenAndReferees(vertex);
+
+			for (EdgeVertex child : children)
 			{
-				for (int i=0; i<children.length; i++)
+				if (getEdgeType(child.m_edge) == EdgeType.INCLUDE)
 				{
-					EdgeVertex child = children[i];
-					if (getEdgeType(child.m_edge) == EDGE_TYPE_INCLUDE)
-					{
-						deepTraverse(child.m_vertex, proc, level+1);
-					}
+					deepTraverse(child.m_vertex, proc, level+1);
 				}
 			}
 		}
@@ -411,43 +385,54 @@ public class DBTree implements Graph {
 	
 	//remove vertex, the children append to 
 	static class RefLinkInfo {
-		final Vertex m_source;
-		final Vertex m_target;
+		final Vertex m_referer;
+		final Vertex m_referee;
 		final int m_pos;
 		
-		RefLinkInfo (Vertex source, Vertex target, int pos)
+		RefLinkInfo (Vertex referer, Vertex referee, int pos)
 		{
-			m_source = source;
-			m_target = target;
+			m_referer = referer;
+			m_referee = referee;
 			m_pos = pos;
 		}
-		
 	}
 	
 	//return the reference link info to the sub tree
-	public ArrayList<RefLinkInfo> removeSubTree (Vertex vertex)
+	public ArrayList<RefLinkInfo> removeSubTree (Vertex parent, int pos)
 	{
 		final ArrayList<RefLinkInfo> refLinkInfos = new ArrayList<RefLinkInfo> ();
-		deepTraverse(vertex, new Processor() {
+		
+		EdgeVertex edgeVertex = getChildOrReferee(parent, pos);
+		
+		assert (getEdgeType(edgeVertex.m_edge) == EdgeType.INCLUDE);
+		
+		deepTraverse(edgeVertex.m_vertex, new Processor() {
 			
 			@Override
 			public boolean run(Vertex vertex, int level) {
-				EdgeVertex[] children = getChildren(vertex);
-				for (int i=0; i<children.length; i++)
+				ArrayList<EdgeVertex> referers = getReferers(vertex);
+				
+				if (referers != null)
 				{
-					EdgeVertex child = children[i];
-					
-					if (getEdgeType(child.m_edge) == EDGE_TYPE_REFERENCE)
+					for (EdgeVertex referer : referers)
 					{
-						refLinkInfos.add(new RefLinkInfo(vertex, child.m_vertex, i));
+						ArrayList<Object> edgeArray = getEdgeIDsToChildren(referer.m_vertex, false);
+						int edgeIndex = edgeArray.indexOf(referer.m_edge.getId());
+
+						refLinkInfos.add(new RefLinkInfo(referer.m_vertex, vertex, edgeIndex));
+						edgeArray.remove(edgeIndex);
+
+						removeEdge(referer.m_edge);
 					}
-					
-					removeRefEdge(vertex, child.m_vertex);
 				}
+				
 				return true;
 			}
 		});
-		return refLinkInfos;
+		
+		//TODO: save parent id and pos, and move to trash 
+		
+		return refLinkInfos.size()==0 ? null : refLinkInfos;
 	}
 	
 	public EdgeVertex restoreSubTree (Vertex vertex)
@@ -466,6 +451,16 @@ public class DBTree implements Graph {
 	}
 	
 	
-	
+	private void copyProperty(Element from, Element to)
+	{
+		for (String key : from.getPropertyKeys())
+		{
+			if (key != CHILD_EDGES_PROP_NAME)
+			{
+				to.setProperty(key, from.getProperty(key));
+			}
+		}
+		
+	}
 	
 }
