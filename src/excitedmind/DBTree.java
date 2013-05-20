@@ -22,14 +22,24 @@ public class DBTree implements Graph {
 	public final static String EDGE_TYPE_PROP_NAME = PrefuseLib.FIELD_PREFIX + "edgeType";
 	private final static String CHILD_EDGES_PROP_NAME = PrefuseLib.FIELD_PREFIX + "childEdges";
 	
+	private final static String ROOT_INDEX_NAME = PrefuseLib.FIELD_PREFIX + "rootIndex";
+	private final static String ROOT_KEY_NAME = PrefuseLib.FIELD_PREFIX + "root";
+	
+	private final static String TRASH_INDEX_NAME = PrefuseLib.FIELD_PREFIX + "trashIndex";
+	private final static String TRASH_KEY_NAME = PrefuseLib.FIELD_PREFIX + "vertex";
+	
+	private final static String SAVED_PARENT_ID_PROP_NAME = PrefuseLib.FIELD_PREFIX + "parent";
+	private final static String SAVED_POS_PROP_NAME = PrefuseLib.FIELD_PREFIX + "pos";
+	public final static String SAVED_REFERER_INFO_PROP_NAME = PrefuseLib.FIELD_PREFIX + "referers";
+	
 	enum EdgeType { INCLUDE, REFERENCE};
 	
     protected static final int ADDING_EDGE_END = 0x7FFFFFFF;
 	
 	private OrientGraph m_graph;
 	
-	private Index<Vertex> m_rootIndices; 
-	private Index<Vertex> m_trashIndices; 
+	private Index<Vertex> m_rootIndex; 
+	private Index<Vertex> m_trashIndex; 
 	
 	String m_path;
 	
@@ -103,27 +113,25 @@ public class DBTree implements Graph {
 	
 	private void createIndices ()
 	{
-		final String rootIndices = "rootIndices";
-		m_rootIndices = m_graph.getIndex (rootIndices, Vertex.class);
+		m_rootIndex = m_graph.getIndex (ROOT_INDEX_NAME, Vertex.class);
 		
-		if (m_rootIndices == null)
+		if (m_rootIndex == null)
 		{
-			m_rootIndices = m_graph.createIndex(rootIndices, Vertex.class);
+			m_rootIndex = m_graph.createIndex(ROOT_INDEX_NAME, Vertex.class);
 		}
 		
-		final String trashIndices = "rootIndices";
-		m_trashIndices = m_graph.getIndex (trashIndices, Vertex.class);
+		m_trashIndex = m_graph.getIndex (TRASH_INDEX_NAME, Vertex.class);
 		
-		if (m_rootIndices == null)
+		if (m_trashIndex == null)
 		{
-			m_trashIndices = m_graph.createIndex(trashIndices, Vertex.class);
+			m_trashIndex = m_graph.createIndex(TRASH_INDEX_NAME, Vertex.class);
 		}
 	}
 	
 	public Vertex addRoot ()
 	{
 		Vertex root = m_graph.addVertex(null);
-		m_rootIndices.put("root", "root", root);
+		m_rootIndex.put(ROOT_KEY_NAME, ROOT_KEY_NAME, root);
 		Object rootId = root.getId();
 		Object oldId = rootId;
 		System.out.println(root.getId());
@@ -136,6 +144,10 @@ public class DBTree implements Graph {
 		return root;
 	}
 
+	public Vertex getRoot ()
+	{
+		return m_rootIndex.get(ROOT_KEY_NAME, ROOT_KEY_NAME).iterator().next();
+	}
 	
 	private Vertex getEdgeSource (Edge edge)
 	{
@@ -147,13 +159,13 @@ public class DBTree implements Graph {
 		return edge.getVertex(Direction.IN);
 	}
 	
-	private ArrayList<Object> getEdgeIDsToChildren (Vertex source, boolean ifNullCreat)
+	public ArrayList<Object> getContainerProperty (Vertex source, String propName, boolean ifNullCreate)
 	{
 		//Because outEdgeArray must be convert to ORecordLazyList, so its type is not ArrayList.
-		Object outEdgeArray = source.getProperty(CHILD_EDGES_PROP_NAME);
+		Object outEdgeArray = source.getProperty(propName);
 		if (outEdgeArray == null)
 		{
-			if (ifNullCreat)
+			if (ifNullCreate)
 			{
 				outEdgeArray = new ArrayList<Object> ();
 				source.setProperty(CHILD_EDGES_PROP_NAME, outEdgeArray);
@@ -173,15 +185,22 @@ public class DBTree implements Graph {
 		return (ArrayList<Object>)outEdgeArray;
 	}
 	
+	private ArrayList<Object> getEdgeIDsToChildren (Vertex source, boolean ifNullCreate)
+	{
+		return getContainerProperty (source, CHILD_EDGES_PROP_NAME, ifNullCreate);
+	}
+	
+	
 	public EdgeType getEdgeType (Edge edge)
 	{
-		return (EdgeType)edge.getProperty(EDGE_TYPE_PROP_NAME);
+//		return (EdgeType)edge.getProperty(EDGE_TYPE_PROP_NAME);
+		return EdgeType.values()[(Integer)edge.getProperty(EDGE_TYPE_PROP_NAME)];
 	}
 	
 	private Edge addEdge (Vertex source, Vertex target, int pos, EdgeType edgeType)
 	{
 		Edge edge = m_graph.addEdge(null, source, target, null);
-		edge.setProperty(EDGE_TYPE_PROP_NAME, edgeType); 
+		edge.setProperty(EDGE_TYPE_PROP_NAME, edgeType.ordinal()); 
 		
 		//to make the edge'id is to local db
 		commit ();
@@ -256,8 +275,6 @@ public class DBTree implements Graph {
 			return getEdge(childEdgeArray.get(pos));
 		}
 	}
-	
-	
 	
 	public class EdgeVertex {
 		final public Vertex m_vertex;
@@ -367,12 +384,16 @@ public class DBTree implements Graph {
 		if (proc.run(vertex, level))
 		{
 			ArrayList<EdgeVertex> children = getChildrenAndReferees(vertex);
-
-			for (EdgeVertex child : children)
+			
+			if (children != null)
 			{
-				if (getEdgeType(child.m_edge) == EdgeType.INCLUDE)
+
+				for (EdgeVertex child : children)
 				{
-					deepTraverse(child.m_vertex, proc, level+1);
+					if (getEdgeType(child.m_edge) == EdgeType.INCLUDE)
+					{
+						deepTraverse(child.m_vertex, proc, level+1);
+					}
 				}
 			}
 		}
@@ -384,12 +405,12 @@ public class DBTree implements Graph {
 	}
 	
 	//remove vertex, the children append to 
-	static class RefLinkInfo {
-		final Vertex m_referer;
-		final Vertex m_referee;
+	public static class RefLinkInfo {
+		final Object m_referer;
+		final Object m_referee;
 		final int m_pos;
 		
-		RefLinkInfo (Vertex referer, Vertex referee, int pos)
+		RefLinkInfo (Object referer, Object referee, int pos)
 		{
 			m_referer = referer;
 			m_referee = referee;
@@ -397,16 +418,20 @@ public class DBTree implements Graph {
 		}
 	}
 	
-	//return the reference link info to the sub tree
-	public ArrayList<RefLinkInfo> removeSubTree (Vertex parent, int pos)
+	//return the removed vertex
+	public Vertex moveSubTreeToTrash (Vertex parent, int pos)
 	{
+		assert (parent != getRoot());
+		
 		final ArrayList<RefLinkInfo> refLinkInfos = new ArrayList<RefLinkInfo> ();
 		
 		EdgeVertex edgeVertex = getChildOrReferee(parent, pos);
 		
 		assert (getEdgeType(edgeVertex.m_edge) == EdgeType.INCLUDE);
 		
-		deepTraverse(edgeVertex.m_vertex, new Processor() {
+		Vertex removedVertex = edgeVertex.m_vertex;
+		
+		deepTraverse(removedVertex, new Processor() {
 			
 			@Override
 			public boolean run(Vertex vertex, int level) {
@@ -419,7 +444,7 @@ public class DBTree implements Graph {
 						ArrayList<Object> edgeArray = getEdgeIDsToChildren(referer.m_vertex, false);
 						int edgeIndex = edgeArray.indexOf(referer.m_edge.getId());
 
-						refLinkInfos.add(new RefLinkInfo(referer.m_vertex, vertex, edgeIndex));
+						refLinkInfos.add(new RefLinkInfo(referer.m_vertex.getId(), vertex.getId(), edgeIndex));
 						edgeArray.remove(edgeIndex);
 
 						removeEdge(referer.m_edge);
@@ -430,17 +455,46 @@ public class DBTree implements Graph {
 			}
 		});
 		
-		//TODO: save parent id and pos, and move to trash 
+		removedVertex.setProperty(SAVED_PARENT_ID_PROP_NAME, parent.getId());
+		removedVertex.setProperty(SAVED_POS_PROP_NAME, pos);
+		removedVertex.setProperty(SAVED_REFERER_INFO_PROP_NAME, refLinkInfos);
 		
-		return refLinkInfos.size()==0 ? null : refLinkInfos;
+		m_trashIndex.put(TRASH_KEY_NAME, TRASH_KEY_NAME, removedVertex);
+		
+		commit ();
+		
+		return removedVertex;
 	}
 	
+	//return parent vertex, and 
 	public EdgeVertex restoreSubTree (Vertex vertex)
 	{
-		return null;
+		Object parentId = vertex.getProperty(SAVED_PARENT_ID_PROP_NAME);
+		int pos = (Integer)vertex.getProperty(SAVED_POS_PROP_NAME);
+		ArrayList<Object> refLinkInfoes = getContainerProperty (vertex, SAVED_REFERER_INFO_PROP_NAME, false);
+		
+		Vertex parent = getVertex(parentId);
+		Edge edge = addEdge(parent, vertex, pos, EdgeType.INCLUDE);
+		
+		if (refLinkInfoes != null)
+		{
+			for (Object obj : refLinkInfoes)
+			{
+				RefLinkInfo refLinkInfo = (RefLinkInfo) obj;
+				addRefEdge(getVertex(refLinkInfo.m_referer), 
+						getVertex(refLinkInfo.m_referee), 
+						refLinkInfo.m_pos);
+			}
+		}
+		
+		vertex.removeProperty(SAVED_PARENT_ID_PROP_NAME);
+		vertex.removeProperty(SAVED_POS_PROP_NAME);
+		vertex.removeProperty(SAVED_REFERER_INFO_PROP_NAME);
+		
+		return new EdgeVertex(edge, parent);
 	}
 	
-	public int getNodeNumber (Vertex root)
+	public int getVertexNumber (Vertex root)
 	{
 		return 0;
 	}

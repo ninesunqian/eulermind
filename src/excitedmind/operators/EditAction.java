@@ -5,12 +5,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.text.JTextComponent;
 import javax.swing.undo.AbstractUndoableEdit;
 
-import prefuse.data.Node;
-import prefuse.visual.VisualItem;
 import prefuse.visual.tuple.TableNodeItem;
 
 import excitedmind.MindTree;
@@ -19,6 +15,7 @@ import excitedmind.MindView;
 public class EditAction extends AbstractAction {
 	
 	MindView m_mindView;
+	TableNodeItem m_nodeItem;
 	
 	KeyListener keyListener = new KeyListener() {
 			
@@ -38,9 +35,7 @@ public class EditAction extends AbstractAction {
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER)
 				{
-					//FIXME: curFocus moveing, while edit
-					final TableNodeItem node = m_mindView.getFocusNode ();
-					String oldText = node.getString (MindTree.sm_textPropName);
+					String oldText = m_nodeItem.getString (MindTree.sm_textPropName);
 
 					m_mindView.removeKeyListener(keyListener);
 
@@ -48,7 +43,7 @@ public class EditAction extends AbstractAction {
 					m_mindView.stopEditing();
 					
 					MindTree mindTree = m_mindView.getMindTree();
-					Object bpId = mindTree.getDBItemId(m_mindView.getVisualization().getSourceTuple(node));
+					Object bpId = mindTree.getDBItemId(m_mindView.getVisualization().getSourceTuple(m_nodeItem));
 					
 					Executor executor = new Executor (m_mindView, bpId, oldText, text);
 					executor.redo();
@@ -66,9 +61,9 @@ public class EditAction extends AbstractAction {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		final TableNodeItem node = m_mindView.getFocusNode ();
+		m_nodeItem = m_mindView.getFocusNode ();
 		m_mindView.getTextEditor().addKeyListener(keyListener);
-		m_mindView.editText(node, MindTree.sm_textPropName) ;
+		m_mindView.editText(m_nodeItem, MindTree.sm_textPropName) ;
 	}
 	
 	static class Executor extends AbstractUndoableEdit 

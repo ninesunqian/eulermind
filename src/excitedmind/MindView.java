@@ -9,6 +9,7 @@ import javax.swing.KeyStroke;
 import javax.swing.undo.UndoManager;
 
 import excitedmind.operators.EditAction;
+import excitedmind.operators.RemoveAction;
 
 import prefuse.Constants;
 import prefuse.Display;
@@ -220,6 +221,8 @@ public class MindView extends Display {
                 "bottom-to-top", KeyStroke.getKeyStroke("ctrl 4"), WHEN_FOCUSED);
         
         registerKeyboardAction(new EditAction(this), "edit", KeyStroke.getKeyStroke("F2"), WHEN_FOCUSED);
+        registerKeyboardAction(new RemoveAction(this), "remove", KeyStroke.getKeyStroke("DELETE"), WHEN_FOCUSED);
+        
         registerKeyboardAction(new ActionListener() {
 
         	@Override

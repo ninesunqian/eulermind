@@ -35,6 +35,7 @@ import com.tinkerpop.blueprints.Index;
 import com.tinkerpop.blueprints.Vertex;
 
 import excitedmind.DBTree.EdgeVertex;
+import excitedmind.DBTree.RefLinkInfo;
 
 
 
@@ -59,7 +60,7 @@ public class MindTree {
 	public final static String sm_edgeTypePropName = DBTree.EDGE_TYPE_PROP_NAME;
 	public final static String sm_edgeColorPropName = "edgeColor";
 
-	Tree m_tree;
+	public Tree m_tree;
 	Table m_nodeTable;
 	Table m_edgeTable;
 	
@@ -429,7 +430,7 @@ public class MindTree {
 		while (allRows.hasNext()) {
 			int curRow = allRows.nextInt();
 
-			if (m_nodeTable.get(curRow, BP_ID_COL_KEY) == bpId) {
+			if (bpId == null || m_nodeTable.get(curRow, BP_ID_COL_KEY).equals(bpId)) {
 				aimRows.add(curRow);
 			}
 		}
@@ -439,8 +440,12 @@ public class MindTree {
 		//attach blueprints node, to each node in aimRows
 		while (aimRowIter.hasNext()) {
 			int row = aimRowIter.next();
-			Node node = m_tree.getNode(row);
-			visiter.visit (node);
+			
+			if (m_nodeTable.isValidRow(row))
+			{
+				Node node = m_tree.getNode(row);
+				visiter.visit (node);
+			}
 		}
 	}
 
@@ -488,7 +493,34 @@ public class MindTree {
 	}
 	
 	//return the parent of the removed node
-	public void removeNode (Node node)
+	public void moveNodeToTrash (Node node)
+	{
+		Node parent = m_tree.getParent (node);
+		int index = m_tree.getChildIndex(parent, node);
+		Vertex vertex = getVertex (node);
+		
+		m_dbTree.moveSubTreeToTrash(getVertex(parent), index);
+		
+		visitAllAvataresOfNode(getDBItemId(node), new Visiter () {
+			public void visit (Node node) {
+				System.out.println ("remove node :" + node.getRow() + "---" + node.getString(sm_textPropName));
+				m_tree.removeChild(node);
+			}
+		});
+		
+		ArrayList<Object> refLinkInfoes = m_dbTree.getContainerProperty (vertex, DBTree.SAVED_REFERER_INFO_PROP_NAME, false);
+		for (Object obj : refLinkInfoes)
+		{
+			final RefLinkInfo refLinkInfo = (RefLinkInfo) obj;
+			visitAllAvataresOfNode(refLinkInfo.m_referee, new Visiter () {
+				public void visit (Node node) {
+					m_tree.removeNode(node);
+				}
+			});
+		}
+	}
+	
+	public void restoreNode (Node node)
 	{
 		
 		
