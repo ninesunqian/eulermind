@@ -66,15 +66,10 @@ public class MindView extends Display {
     private static final String sm_itemStyleActions = "itemStyleActions";
     private static final String sm_itemPositionActions = "itemPositionActions";
     
-    private static final String sm_searchAnimator = "searchAnimator";
-    private static final String sm_orientAnimator = "orientAnimator";
-
     public static final String sm_layoutAction = "layoutAction";
-    private static final String sm_layoutAnimator = "layoutAnimator";
     
     
     private NodeLinkTreeLayout m_treeLayout;
-    private CollapsedSubtreeLayout m_subTreeLayout;
     
     private LabelRenderer m_nodeRenderer;
     private EdgeRenderer m_edgeRenderer;
@@ -84,31 +79,39 @@ public class MindView extends Display {
     private MindTree m_mindTree;
     private TableNodeItem m_curFocus;
     
+    private double m_clickedItemX;
+    private double m_clickedItemY;
+    
     public MindView(String path, Object rootId) {
         super(new Visualization());
+        setSize(700, 600);
         
         m_mindTree = new MindTree(path, rootId);
-
         m_vis.add(sm_treeGroupName, m_mindTree.m_tree);
+        setItemSorter(new TreeDepthItemSorter());
 
         setPefuseAction ();
+        
+        setMouseControlListener ();
+        setKeyControlListener ();
 
-        setSearchAnimation ();
-        
-        // initialize the display
-        setSize(700, 600);
-        setItemSorter(new TreeDepthItemSorter());
-        
+        m_vis.run(sm_layoutAction);
+    }
+    
+    boolean m_needPan;
+    private void setMouseControlListener ()
+    {
         addControlListener(new ZoomToFitControl());
         addControlListener(new ZoomControl());
         addControlListener(new WheelZoomControl());
         addControlListener(new PanControl());
         addControlListener(new ControlAdapter() {
         	
+        	//TODO
+//        addControlListener(new FocusControl(1, sm_layoutAction));
         	public void itemEntered(VisualItem item, MouseEvent e) {
         		if (item.isInGroup(sm_treeNodesGroupName))
         		{
-        			m_vis.cancel(sm_layoutAnimator);
 	    			System.out.println ("mouse entered");
         			m_curFocus = (TableNodeItem)item;
 	        		m_vis.run(sm_layoutAction);
@@ -118,108 +121,72 @@ public class MindView extends Display {
         	
         	public void itemClicked(VisualItem item, MouseEvent e) {
     			System.out.println ("mouse Clicked");
+    			m_curFocus = (TableNodeItem)item;
     			
         		if (item.isInGroup(sm_treeNodesGroupName))
         		{
-        			m_vis.cancel(sm_layoutAnimator);
+	    			m_clickedItemX = item.getX();
+	    			m_clickedItemY = item.getY();
+    			
 	        		m_mindTree.ToggleFoldNode(item);
 	        		m_vis.run(sm_layoutAction);
+	        		
+	        		m_vis.invalidateAll();
+	        		m_needPan = true;
         		}
         	} 
         }
         );
-//        addControlListener(new FocusControl(1, sm_layoutAction));
-        
-        
-        setKey ();
-
-        // filter graph and perform layout
-        setOrientation(m_orientation);
-        m_vis.run(sm_layoutAction);
+    	
     }
+    
     
     private void setPefuseAction ()
     {
-        setItemRenderer ();
-
         addItemStyleActions();
         addItemPositionActions();
+        
+        setItemRenderer ();
 
         // quick repaint
-        ActionList repaint = new ActionList();
-        repaint.add(m_vis.getAction(sm_itemPositionActions));
-        addRepaintActionsTo(repaint);
-        m_vis.putAction("repaint", repaint);
-
-        //search animate
-        ActionList searchAnimate = new ActionList(400);
-        addItemStyleAnimatorsTo(searchAnimate);
-        addRepaintAnimatorsTo(searchAnimate);
-        m_vis.putAction(sm_searchAnimator, searchAnimate);
-
-        // create animator for orientation changes
-        ActionList orientAnimator = new ActionList(2000);
-        addItemPositionAnimatorsTo(orientAnimator);
-        addRepaintAnimatorsTo(orientAnimator);
-        m_vis.putAction(sm_orientAnimator, orientAnimator);
+        m_vis.putAction("repaint", new RepaintAction());
 
         // create the filtering and layout
         ActionList layoutAction = new ActionList();
         layoutAction.add(m_vis.getAction(sm_itemPositionActions));
         layoutAction.add(m_vis.getAction(sm_itemStyleActions));
         m_vis.putAction(sm_layoutAction, layoutAction);
-
-        ActionList layoutAnimator = new ActionList(500);
-        layoutAnimator.setPacingFunction(new SlowInSlowOutPacer());
-        addItemStyleAnimatorsTo(layoutAnimator);
-        addItemPositionAnimatorsTo(layoutAnimator);
-        addRepaintAnimatorsTo(layoutAnimator);
-        m_vis.putAction(sm_layoutAnimator, layoutAnimator);
-        
-        m_vis.alwaysRunAfter(sm_layoutAction, sm_layoutAnimator);
-    	
+        m_vis.alwaysRunAfter(sm_layoutAction, "repaint");
     }
     
     private void setItemRenderer ()
     {
-        m_nodeRenderer = new LabelRenderer(MindTree.sm_textPropName);
-        m_nodeRenderer.setRenderType(AbstractShapeRenderer.RENDER_TYPE_FILL);
-        m_nodeRenderer.setHorizontalAlignment(Constants.LEFT);
-        m_nodeRenderer.setRoundedCorner(8, 8);
-        
-        m_edgeRenderer = new EdgeRenderer(Constants.EDGE_TYPE_CURVE);
+    	m_nodeRenderer = new LabelRenderer(MindTree.sm_textPropName);
+    	m_nodeRenderer.setRenderType(AbstractShapeRenderer.RENDER_TYPE_FILL);
+    	m_nodeRenderer.setHorizontalAlignment(Constants.LEFT);
+    	m_nodeRenderer.setRoundedCorner(8, 8);
 
-        DefaultRendererFactory rf = new DefaultRendererFactory(m_nodeRenderer);
-        rf.add(new InGroupPredicate(sm_treeEdgesGroupName), m_edgeRenderer);
-        m_vis.setRendererFactory(rf);
+    	m_edgeRenderer = new EdgeRenderer(Constants.EDGE_TYPE_CURVE);
+
+    	DefaultRendererFactory rf = new DefaultRendererFactory(m_nodeRenderer);
+    	rf.add(new InGroupPredicate(sm_treeEdgesGroupName), m_edgeRenderer);
+    	m_vis.setRendererFactory(rf);
+
+    	m_nodeRenderer.setHorizontalAlignment(Constants.LEFT);
+
+    	m_edgeRenderer.setHorizontalAlignment1(Constants.RIGHT);
+    	m_edgeRenderer.setHorizontalAlignment2(Constants.LEFT);
+
+    	m_edgeRenderer.setVerticalAlignment1(Constants.CENTER);
+    	m_edgeRenderer.setVerticalAlignment2(Constants.CENTER);
+
+    	m_treeLayout.setOrientation(Constants.ORIENT_LEFT_RIGHT);
     }
 
     
-    private void setSearchAnimation ()
-    {
-        TupleSet search = new PrefixSearchTupleSet();
-        m_vis.addFocusGroup(Visualization.SEARCH_ITEMS, search);
-        search.addTupleSetListener(new TupleSetListener() {
-            public void tupleSetChanged(TupleSet t, Tuple[] add, Tuple[] rem) {
-                m_vis.cancel(sm_searchAnimator);
-                m_vis.run(sm_itemStyleActions);
-                m_vis.run(sm_searchAnimator);
-            }
-        });
-    	
-    }
     
-    public void setKey ()
+    public void setKeyControlListener ()
     {
-        registerKeyboardAction(new OrientAction(Constants.ORIENT_LEFT_RIGHT),
-                "left-to-right", KeyStroke.getKeyStroke("ctrl 1"), WHEN_FOCUSED);
-        registerKeyboardAction(new OrientAction(Constants.ORIENT_TOP_BOTTOM),
-                "top-to-bottom", KeyStroke.getKeyStroke("ctrl 2"), WHEN_FOCUSED);
-        registerKeyboardAction(new OrientAction(Constants.ORIENT_RIGHT_LEFT),
-                "right-to-left", KeyStroke.getKeyStroke("ctrl 3"), WHEN_FOCUSED);
-        registerKeyboardAction(new OrientAction(Constants.ORIENT_BOTTOM_TOP),
-                "bottom-to-top", KeyStroke.getKeyStroke("ctrl 4"), WHEN_FOCUSED);
-        
         registerKeyboardAction(new EditAction(this), "edit", KeyStroke.getKeyStroke("F2"), WHEN_FOCUSED);
         registerKeyboardAction(new RemoveAction(this), "remove", KeyStroke.getKeyStroke("DELETE"), WHEN_FOCUSED);
         
@@ -250,130 +217,33 @@ public class MindView extends Display {
         WHEN_FOCUSED);
     }
 
-    public void setOrientation(int orientation) {
-        switch (orientation) {
-        case Constants.ORIENT_LEFT_RIGHT:
-            m_nodeRenderer.setHorizontalAlignment(Constants.LEFT);
-            m_edgeRenderer.setHorizontalAlignment1(Constants.RIGHT);
-            m_edgeRenderer.setHorizontalAlignment2(Constants.LEFT);
-            m_edgeRenderer.setVerticalAlignment1(Constants.CENTER);
-            m_edgeRenderer.setVerticalAlignment2(Constants.CENTER);
-            break;
-        case Constants.ORIENT_RIGHT_LEFT:
-            m_nodeRenderer.setHorizontalAlignment(Constants.RIGHT);
-            m_edgeRenderer.setHorizontalAlignment1(Constants.LEFT);
-            m_edgeRenderer.setHorizontalAlignment2(Constants.RIGHT);
-            m_edgeRenderer.setVerticalAlignment1(Constants.CENTER);
-            m_edgeRenderer.setVerticalAlignment2(Constants.CENTER);
-            break;
-        case Constants.ORIENT_TOP_BOTTOM:
-            m_nodeRenderer.setHorizontalAlignment(Constants.CENTER);
-            m_edgeRenderer.setHorizontalAlignment1(Constants.CENTER);
-            m_edgeRenderer.setHorizontalAlignment2(Constants.CENTER);
-            m_edgeRenderer.setVerticalAlignment1(Constants.BOTTOM);
-            m_edgeRenderer.setVerticalAlignment2(Constants.TOP);
-            break;
-        case Constants.ORIENT_BOTTOM_TOP:
-            m_nodeRenderer.setHorizontalAlignment(Constants.CENTER);
-            m_edgeRenderer.setHorizontalAlignment1(Constants.CENTER);
-            m_edgeRenderer.setHorizontalAlignment2(Constants.CENTER);
-            m_edgeRenderer.setVerticalAlignment1(Constants.TOP);
-            m_edgeRenderer.setVerticalAlignment2(Constants.BOTTOM);
-            break;
-        default:
-            throw new IllegalArgumentException(
-                    "Unrecognized orientation value: " + orientation);
-        }
-        m_orientation = orientation;
-        m_treeLayout.setOrientation(orientation);
-        m_subTreeLayout.setOrientation(orientation);
-    }
-
-    public int getOrientation() {
-        return m_orientation;
-    }
-
-    // ------------------------------------------------------------------------
-
-    public class OrientAction extends AbstractAction {
-		private static final long serialVersionUID = 1L;
-		
-		private int orientation;
-
-        public OrientAction(int orientation) {
-            this.orientation = orientation;
-        }
-
-        public void actionPerformed(ActionEvent evt) {
-            setOrientation(orientation); 
-            getVisualization().cancel(sm_orientAnimator);
-            getVisualization().run(sm_itemPositionActions);
-            getVisualization().run(sm_orientAnimator);
-        }
-    }
-
-    public class AutoPanAction extends Action {
-        private Point2D m_start = new Point2D.Double();
-        private Point2D m_end = new Point2D.Double();
-        private Point2D m_cur = new Point2D.Double();
-        private int m_bias = 150;
+    public class HoldFocusItemPanAction extends Action {
 
         public void run(double frac) {
-            TupleSet ts = m_vis.getFocusGroup(Visualization.FOCUS_ITEMS);
-            if (ts.getTupleCount() == 0)
-                return;
-
-            if (frac == 0.0) {
-                int xbias = 0, ybias = 0;
-                switch (m_orientation) {
-                case Constants.ORIENT_LEFT_RIGHT:
-                    xbias = m_bias;
-                    break;
-                case Constants.ORIENT_RIGHT_LEFT:
-                    xbias = -m_bias;
-                    break;
-                case Constants.ORIENT_TOP_BOTTOM:
-                    ybias = m_bias;
-                    break;
-                case Constants.ORIENT_BOTTOM_TOP:
-                    ybias = -m_bias;
-                    break;
-                }
-
-                VisualItem vi = (VisualItem) ts.tuples().next();
-                m_cur.setLocation(getWidth() / 2, getHeight() / 2);
-                getAbsoluteCoordinate(m_cur, m_start);
-                m_end.setLocation(vi.getX() + xbias, vi.getY() + ybias);
-            } else {
-                m_cur.setLocation(m_start.getX() + frac
-                        * (m_end.getX() - m_start.getX()), m_start.getY()
-                        + frac * (m_end.getY() - m_start.getY()));
-                panToAbs(m_cur);
-            }
+	        if (m_needPan)
+	        {
+	        	double x = m_curFocus.getX();
+	        	double y = m_curFocus.getY();
+	        	pan(m_clickedItemX-x, m_clickedItemY-y);
+	        	m_needPan = false;
+	        }
         }
     }
     
     private void addItemPositionActions ()
     {
-        m_subTreeLayout = new CollapsedSubtreeLayout(sm_treeGroupName, m_orientation);
         
         m_treeLayout = new NodeLinkTreeLayout(sm_treeGroupName,
                 m_orientation, 50, 0, 8);
+        //must set the anchor, if not, the anchor will move to the center of display, every time.
         m_treeLayout.setLayoutAnchor(new Point2D.Double(25, 300));
 
         
         ActionList actions = new ActionList();
         actions.add(m_treeLayout);
-        actions.add(m_subTreeLayout);
+        actions.add(new HoldFocusItemPanAction());
         
         m_vis.putAction(sm_itemPositionActions, actions);
-    }
-    
-    private void addItemPositionAnimatorsTo (ActionList animators)
-    {
-        animators.add(new VisibilityAnimator(sm_treeGroupName));
-        //animators.add(new AutoPanAction());
-        animators.add(new LocationAnimator(sm_treeNodesGroupName));
     }
     
     private void addItemStyleActions ()
@@ -396,26 +266,6 @@ public class MindView extends Display {
         m_vis.putAction(sm_itemStyleActions, actions);
     }
     
-    private void addItemStyleAnimatorsTo (ActionList animators)
-    {
-    	ItemAction nodeFontAnimator = new FontAnimator(sm_treeNodesGroupName);
-    	ItemAction nodeColorAnimator = new ColorAnimator(sm_treeNodesGroupName);
-
-    	animators.add(nodeFontAnimator);
-    	animators.add(nodeColorAnimator);
-    }
-    
-    private void addRepaintActionsTo (ActionList animators)
-    {
-    	animators.add(new RepaintAction());
-    }
-    
-    private void addRepaintAnimatorsTo (ActionList animators)
-    {
-        animators.add(new QualityControlAnimator());
-    	animators.add(new RepaintAction());
-    }
-
     public class NodeColorAction extends ColorAction {
 
         public NodeColorAction(String group) {
@@ -431,6 +281,7 @@ public class MindView extends Display {
                 return ColorLib.rgb(0, 255, 0);
             else
                 return ColorLib.rgb(255, 255, 255);
+        	
         }
 
     } // end of inner class TreeMapColorAction

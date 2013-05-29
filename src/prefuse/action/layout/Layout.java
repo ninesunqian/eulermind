@@ -135,6 +135,7 @@ public abstract class Layout extends GroupAction {
      * @param a the layout anchor point to use
      */
     public void setLayoutAnchor(Point2D a) {
+    	System.out.println ("set m_anchor :" + a);
         m_anchor = a;
     }
     
