@@ -60,21 +60,6 @@ import prefuse.visual.tuple.TableNodeItem;
 public class MindView extends Display {
 
 	public static final String sm_treeGroupName = "tree";
-    public static final String sm_treeNodesGroupName = "tree.nodes";
-    public static final String sm_treeEdgesGroupName = "tree.edges";
-    
-    private static final String sm_itemStyleActions = "itemStyleActions";
-    private static final String sm_itemPositionActions = "itemPositionActions";
-    
-    public static final String sm_layoutAction = "layoutAction";
-    
-    
-    private NodeLinkTreeLayout m_treeLayout;
-    
-    private LabelRenderer m_nodeRenderer;
-    private EdgeRenderer m_edgeRenderer;
-
-    private int m_orientation = Constants.ORIENT_LEFT_RIGHT;
     
     private MindTree m_mindTree;
     private TableNodeItem m_curFocus;
@@ -90,12 +75,12 @@ public class MindView extends Display {
         m_vis.add(sm_treeGroupName, m_mindTree.m_tree);
         setItemSorter(new TreeDepthItemSorter());
 
-        setPefuseAction ();
+        //TODO  setPefuseAction ();
         
         setMouseControlListener ();
         setKeyControlListener ();
 
-        m_vis.run(sm_layoutAction);
+        //TODO  m_vis.run(sm_layoutAction);
     }
     
     boolean m_needPan;
@@ -141,49 +126,6 @@ public class MindView extends Display {
     }
     
     
-    private void setPefuseAction ()
-    {
-        addItemStyleActions();
-        addItemPositionActions();
-        
-        setItemRenderer ();
-
-        // quick repaint
-        m_vis.putAction("repaint", new RepaintAction());
-
-        // create the filtering and layout
-        ActionList layoutAction = new ActionList();
-        layoutAction.add(m_vis.getAction(sm_itemPositionActions));
-        layoutAction.add(m_vis.getAction(sm_itemStyleActions));
-        m_vis.putAction(sm_layoutAction, layoutAction);
-        m_vis.alwaysRunAfter(sm_layoutAction, "repaint");
-    }
-    
-    private void setItemRenderer ()
-    {
-    	m_nodeRenderer = new LabelRenderer(MindTree.sm_textPropName);
-    	m_nodeRenderer.setRenderType(AbstractShapeRenderer.RENDER_TYPE_FILL);
-    	m_nodeRenderer.setHorizontalAlignment(Constants.LEFT);
-    	m_nodeRenderer.setRoundedCorner(8, 8);
-
-    	m_edgeRenderer = new EdgeRenderer(Constants.EDGE_TYPE_CURVE);
-
-    	DefaultRendererFactory rf = new DefaultRendererFactory(m_nodeRenderer);
-    	rf.add(new InGroupPredicate(sm_treeEdgesGroupName), m_edgeRenderer);
-    	m_vis.setRendererFactory(rf);
-
-    	m_nodeRenderer.setHorizontalAlignment(Constants.LEFT);
-
-    	m_edgeRenderer.setHorizontalAlignment1(Constants.RIGHT);
-    	m_edgeRenderer.setHorizontalAlignment2(Constants.LEFT);
-
-    	m_edgeRenderer.setVerticalAlignment1(Constants.CENTER);
-    	m_edgeRenderer.setVerticalAlignment2(Constants.CENTER);
-
-    	m_treeLayout.setOrientation(Constants.ORIENT_LEFT_RIGHT);
-    }
-
-    
     
     public void setKeyControlListener ()
     {
@@ -217,75 +159,6 @@ public class MindView extends Display {
         WHEN_FOCUSED);
     }
 
-    public class HoldFocusItemPanAction extends Action {
-
-        public void run(double frac) {
-	        if (m_needPan)
-	        {
-	        	double x = m_curFocus.getX();
-	        	double y = m_curFocus.getY();
-	        	pan(m_clickedItemX-x, m_clickedItemY-y);
-	        	m_needPan = false;
-	        }
-        }
-    }
-    
-    private void addItemPositionActions ()
-    {
-        
-        m_treeLayout = new NodeLinkTreeLayout(sm_treeGroupName,
-                m_orientation, 50, 0, 8);
-        //must set the anchor, if not, the anchor will move to the center of display, every time.
-        m_treeLayout.setLayoutAnchor(new Point2D.Double(25, 300));
-
-        
-        ActionList actions = new ActionList();
-        actions.add(m_treeLayout);
-        actions.add(new HoldFocusItemPanAction());
-        
-        m_vis.putAction(sm_itemPositionActions, actions);
-    }
-    
-    private void addItemStyleActions ()
-    {
-    	ItemAction nodeFont = new FontAction(sm_treeNodesGroupName, FontLib.getFont("Tahoma", 16));
-    	ItemAction nodeColor = new NodeColorAction(sm_treeNodesGroupName);
-    	ItemAction textColor = new ColorAction(sm_treeNodesGroupName, VisualItem.TEXTCOLOR, ColorLib.rgb(0, 0, 0));
-
-    	ItemAction edgeColor = new ColorAction(sm_treeEdgesGroupName, VisualItem.STROKECOLOR, 
-    			ColorLib.rgb(200, 200, 200));
-
-        ActionList actions = new ActionList();
-        
-    	actions.add(nodeFont);
-    	actions.add(nodeColor);
-    	actions.add(textColor);
-    	
-    	actions.add(edgeColor);
-    	
-        m_vis.putAction(sm_itemStyleActions, actions);
-    }
-    
-    public class NodeColorAction extends ColorAction {
-
-        public NodeColorAction(String group) {
-            super(group, VisualItem.FILLCOLOR);
-        }
-
-        public int getColor(VisualItem item) {
-        	if (item == m_curFocus)
-                return ColorLib.rgb(255, 255, 0);
-        	else if (m_vis.isInGroup(item, Visualization.SEARCH_ITEMS))
-                return ColorLib.rgb(255, 0, 0);
-            else if (m_vis.isInGroup(item, Visualization.FOCUS_ITEMS))
-                return ColorLib.rgb(0, 255, 0);
-            else
-                return ColorLib.rgb(255, 255, 255);
-        	
-        }
-
-    } // end of inner class TreeMapColorAction
-    
     private UndoManager m_undoManager = new UndoManager();
     
     public UndoManager getUndoManager ()
