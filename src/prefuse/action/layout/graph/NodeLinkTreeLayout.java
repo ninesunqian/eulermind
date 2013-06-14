@@ -273,6 +273,7 @@ public class NodeLinkTreeLayout extends TreeLayout {
             if ( l == null ) {
                 np.prelim = 0;
             } else {
+            	//离父节点 (所有兄弟的中心) 的距离
                 np.prelim = getParams(l).prelim + spacing(l,n,true);
             }
         }
@@ -317,22 +318,43 @@ public class NodeLinkTreeLayout extends TreeLayout {
             sop = getParams(vop).mod;
             sim = getParams(vim).mod;
             som = getParams(vom).mod;
+            /*
+             * vim: move right from v's older siblings
+             * vom: move left from v's older siblings
+             * vip: move left  from v
+             * vop: move right from v
+             * 
+             * variable naming:
+             * 'm' like a forest, 'p' is present tree
+             * 'o' is outer,  'i' is inner
+             * */
             
             NodeItem nr = nextRight(vim);
             NodeItem nl = nextLeft(vip);
             while ( nr != null && nl != null ) {
+            	
+                //vim and vip stand side by side, in the level of them
+            	
                 vim = nr;
                 vip = nl;
+                
                 vom = nextLeft(vom);
                 vop = nextRight(vop);
+                
                 getParams(vop).ancestor = v;
-                double shift = (getParams(vim).prelim + sim) - 
-                    (getParams(vip).prelim + sip) + spacing(vim,vip,false);
+                
+                //vim's node position in parent level forest
+                double simuf = getParams(vim).prelim + sim;
+                //vip's node position in parent level forest
+                double sipuf = getParams(vip).prelim + sip;
+                
+                double shift = simuf + spacing(vim,vip,false) - sipuf;
                 if ( shift > 0 ) {
                     moveSubtree(ancestor(vim,v,a), v, shift);
                     sip += shift;
                     sop += shift;
                 }
+                
                 sim += getParams(vim).mod;
                 sip += getParams(vip).mod;
                 som += getParams(vom).mod;
@@ -341,15 +363,34 @@ public class NodeLinkTreeLayout extends TreeLayout {
                 nr = nextRight(vim);
                 nl = nextLeft(vip);
             }
+            
+            
+            /* to here:  nextLeft(vip)==null, nextRight(vop) == null,  
+             * that is there is no node at next level of the tree of v 
+             */
             if ( nr != null && nextRight(vop) == null ) {
                 Params vopp = getParams(vop);
+                
+                // vop's next left is nextRight(vim)
                 vopp.thread = nr;
+                
+                //set vop's mod equals vim's mod
                 vopp.mod += sim - sop;
             }
+            
+            /* to here:  nextRight(vim)==null, nextLeft(vom) == null,  
+             * that is there is no node at this level of the forest of v's older siblings
+             */
             if ( nl != null && nextLeft(vom) == null ) {
                 Params vomp = getParams(vom);
+                
+                // vom's next right is nextLeft(vip)
                 vomp.thread = nl;
+                
+                //set vom's mod equals  vip's mod
                 vomp.mod += sip - som;
+                
+                // v is higher than older siblings
                 a = v;
             }
         }
@@ -373,8 +414,8 @@ public class NodeLinkTreeLayout extends TreeLayout {
         Params wpp = getParams(wp);
         double subtrees = wpp.number - wmp.number;
         wpp.change -= shift/subtrees;
-        wpp.shift += shift;
         wmp.change += shift/subtrees;
+        wpp.shift += shift;
         wpp.prelim += shift;
         wpp.mod += shift;
     }
@@ -405,6 +446,8 @@ public class NodeLinkTreeLayout extends TreeLayout {
     private void secondWalk(NodeItem n, NodeItem p, double m, int depth) {
         Params np = getParams(n);
         setBreadth(n, p, np.prelim + m);
+        
+        //深度的坐标,本剧  m_depths 数组中的设置
         setDepth(n, p, m_depths[depth]);
         
         if ( n.isExpanded() ) {
@@ -488,8 +531,13 @@ public class NodeLinkTreeLayout extends TreeLayout {
      * Wrapper class holding parameters used for each node in this layout.
      */
     public static class Params implements Cloneable {
+    	//tree middle position in siblings forest ares
         double prelim;
+        
+    	//tree top position in siblings forest ares. suppose m_orientation is left-to-right
         double mod;
+        
+        //
         double shift;
         double change;
         int    number = -2;

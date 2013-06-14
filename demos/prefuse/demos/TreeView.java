@@ -144,7 +144,7 @@ public class TreeView extends Display {
         
         // create the filtering and layout
         ActionList filter = new ActionList();
-        filter.add(new FisheyeTreeFilter(tree, 2));
+        filter.add(new FisheyeTreeFilter(tree, 1));
         filter.add(treeLayout);
         filter.add(subLayout);
         
@@ -447,6 +447,8 @@ public class TreeView extends Display {
         }
         
         public int getColor(VisualItem item) {
+        	System.out.println ("NodeColorAction.getColor: "+ m_vis.getSourceTuple(item).getString("name"));
+        	
             if ( m_vis.isInGroup(item, Visualization.SEARCH_ITEMS) )
                 return ColorLib.rgb(255, 0, 0);
             else if ( m_vis.isInGroup(item, Visualization.FOCUS_ITEMS) )
