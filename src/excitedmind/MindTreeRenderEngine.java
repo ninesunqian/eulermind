@@ -68,7 +68,6 @@ public class MindTreeRenderEngine {
     
     public static final String sm_layoutAction = "layoutAction";
     
-    private NodeLinkTreeLayout m_treeLayout;
     
     private int m_orientation = Constants.ORIENT_LEFT_RIGHT;
 	
@@ -81,90 +80,99 @@ public class MindTreeRenderEngine {
 		m_treeNodesGroupName = PrefuseLib.getGroupName(treeGroupName, Graph.NODES); 
 		m_treeEdgesGroupName = PrefuseLib.getGroupName(treeGroupName, Graph.EDGES); 
 
-        addItemStyleActions();
-        addItemPositionActions();
+    	m_vis.setRendererFactory(makeItemRendererFactory());
+    	
+        m_vis.putAction(sm_itemStyleActions, makeItemStyleActions());
+        m_vis.putAction(sm_itemPositionActions, makeItemPositionActions());
         
-        setItemRenderer ();
-
-        // quick repaint
-        m_vis.putAction("repaint", new RepaintAction());
-
-        // create the filtering and layout
         ActionList layoutAction = new ActionList();
-        layoutAction.add(m_vis.getAction(sm_itemPositionActions));
-        layoutAction.add(m_vis.getAction(sm_itemStyleActions));
+        layoutAction.add(makeItemPositionActions());
+        layoutAction.add(makeItemStyleActions());
         m_vis.putAction(sm_layoutAction, layoutAction);
+        
+        m_vis.putAction("repaint", new RepaintAction());
+        
         m_vis.alwaysRunAfter(sm_layoutAction, "repaint");
-		// TODO Auto-generated constructor stub
+        m_vis.alwaysRunAfter(sm_itemStyleActions, "repaint");
+        m_vis.alwaysRunAfter(sm_itemPositionActions, "repaint");
 	}
 	
-    private void addItemStyleActions ()
+	public void run ()
+	{
+		m_vis.run(sm_layoutAction);
+	}
+	
+    private Action makeItemStyleActions ()
     {
         ActionList actions = new ActionList();
         
     	actions.add(new NodeFontAction());
     	actions.add(new NodeColorAction());
     	actions.add(new NodeTextColorAction());
-    	
     	actions.add(new EdgeColorAction());
     	
-        m_vis.putAction(sm_itemStyleActions, actions);
+        return actions;
     }
     
-    private void addItemPositionActions ()
+    private Action makeItemPositionActions ()
     {
         
-        m_treeLayout = new NodeLinkTreeLayout(m_treeGroupName,
-                m_orientation, 50, 0, 8);
+        NodeLinkTreeLayout treeLayout = 
+        	new NodeLinkTreeLayout(m_treeGroupName, m_orientation, 50, 0, 8);
         
-    	m_treeLayout.setOrientation(Constants.ORIENT_LEFT_RIGHT);
-    	
+    	treeLayout.setOrientation(Constants.ORIENT_LEFT_RIGHT);
         //must set the anchor, if not, the anchor will move to the center of display, every time.
-        m_treeLayout.setLayoutAnchor(new Point2D.Double(25, 300));
+        treeLayout.setLayoutAnchor(new Point2D.Double(25, 300));
 
-        
         ActionList actions = new ActionList();
-        actions.add(m_treeLayout);
+        
+        actions.add(treeLayout);
         actions.add(new HoldFocusItemPanAction());
         
-        m_vis.putAction(sm_itemPositionActions, actions);
+        return actions;
     }
     
-    private void setItemRenderer ()
+    private DefaultRendererFactory makeItemRendererFactory ()
     {
-	    LabelRenderer nodeRenderer;
-	    EdgeRenderer edgeRenderer;
-
-    	nodeRenderer = new LabelRenderer(MindTree.sm_textPropName);
+	    LabelRenderer nodeRenderer = new LabelRenderer(MindTree.sm_textPropName);
     	nodeRenderer.setRenderType(AbstractShapeRenderer.RENDER_TYPE_FILL);
     	nodeRenderer.setHorizontalAlignment(Constants.LEFT);
     	nodeRenderer.setRoundedCorner(8, 8);
     	nodeRenderer.setHorizontalAlignment(Constants.LEFT);
 
-    	edgeRenderer = new EdgeRenderer(Constants.EDGE_TYPE_CURVE);
+	    EdgeRenderer edgeRenderer = new EdgeRenderer(Constants.EDGE_TYPE_CURVE);
     	edgeRenderer.setHorizontalAlignment1(Constants.RIGHT);
     	edgeRenderer.setHorizontalAlignment2(Constants.LEFT);
     	edgeRenderer.setVerticalAlignment1(Constants.CENTER);
     	edgeRenderer.setVerticalAlignment2(Constants.CENTER);
 
-    	DefaultRendererFactory rf = new DefaultRendererFactory(nodeRenderer, edgeRenderer);
-    	
     	//TODO remove it
     	//rf.add(new InGroupPredicate(m_treeEdgesGroupName), edgeRenderer);
     	
-    	m_vis.setRendererFactory(rf);
+    	return new DefaultRendererFactory(nodeRenderer, edgeRenderer);
+    }
+    
+    private	VisualItem m_holdedItem;
+	private double m_holdedItemX;
+	private double m_holdedItemY;
+    
+    public void holdItem (VisualItem item)
+    {
+    	m_holdedItem = item;
+	    m_holdedItemX = item.getX();
+	    m_holdedItemY = item.getY();
     }
 
 	
     public class HoldFocusItemPanAction extends Action {
 
         public void run(double frac) {
-	        if (m_needPan)
+	        if (m_holdedItem != null)
 	        {
-	        	double x = m_curFocus.getX();
-	        	double y = m_curFocus.getY();
-	        	pan(m_clickedItemX-x, m_clickedItemY-y);
-	        	m_needPan = false;
+	        	double x = m_holdedItem.getX();
+	        	double y = m_holdedItem.getY();
+	        	m_mindView.pan(m_holdedItemX-x, m_holdedItemY-y);
+	        	m_holdedItem = null;
 	        }
         }
     }
@@ -208,7 +216,7 @@ public class MindTreeRenderEngine {
         }
 
         public Font getFont(VisualItem item) {
-            return FontLib.getFont("SansSerif",Font.PLAIN,10);
+            return FontLib.getFont("SansSerif",Font.PLAIN,15);
         }
     }
     

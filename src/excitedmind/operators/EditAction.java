@@ -87,13 +87,13 @@ public class EditAction extends AbstractAction {
 		public void redo ()
 		{
 			m_mindView.getMindTree().setNodeProperty(m_bpId, MindTree.sm_textPropName, m_newText);
-			m_mindView.getVisualization().run(MindView.sm_layoutAction);
+			m_mindView.renderTree ();
 		}
 		
 		public void undo ()
 		{
 			m_mindView.getMindTree().setNodeProperty(m_bpId, MindTree.sm_textPropName, m_oldText);
-			m_mindView.getVisualization().run(MindView.sm_layoutAction);
+			m_mindView.renderTree ();
 		}
 	}
 }

@@ -31,7 +31,7 @@ public class RemoveAction extends AbstractAction {
 		Tuple tuple = m_mindView.getVisualization().getSourceTuple(m_nodeItem);
 		Node node = mindTree.m_tree.getNode(tuple.getRow());
 		m_mindView.getMindTree().moveNodeToTrash(node);
-		m_mindView.getVisualization().run(MindView.sm_layoutAction);
+		m_mindView.renderTree ();
 	}
 	
 	static class Executor extends AbstractUndoableEdit 
@@ -55,13 +55,13 @@ public class RemoveAction extends AbstractAction {
 		public void redo ()
 		{
 			m_mindView.getMindTree().setNodeProperty(m_bpId, MindTree.sm_textPropName, m_newText);
-			m_mindView.getVisualization().run(MindView.sm_layoutAction);
+			m_mindView.renderTree ();
 		}
 		
 		public void undo ()
 		{
 			m_mindView.getMindTree().setNodeProperty(m_bpId, MindTree.sm_textPropName, m_oldText);
-			m_mindView.getVisualization().run(MindView.sm_layoutAction);
+			m_mindView.renderTree ();
 		}
 	}
 }

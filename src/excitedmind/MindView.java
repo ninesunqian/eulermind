@@ -35,6 +35,7 @@ import prefuse.controls.PanControl;
 import prefuse.controls.WheelZoomControl;
 import prefuse.controls.ZoomControl;
 import prefuse.controls.ZoomToFitControl;
+import prefuse.data.Graph;
 import prefuse.data.Tree;
 import prefuse.data.Tuple;
 import prefuse.data.event.TupleSetListener;
@@ -46,6 +47,7 @@ import prefuse.render.AbstractShapeRenderer;
 import prefuse.render.LabelRenderer;
 import prefuse.util.ColorLib;
 import prefuse.util.FontLib;
+import prefuse.util.PrefuseLib;
 import prefuse.visual.VisualItem;
 import prefuse.visual.expression.InGroupPredicate;
 import prefuse.visual.sort.TreeDepthItemSorter;
@@ -59,7 +61,9 @@ import prefuse.visual.tuple.TableNodeItem;
  */
 public class MindView extends Display {
 
-	public static final String sm_treeGroupName = "tree";
+	public final String m_treeGroupName = "tree";
+    public final String m_treeNodesGroupName;
+    public final String m_treeEdgesGroupName;
     
     private MindTree m_mindTree;
     private TableNodeItem m_curFocus;
@@ -67,20 +71,40 @@ public class MindView extends Display {
     private double m_clickedItemX;
     private double m_clickedItemY;
     
+    MindTreeRenderEngine m_renderEngine;
+    
     public MindView(String path, Object rootId) {
         super(new Visualization());
         setSize(700, 600);
         
         m_mindTree = new MindTree(path, rootId);
-        m_vis.add(sm_treeGroupName, m_mindTree.m_tree);
+		m_treeNodesGroupName = PrefuseLib.getGroupName(m_treeGroupName, Graph.NODES); 
+		m_treeEdgesGroupName = PrefuseLib.getGroupName(m_treeGroupName, Graph.EDGES); 
+        
+        m_vis.add(m_treeGroupName, m_mindTree.m_tree);
         setItemSorter(new TreeDepthItemSorter());
 
-        //TODO  setPefuseAction ();
+        m_renderEngine = new MindTreeRenderEngine(this, m_treeGroupName);
         
         setMouseControlListener ();
         setKeyControlListener ();
-
-        //TODO  m_vis.run(sm_layoutAction);
+        
+        renderTree ();
+    }
+    
+    public boolean isNode (VisualItem item)
+    {
+    	return item.isInGroup(m_treeNodesGroupName);
+    }
+    
+    public boolean isEdge (VisualItem item)
+    {
+    	return item.isInGroup(m_treeEdgesGroupName);
+    }
+    
+    public void renderTree ()
+    {
+        m_renderEngine.run ();
     }
     
     boolean m_needPan;
@@ -95,11 +119,11 @@ public class MindView extends Display {
         	//TODO
 //        addControlListener(new FocusControl(1, sm_layoutAction));
         	public void itemEntered(VisualItem item, MouseEvent e) {
-        		if (item.isInGroup(sm_treeNodesGroupName))
+        		if (isNode(item))
         		{
 	    			System.out.println ("mouse entered");
         			m_curFocus = (TableNodeItem)item;
-	        		m_vis.run(sm_layoutAction);
+        			renderTree();
         		}
         		
         	}
@@ -108,16 +132,14 @@ public class MindView extends Display {
     			System.out.println ("mouse Clicked");
     			m_curFocus = (TableNodeItem)item;
     			
-        		if (item.isInGroup(sm_treeNodesGroupName))
+        		if (isNode(item))
         		{
-	    			m_clickedItemX = item.getX();
-	    			m_clickedItemY = item.getY();
+        			m_renderEngine.holdItem(item);
     			
 	        		m_mindTree.ToggleFoldNode(item);
-	        		m_vis.run(sm_layoutAction);
+        			renderTree();
 	        		
-	        		m_vis.invalidateAll();
-	        		m_needPan = true;
+	        		//m_vis.invalidateAll();
         		}
         	} 
         }
