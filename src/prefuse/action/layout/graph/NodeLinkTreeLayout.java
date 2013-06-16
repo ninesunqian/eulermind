@@ -37,10 +37,12 @@ public class NodeLinkTreeLayout extends TreeLayout {
     private double m_dspace = 50;  // the spacing between depth levels
     private double m_offset = 50;  // pixel offset for root node position
     
-    private double[] m_depths = new double[10];
+    private double[] m_alignedDepths = new double[10];
     private int      m_maxDepth = 0;
     
     private double m_ax, m_ay; // for holding anchor co-ordinates
+    
+    private boolean m_align;
     
     /**
      * Create a new NodeLinkTreeLayout. A left-to-right orientation is assumed.
@@ -92,6 +94,11 @@ public class NodeLinkTreeLayout extends TreeLayout {
                 "Unsupported orientation value: "+orientation);
         }
         m_orientation = orientation;
+    }
+    
+    public void setAlign (boolean align)
+    {
+    	m_align = align;
     }
     
     /**
@@ -214,20 +221,16 @@ public class NodeLinkTreeLayout extends TreeLayout {
                 : l.getBounds().getHeight() + r.getBounds().getHeight() );
     }
     
-    private void updateDepths(int depth, NodeItem item) {
-        boolean v = ( m_orientation == Constants.ORIENT_TOP_BOTTOM ||
-                      m_orientation == Constants.ORIENT_BOTTOM_TOP );
-        double d = ( v ? item.getBounds().getHeight() 
-                       : item.getBounds().getWidth() );
-        if ( m_depths.length <= depth )
-            m_depths = ArrayLib.resize(m_depths, 3*depth/2);
-        m_depths[depth] = Math.max(m_depths[depth], d);
+    private void updateAlignedDepths(int depth, double d) {
+        if ( m_alignedDepths.length <= depth )
+            m_alignedDepths = ArrayLib.resize(m_alignedDepths, 3*depth/2);
+        m_alignedDepths[depth] = Math.max(m_alignedDepths[depth], d);
         m_maxDepth = Math.max(m_maxDepth, depth);
     }
     
-    private void determineDepths() {
+    private void determineAlignedDepths() {
         for ( int i=1; i<m_maxDepth; ++i )
-            m_depths[i] += m_depths[i-1] + m_dspace;
+            m_alignedDepths[i] += m_alignedDepths[i-1] + m_dspace;
     }
     
     // ------------------------------------------------------------------------
@@ -239,7 +242,7 @@ public class NodeLinkTreeLayout extends TreeLayout {
         Graph g = (Graph)m_vis.getGroup(m_group);
         initSchema(g.getNodes());
         
-        Arrays.fill(m_depths, 0);
+        Arrays.fill(m_alignedDepths, 0);
         m_maxDepth = 0;
         
         Point2D a = getLayoutAnchor();
@@ -255,7 +258,7 @@ public class NodeLinkTreeLayout extends TreeLayout {
         firstWalk(root, 0, 1);
         
         // sum up the depth info
-        determineDepths();
+        determineAlignedDepths();
         
         // do second pass - assign layout positions
         secondWalk(root, null, -rp.prelim, 0);
@@ -264,7 +267,20 @@ public class NodeLinkTreeLayout extends TreeLayout {
     private void firstWalk(NodeItem n, int num, int depth) {
         Params np = getParams(n);
         np.number = num;
-        updateDepths(depth, n);
+        
+        boolean v = ( m_orientation == Constants.ORIENT_TOP_BOTTOM ||
+                      m_orientation == Constants.ORIENT_BOTTOM_TOP );
+        np.deepSize = v ? n.getBounds().getHeight() : n.getBounds().getWidth();
+        
+        if (depth == 1) {
+        	np.depth = 0;
+        }
+        else {
+        	Params pp = getParams((NodeItem)n.getParent());
+	        np.depth = pp.depth + pp.deepSize + m_dspace;
+        }
+        
+        updateAlignedDepths(depth, np.deepSize);
         
         boolean expanded = n.isExpanded();
         if ( n.getChildCount() == 0 || !expanded ) // is leaf
@@ -273,7 +289,6 @@ public class NodeLinkTreeLayout extends TreeLayout {
             if ( l == null ) {
                 np.prelim = 0;
             } else {
-            	//离父节点 (所有兄弟的中心) 的距离
                 np.prelim = getParams(l).prelim + spacing(l,n,true);
             }
         }
@@ -296,7 +311,7 @@ public class NodeLinkTreeLayout extends TreeLayout {
             
             NodeItem left = (NodeItem)n.getPreviousSibling();
             if ( left != null ) {
-                np.prelim = getParams(left).prelim + spacing(left, n, true);
+                np.prelim = getParams(left).prelim + spacing(left, n, true) + midpoint;
                 np.mod = np.prelim - midpoint;
             } else {
                 np.prelim = midpoint;
@@ -349,11 +364,13 @@ public class NodeLinkTreeLayout extends TreeLayout {
                 double sipuf = getParams(vip).prelim + sip;
                 
                 double shift = simuf + spacing(vim,vip,false) - sipuf;
+                
                 if ( shift > 0 ) {
                     moveSubtree(ancestor(vim,v,a), v, shift);
                     sip += shift;
                     sop += shift;
                 }
+                
                 
                 sim += getParams(vim).mod;
                 sip += getParams(vip).mod;
@@ -447,8 +464,12 @@ public class NodeLinkTreeLayout extends TreeLayout {
         Params np = getParams(n);
         setBreadth(n, p, np.prelim + m);
         
-        //深度的坐标,本剧  m_depths 数组中的设置
-        setDepth(n, p, m_depths[depth]);
+        if (m_align) {
+        	setDepth(n, p, m_alignedDepths[depth]);
+        }
+        else {
+        	setDepth(n, p, np.depth);
+        }
         
         if ( n.isExpanded() ) {
             depth += 1;
@@ -531,15 +552,20 @@ public class NodeLinkTreeLayout extends TreeLayout {
      * Wrapper class holding parameters used for each node in this layout.
      */
     public static class Params implements Cloneable {
-    	//tree middle position in siblings forest ares
+    	//tree middle position in siblings forest area
         double prelim;
         
-    	//tree top position in siblings forest ares. suppose m_orientation is left-to-right
+    	//tree top position in siblings forest area. suppose m_orientation is left-to-right
         double mod;
         
-        //
         double shift;
         double change;
+        
+        double deepSize;
+        double depth;
+        
+        double breadthSize;
+        
         int    number = -2;
         NodeItem ancestor = null;
         NodeItem thread = null;

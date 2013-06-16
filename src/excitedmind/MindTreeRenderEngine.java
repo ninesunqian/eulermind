@@ -194,7 +194,6 @@ public class MindTreeRenderEngine {
                 return ColorLib.rgb(255, 255, 255);
         	
         }
-
     }
     
     public class NodeTextColorAction extends ColorAction {

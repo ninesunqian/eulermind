@@ -139,7 +139,6 @@ public class MindView extends Display {
 	        		m_mindTree.ToggleFoldNode(item);
         			renderTree();
 	        		
-	        		//m_vis.invalidateAll();
         		}
         	} 
         }
