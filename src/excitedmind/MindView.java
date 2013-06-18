@@ -3,6 +3,7 @@ package excitedmind;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.event.MouseEvent;
 import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
@@ -11,45 +12,17 @@ import javax.swing.undo.UndoManager;
 import excitedmind.operators.EditAction;
 import excitedmind.operators.RemoveAction;
 
-import prefuse.Constants;
 import prefuse.Display;
 import prefuse.Visualization;
-import prefuse.action.Action;
-import prefuse.action.ActionList;
-import prefuse.action.ItemAction;
-import prefuse.action.RepaintAction;
-import prefuse.action.animate.ColorAnimator;
-import prefuse.action.animate.FontAnimator;
-import prefuse.action.animate.LocationAnimator;
-import prefuse.action.animate.QualityControlAnimator;
-import prefuse.action.animate.VisibilityAnimator;
-import prefuse.action.assignment.ColorAction;
-import prefuse.action.assignment.FontAction;
-import prefuse.action.filter.FisheyeTreeFilter;
-import prefuse.action.layout.CollapsedSubtreeLayout;
-import prefuse.action.layout.graph.NodeLinkTreeLayout;
-import prefuse.activity.SlowInSlowOutPacer;
 import prefuse.controls.ControlAdapter;
-import prefuse.controls.FocusControl;
 import prefuse.controls.PanControl;
 import prefuse.controls.WheelZoomControl;
 import prefuse.controls.ZoomControl;
 import prefuse.controls.ZoomToFitControl;
 import prefuse.data.Graph;
-import prefuse.data.Tree;
-import prefuse.data.Tuple;
-import prefuse.data.event.TupleSetListener;
-import prefuse.data.search.PrefixSearchTupleSet;
-import prefuse.data.tuple.TupleSet;
-import prefuse.render.DefaultRendererFactory;
-import prefuse.render.EdgeRenderer;
-import prefuse.render.AbstractShapeRenderer;
-import prefuse.render.LabelRenderer;
-import prefuse.util.ColorLib;
-import prefuse.util.FontLib;
 import prefuse.util.PrefuseLib;
+import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
-import prefuse.visual.expression.InGroupPredicate;
 import prefuse.visual.sort.TreeDepthItemSorter;
 import prefuse.visual.tuple.TableNodeItem;
 
@@ -124,6 +97,15 @@ public class MindView extends Display {
 	    			System.out.println ("mouse entered");
         			m_curFocus = (TableNodeItem)item;
         			renderTree();
+        			
+        			Rectangle2D bounds = item.getBounds();
+        			MindTreeLayout.Params params = MindTreeLayout.getParams((NodeItem)item);
+        			System.out.println ("    mod = " + params.mod);
+        			System.out.println ("    prelim = " + params.prelim);
+        			System.out.println ("    breadth = " + params.breadth);
+        			System.out.println ("    bounds.y = " + bounds.getY());
+        			
+        			
         		}
         		
         	}

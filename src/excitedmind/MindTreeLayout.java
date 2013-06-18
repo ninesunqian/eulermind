@@ -1,4 +1,4 @@
-package prefuse.action.layout.graph;
+package excitedmind;
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 import prefuse.Constants;
 import prefuse.Display;
+import prefuse.action.layout.graph.TreeLayout;
 import prefuse.data.Graph;
 import prefuse.data.Schema;
 import prefuse.data.tuple.TupleSet;
@@ -29,7 +30,7 @@ import prefuse.visual.NodeItem;
  * 
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
-public class NodeLinkTreeLayout extends TreeLayout {
+public class MindTreeLayout extends TreeLayout {
     
     private int    m_orientation;  // the orientation of the tree
     private double m_bspace = 5;   // the spacing between sibling nodes
@@ -37,16 +38,14 @@ public class NodeLinkTreeLayout extends TreeLayout {
     private double m_dspace = 50;  // the spacing between depth levels
     private double m_offset = 50;  // pixel offset for root node position
     
-    private double[] m_depths = new double[10];
-    private int      m_maxDepth = 0;
-    
     private double m_ax, m_ay; // for holding anchor co-ordinates
+    
     
     /**
      * Create a new NodeLinkTreeLayout. A left-to-right orientation is assumed.
      * @param group the data group to layout. Must resolve to a Graph instance.
      */
-    public NodeLinkTreeLayout(String group) {
+    public MindTreeLayout(String group) {
         super(group);
         m_orientation = Constants.ORIENT_LEFT_RIGHT;
     }
@@ -63,7 +62,7 @@ public class NodeLinkTreeLayout extends TreeLayout {
      * @param bspace the spacing to maintain between sibling nodes
      * @param tspace the spacing to maintain between neighboring subtrees
      */
-    public NodeLinkTreeLayout(String group, int orientation,
+    public MindTreeLayout(String group, int orientation,
             double dspace, double bspace, double tspace)
     {
         super(group);
@@ -214,21 +213,6 @@ public class NodeLinkTreeLayout extends TreeLayout {
                 : l.getBounds().getHeight() + r.getBounds().getHeight() );
     }
     
-    private void updateDepths(int depth, NodeItem item) {
-        boolean v = ( m_orientation == Constants.ORIENT_TOP_BOTTOM ||
-                      m_orientation == Constants.ORIENT_BOTTOM_TOP );
-        double d = ( v ? item.getBounds().getHeight() 
-                       : item.getBounds().getWidth() );
-        if ( m_depths.length <= depth )
-            m_depths = ArrayLib.resize(m_depths, 3*depth/2);
-        m_depths[depth] = Math.max(m_depths[depth], d);
-        m_maxDepth = Math.max(m_maxDepth, depth);
-    }
-    
-    private void determineDepths() {
-        for ( int i=1; i<m_maxDepth; ++i )
-            m_depths[i] += m_depths[i-1] + m_dspace;
-    }
     
     // ------------------------------------------------------------------------
     
@@ -238,9 +222,6 @@ public class NodeLinkTreeLayout extends TreeLayout {
     public void run(double frac) {
         Graph g = (Graph)m_vis.getGroup(m_group);
         initSchema(g.getNodes());
-        
-        Arrays.fill(m_depths, 0);
-        m_maxDepth = 0;
         
         Point2D a = getLayoutAnchor();
         m_ax = a.getX();
@@ -254,17 +235,26 @@ public class NodeLinkTreeLayout extends TreeLayout {
         // do first pass - compute breadth information, collect depth info
         firstWalk(root, 0, 1);
         
-        // sum up the depth info
-        determineDepths();
-        
         // do second pass - assign layout positions
         secondWalk(root, null, -rp.prelim, 0);
     }
 
     private void firstWalk(NodeItem n, int num, int depth) {
         Params np = getParams(n);
-        np.number = num;
-        updateDepths(depth, n);
+        
+        boolean v = ( m_orientation == Constants.ORIENT_TOP_BOTTOM ||
+                      m_orientation == Constants.ORIENT_BOTTOM_TOP );
+        
+        Rectangle2D nBounds = n.getBounds();
+        np.deepSize = v ? nBounds.getHeight() : nBounds.getWidth();
+        
+        if (depth == 1) {
+        	np.depth = 0;
+        }
+        else {
+        	Params pp = getParams((NodeItem)n.getParent());
+	        np.depth = pp.depth + pp.deepSize + m_dspace;
+        }
         
         boolean expanded = n.isExpanded();
         if ( n.getChildCount() == 0 || !expanded ) // is leaf
@@ -272,174 +262,42 @@ public class NodeLinkTreeLayout extends TreeLayout {
             NodeItem l = (NodeItem)n.getPreviousSibling();
             if ( l == null ) {
                 np.prelim = 0;
+                np.mod = 0;
             } else {
-            	//离父节点 (所有兄弟的中心) 的距离
-                np.prelim = getParams(l).prelim + spacing(l,n,true);
+            	Params lp = getParams(l);
+        		np.mod = lp.mod + lp.breadth;
+        		np.prelim = np.mod;
             }
+            
+        	np.breadth = v ? nBounds.getWidth() : nBounds.getHeight() + m_bspace;
         }
         else if ( expanded )
         {
-            NodeItem leftMost = (NodeItem)n.getFirstChild();
-            NodeItem rightMost = (NodeItem)n.getLastChild();
-            NodeItem defaultAncestor = leftMost;
-            NodeItem c = leftMost;
-            for ( int i=0; c != null; ++i, c = (NodeItem)c.getNextSibling() )
-            {
-                firstWalk(c, i, depth+1);
-                defaultAncestor = apportion(c, defaultAncestor);
-            }
-            
-            executeShifts(n);
-            
-            double midpoint = 0.5 *
-                (getParams(leftMost).prelim + getParams(rightMost).prelim);
-            
-            NodeItem left = (NodeItem)n.getPreviousSibling();
-            if ( left != null ) {
-                np.prelim = getParams(left).prelim + spacing(left, n, true);
-                np.mod = np.prelim - midpoint;
-            } else {
-                np.prelim = midpoint;
-            }
-        }
-    }
-    
-    private NodeItem apportion(NodeItem v, NodeItem a) {        
-        NodeItem w = (NodeItem)v.getPreviousSibling();
-        if ( w != null ) {
-            NodeItem vip, vim, vop, vom;
-            double   sip, sim, sop, som;
-            
-            vip = vop = v;
-            vim = w;
-            vom = (NodeItem)vip.getParent().getFirstChild();
-            
-            sip = getParams(vip).mod;
-            sop = getParams(vop).mod;
-            sim = getParams(vim).mod;
-            som = getParams(vom).mod;
-            /*
-             * vim: move right from v's older siblings
-             * vom: move left from v's older siblings
-             * vip: move left  from v
-             * vop: move right from v
-             * 
-             * variable naming:
-             * 'm' like a forest, 'p' is present tree
-             * 'o' is outer,  'i' is inner
-             * */
-            
-            NodeItem nr = nextRight(vim);
-            NodeItem nl = nextLeft(vip);
-            while ( nr != null && nl != null ) {
-            	
-                //vim and vip stand side by side, in the level of them
-            	
-                vim = nr;
-                vip = nl;
-                
-                vom = nextLeft(vom);
-                vop = nextRight(vop);
-                
-                getParams(vop).ancestor = v;
-                
-                //vim's node position in parent level forest
-                double simuf = getParams(vim).prelim + sim;
-                //vip's node position in parent level forest
-                double sipuf = getParams(vip).prelim + sip;
-                
-                double shift = simuf + spacing(vim,vip,false) - sipuf;
-                if ( shift > 0 ) {
-                    moveSubtree(ancestor(vim,v,a), v, shift);
-                    sip += shift;
-                    sop += shift;
-                }
-                
-                sim += getParams(vim).mod;
-                sip += getParams(vip).mod;
-                som += getParams(vom).mod;
-                sop += getParams(vop).mod;
-                
-                nr = nextRight(vim);
-                nl = nextLeft(vip);
-            }
-            
-            
-            /* to here:  nextLeft(vip)==null, nextRight(vop) == null,  
-             * that is there is no node at next level of the tree of v 
-             */
-            if ( nr != null && nextRight(vop) == null ) {
-                Params vopp = getParams(vop);
-                
-                // vop's next left is nextRight(vim)
-                vopp.thread = nr;
-                
-                //set vop's mod equals vim's mod
-                vopp.mod += sim - sop;
-            }
-            
-            /* to here:  nextRight(vim)==null, nextLeft(vom) == null,  
-             * that is there is no node at this level of the forest of v's older siblings
-             */
-            if ( nl != null && nextLeft(vom) == null ) {
-                Params vomp = getParams(vom);
-                
-                // vom's next right is nextLeft(vip)
-                vomp.thread = nl;
-                
-                //set vom's mod equals  vip's mod
-                vomp.mod += sip - som;
-                
-                // v is higher than older siblings
-                a = v;
-            }
-        }
-        return a;
-    }
-    
-    private NodeItem nextLeft(NodeItem n) {
-        NodeItem c = null;
-        if ( n.isExpanded() ) c = (NodeItem)n.getFirstChild();
-        return ( c != null ? c : getParams(n).thread );
-    }
-    
-    private NodeItem nextRight(NodeItem n) {
-        NodeItem c = null;
-        if ( n.isExpanded() ) c = (NodeItem)n.getLastChild();
-        return ( c != null ? c : getParams(n).thread );
-    }
-    
-    private void moveSubtree(NodeItem wm, NodeItem wp, double shift) {
-        Params wmp = getParams(wm);
-        Params wpp = getParams(wp);
-        double subtrees = wpp.number - wmp.number;
-        wpp.change -= shift/subtrees;
-        wmp.change += shift/subtrees;
-        wpp.shift += shift;
-        wpp.prelim += shift;
-        wpp.mod += shift;
-    }
-    
-    private void executeShifts(NodeItem n) {
-        double shift = 0, change = 0;
-        for ( NodeItem c = (NodeItem)n.getLastChild();
-              c != null; c = (NodeItem)c.getPreviousSibling() )
-        {
-            Params cp = getParams(c);
-            cp.prelim += shift;
-            cp.mod += shift;
-            change += cp.change;
-            shift += cp.shift + change;
-        }
-    }
-    
-    private NodeItem ancestor(NodeItem vim, NodeItem v, NodeItem a) {
-        NodeItem p = (NodeItem)v.getParent();
-        Params vimp = getParams(vim);
-        if ( vimp.ancestor.getParent() == p ) {
-            return vimp.ancestor;
-        } else {
-            return a;
+        	NodeItem leftMost = (NodeItem)n.getFirstChild();
+        	NodeItem rightMost = (NodeItem)n.getLastChild();
+        	//NodeItem defaultAncestor = leftMost;
+        	NodeItem c = leftMost;
+        	for ( int i=0; c != null; ++i, c = (NodeItem)c.getNextSibling() )
+        	{
+        		firstWalk(c, i, depth+1);
+        		//defaultAncestor = apportion(c, defaultAncestor);
+        	}
+
+        	double midpoint = 0.5 *
+        	(getParams(leftMost).prelim + getParams(rightMost).prelim);
+
+        	NodeItem left = (NodeItem)n.getPreviousSibling();
+
+        	if ( left != null ) {
+        		Params lp = getParams(left);
+    			np.mod = lp.mod + lp.breadth + spacing(left, n, true);
+    			np.prelim = np.mod + midpoint;
+        	} else {
+        		np.prelim = midpoint;
+        	}
+
+        	Params lastChildParams = getParams(rightMost);
+        	np.breadth = lastChildParams.mod + lastChildParams.breadth;
         }
     }
     
@@ -447,8 +305,7 @@ public class NodeLinkTreeLayout extends TreeLayout {
         Params np = getParams(n);
         setBreadth(n, p, np.prelim + m);
         
-        //深度的坐标,本剧  m_depths 数组中的设置
-        setDepth(n, p, m_depths[depth]);
+    	setDepth(n, p, np.depth);
         
         if ( n.isExpanded() ) {
             depth += 1;
@@ -459,7 +316,7 @@ public class NodeLinkTreeLayout extends TreeLayout {
             }
         }
         
-        np.clear();
+        //np.clear();
     }
     
     private void setBreadth(NodeItem n, NodeItem p, double b) {
@@ -515,15 +372,13 @@ public class NodeLinkTreeLayout extends TreeLayout {
         ts.addColumns(PARAMS_SCHEMA);
     }
     
-    private Params getParams(NodeItem item) {
+    public static Params getParams(NodeItem item) {
         Params rp = (Params)item.get(PARAMS);
         if ( rp == null ) {
             rp = new Params();
             item.set(PARAMS, rp);
         }
-        if ( rp.number == -2 ) {
-            rp.init(item);
-        }
+        
         return rp;
     }
     
@@ -531,28 +386,23 @@ public class NodeLinkTreeLayout extends TreeLayout {
      * Wrapper class holding parameters used for each node in this layout.
      */
     public static class Params implements Cloneable {
-    	//tree middle position in siblings forest ares
-        double prelim;
+    	//the root node position (left top point of node) of subtree in siblings forest area
+        public double prelim;
+    	//the top position of subtree in siblings forest area. suppose m_orientation is left-to-right
+        public double mod;
+        //the breadth of subtree 
+        public double breadth;
         
-    	//tree top position in siblings forest ares. suppose m_orientation is left-to-right
-        double mod;
+        public double shift;
+        public double change;
         
-        //
-        double shift;
-        double change;
-        int    number = -2;
-        NodeItem ancestor = null;
-        NodeItem thread = null;
-        
-        public void init(NodeItem item) {
-            ancestor = item;
-            number = -1;
-        }
+        // for not aligned tree, the position in deep direction
+        public double deepSize;
+        // for not aligned tree, the size in deep direction
+        double depth;
         
         public void clear() {
-            number = -2;
             prelim = mod = shift = change = 0;
-            ancestor = thread = null;
         }
     }
     

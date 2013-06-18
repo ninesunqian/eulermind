@@ -1,47 +1,16 @@
 package excitedmind;
 
 import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
-import java.awt.event.MouseEvent;
-import javax.swing.AbstractAction;
-import javax.swing.KeyStroke;
-import javax.swing.undo.UndoManager;
-
-import excitedmind.operators.EditAction;
-import excitedmind.operators.RemoveAction;
 
 import prefuse.Constants;
-import prefuse.Display;
 import prefuse.Visualization;
 import prefuse.action.Action;
 import prefuse.action.ActionList;
-import prefuse.action.ItemAction;
 import prefuse.action.RepaintAction;
-import prefuse.action.animate.ColorAnimator;
-import prefuse.action.animate.FontAnimator;
-import prefuse.action.animate.LocationAnimator;
-import prefuse.action.animate.QualityControlAnimator;
-import prefuse.action.animate.VisibilityAnimator;
 import prefuse.action.assignment.ColorAction;
 import prefuse.action.assignment.FontAction;
-import prefuse.action.filter.FisheyeTreeFilter;
-import prefuse.action.layout.CollapsedSubtreeLayout;
-import prefuse.action.layout.graph.NodeLinkTreeLayout;
-import prefuse.activity.SlowInSlowOutPacer;
-import prefuse.controls.ControlAdapter;
-import prefuse.controls.FocusControl;
-import prefuse.controls.PanControl;
-import prefuse.controls.WheelZoomControl;
-import prefuse.controls.ZoomControl;
-import prefuse.controls.ZoomToFitControl;
 import prefuse.data.Graph;
-import prefuse.data.Tree;
-import prefuse.data.Tuple;
-import prefuse.data.event.TupleSetListener;
-import prefuse.data.search.PrefixSearchTupleSet;
-import prefuse.data.tuple.TupleSet;
 import prefuse.render.DefaultRendererFactory;
 import prefuse.render.EdgeRenderer;
 import prefuse.render.AbstractShapeRenderer;
@@ -50,10 +19,6 @@ import prefuse.util.ColorLib;
 import prefuse.util.FontLib;
 import prefuse.util.PrefuseLib;
 import prefuse.visual.VisualItem;
-import prefuse.visual.expression.InGroupPredicate;
-import prefuse.visual.sort.TreeDepthItemSorter;
-import prefuse.visual.tuple.TableNodeItem;
-
 
 public class MindTreeRenderEngine {
 	private final MindView m_mindView;
@@ -117,8 +82,8 @@ public class MindTreeRenderEngine {
     private Action makeItemPositionActions ()
     {
         
-        NodeLinkTreeLayout treeLayout = 
-        	new NodeLinkTreeLayout(m_treeGroupName, m_orientation, 50, 0, 8);
+        MindTreeLayout treeLayout = 
+        	new MindTreeLayout(m_treeGroupName, m_orientation, 50, 0, 8);
         
     	treeLayout.setOrientation(Constants.ORIENT_LEFT_RIGHT);
         //must set the anchor, if not, the anchor will move to the center of display, every time.
