@@ -108,7 +108,7 @@ public class FisheyeMenu extends Display {
         
         // initial layout and coloring
         ActionList init = new ActionList();
-        init.add(new VerticalLineLayout(m_maxHeight));
+        init.add(new VerticalLineLayout(ITEMS, m_maxHeight));
         init.add(colors);
         init.add(new RepaintAction());
         m_vis.putAction("init", init);
@@ -181,14 +181,15 @@ public class FisheyeMenu extends Display {
     public class VerticalLineLayout extends Layout {
         private double m_maxHeight = 600;
         
-        public VerticalLineLayout(double maxHeight) {
+        public VerticalLineLayout(String group, double maxHeight) {
+        	super (group);
             m_maxHeight = maxHeight;
         }
         
         public void run(double frac) {
             // first pass
             double w = 0, h = 0;
-            Iterator iter = m_vis.items();
+            Iterator iter = m_vis.items(m_group);
             while ( iter.hasNext() ) {
                 VisualItem item = (VisualItem)iter.next();
                 item.setSize(1.0);

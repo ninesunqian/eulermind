@@ -11,6 +11,8 @@ import prefuse.action.RepaintAction;
 import prefuse.action.assignment.ColorAction;
 import prefuse.action.assignment.FontAction;
 import prefuse.data.Graph;
+import prefuse.data.Schema;
+import prefuse.data.Table;
 import prefuse.render.DefaultRendererFactory;
 import prefuse.render.EdgeRenderer;
 import prefuse.render.AbstractShapeRenderer;
@@ -35,6 +37,7 @@ public class MindTreeRenderEngine {
     
     
     private int m_orientation = Constants.ORIENT_LEFT_RIGHT;
+    
 	
 	
 	public MindTreeRenderEngine(MindView mindView, String treeGroupName) {
@@ -110,6 +113,7 @@ public class MindTreeRenderEngine {
     	edgeRenderer.setHorizontalAlignment2(Constants.LEFT);
     	edgeRenderer.setVerticalAlignment1(Constants.CENTER);
     	edgeRenderer.setVerticalAlignment2(Constants.CENTER);
+    	edgeRenderer.setDefaultLineWidth(1.5);
 
     	//TODO remove it
     	//rf.add(new InGroupPredicate(m_treeEdgesGroupName), edgeRenderer);
