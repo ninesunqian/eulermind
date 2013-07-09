@@ -1,0 +1,6 @@
+[submodule "3rdparty/orientdb"]
+	path = 3rdparty/orientdb
+	url = git@github.com:ninesunqian/orientdb.git
+[submodule "3rdparty/blueprints"]
+	path = 3rdparty/blueprints
+	url = git@github.com:ninesunqian/blueprints.git
