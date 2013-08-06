@@ -4,7 +4,7 @@
     <groupId>org.prefuse</groupId>
     <artifactId>prefuse</artifactId>
     <packaging>jar</packaging>
-    <version>bate</version>
+    <version>1.0.0-bate-for-excitedmind</version>
     <name>prefuse</name>
 
     <dependencies>

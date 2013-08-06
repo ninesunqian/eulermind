@@ -298,8 +298,8 @@ public class Graph extends CompositeTupleSet {
         
         if (nodes.getColumnNumber(INDEGREE) < 0)
         {
-        	nodes.addColumn(INDEGREE,  int.class, 0);
-        	nodes.addColumn(OUTDEGREE, int.class, 0);
+            nodes.addColumn(INDEGREE,  int.class, 0);
+            nodes.addColumn(OUTDEGREE, int.class, 0);
         	nodes.addColumn(INLINKS,   int[].class);
         	nodes.addColumn(OUTLINKS,  int[].class);
 
@@ -451,7 +451,7 @@ public class Graph extends CompositeTupleSet {
 	        if (edgePosInNode > degree)
 	        	edgePosInNode = degree;
 	        
-	        assert (degree <= array.length);
+           assert (degree <= array.length);
         
         	if ( degree == array.length ) {
         		int[] newArray = new int[Math.max(3*array.length/2, degree+1)];
