@@ -1,7 +1,6 @@
 package excitedmind;
 
 import excitedmind.DBTree.EdgeVertex;
-import groovy.util.logging.Log4j;
 
 import java.awt.BorderLayout;
 import java.awt.Color;

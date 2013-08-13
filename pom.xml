@@ -74,7 +74,7 @@
     <profile>
       <id>java6</id>
       <activation>
-        <jdk>[1.0,1.7)</jdk>
+        <jdk>[1.6,1.7)</jdk>
       </activation>
       <build>
         <plugins>

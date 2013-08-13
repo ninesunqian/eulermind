@@ -12,6 +12,7 @@ import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Element;
 import com.tinkerpop.blueprints.Features;
 import com.tinkerpop.blueprints.Graph;
+import com.tinkerpop.blueprints.GraphQuery;
 import com.tinkerpop.blueprints.Index;
 import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.blueprints.Vertex;
@@ -108,7 +109,7 @@ public class DBTree implements Graph {
 	}
 	
 	public void commit() {
-		m_graph.stopTransaction(TransactionalGraph.Conclusion.SUCCESS);
+		m_graph.commit();
 	}
 	
 	private void createIndices ()
@@ -433,7 +434,6 @@ public class DBTree implements Graph {
 		
 		deepTraverse(removedVertex, new Processor() {
 			
-			@Override
 			public boolean run(Vertex vertex, int level) {
 				ArrayList<EdgeVertex> referers = getReferers(vertex);
 				
@@ -515,6 +515,11 @@ public class DBTree implements Graph {
 			}
 		}
 		
+	}
+
+	public GraphQuery query() {
+		// TODO Auto-generated method stub
+		return m_graph.query();
 	}
 	
 }
