@@ -108,12 +108,14 @@ public class MindTreeFocusControl extends ControlAdapter {
      */
     public void itemClicked(VisualItem item, MouseEvent e) {
         if ( !filterCheck(item) ) return;
-    			System.out.println ("mouse Clicked");
-    			
-        		if (item.isInGroup(MindView.sm_treeNodesGroupName))
-        		{
-	        		m_mindTree.ToggleFoldNode(item);
-        		}
+        System.out.println ("mouse Clicked");
+        
+        /*
+        if (item.isInGroup(MindView.sm_treeNodesGroupName))
+        {
+            m_mindTree.ToggleFoldNode(item);
+        }
+        */
     }
     
     private void runActivity(Visualization vis) {

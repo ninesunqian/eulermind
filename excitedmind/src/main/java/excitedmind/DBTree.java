@@ -6,7 +6,6 @@ import java.util.Iterator;
 import prefuse.util.PrefuseLib;
 
 import com.orientechnologies.orient.core.db.record.ORecordLazyList;
-import com.sun.awt.AWTUtilities.Translucency;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Element;

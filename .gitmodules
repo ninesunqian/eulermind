@@ -1,6 +1,0 @@
-[submodule "orientdb"]
-	path = orientdb
-	url = git@github.com:ninesunqian/orientdb.git
-[submodule "blueprints"]
-	path = blueprints
-	url = git@github.com:ninesunqian/blueprints.git

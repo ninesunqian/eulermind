@@ -1,24 +1,74 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.excitedmind</groupId>
+
+    <parent>
+        <groupId>com.excitedmind</groupId>
+        <artifactId>excitedmind-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
     <artifactId>excitedmind</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.0-alpha</version>
+
     <name>excitedmind</name>
 
+    <properties>
+        <orient_ver>1.5.0</orient_ver>
+        <libdir>${project.basedir}/../lib</libdir>
+    </properties>
+
     <dependencies>
+
         <dependency>
-            <groupId>com.tinkerpop.blueprints</groupId>
-            <artifactId>blueprints-orient-graph</artifactId>
-            <version>2.4.0-exmd-SNAPSHOT</version>
+            <groupId>${project.groupId}</groupId>
+			<artifactId>prefuse</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>org.prefuse</groupId>
-            <artifactId>prefuse</artifactId>
-            <version>1.0.0-exmd-bate</version>
+			<groupId>com.tinkerpop.blueprints</groupId>
+			<artifactId>blueprints-core</artifactId>
+			<version>2.4.0-SNAPSHOT</version>
         </dependency>
+
+        <dependency>
+			<groupId>com.tinkerpop.blueprints</groupId>
+			<artifactId>blueprints-orient-graph</artifactId>
+			<version>2.4.0-SNAPSHOT</version>
+        </dependency>
+
+        <!--
+		<dependency>
+			<groupId>com.orientechnologies</groupId>
+			<artifactId>orientdb-server</artifactId>
+			<version>${orient_ver}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.orientechnologies</groupId>
+			<artifactId>orientdb-enterprise</artifactId>
+			<version>${orient_ver}</version>
+		</dependency>
+        -->
+
+		<dependency>
+			<groupId>com.orientechnologies</groupId>
+			<artifactId>orientdb-tools</artifactId>
+			<version>${orient_ver}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.orientechnologies</groupId>
+			<artifactId>orient-commons</artifactId>
+			<version>${orient_ver}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.orientechnologies</groupId>
+			<artifactId>orientdb-core</artifactId>
+			<version>${orient_ver}</version>
+		</dependency>
 
     </dependencies>
 
