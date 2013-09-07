@@ -137,7 +137,6 @@ public class DBTree implements Graph {
 		System.out.println(root.getId());
 		commit ();
 		System.out.println(root.getId());
-		m_graph = new OrientGraph (m_path);
 		root = m_graph.getVertex(rootId);
 		rootId = root.getId();
 		System.out.println(root.getId());
@@ -199,7 +198,7 @@ public class DBTree implements Graph {
 	
 	private Edge addEdge (Vertex source, Vertex target, int pos, EdgeType edgeType)
 	{
-		Edge edge = m_graph.addEdge(null, source, target, null);
+		Edge edge = m_graph.addEdge(null, source, target, "");
 		edge.setProperty(EDGE_TYPE_PROP_NAME, edgeType.ordinal()); 
 		
 		//to make the edge'id is to local db

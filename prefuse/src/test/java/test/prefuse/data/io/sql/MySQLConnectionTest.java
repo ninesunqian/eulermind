@@ -20,6 +20,7 @@ public class MySQLConnectionTest extends TestCase {
     private Table m_table;
     
     public void testLoadFromMySQLDatabase() {
+        /*
         String host     = "localhost";
         String database = "friendster";
         String user     = "anonymous";
@@ -66,14 +67,17 @@ public class MySQLConnectionTest extends TestCase {
         s_logger.info(sbuf.toString());
         
         m_table = t;
+        */
     }
     
     public static void main(String[] args) {
+        /*
         MySQLConnectionTest test = new MySQLConnectionTest();
         test.testLoadFromMySQLDatabase();
         
         JFrame f = JPrefuseTable.showTableWindow(test.m_table);
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        */
     }
     
 }

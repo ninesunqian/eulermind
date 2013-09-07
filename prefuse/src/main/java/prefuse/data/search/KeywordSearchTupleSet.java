@@ -3,10 +3,12 @@ package prefuse.data.search;
 import java.io.IOException;
 import java.util.logging.Logger;
 
+/*
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.Hits;
+*/
 
 import prefuse.data.Tuple;
 import prefuse.util.StringLib;
@@ -35,7 +37,7 @@ public class KeywordSearchTupleSet extends SearchTupleSet {
     protected IntObjectHashMap m_map = new IntObjectHashMap();
     protected String m_query = "";
     
-    protected LuceneSearcher m_lucene = null;
+//    protected LuceneSearcher m_lucene = null;
     protected boolean m_storeTermVectors = false;
     
     protected int m_id = 1;
@@ -44,16 +46,18 @@ public class KeywordSearchTupleSet extends SearchTupleSet {
      * Creates a new KeywordSearchFocusSet using an in-memory search index.
      */
     public KeywordSearchTupleSet() {
-        m_lucene = new LuceneSearcher();
+ //       m_lucene = new LuceneSearcher();
     }
     
     /**
      * Creates a new TextSearchFocusSet with the given LuceneSearcher.
      * @param searcher the {@link LuceneSearcher} to use.
      */
+    /*
     public KeywordSearchTupleSet(LuceneSearcher searcher) {
         m_lucene = searcher;
     }
+    */
     
     /**
      * Returns the current search query, if any.
@@ -85,8 +89,11 @@ public class KeywordSearchTupleSet extends SearchTupleSet {
             return;
         }
         
-        m_lucene.setReadMode(true);
+ //       m_lucene.setReadMode(true);
+        
+        /*
         try {
+        
             Hits hits = m_lucene.search(query);
             for ( int i=0; i < hits.length(); i++ ) {
                 Tuple t = getMatchingTuple(hits.doc(i));
@@ -101,6 +108,7 @@ public class KeywordSearchTupleSet extends SearchTupleSet {
             s_logger.warning("Lucene IO exception.\n"+
                     StringLib.getStackTrace(e));
         }
+        */
         
     }
     
@@ -109,15 +117,18 @@ public class KeywordSearchTupleSet extends SearchTupleSet {
      * @param d the Document to lookup.
      * @return the matching Tuple, or null if none.
      */
+    /*
     protected Tuple getMatchingTuple(Document d) {
         int id = Integer.parseInt(d.get(LuceneSearcher.ID));
         return (Tuple)m_map.get(id);
     }
+    */
     
     /**
      * @see prefuse.data.search.SearchTupleSet#index(prefuse.data.Tuple, java.lang.String)
      */
     public void index(Tuple t, String field) {
+    	/*
         m_lucene.setReadMode(false);
         String s;
         if ( (s=t.getString(field)) == null ) return;
@@ -125,6 +136,7 @@ public class KeywordSearchTupleSet extends SearchTupleSet {
         int id = m_id++;
         m_lucene.addDocument(getDocument(id, s));        
         m_map.put(id, t);
+        */
     }
 
     /**
@@ -150,20 +162,24 @@ public class KeywordSearchTupleSet extends SearchTupleSet {
      * @param text the text the Document should contain
      * @return a new Lucene Document instance
      */
+    /*
     protected Document getDocument(int id, String text) {
         Document d = new Document();
         d.add(Field.Text(LuceneSearcher.FIELD, text, m_storeTermVectors));
         d.add(Field.Keyword(LuceneSearcher.ID, String.valueOf(id)));
         return d;
     }
+    */
     
     /**
      * Get the {@link LuceneSearcher} instance used by this class.
      * @return returns the backing lucene searcher.
      */
+    /*
     public LuceneSearcher getLuceneSearcher() {
         return m_lucene;
     }
+    */
     
     /**
      * Returns a copy of the mapping from Lucene document IDs to prefuse Tuple instances.
@@ -178,7 +194,7 @@ public class KeywordSearchTupleSet extends SearchTupleSet {
      * @see prefuse.data.tuple.TupleSet#clear()
      */
     public void clear() {
-        m_lucene = new LuceneSearcher();
+        //m_lucene = new LuceneSearcher();
         super.clear();
     }
     
