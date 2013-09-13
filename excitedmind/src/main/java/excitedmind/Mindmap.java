@@ -58,9 +58,7 @@ public class Mindmap {
 		createTree (dbTree, null, "", 0);
 		dbTree = null;
 		
-		
 		JComponent Mindmap = demo(dbUrl, m_rootVertex.getId());
-		
 		
 		JFrame frame = new JFrame("mindmap core");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

@@ -198,7 +198,10 @@ public class DBTree implements Graph {
 	
 	private Edge addEdge (Vertex source, Vertex target, int pos, EdgeType edgeType)
 	{
-		Edge edge = m_graph.addEdge(null, source, target, "");
+		//the label should not be null or "", 
+		//it is related to the implement of blueprints
+		Edge edge = m_graph.addEdge(null, source, target, "a");
+
 		edge.setProperty(EDGE_TYPE_PROP_NAME, edgeType.ordinal()); 
 		
 		//to make the edge'id is to local db

@@ -33,10 +33,10 @@ import prefuse.visual.NodeItem;
 public class MindTreeLayout extends TreeLayout {
     
     private int    m_orientation;  // the orientation of the tree
-    private double m_bspace = 5;   // the spacing between sibling nodes
-    private double m_tspace = 25;  // the spacing between subtrees
-    private double m_dspace = 50;  // the spacing between depth levels
-    private double m_offset = 50;  // pixel offset for root node position
+    private double m_bspace = 20;   // the spacing between sibling nodes
+    private double m_tspace = 20;  // the spacing between subtrees
+    private double m_dspace = 20;  // the spacing between depth levels
+    private double m_offset = 20;  // pixel offset for root node position
     
     private double m_ax, m_ay; // for holding anchor co-ordinates
     
@@ -67,9 +67,11 @@ public class MindTreeLayout extends TreeLayout {
     {
         super(group);
         m_orientation = orientation;
+        
         m_dspace = dspace;
         m_bspace = bspace;
         m_tspace = tspace;
+        
     }
     
     // ------------------------------------------------------------------------
@@ -208,9 +210,7 @@ public class MindTreeLayout extends TreeLayout {
     private double spacing(NodeItem l, NodeItem r, boolean siblings) {
         boolean w = ( m_orientation == Constants.ORIENT_TOP_BOTTOM ||
                       m_orientation == Constants.ORIENT_BOTTOM_TOP );
-        return (siblings ? m_bspace : m_tspace) + 0.5 *
-            ( w ? l.getBounds().getWidth() + r.getBounds().getWidth()
-                : l.getBounds().getHeight() + r.getBounds().getHeight() );
+        return (siblings ? m_bspace : m_tspace);
     }
     
     
