@@ -52,6 +52,8 @@ public abstract class AbstractShapeRenderer implements Renderer {
         Shape shape = getShape(item);
         if (shape != null)
             drawShape(g, item, shape);
+        else
+        	System.out.println("the Shaper has no java shape");
     }
     
     /**

@@ -271,24 +271,21 @@ public class MindTree {
 	
 	public void unfoldNode (VisualItem visualItem)
 	{
-		
-		final Visualization vis = visualItem.getVisualization();
 		Node node = (Node)visualItem.getSourceTuple();
-		final String group = visualItem.getGroup();
 		
-		if (visualItem.isExpanded())
-		{
-			return;
-		}
-		
-		visualItem.setExpanded(true);
-		
-		if (m_tree.getChildCount(node.getRow()) > 0) // node is not a leaf node
-		{
+		if (node.getChildCount() > 0){ // node is not a leaf node
+
+			if (visualItem.isExpanded()) {
+				return;
+			}
+
 			assert (m_foldedNodes.contains(node));
-			
+
 			m_foldedNodes.remove(node);
+
+			final Visualization vis = visualItem.getVisualization();
 			final Node unfoldTreeRoot = node;
+			final String group = visualItem.getGroup();
 			
 			//unfold descendants deeply, to the folded descendants
 			deepTraverse(node,new Processor() {
@@ -301,6 +298,7 @@ public class MindTree {
 					TableNodeItem visualNode = (TableNodeItem)vis.getVisualItem(group, node);
 					TableEdgeItem visualEdge = (TableEdgeItem)visualNode.getParentEdge();
 					
+					System.out.println ( "visiableNode " + node.getString(sm_textPropName));
 					PrefuseLib.updateVisible(visualNode, true);
 					PrefuseLib.updateVisible(visualEdge, true);
 					
@@ -316,6 +314,8 @@ public class MindTree {
 		{
 			attachChildren(node);
 		}
+
+		visualItem.setExpanded(true);
 	}
 	
 	public void foldNode (VisualItem visualItem)
@@ -324,12 +324,11 @@ public class MindTree {
 		Node node = (Node)visualItem.getSourceTuple();
 		final String group = visualItem.getGroup();
 	
+		System.out.println ( "foldNode " + node.getString(sm_textPropName));
 		if (! visualItem.isExpanded())
 		{
 			return;
 		}
-		
-		visualItem.setExpanded(false);
 		
 		m_foldedNodes.add(node);
 		
@@ -349,9 +348,9 @@ public class MindTree {
 				PrefuseLib.updateVisible(visualNode, false);
 				PrefuseLib.updateVisible(visualEdge, false);
 					
-				System.out.println ("invisable node: " + node.getString("text"));
-				
+				System.out.println ( "invisiableNode " + node.getString(sm_textPropName));
 				if (m_foldedNodes.contains(node)) {
+					System.out.println ( "m_foldedNodes contain: " + node + " " + node.getString(sm_textPropName));
 					return false;
 				} else {
 					return true;
@@ -369,18 +368,31 @@ public class MindTree {
 			
 			m_tree.removeDescendants(toRemovedNode);
 		}
+
+		visualItem.setExpanded(false);
 	}
 	
 	public void ToggleFoldNode (VisualItem visualItem )
 	{
-		if (visualItem.isExpanded())
+		Node node = (Node)visualItem.getSourceTuple();
+		if (node.getChildCount() == 0)
 		{
-			foldNode(visualItem);
+            System.out.println ( "----leaf node un fold " + visualItem.getString(sm_textPropName));
+            unfoldNode(visualItem);
 		}
-		else
-		{
-			unfoldNode(visualItem);
-		}
+        else
+        {
+            if (visualItem.isExpanded())
+            {
+                System.out.println ( "---- fold " + visualItem.getString(sm_textPropName));
+                foldNode(visualItem);
+            }
+            else
+            {
+                System.out.println ( "----un fold " + visualItem.getString(sm_textPropName));
+                unfoldNode(visualItem);
+            }
+        }
 	}
 	
 	public void setRoot (Node node)

@@ -39,12 +39,14 @@ import javax.swing.text.JTextComponent;
 import prefuse.activity.Activity;
 import prefuse.activity.SlowInSlowOutPacer;
 import prefuse.controls.Control;
+import prefuse.data.Graph;
 import prefuse.data.expression.AndPredicate;
 import prefuse.data.expression.BooleanLiteral;
 import prefuse.data.expression.Predicate;
 import prefuse.data.expression.parser.ExpressionParser;
 import prefuse.render.Renderer;
 import prefuse.util.ColorLib;
+import prefuse.util.PrefuseLib;
 import prefuse.util.StringLib;
 import prefuse.util.UpdateListener;
 import prefuse.util.collections.CopyOnWriteArrayList;
@@ -892,6 +894,7 @@ public class Display extends JComponent {
             getItemBounds(m_rclip);
             m_bounds.reset();
             
+            int edgeNum = 0;
             // fill the rendering and picking queues
             m_queue.clear();   // clear the queue
             Iterator items = m_vis.items(m_predicate);
@@ -900,16 +903,32 @@ public class Display extends JComponent {
                 Rectangle2D bounds = item.getBounds();
                 m_bounds.union(bounds); // add to item bounds
                 
-                if ( m_clip.intersects(bounds, pixel) )
+                //wxg ad
+                if (item.isInGroup(PrefuseLib.getGroupName("tree", Graph.EDGES)))
+                {
+                	edgeNum++;
+                }
+                
+                if ( m_clip.intersects(bounds, pixel) ) {
+
                     m_queue.addToRenderQueue(item);
+                }
+                //wxg add
+                else if (item.isInGroup(PrefuseLib.getGroupName("tree", Graph.EDGES)))
+                {
+                	//System.out.println ("undrawing bounds: " + bounds);
+                }
+
                 if ( item.isInteractive() )
                     m_queue.addToPickingQueue(item);
             }
             
+         //   System.out.println ("edge count: " + edgeNum);
             // sort the rendering queue
             m_queue.sortRenderQueue();
             
             // render each visual item
+         //   System.out.println("Display: m_queue.rsize = " + m_queue.rsize);
             for ( int i=0; i<m_queue.rsize; ++i ) {
                 m_queue.ritems[i].render(g2D);
             }
