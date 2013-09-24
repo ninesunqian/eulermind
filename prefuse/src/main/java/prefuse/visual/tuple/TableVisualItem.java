@@ -119,7 +119,9 @@ public class TableVisualItem extends TableTuple implements VisualItem {
      * @see prefuse.visual.VisualItem#validateBounds()
      */
     public Rectangle2D validateBounds() {
-        if ( isValidated() ) return getBounds();
+        if ( isValidated() ) {
+            return getBounds();
+        }
         
         Visualization v = getVisualization();
                 

@@ -286,7 +286,7 @@ public class MindTree {
 			final Visualization vis = visualItem.getVisualization();
 			final Node unfoldTreeRoot = node;
 			final String group = visualItem.getGroup();
-			
+
 			//unfold descendants deeply, to the folded descendants
 			deepTraverse(node,new Processor() {
 				public boolean run(Node node, int level) {

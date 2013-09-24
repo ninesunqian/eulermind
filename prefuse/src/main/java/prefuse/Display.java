@@ -894,7 +894,6 @@ public class Display extends JComponent {
             getItemBounds(m_rclip);
             m_bounds.reset();
             
-            int edgeNum = 0;
             // fill the rendering and picking queues
             m_queue.clear();   // clear the queue
             Iterator items = m_vis.items(m_predicate);
@@ -903,27 +902,15 @@ public class Display extends JComponent {
                 Rectangle2D bounds = item.getBounds();
                 m_bounds.union(bounds); // add to item bounds
                 
-                //wxg ad
-                if (item.isInGroup(PrefuseLib.getGroupName("tree", Graph.EDGES)))
-                {
-                	edgeNum++;
-                }
-                
                 if ( m_clip.intersects(bounds, pixel) ) {
 
                     m_queue.addToRenderQueue(item);
-                }
-                //wxg add
-                else if (item.isInGroup(PrefuseLib.getGroupName("tree", Graph.EDGES)))
-                {
-                	//System.out.println ("undrawing bounds: " + bounds);
                 }
 
                 if ( item.isInteractive() )
                     m_queue.addToPickingQueue(item);
             }
             
-         //   System.out.println ("edge count: " + edgeNum);
             // sort the rendering queue
             m_queue.sortRenderQueue();
             

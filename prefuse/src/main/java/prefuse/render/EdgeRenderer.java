@@ -258,7 +258,9 @@ public class EdgeRenderer extends AbstractShapeRenderer {
      * @see prefuse.render.Renderer#setBounds(prefuse.visual.VisualItem)
      */
     public void setBounds(VisualItem item) {
-        if ( !m_manageBounds ) return;
+        if ( !m_manageBounds ) {
+            return;
+        }
         Shape shape = getShape(item);
         if ( shape == null ) {
             item.setBounds(item.getX(), item.getY(), 0, 0);
