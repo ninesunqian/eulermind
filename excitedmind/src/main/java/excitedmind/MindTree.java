@@ -1,37 +1,25 @@
 package excitedmind;
 
-import java.rmi.UnexpectedException;
 import java.util.ArrayList;
 
 import prefuse.Visualization;
-import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
 import prefuse.visual.tuple.TableEdgeItem;
 import prefuse.visual.tuple.TableNodeItem;
 
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 
 import prefuse.data.Edge;
 import prefuse.data.Node;
-import prefuse.data.Schema;
 import prefuse.data.Table;
 import prefuse.data.Tree;
+import prefuse.data.Graph;
 import prefuse.data.Tuple;
-import prefuse.data.event.EventConstants;
-import prefuse.data.event.TableListener;
-import prefuse.data.event.TreeRootChangeListener;
 import prefuse.util.PrefuseLib;
 import prefuse.util.collections.IntIterator;
 
-import com.tinkerpop.blueprints.CloseableIterable;
-import com.tinkerpop.blueprints.Direction;
-import com.tinkerpop.blueprints.Index;
 import com.tinkerpop.blueprints.Vertex;
 
 import excitedmind.DBTree.EdgeVertex;
@@ -41,153 +29,96 @@ import excitedmind.DBTree.RefLinkInfo;
 
 public class MindTree {
 
-	private final static String BP_ID_COL_KEY = PrefuseLib.FIELD_PREFIX + "bpElement";
-	private final static String EDGE_TYPE_COL_KEY = PrefuseLib.FIELD_PREFIX + "edgeType";
-	
+    private final static String sm_treeGroupName = "tree";
+    private final static String sm_treeNodesGroupName = PrefuseLib.getGroupName(sm_treeGroupName, Graph.NODES);
+    private final static String sm_treeEdgesGroupName = PrefuseLib.getGroupName(sm_treeGroupName, Graph.EDGES);
+
+	private final static String sm_bpIdColumnName = "bpElement";
+
 	public final static String sm_textPropName = "text";
-	
 	public final static String sm_fontFamilyPropName = "fontFamily";
 	public final static String sm_fontSizePropName = "fontSize";
-	
 	public final static String sm_boldPropName = "bold";
 	public final static String sm_italicPropName = "italic";
 	public final static String sm_underlinedPropName = "underlined";
-	
 	public final static String sm_nodeColorPropName = "nodeColor";
 	public final static String sm_textColorPropName = "textColor";
-	public final static String sm_outlineColorPropName = "outlineColor";
-	
+
+    public final static String sm_nodePropNames [] = {
+            sm_textPropName,
+
+            sm_fontFamilyPropName,
+            sm_fontSizePropName,
+
+            sm_boldPropName,
+            sm_italicPropName,
+            sm_underlinedPropName,
+
+            sm_nodeColorPropName,
+            sm_textColorPropName,
+    };
+
 	public final static String sm_edgeTypePropName = DBTree.EDGE_TYPE_PROP_NAME;
 	public final static String sm_edgeColorPropName = "edgeColor";
+    public final static String sm_edgePropNames [] = {sm_edgeTypePropName, sm_edgeColorPropName};
 
 	public Tree m_tree;
 	Table m_nodeTable;
 	Table m_edgeTable;
 	
-	private HashSet<String> m_nodePropNames;
-	private HashSet<String> m_edgePropNames;
-	
 	private String m_edgeTypePropName;
 	
 	DBTree m_dbTree;
-	private int m_maxLevel;
-	
-	private boolean m_tableListenerEnabled = true;
-	
+
+
+
     private LinkedHashSet<Node> m_foldedNodes = new LinkedHashSet<Node>();
     
-	TableListener m_nodeTableListener = new TableListener() {
-		
-		@Override
-		public void tableChanged(Table t, int start, int end, int col, int type) {
-			//only update the propNames, not include m_edgeIdArrayPropName
-			if (type == EventConstants.UPDATE && m_tableListenerEnabled)
-			{
-				String colName = t.getColumnName(col);
-				if (m_nodePropNames.contains(colName))
-				{
-					for (int i=start; i<=end; i++)
-					{
-						Tuple tuple = t.getTuple(i);
-
-						Object bpId = tuple.get(BP_ID_COL_KEY);
-						com.tinkerpop.blueprints.Vertex bpNode = m_dbTree.getVertex (bpId);
-						bpNode.setProperty(colName, tuple.get(col));
-					}
-				}
-
-			}
-		}
-	};
-	
-	TableListener m_edgeTableListener = new TableListener() {
-
-		@Override
-		public void tableChanged(Table t, int start, int end, int col, int type) {
-			if (type == EventConstants.UPDATE && m_tableListenerEnabled)
-			{
-				String colName = t.getColumnName(col);
-				if (m_edgePropNames.contains(colName))
-				{
-					for (int i=start; i<=end; i++)
-					{
-						Tuple tuple = t.getTuple(i);
-						
-						Object bpId = tuple.get(BP_ID_COL_KEY);
-						com.tinkerpop.blueprints.Edge bpEdge = m_dbTree.getEdge (bpId);
-						bpEdge.setProperty(colName, tuple.get(col));
-					}
-				}
-			}
-		}
-	};
-	
 	//return sorted copy of propName
-	private HashSet<String> addProperties (String [] propNames, Table t)
+	private void addTableProperties(String[] propNames, Table t)
 	{
-		HashSet<String> hashSet = new HashSet<String> ();
-		
-		t.addColumn(BP_ID_COL_KEY, Object.class, null);
+		t.addColumn(sm_bpIdColumnName, Object.class, null);
 		
 		for (String propName : propNames)
 		{
 			t.addColumn(propName, Object.class, null);
-			hashSet.add(propName);
 		}
-		return hashSet;
 	}
 	
 	
-	public MindTree(String dbPath, Object rootId) 
+	public MindTree(String dbPath, Object rootId)
 	{
 		m_tree = new Tree();
 		
 		m_dbTree = new DBTree (dbPath);
-		m_maxLevel = 2;
-		
+
 		m_nodeTable = m_tree.getNodeTable();
 		m_edgeTable = m_tree.getEdgeTable();
 		
-		String nodePropNames [] = {
-			sm_textPropName,
-			
-			sm_fontFamilyPropName,
-			sm_fontSizePropName,
-			
-			sm_boldPropName,
-			sm_italicPropName,
-			sm_underlinedPropName,
-			
-			sm_nodeColorPropName,
-			sm_textColorPropName,
-			sm_outlineColorPropName
-		};
 
-		String edgePropNames [] = {sm_edgeTypePropName, sm_edgeColorPropName};
-		
-		m_nodePropNames = addProperties(nodePropNames, m_nodeTable);
-		m_edgePropNames = addProperties(edgePropNames, m_edgeTable);
+		addTableProperties(sm_nodePropNames, m_nodeTable);
+		addTableProperties(sm_edgePropNames, m_edgeTable);
 		
 		Node root = m_tree.addRoot();
 		loadNodeProperties(m_dbTree.getVertex(rootId), root);
-		
-		deepTraverse (root, new Processor () {
+
+        final int initialLevel = 2;
+		m_tree.deepTraverse (root, new Tree.Processor () {
 			public boolean run (Node node, int level) {
 				attachChildren (node);
-				return level < m_maxLevel;
+				return level < initialLevel;
 			}
 			
 		}, 0);
-		
-		m_nodeTable.addTableListener(m_nodeTableListener);
-		m_edgeTable.addTableListener(m_edgeTableListener);
-		
-		m_tableListenerEnabled = true;
+
+
+        //m_tree = (Tree)m_vis.getGroup(sm_treeGroupName);
+
 	}
 	
-	private static void blueprints2prefuse(com.tinkerpop.blueprints.Element bpElement, Tuple tuple, HashSet<String> keys)
+	private static void blueprints2prefuse(com.tinkerpop.blueprints.Element bpElement, Tuple tuple, String keys[])
 	{
-		tuple.set(BP_ID_COL_KEY, bpElement.getId());
+		tuple.set(sm_bpIdColumnName, bpElement.getId());
 		for (String key : keys)
 		{
 			tuple.set(key, bpElement.getProperty(key));
@@ -196,34 +127,23 @@ public class MindTree {
 	
 	private void loadNodeProperties (Vertex vertex, Node node)
 	{
-		blueprints2prefuse(vertex, node, m_nodePropNames);
+		blueprints2prefuse(vertex, node, sm_nodePropNames);
 	}
 	
 	private void loadEdgeProperties (com.tinkerpop.blueprints.Edge dbEdge, Edge edge)
 	{
-		blueprints2prefuse(dbEdge, edge, m_edgePropNames);
+		blueprints2prefuse(dbEdge, edge, sm_edgePropNames);
 	}
-	
-
-	/*
-	private static void prefuse2blueprints(Tuple tuple, com.tinkerpop.blueprints.Element bpElement, String [] keys) 
-	{
-		for (String key : keys)
-		{
-			bpElement.setProperty(key, tuple.get(key));
-		}
-	}
-	*/
 	
 	private Vertex getVertex (Node node)
 	{
-		Object bpId = node.get(BP_ID_COL_KEY);
+		Object bpId = node.get(sm_bpIdColumnName);
 		return m_dbTree.getVertex(bpId);
 	}
 	
 	private com.tinkerpop.blueprints.Edge getDBEdge (Edge edge)
 	{
-		return m_dbTree.getEdge(edge.get(BP_ID_COL_KEY));
+		return m_dbTree.getEdge(edge.get(sm_bpIdColumnName));
 	}
 
 	private void attachChildren (Node parent)
@@ -245,7 +165,7 @@ public class MindTree {
 			loadEdgeProperties(edgeVertex.m_edge, edge);
 		}
 	}
-
+/*
 	private interface Processor 
 	{
 		//return: true: continue deeper, false stop
@@ -268,6 +188,7 @@ public class MindTree {
 	{
 		deepTraverse(node, proc, 0);
 	}
+	*/
 	
 	public void unfoldNode (VisualItem visualItem)
 	{
@@ -288,7 +209,7 @@ public class MindTree {
 			final String group = visualItem.getGroup();
 
 			//unfold descendants deeply, to the folded descendants
-			deepTraverse(node,new Processor() {
+			m_tree.deepTraverse(node,new Tree.Processor() {
 				public boolean run(Node node, int level) {
 					
 					if (node == unfoldTreeRoot) {
@@ -335,7 +256,7 @@ public class MindTree {
 		final Node foldTreeRoot = node;
 		
 		//set descendants unvisible deeply, to the folded descendants
-		deepTraverse(node,new Processor() {
+		m_tree.deepTraverse(node,new Tree.Processor() {
 			public boolean run(Node node, int level) {
 				if (node == foldTreeRoot)
 				{
@@ -359,13 +280,10 @@ public class MindTree {
 		}, 0);
 		
 		// detach the descendants of the earliest unfold node
-		if (m_foldedNodes.size() > 100)
+		if (m_foldedNodes.size() > 5)
 		{
-			Iterator<Node> iter = m_foldedNodes.iterator();
-			Node toRemovedNode = iter.next();
-			iter = null;
+			Node toRemovedNode = m_foldedNodes.iterator().next();
 			m_foldedNodes.remove(toRemovedNode);
-			
 			m_tree.removeDescendants(toRemovedNode);
 		}
 
@@ -442,7 +360,7 @@ public class MindTree {
 		while (allRows.hasNext()) {
 			int curRow = allRows.nextInt();
 
-			if (bpId == null || m_nodeTable.get(curRow, BP_ID_COL_KEY).equals(bpId)) {
+			if (bpId == null || m_nodeTable.get(curRow, sm_bpIdColumnName).equals(bpId)) {
 				aimRows.add(curRow);
 			}
 		}
@@ -546,8 +464,6 @@ public class MindTree {
 	
 	public void setNodeProperty (final Object bpId, final String key, final Object value)
 	{
-		assert (m_nodePropNames.contains(key));
-		
 		Vertex dbNode = m_dbTree.getVertex(bpId);
 		dbNode.setProperty(key, value);
 		
@@ -561,12 +477,12 @@ public class MindTree {
 	
 	public void setNodeProperty (final Node node, final String key, final Object value)
 	{
-		setNodeProperty (node.get(BP_ID_COL_KEY), key, value);
+		setNodeProperty (node.get(sm_bpIdColumnName), key, value);
 	}
 	
 	public Object getDBItemId (final Tuple tuple)
 	{
 		assert(m_tree.containsTuple(tuple));
-		return tuple.get(BP_ID_COL_KEY);
+		return tuple.get(sm_bpIdColumnName);
 	}
 }

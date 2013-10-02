@@ -581,7 +581,30 @@ public class Tree extends Graph {
     public Iterator children(Node n) {
         return super.outNeighbors(n);
     }
-    
+
+    public static  interface Processor
+    {
+        //return: true: continue deeper, false stop
+        abstract public boolean run (Node node, int level);
+    }
+
+    public void deepTraverse (Node node, Processor proc, int level)
+    {
+        if (proc.run(node, level))
+        {
+            Iterator children_iter = children(node);
+            while (children_iter.hasNext())
+            {
+                deepTraverse((Node)children_iter.next(), proc, level+1);
+            }
+        }
+    }
+
+    public void deepTraverse (Node node, Processor proc)
+    {
+        deepTraverse(node, proc, 0);
+    }
+
     // ------------------------------------------------------------------------
     // Sanity Test
     

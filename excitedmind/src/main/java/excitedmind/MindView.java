@@ -126,7 +126,7 @@ public class MindView extends Display {
 
 					m_renderEngine.holdItem(item);
 
-					m_mindTree.ToggleFoldNode(item);
+					m_mindTree.ToggleFoldNode((NodeItem)item);
 					renderTree();
 
 				}

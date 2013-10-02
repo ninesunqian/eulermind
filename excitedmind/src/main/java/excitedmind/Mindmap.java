@@ -10,6 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -42,14 +43,31 @@ import prefuse.visual.VisualItem;
 public class Mindmap {
 
 	public static void main(String argv[]) {
-		
-		String dbUrl = "local://tmp/mind_db";
-		
-        Runtime rt =Runtime.getRuntime();
-        String str[ ] = {"/bin/rm","-rf","/tmp/mind_db"};
+
+        /*
+        String tmpdir = System.getProperty("java.io.tmpdir");
+        System.out.println ("tmpdir = " + tmpdir);
+        String dbPath = tmpdir  + "mind_db";
+        */
+        String dbPath = "d://tmp/mind_db";
+
+		String dbUrl = "local:" + dbPath.replace(File.separatorChar, '/');
+        System.out.println ("dbUrl = " + dbUrl);
+        Runtime rt =Runtime.getRuntime() ;
+
+        String rmDirCmd;
+        if (File.separatorChar == '/') {
+            rmDirCmd = "/bin/rm -rf  " + dbPath;
+        }
+        else {
+            rmDirCmd = " rmdir /s /q " + dbPath;
+        }
+
         try {
-			rt.exec(str);
-		} catch (IOException e) {
+            System.out.println (rmDirCmd);
+            Process process = rt.exec(rmDirCmd);
+
+        } catch (IOException e) {
 			e.printStackTrace();
 		}
         
