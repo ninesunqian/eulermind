@@ -2,14 +2,7 @@ package excitedmind;
 
 import java.util.ArrayList;
 
-import prefuse.Visualization;
-import prefuse.visual.VisualItem;
-import prefuse.visual.tuple.TableEdgeItem;
-import prefuse.visual.tuple.TableNodeItem;
-
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 
 import prefuse.data.Edge;
 import prefuse.data.Node;
@@ -29,11 +22,7 @@ import excitedmind.DBTree.RefLinkInfo;
 
 public class MindTree {
 
-    private final static String sm_treeGroupName = "tree";
-    private final static String sm_treeNodesGroupName = PrefuseLib.getGroupName(sm_treeGroupName, Graph.NODES);
-    private final static String sm_treeEdgesGroupName = PrefuseLib.getGroupName(sm_treeGroupName, Graph.EDGES);
-
-	private final static String sm_bpIdColumnName = "bpElement";
+	private final static String sm_dbIdColumnName = "dbElement";
 
 	public final static String sm_textPropName = "text";
 	public final static String sm_fontFamilyPropName = "fontFamily";
@@ -71,13 +60,10 @@ public class MindTree {
 	DBTree m_dbTree;
 
 
-
-    private LinkedHashSet<Node> m_foldedNodes = new LinkedHashSet<Node>();
-    
 	//return sorted copy of propName
 	private void addTableProperties(String[] propNames, Table t)
 	{
-		t.addColumn(sm_bpIdColumnName, Object.class, null);
+		t.addColumn(sm_dbIdColumnName, Object.class, null);
 		
 		for (String propName : propNames)
 		{
@@ -111,44 +97,41 @@ public class MindTree {
 			
 		}, 0);
 
-
-        //m_tree = (Tree)m_vis.getGroup(sm_treeGroupName);
-
 	}
-	
-	private static void blueprints2prefuse(com.tinkerpop.blueprints.Element bpElement, Tuple tuple, String keys[])
+
+	private static void loadElementProperties(com.tinkerpop.blueprints.Element dbElement, Tuple tuple, String keys[])
 	{
-		tuple.set(sm_bpIdColumnName, bpElement.getId());
+		tuple.set(sm_dbIdColumnName, dbElement.getId());
 		for (String key : keys)
 		{
-			tuple.set(key, bpElement.getProperty(key));
+			tuple.set(key, dbElement.getProperty(key));
 		}
 	}
 	
 	private void loadNodeProperties (Vertex vertex, Node node)
 	{
-		blueprints2prefuse(vertex, node, sm_nodePropNames);
+		loadElementProperties(vertex, node, sm_nodePropNames);
 	}
 	
 	private void loadEdgeProperties (com.tinkerpop.blueprints.Edge dbEdge, Edge edge)
 	{
-		blueprints2prefuse(dbEdge, edge, sm_edgePropNames);
+		loadElementProperties(dbEdge, edge, sm_edgePropNames);
 	}
 	
-	private Vertex getVertex (Node node)
+	private Vertex getDBVertex(Node node)
 	{
-		Object bpId = node.get(sm_bpIdColumnName);
-		return m_dbTree.getVertex(bpId);
+		Object dbId = node.get(sm_dbIdColumnName);
+		return m_dbTree.getVertex(dbId);
 	}
 	
 	private com.tinkerpop.blueprints.Edge getDBEdge (Edge edge)
 	{
-		return m_dbTree.getEdge(edge.get(sm_bpIdColumnName));
+		return m_dbTree.getEdge(edge.get(sm_dbIdColumnName));
 	}
 
-	private void attachChildren (Node parent)
+	public void attachChildren (Node parent)
 	{
-		ArrayList<EdgeVertex> edgeVertexArray = m_dbTree.getChildrenAndReferees(getVertex(parent));
+		ArrayList<EdgeVertex> edgeVertexArray = m_dbTree.getChildrenAndReferees(getDBVertex(parent));
 		
 		if (edgeVertexArray == null || edgeVertexArray.size() == 0)
 		{
@@ -160,159 +143,17 @@ public class MindTree {
 			Node child = m_tree.addChild(parent);
 			Edge edge = m_tree.getEdge(parent, child);
 
-			System.out.println (getVertex(parent)+ "->" + edgeVertex.m_vertex+ "   :  " + edgeVertex.m_edge);
+			System.out.println (getDBVertex(parent)+ "->" + edgeVertex.m_vertex+ "   :  " + edgeVertex.m_edge);
 			loadNodeProperties(edgeVertex.m_vertex, child);
 			loadEdgeProperties(edgeVertex.m_edge, edge);
 		}
 	}
-/*
-	private interface Processor 
-	{
-		//return: true: continue deeper, false stop
-	 	abstract public boolean run (Node node, int level);
-	}
-	
-	private void deepTraverse (Node node, Processor proc, int level)
-	{
-		if (proc.run(node, level))
-		{
-			Iterator children_iter = m_tree.children(node);
-			while (children_iter.hasNext())
-			{
-				deepTraverse((Node)children_iter.next(), proc, level+1);
-			}
-		}
-	}
-	
-	void deepTraverse (Node node, Processor proc)
-	{
-		deepTraverse(node, proc, 0);
-	}
-	*/
-	
-	public void unfoldNode (VisualItem visualItem)
-	{
-		Node node = (Node)visualItem.getSourceTuple();
-		
-		if (node.getChildCount() > 0){ // node is not a leaf node
 
-			if (visualItem.isExpanded()) {
-				return;
-			}
+    public void detachChildern (Node node)
+    {
+        m_tree.removeDescendants(node);
+    }
 
-			assert (m_foldedNodes.contains(node));
-
-			m_foldedNodes.remove(node);
-
-			final Visualization vis = visualItem.getVisualization();
-			final Node unfoldTreeRoot = node;
-			final String group = visualItem.getGroup();
-
-			//unfold descendants deeply, to the folded descendants
-			m_tree.deepTraverse(node,new Tree.Processor() {
-				public boolean run(Node node, int level) {
-					
-					if (node == unfoldTreeRoot) {
-						return true;
-					}
-					
-					TableNodeItem visualNode = (TableNodeItem)vis.getVisualItem(group, node);
-					TableEdgeItem visualEdge = (TableEdgeItem)visualNode.getParentEdge();
-					
-					System.out.println ( "visiableNode " + node.getString(sm_textPropName));
-					PrefuseLib.updateVisible(visualNode, true);
-					PrefuseLib.updateVisible(visualEdge, true);
-					
-					if (m_foldedNodes.contains(node)) {
-						return false;
-					} else {
-						return true;
-					}
-				}
-			}, 0);
-		}
-		else // node  is the leaf of prefuse Tree
-		{
-			attachChildren(node);
-		}
-
-		visualItem.setExpanded(true);
-	}
-	
-	public void foldNode (VisualItem visualItem)
-	{
-		final Visualization vis = visualItem.getVisualization();
-		Node node = (Node)visualItem.getSourceTuple();
-		final String group = visualItem.getGroup();
-	
-		System.out.println ( "foldNode " + node.getString(sm_textPropName));
-		if (! visualItem.isExpanded())
-		{
-			return;
-		}
-		
-		m_foldedNodes.add(node);
-		
-		final Node foldTreeRoot = node;
-		
-		//set descendants unvisible deeply, to the folded descendants
-		m_tree.deepTraverse(node,new Tree.Processor() {
-			public boolean run(Node node, int level) {
-				if (node == foldTreeRoot)
-				{
-					return true;
-				}
-				
-				TableNodeItem visualNode = (TableNodeItem)vis.getVisualItem(group, node);
-				TableEdgeItem visualEdge = (TableEdgeItem)visualNode.getParentEdge();
-				
-				PrefuseLib.updateVisible(visualNode, false);
-				PrefuseLib.updateVisible(visualEdge, false);
-					
-				System.out.println ( "invisiableNode " + node.getString(sm_textPropName));
-				if (m_foldedNodes.contains(node)) {
-					System.out.println ( "m_foldedNodes contain: " + node + " " + node.getString(sm_textPropName));
-					return false;
-				} else {
-					return true;
-				}
-			}
-		}, 0);
-		
-		// detach the descendants of the earliest unfold node
-		if (m_foldedNodes.size() > 5)
-		{
-			Node toRemovedNode = m_foldedNodes.iterator().next();
-			m_foldedNodes.remove(toRemovedNode);
-			m_tree.removeDescendants(toRemovedNode);
-		}
-
-		visualItem.setExpanded(false);
-	}
-	
-	public void ToggleFoldNode (VisualItem visualItem )
-	{
-		Node node = (Node)visualItem.getSourceTuple();
-		if (node.getChildCount() == 0)
-		{
-            System.out.println ( "----leaf node un fold " + visualItem.getString(sm_textPropName));
-            unfoldNode(visualItem);
-		}
-        else
-        {
-            if (visualItem.isExpanded())
-            {
-                System.out.println ( "---- fold " + visualItem.getString(sm_textPropName));
-                foldNode(visualItem);
-            }
-            else
-            {
-                System.out.println ( "----un fold " + visualItem.getString(sm_textPropName));
-                unfoldNode(visualItem);
-            }
-        }
-	}
-	
 	public void setRoot (Node node)
 	{
 		if (node == m_tree.getRoot())
@@ -326,10 +167,10 @@ public class MindTree {
 		}
 	}
 	
-	public void ascendRootParent ()
+	public void ascendRoot ()
 	{
 		Node root = m_tree.getRoot();
-		EdgeVertex edgeVertex = m_dbTree.getParent(getVertex(root));
+		EdgeVertex edgeVertex = m_dbTree.getParent(getDBVertex(root));
 		
 		if (edgeVertex == null)
 		{
@@ -345,22 +186,22 @@ public class MindTree {
 		m_tree.setRoot(newRoot);
 	}
 	
-	interface Visiter  {
+	interface Visitor {
 	 	abstract public void visit (Node node);
 	}
 	
-	private void visitAllAvataresOfNode (Object bpId, Visiter visiter)
+	private void visitNodeAvatares(Object dbId, Visitor visiter)
 	{
 		IntIterator allRows = m_nodeTable.rows();
 
 		ArrayList<Integer> aimRows = new ArrayList<Integer> ();
-		System.out.println ("need node's bpId is" + bpId);
+		System.out.println ("need node's dbId is" + dbId);
 
-		//collect the node with the same parentBpId to aimRows
+		//collect the node with the same parentDBId to aimRows
 		while (allRows.hasNext()) {
 			int curRow = allRows.nextInt();
 
-			if (bpId == null || m_nodeTable.get(curRow, sm_bpIdColumnName).equals(bpId)) {
+			if (dbId == null || m_nodeTable.get(curRow, sm_dbIdColumnName).equals(dbId)) {
 				aimRows.add(curRow);
 			}
 		}
@@ -379,110 +220,158 @@ public class MindTree {
 		}
 	}
 
-	private void appendBpChild (final Object parentBpId, 
-			final Vertex bpChild,
-			final com.tinkerpop.blueprints.Edge bpEdge, 
-			final int edgePosInSourceNode)
+	private void exposeDBEdge(final Vertex source,
+                              final Vertex target,
+                              final com.tinkerpop.blueprints.Edge dbEdge,
+                              final int edgePosInSourceNode)
 	{
-		visitAllAvataresOfNode(parentBpId, new Visiter () {
-			public void visit (Node node) {
-				Node child = m_tree.addNode();
-				Edge edge = m_tree.addChildEdge(node, child, edgePosInSourceNode);
+        final Object sourceId = source.getId();
+		visitNodeAvatares(source, new Visitor() {
+            public void visit(Node node) {
+                Node child = m_tree.addNode();
+                Edge edge = m_tree.addChildEdge(node, child, edgePosInSourceNode);
 
-				loadNodeProperties(bpChild, child);
-				loadEdgeProperties(bpEdge, edge);
-			}
-		});
+                loadNodeProperties(target, child);
+                loadEdgeProperties(dbEdge, edge);
+            }
+        });
 	}
 
+    //return new child node
 	public Node addChild(Node parent, int pos) {
-		Vertex dbParent = getVertex(parent);
+		Vertex dbParent = getDBVertex(parent);
 		EdgeVertex edgeVertex = m_dbTree.addChild(dbParent, pos);
 		
-		appendBpChild(dbParent.getId(), edgeVertex.m_vertex,edgeVertex.m_edge, pos);
+		exposeDBEdge(dbParent, edgeVertex.m_vertex, edgeVertex.m_edge, pos);
 		
         return m_tree.getChild(parent, pos);
 	}
 
-	public Node addReference(Node node, Vertex referee, int pos) {
-		
-		Vertex referer = getVertex(node);
-		com.tinkerpop.blueprints.Edge refEdge = m_dbTree.addRefEdge(referer, referee, pos);
-		
-        if (refEdge == null) {
-        	return null;
-        }
-        else {
-			appendBpChild(referer.getId(), referee, refEdge, pos);
-	        return m_tree.getChild(node, pos);
-        }
-	}
-	
-	public Node addReference(Node node, Node refTargetNode, int pos) {
-		return addReference(node, getVertex(refTargetNode), pos);
-	}
-	
-	//return the parent of the removed node
-	public void moveNodeToTrash (Node node)
+    //return the next or previous sibling, or parent
+    public Node removeLeafNode(Node node) {
+
+        /* TODO
+        Node parent = node
+        Vertex dbParent = getDBVertex(parent);
+        EdgeVertex edgeVertex = m_dbTree.addChild(dbParent, pos);
+
+        exposeDBEdge(dbParent, edgeVertex.m_vertex, edgeVertex.m_edge, pos);
+
+        return m_tree.getChild(parent, pos);
+        */
+        return null;
+    }
+
+	//return the DBid of node
+	public Object moveNodeToTrash (Node node)
 	{
 		Node parent = m_tree.getParent (node);
 		int index = m_tree.getChildIndex(parent, node);
-		Vertex vertex = getVertex (node);
+		Vertex vertex = getDBVertex(node);
+        Object dbId = vertex.getId();
 		
-		m_dbTree.moveSubTreeToTrash(getVertex(parent), index);
+		m_dbTree.moveSubTreeToTrash(getDBVertex(parent), index);
 		
-		visitAllAvataresOfNode(getDBItemId(node), new Visiter () {
-			public void visit (Node node) {
-				System.out.println ("remove node :" + node.getRow() + "---" + node.getString(sm_textPropName));
-				m_tree.removeChild(node);
-			}
-		});
+		visitNodeAvatares(getDBElementId(node), new Visitor() {
+            public void visit(Node node) {
+                System.out.println("remove node :" + node.getRow() + "---" + node.getString(sm_textPropName));
+                m_tree.removeChild(node);
+            }
+        });
 		
 		ArrayList<Object> refLinkInfoes = m_dbTree.getContainerProperty (vertex, DBTree.SAVED_REFERER_INFO_PROP_NAME, false);
 		for (Object obj : refLinkInfoes)
 		{
 			final RefLinkInfo refLinkInfo = (RefLinkInfo) obj;
-			visitAllAvataresOfNode(refLinkInfo.m_referee, new Visiter () {
-				public void visit (Node node) {
-					m_tree.removeNode(node);
-				}
-			});
+			visitNodeAvatares(refLinkInfo.m_referee, new Visitor() {
+                public void visit(Node node) {
+                    m_tree.removeNode(node);
+                }
+            });
 		}
+        return dbId;
 	}
 	
-	public void restoreNode (Node node)
+	public void restoreNode (Object dbId)
 	{
+        //TODO
 		
 		
 	}
-	
-	public void reconnectNode (Node target, Node source1, Node source2, int pos)
+
+    public Node addReference(Node referer, Node referee, int pos) {
+
+        Vertex refererVertex = getDBVertex(referer);
+        Vertex refereeVertex = getDBVertex(referee);
+        com.tinkerpop.blueprints.Edge refEdge = m_dbTree.addRefEdge(refererVertex, refereeVertex, pos);
+
+        if (refEdge == null) {
+            return null;
+        }
+        else {
+            exposeDBEdge(refererVertex, refereeVertex, refEdge, pos);
+            return m_tree.getChild(referer, pos);
+        }
+    }
+
+    public void removeReference(Node referer, Node referee) {
+        /* TODO
+
+        Vertex refererVertex = getDBVertex(referer);
+        Vertex refereeVertex = getDBVertex(referee);
+        Edge edge = m_tree.getEdge (referer, referee);
+        edge.get
+
+        com.tinkerpop.blueprints.Edge refEdge = m_dbTree.getRef(refererVertex, refereeVertex, pos);
+
+        if (refEdge == null) {
+            return null;
+        }
+        else {
+            exposeDBEdge(refererVertex, refereeVertex, refEdge, pos);
+            return m_tree.getChild(referer, pos);
+        }
+        */
+    }
+
+
+    public void reconnectNode (Node target, Node source1, Node source2, int pos)
 	{
 		//source1 // OUTDEGREE, OUTEDGES
 		//source2 //OUTDEGEEE, OUTEDGES
 	}
 	
-	public void setNodeProperty (final Object bpId, final String key, final Object value)
+	public void setNodeProperty (final Object dbId, final String key, final Object value)
 	{
-		Vertex dbNode = m_dbTree.getVertex(bpId);
+		Vertex dbNode = m_dbTree.getVertex(dbId);
 		dbNode.setProperty(key, value);
 		
-		visitAllAvataresOfNode(bpId, new Visiter () {
-			public void visit (Node node) {
-				node.set(key, value);
-			}
-		});
+		visitNodeAvatares(dbId, new Visitor() {
+            public void visit(Node node) {
+                node.set(key, value);
+            }
+        });
 		
 	}
 	
 	public void setNodeProperty (final Node node, final String key, final Object value)
 	{
-		setNodeProperty (node.get(sm_bpIdColumnName), key, value);
+		setNodeProperty (node.get(sm_dbIdColumnName), key, value);
 	}
 	
-	public Object getDBItemId (final Tuple tuple)
+	public Object getDBElementId(final Tuple tuple)
 	{
 		assert(m_tree.containsTuple(tuple));
-		return tuple.get(sm_bpIdColumnName);
+		return tuple.get(sm_dbIdColumnName);
 	}
+
+    public String getText (Node node)
+    {
+        return node.getString(sm_textColorPropName);
+    }
+
+    public void setText (Node node, String text)
+    {
+        setNodeProperty(node, sm_textPropName, text);
+    }
 }

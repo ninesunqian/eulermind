@@ -46,11 +46,7 @@ import prefuse.visual.tuple.TableNodeItem;
  */
 public class MindView extends Display {
 
-	public final String m_treeGroupName = "tree";
-	public final String m_treeNodesGroupName;
-	public final String m_treeEdgesGroupName;
-
-	private MindTree m_mindTree;
+	private VisualMindTree m_visMindTree;
 	private TableNodeItem m_curFocus;
 
 	MindTreeRenderEngine m_renderEngine;
@@ -61,29 +57,16 @@ public class MindView extends Display {
 
 		setHighQuality(true);
 
-		m_mindTree = new MindTree(path, rootId);
-		m_treeNodesGroupName = PrefuseLib.getGroupName(m_treeGroupName,
-				Graph.NODES);
-		m_treeEdgesGroupName = PrefuseLib.getGroupName(m_treeGroupName,
-				Graph.EDGES);
+		m_visMindTree = new VisualMindTree(path, rootId, m_vis);
 
-		m_vis.add(m_treeGroupName, m_mindTree.m_tree);
 		setItemSorter(new TreeDepthItemSorter());
 
-		m_renderEngine = new MindTreeRenderEngine(this, m_treeGroupName);
+		m_renderEngine = new MindTreeRenderEngine(this, VisualMindTree.sm_treeGroupName);
 
 		setMouseControlListener();
 		setKeyControlListener();
 
 		renderTree();
-	}
-
-	public boolean isNode(VisualItem item) {
-		return item.isInGroup(m_treeNodesGroupName);
-	}
-
-	public boolean isEdge(VisualItem item) {
-		return item.isInGroup(m_treeEdgesGroupName);
 	}
 
 	public void renderTree() {
@@ -100,7 +83,7 @@ public class MindView extends Display {
 		addControlListener(new ControlAdapter() {
 
 			public void itemEntered(VisualItem item, MouseEvent e) {
-				if (isNode(item)) {
+				if (m_visMindTree.isNode(item)) {
 					m_curFocus = (TableNodeItem) item;
 					renderTree();
 
@@ -121,12 +104,12 @@ public class MindView extends Display {
 			public void itemClicked(VisualItem item, MouseEvent e) {
 				System.out.println("mouse Clicked");
 
-				if (isNode(item)) {
+				if (m_visMindTree.isNode(item)) {
 					m_curFocus = (TableNodeItem) item;
 
 					m_renderEngine.holdItem(item);
 
-					m_mindTree.ToggleFoldNode((NodeItem)item);
+					m_visMindTree.ToggleFoldNode((NodeItem)item);
 					renderTree();
 
 				}
@@ -167,8 +150,8 @@ public class MindView extends Display {
 		return m_undoManager;
 	}
 
-	public MindTree getMindTree() {
-		return m_mindTree;
+	public VisualMindTree getMindTree() {
+		return m_visMindTree;
 	}
 
 	public TableNodeItem getFocusNode() {

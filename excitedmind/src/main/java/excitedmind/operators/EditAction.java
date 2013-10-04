@@ -9,7 +9,7 @@ import javax.swing.undo.AbstractUndoableEdit;
 
 import prefuse.visual.tuple.TableNodeItem;
 
-import excitedmind.MindTree;
+import excitedmind.VisualMindTree;
 import excitedmind.MindView;
 
 public class EditAction extends AbstractAction {
@@ -35,15 +35,15 @@ public class EditAction extends AbstractAction {
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER)
 				{
-					String oldText = m_nodeItem.getString (MindTree.sm_textPropName);
+                    VisualMindTree visMindTree = m_mindView.getMindTree();
+
+					String oldText = visMindTree.getText(m_nodeItem);
+                    Object bpId = visMindTree.getDBElementId(m_nodeItem);
 
 					m_mindView.removeKeyListener(keyListener);
 
 					String text = m_mindView.getTextEditor().getText();
 					m_mindView.stopEditing();
-					
-					MindTree mindTree = m_mindView.getMindTree();
-					Object bpId = mindTree.getDBItemId(m_mindView.getVisualization().getSourceTuple(m_nodeItem));
 					
 					Executor executor = new Executor (m_mindView, bpId, oldText, text);
 					executor.redo();
@@ -63,7 +63,7 @@ public class EditAction extends AbstractAction {
 	public void actionPerformed(ActionEvent e) {
 		m_nodeItem = m_mindView.getFocusNode ();
 		m_mindView.getTextEditor().addKeyListener(keyListener);
-		m_mindView.editText(m_nodeItem, MindTree.sm_textPropName) ;
+		m_mindView.editText(m_nodeItem, VisualMindTree.sm_textPropName) ;
 	}
 	
 	static class Executor extends AbstractUndoableEdit 
@@ -86,13 +86,13 @@ public class EditAction extends AbstractAction {
 
 		public void redo ()
 		{
-			m_mindView.getMindTree().setNodeProperty(m_bpId, MindTree.sm_textPropName, m_newText);
+			m_mindView.getMindTree().setNodeProperty(m_bpId, VisualMindTree.sm_textPropName, m_newText);
 			m_mindView.renderTree ();
 		}
 		
 		public void undo ()
 		{
-			m_mindView.getMindTree().setNodeProperty(m_bpId, MindTree.sm_textPropName, m_oldText);
+			m_mindView.getMindTree().setNodeProperty(m_bpId, VisualMindTree.sm_textPropName, m_oldText);
 			m_mindView.renderTree ();
 		}
 	}
