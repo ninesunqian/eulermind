@@ -40,6 +40,8 @@ public class VisualMindTree extends MindTree {
         m_vis = vis;
         //m_vis.add(sm_treeGroupName, m_tree);
         m_vis.add(sm_treeGroupName, m_tree);
+
+        //TODO: add table Litener, remove event, remove frome m_foldedNodes
     }
 
     private NodeItem toVisual (Node node)

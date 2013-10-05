@@ -148,12 +148,12 @@ public class DBTree implements Graph {
 		return m_rootIndex.get(ROOT_KEY_NAME, ROOT_KEY_NAME).iterator().next();
 	}
 	
-	private Vertex getEdgeSource (Edge edge)
+	public Vertex getEdgeSource (Edge edge)
 	{
 		return edge.getVertex(Direction.OUT);
 	}
 	
-	private Vertex getEdgeTarget (Edge edge)
+	public Vertex getEdgeTarget (Edge edge)
 	{
 		return edge.getVertex(Direction.IN);
 	}
@@ -264,7 +264,7 @@ public class DBTree implements Graph {
 		commit ();
 	}
 	
-	private Edge getEdge (Vertex source, int pos)
+	public Edge getEdge (Vertex source, int pos)
 	{
 		ArrayList<Object> childEdgeArray = getEdgeIDsToChildren(source, false);
 		
@@ -425,14 +425,14 @@ public class DBTree implements Graph {
 	{
 		assert (parent != getRoot());
 		
-		final ArrayList<RefLinkInfo> refLinkInfos = new ArrayList<RefLinkInfo> ();
-		
 		EdgeVertex edgeVertex = getChildOrReferee(parent, pos);
 		
 		assert (getEdgeType(edgeVertex.m_edge) == EdgeType.INCLUDE);
 		
 		Vertex removedVertex = edgeVertex.m_vertex;
-		
+
+        //collect the nodes and edges which refer the removed treee
+        final ArrayList<RefLinkInfo> refLinkInfos = new ArrayList<RefLinkInfo> ();
 		deepTraverse(removedVertex, new Processor() {
 			
 			public boolean run(Vertex vertex, int level) {
@@ -466,20 +466,57 @@ public class DBTree implements Graph {
 		
 		return removedVertex;
 	}
+
+    public static class TrashedTreeContext {
+        Object m_parentId;
+        int m_pos;
+        ArrayList<RefLinkInfo> m_refLinkInfos;
+
+        TrashedTreeContext (Object parentId, int pos, ArrayList<RefLinkInfo> refLinkInfos)
+        {
+            m_parentId = parentId;
+            m_pos = pos;
+            m_refLinkInfos = refLinkInfos;
+        }
+    }
+
+    public TrashedTreeContext getTrashedTreeContext (Vertex vertex)
+    {
+        Object parentId = vertex.getProperty(SAVED_PARENT_ID_PROP_NAME);
+        int pos = (Integer)vertex.getProperty(SAVED_POS_PROP_NAME);
+        ArrayList<Object> refLinkInfos = getContainerProperty (vertex, SAVED_REFERER_INFO_PROP_NAME, false);
+
+        assert (parentId != null);
+
+        if (refLinkInfos == null) {
+            return new TrashedTreeContext (parentId, pos, null);
+
+        } else {
+            ArrayList<RefLinkInfo> new_array = new ArrayList<RefLinkInfo>();
+            for (Object obj : refLinkInfos)
+            {
+                RefLinkInfo refLinkInfo = (RefLinkInfo) obj;
+                new_array.add(refLinkInfo);
+            }
+
+            return new TrashedTreeContext (parentId, pos, new_array);
+        }
+
+    }
 	
 	//return parent vertex, and 
 	public EdgeVertex restoreSubTree (Vertex vertex)
 	{
 		Object parentId = vertex.getProperty(SAVED_PARENT_ID_PROP_NAME);
 		int pos = (Integer)vertex.getProperty(SAVED_POS_PROP_NAME);
-		ArrayList<Object> refLinkInfoes = getContainerProperty (vertex, SAVED_REFERER_INFO_PROP_NAME, false);
+		ArrayList<Object> refLinkInfos = getContainerProperty (vertex, SAVED_REFERER_INFO_PROP_NAME, false);
 		
 		Vertex parent = getVertex(parentId);
 		Edge edge = addEdge(parent, vertex, pos, EdgeType.INCLUDE);
 		
-		if (refLinkInfoes != null)
+		if (refLinkInfos != null)
 		{
-			for (Object obj : refLinkInfoes)
+			for (Object obj : refLinkInfos)
 			{
 				RefLinkInfo refLinkInfo = (RefLinkInfo) obj;
 				addRefEdge(getVertex(refLinkInfo.m_referer), 

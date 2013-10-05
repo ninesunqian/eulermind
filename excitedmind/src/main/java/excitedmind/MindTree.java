@@ -247,21 +247,6 @@ public class MindTree {
         return m_tree.getChild(parent, pos);
 	}
 
-    //return the next or previous sibling, or parent
-    public Node removeLeafNode(Node node) {
-
-        /* TODO
-        Node parent = node
-        Vertex dbParent = getDBVertex(parent);
-        EdgeVertex edgeVertex = m_dbTree.addChild(dbParent, pos);
-
-        exposeDBEdge(dbParent, edgeVertex.m_vertex, edgeVertex.m_edge, pos);
-
-        return m_tree.getChild(parent, pos);
-        */
-        return null;
-    }
-
 	//return the DBid of node
 	public Object moveNodeToTrash (Node node)
 	{
@@ -292,17 +277,40 @@ public class MindTree {
         return dbId;
 	}
 	
-	public void restoreNode (Object dbId)
+	public void restoreNode (final Object dbId)
 	{
-        //TODO
-		
-		
+        final Vertex restoredVertex = m_dbTree.getVertex(dbId);
+        final DBTree.TrashedTreeContext context = m_dbTree.getTrashedTreeContext(restoredVertex);
+        final Vertex parentVertex = m_dbTree.getVertex(context.m_parentId);
+
+        final EdgeVertex edgeParent = m_dbTree.restoreSubTree(restoredVertex);
+
+        visitNodeAvatares(context.m_parentId, new Visitor() {
+            @Override
+            public void visit(Node node) {
+                exposeDBEdge(parentVertex, restoredVertex, edgeParent.m_edge, context.m_pos);
+            }
+        });
+
+        for (final RefLinkInfo refLinkInfo : context.m_refLinkInfos) {
+            final Vertex refererVertex = m_dbTree.getVertex(refLinkInfo.m_referer);
+            final Vertex refereeVertex = m_dbTree.getVertex(refLinkInfo.m_referee);
+            final com.tinkerpop.blueprints.Edge refDBEdge = m_dbTree.getEdge (refereeVertex, refLinkInfo.m_pos);
+
+            visitNodeAvatares(refLinkInfo.m_referer, new Visitor() {
+                @Override
+                public void visit(Node node) {
+                    exposeDBEdge(refererVertex, refereeVertex, refDBEdge, refLinkInfo.m_pos);
+                }
+            });
+        }
 	}
 
-    public Node addReference(Node referer, Node referee, int pos) {
+
+    public Node addReference(Node referer, Object refereeDBId, int pos) {
 
         Vertex refererVertex = getDBVertex(referer);
-        Vertex refereeVertex = getDBVertex(referee);
+        Vertex refereeVertex = m_dbTree.getVertex(refereeDBId);
         com.tinkerpop.blueprints.Edge refEdge = m_dbTree.addRefEdge(refererVertex, refereeVertex, pos);
 
         if (refEdge == null) {
@@ -314,29 +322,26 @@ public class MindTree {
         }
     }
 
-    public void removeReference(Node referer, Node referee) {
-        /* TODO
+    public void removeReference(Edge refEdge) {
 
-        Vertex refererVertex = getDBVertex(referer);
-        Vertex refereeVertex = getDBVertex(referee);
-        Edge edge = m_tree.getEdge (referer, referee);
-        edge.get
+        final com.tinkerpop.blueprints.Edge dbEdge = getDBEdge(refEdge);
+        assert (m_dbTree.getEdgeType(dbEdge) == DBTree.EdgeType.REFERENCE);
+        final Vertex target = m_dbTree.getEdgeTarget (dbEdge);
 
-        com.tinkerpop.blueprints.Edge refEdge = m_dbTree.getRef(refererVertex, refereeVertex, pos);
-
-        if (refEdge == null) {
-            return null;
-        }
-        else {
-            exposeDBEdge(refererVertex, refereeVertex, refEdge, pos);
-            return m_tree.getChild(referer, pos);
-        }
-        */
+        visitNodeAvatares(target.getId(), new Visitor() {
+            @Override
+            public void visit(Node node) {
+                m_tree.removeNode (node);
+            }
+        });
     }
-
 
     public void reconnectNode (Node target, Node source1, Node source2, int pos)
 	{
+        //TODO
+        // addReference --> addRelation
+        // removeReference --> removeRelation
+
 		//source1 // OUTDEGREE, OUTEDGES
 		//source2 //OUTDEGEEE, OUTEDGES
 	}
