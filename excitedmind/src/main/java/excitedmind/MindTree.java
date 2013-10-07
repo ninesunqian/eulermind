@@ -8,9 +8,7 @@ import prefuse.data.Edge;
 import prefuse.data.Node;
 import prefuse.data.Table;
 import prefuse.data.Tree;
-import prefuse.data.Graph;
 import prefuse.data.Tuple;
-import prefuse.util.PrefuseLib;
 import prefuse.util.collections.IntIterator;
 
 import com.tinkerpop.blueprints.Vertex;
@@ -238,33 +236,40 @@ public class MindTree {
 	}
 
     //return new child node
-	public Node addChild(Node parent, int pos) {
-		Vertex dbParent = getDBVertex(parent);
+	public void addChild(Object  parentDBId, int pos) {
+		Vertex dbParent = m_dbTree.getVertex(parentDBId);
 		EdgeVertex edgeVertex = m_dbTree.addChild(dbParent, pos);
 		
 		exposeDBEdge(dbParent, edgeVertex.m_vertex, edgeVertex.m_edge, pos);
-		
-        return m_tree.getChild(parent, pos);
+
+        //TODO add to VisualMindTree return m_tree.getChild(parent, pos);
 	}
 
 	//return the DBid of node
-	public Object moveNodeToTrash (Node node)
+	public Object moveNodeToTrash (Object parentDBId, int pos)
 	{
+        /* TODO move to VisualMindTree
 		Node parent = m_tree.getParent (node);
 		int index = m_tree.getChildIndex(parent, node);
 		Vertex vertex = getDBVertex(node);
         Object dbId = vertex.getId();
+        */
+
+        Vertex parent = m_dbTree.getVertex(parentDBId);
 		
-		m_dbTree.moveSubTreeToTrash(getDBVertex(parent), index);
+		m_dbTree.trashSubTree(parent, pos);
+
+        EdgeVertex edgeChild = m_dbTree.getChildOrReferee(parent, pos);
+        Object removedDBId = edgeChild.m_vertex.getId();
 		
-		visitNodeAvatares(getDBElementId(node), new Visitor() {
+		visitNodeAvatares(removedDBId, new Visitor() {
             public void visit(Node node) {
                 System.out.println("remove node :" + node.getRow() + "---" + node.getString(sm_textPropName));
                 m_tree.removeChild(node);
             }
         });
 		
-		ArrayList<Object> refLinkInfoes = m_dbTree.getContainerProperty (vertex, DBTree.SAVED_REFERER_INFO_PROP_NAME, false);
+		ArrayList<Object> refLinkInfoes = m_dbTree.getContainerProperty (edgeChild.m_vertex, DBTree.SAVED_REFERER_INFO_PROP_NAME, true);
 		for (Object obj : refLinkInfoes)
 		{
 			final RefLinkInfo refLinkInfo = (RefLinkInfo) obj;
@@ -274,7 +279,7 @@ public class MindTree {
                 }
             });
 		}
-        return dbId;
+        return removedDBId;
 	}
 	
 	public void restoreNode (final Object dbId)
@@ -283,7 +288,7 @@ public class MindTree {
         final DBTree.TrashedTreeContext context = m_dbTree.getTrashedTreeContext(restoredVertex);
         final Vertex parentVertex = m_dbTree.getVertex(context.m_parentId);
 
-        final EdgeVertex edgeParent = m_dbTree.restoreSubTree(restoredVertex);
+        final EdgeVertex edgeParent = m_dbTree.restoreTrashedSubTree(restoredVertex);
 
         visitNodeAvatares(context.m_parentId, new Visitor() {
             @Override
@@ -307,19 +312,18 @@ public class MindTree {
 	}
 
 
-    public Node addReference(Node referer, Object refereeDBId, int pos) {
+    public void addReference(Object refererDBId, Object refereeDBId, int pos) {
 
-        Vertex refererVertex = getDBVertex(referer);
+        //move to VisualMindTree: Vertex refererVertex = getDBVertex(referer);
+        Vertex refererVertex = m_dbTree.getVertex(refererDBId);
         Vertex refereeVertex = m_dbTree.getVertex(refereeDBId);
         com.tinkerpop.blueprints.Edge refEdge = m_dbTree.addRefEdge(refererVertex, refereeVertex, pos);
 
-        if (refEdge == null) {
-            return null;
-        }
-        else {
+        /*
+        //move to VisualMindTree: Vertex refererVertex = getDBVertex(referer);
             exposeDBEdge(refererVertex, refereeVertex, refEdge, pos);
             return m_tree.getChild(referer, pos);
-        }
+            */
     }
 
     public void removeReference(Edge refEdge) {
@@ -336,7 +340,7 @@ public class MindTree {
         });
     }
 
-    public void reconnectNode (Node target, Node source1, Node source2, int pos)
+    public void reconnectNode (Node oldParent, int , Node source2, int pos)
 	{
         //TODO
         // addReference --> addRelation
@@ -358,11 +362,13 @@ public class MindTree {
         });
 		
 	}
-	
+
+    /* TODO add to VisualMindTree
 	public void setNodeProperty (final Node node, final String key, final Object value)
 	{
 		setNodeProperty (node.get(sm_dbIdColumnName), key, value);
 	}
+	*/
 	
 	public Object getDBElementId(final Tuple tuple)
 	{

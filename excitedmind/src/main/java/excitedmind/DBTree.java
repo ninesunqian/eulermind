@@ -227,22 +227,6 @@ public class DBTree implements Graph {
 		return edge;
 	}
 	
-	private void removeEdge (Vertex source, int pos)
-	{
-		ArrayList<Object> outEdgeArray = getEdgeIDsToChildren(source, false);
-		Object edgeId = outEdgeArray.get(pos);
-		
-		m_graph.removeEdge(m_graph.getEdge(edgeId));
-		outEdgeArray.remove(pos);
-		
-		//NOTICE: the container property must be reset to Vertex.
-		//If not, the last item will not be save to db.
-		//it is the bug of blueprints or orientdb
-		source.setProperty(CHILD_EDGES_PROP_NAME, outEdgeArray);
-		commit ();
-	}
-	
-	
 	//only addRefEdge and removeRefEdge is public
 	
 	public Edge addRefEdge (Vertex referer, Vertex referee, int pos)
@@ -250,21 +234,32 @@ public class DBTree implements Graph {
 		assert (referer.getId() != referee.getId());
 		return addEdge (referer, referee, pos, EdgeType.REFERENCE);
 	}
-	
+
+    private void removeEdge (Vertex source, int pos, EdgeType assert_type)
+    {
+        ArrayList<Object> outEdgeArray = getEdgeIDsToChildren(source, false);
+        Object edgeId = outEdgeArray.get(pos);
+
+        Edge edge = m_graph.getEdge(edgeId);
+        assert (getEdgeType(edge) == assert_type);
+
+        m_graph.removeEdge(m_graph.getEdge(edgeId));
+
+        outEdgeArray.remove(pos);
+        //NOTICE: the container property must be reset to Vertex.
+        //If not, the last item will not be save to db.
+        //it is the bug of blueprints or orientdb
+        source.setProperty(CHILD_EDGES_PROP_NAME, outEdgeArray);
+
+        commit ();
+    }
+
 	public void removeRefEdge (Vertex source, int pos)
 	{
-		ArrayList<Object> outEdgeArray = getEdgeIDsToChildren(source, false);
-		Object edgeId = outEdgeArray.get(pos);
-		
-		Edge edge = m_graph.getEdge(edgeId);
-		assert (getEdgeType(edge) == EdgeType.REFERENCE);
-		
-		m_graph.removeEdge(edge);
-		outEdgeArray.remove(pos);
-		commit ();
+        removeEdge(source, pos, EdgeType.REFERENCE);
 	}
-	
-	public Edge getEdge (Vertex source, int pos)
+
+    public Edge getEdge (Vertex source, int pos)
 	{
 		ArrayList<Object> childEdgeArray = getEdgeIDsToChildren(source, false);
 		
@@ -277,7 +272,7 @@ public class DBTree implements Graph {
 			return getEdge(childEdgeArray.get(pos));
 		}
 	}
-	
+
 	public class EdgeVertex {
 		final public Vertex m_vertex;
 		final public Edge m_edge;
@@ -343,7 +338,7 @@ public class DBTree implements Graph {
 			if (getEdgeType(parentToVertex) == EdgeType.INCLUDE)
 				break;
 		}
-		
+
 		if (parentToVertex == null) {
 			return null;
 			
@@ -352,9 +347,17 @@ public class DBTree implements Graph {
 			return new EdgeVertex(parentToVertex, parent);
 		}
 	}
-	
-	
-	public ArrayList<EdgeVertex> getReferers(Vertex referee)
+
+    public void changeCustody (Vertex oldParent, int oldPos, Vertex newParent, int newPos)
+    {
+        Vertex child = getChildOrReferee(oldParent, oldPos).m_vertex;
+        removeEdge (oldParent, oldPos, EdgeType.INCLUDE);
+        addEdge(newParent, child, newPos, EdgeType.INCLUDE);
+    }
+
+
+
+    public ArrayList<EdgeVertex> getReferers(Vertex referee)
 	{
 		Iterator<Edge> edgeIterator = referee.getEdges(Direction.IN).iterator();
 		Edge refEdge = null;
@@ -421,7 +424,7 @@ public class DBTree implements Graph {
 	}
 	
 	//return the removed vertex
-	public Vertex moveSubTreeToTrash (Vertex parent, int pos)
+	public Vertex trashSubTree(Vertex parent, int pos)
 	{
 		assert (parent != getRoot());
 		
@@ -505,7 +508,7 @@ public class DBTree implements Graph {
     }
 	
 	//return parent vertex, and 
-	public EdgeVertex restoreSubTree (Vertex vertex)
+	public EdgeVertex restoreTrashedSubTree(Vertex vertex)
 	{
 		Object parentId = vertex.getProperty(SAVED_PARENT_ID_PROP_NAME);
 		int pos = (Integer)vertex.getProperty(SAVED_POS_PROP_NAME);
@@ -530,11 +533,6 @@ public class DBTree implements Graph {
 		vertex.removeProperty(SAVED_REFERER_INFO_PROP_NAME);
 		
 		return new EdgeVertex(edge, parent);
-	}
-	
-	public int getVertexNumber (Vertex root)
-	{
-		return 0;
 	}
 	
 	private void cleanTrash ()
