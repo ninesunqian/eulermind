@@ -348,11 +348,23 @@ public class DBTree implements Graph {
 		}
 	}
 
-    public void changeCustody (Vertex oldParent, int oldPos, Vertex newParent, int newPos)
+    public EdgeVertex moveChild (Vertex oldParent, int oldPos, Vertex newParent, int newPos)
     {
         Vertex child = getChildOrReferee(oldParent, oldPos).m_vertex;
         removeEdge (oldParent, oldPos, EdgeType.INCLUDE);
-        addEdge(newParent, child, newPos, EdgeType.INCLUDE);
+        return new EdgeVertex(addEdge(newParent, child, newPos, EdgeType.INCLUDE), child);
+    }
+
+    public void changeChildPos (Vertex parent, int oldPos, int newPos)
+    {
+        if (oldPos == newPos)
+            return;
+
+        ArrayList<Object> outEdgeArray = getEdgeIDsToChildren(parent, true);
+        Object edgeId = outEdgeArray.remove(oldPos);
+        outEdgeArray.add(newPos, edgeId);
+        parent.setProperty(CHILD_EDGES_PROP_NAME, outEdgeArray);
+        commit ();
     }
 
 
@@ -537,6 +549,7 @@ public class DBTree implements Graph {
 	
 	private void cleanTrash ()
 	{
+        //TODO
 		
 	}
 	

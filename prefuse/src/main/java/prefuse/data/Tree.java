@@ -278,7 +278,7 @@ public class Tree extends Graph {
     
     /**
      * Remove the descendants of a node from the tree, except the node.
-     * @param n the node to remove
+     * @param node the node to remove
      * @return true if the node and its subtree is successfully removed,
      * false otherwise
      */
