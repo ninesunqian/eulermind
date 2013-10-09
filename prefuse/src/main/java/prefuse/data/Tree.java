@@ -371,7 +371,7 @@ public class Tree extends Graph {
         
         return -1;
     }
-    
+
     /**
      * Get the child index (order number of the child) for the given parent
      * and child nodes.
@@ -384,7 +384,56 @@ public class Tree extends Graph {
     public int getChildIndex(Node p, Node c) {
         return getChildIndex(p.getRow(), c.getRow());
     }
-    
+
+
+    /**
+     * Get the child index (order number of the child) for the given parent
+     * node id and child node id.
+     * @param parent the parent node id (node table row number)
+     * @param oldIndex the old child index
+     * @return the old index of the child, or -1 if the given child node is not
+     * actually a child of the given parent node, or either node is
+     * invalud.
+     */
+    public int changeChildIndex(int parent, int oldIndex, int newIndex) {
+        int[] outlinks = (int[])getNodeTable().get(parent, OUTLINKS);
+
+        if (newIndex == -1)
+            newIndex = outlinks.length - 1;
+
+        if (oldIndex == -1)
+            oldIndex = outlinks.length - 1;
+
+        if (newIndex < oldIndex)
+        {
+            int tmp = outlinks [oldIndex];
+            System.arraycopy(outlinks, newIndex, outlinks, newIndex+1, oldIndex-newIndex);
+            outlinks[newIndex] = tmp;
+        }
+        else if (oldIndex < newIndex)
+        {
+            int tmp = outlinks [oldIndex];
+            System.arraycopy(outlinks, oldIndex, outlinks, oldIndex-1, newIndex-oldIndex);
+            outlinks[newIndex] = tmp;
+        }
+
+        return oldIndex;
+    }
+
+    /**
+     * Get the child index (order number of the child) for the given parent
+     * node id and child node id.
+     * @param parent the parent node id (node table row number)
+     * @param oldIndex the old child index
+     * @return the old index of the child, or -1 if the given child node is not
+     * actually a child of the given parent node, or either node is
+     * invalud.
+     */
+    public int changeChildIndex(Node parent, int oldIndex, int newIndex) {
+        return changeChildIndex(parent.getRow(), oldIndex, newIndex);
+    }
+
+
     /**
      * Get the node id of the first child of the given parent node id.
      * @param node the parent node id (node table row number)

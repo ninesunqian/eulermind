@@ -338,13 +338,16 @@ public class MindTree {
         exposeRelation(newParentDBId, newPos, edgeVertex.m_edge, edgeVertex.m_vertex);
 	}
 
-    public void changeChildPos (Object parentDBId, int oldPos, int newPos)
+    public void changeChildPos (final Object parentDBId, final int oldPos, final int newPos)
     {
         Vertex parent = m_dbTree.getVertex(parentDBId);
         m_dbTree.changeChildPos(parent, oldPos, newPos);
 
-        hideRelation(parentDBId, oldPos);
-        //TODO: exposeRelation(newParentDBId, newPos, edgeVertex.m_edge, edgeVertex.m_vertex);
+        visitNodeAvatares(parentDBId, new Visitor() {
+            public void visit(Node parent) {
+                m_tree.changeChildIndex(parent, oldPos, newPos);
+            }
+        });
     }
 	
 	public void setNodeProperty (final Object dbId, final String key, final Object value)
