@@ -18,38 +18,38 @@ import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 
 public class DBTree implements Graph {
-	
+
 	public final static String EDGE_TYPE_PROP_NAME = PrefuseLib.FIELD_PREFIX + "edgeType";
 	private final static String CHILD_EDGES_PROP_NAME = PrefuseLib.FIELD_PREFIX + "childEdges";
-	
+
 	private final static String ROOT_INDEX_NAME = PrefuseLib.FIELD_PREFIX + "rootIndex";
 	private final static String ROOT_KEY_NAME = PrefuseLib.FIELD_PREFIX + "root";
-	
+
 	private final static String TRASH_INDEX_NAME = PrefuseLib.FIELD_PREFIX + "trashIndex";
 	private final static String TRASH_KEY_NAME = PrefuseLib.FIELD_PREFIX + "vertex";
-	
+
 	private final static String SAVED_PARENT_ID_PROP_NAME = PrefuseLib.FIELD_PREFIX + "parent";
 	private final static String SAVED_POS_PROP_NAME = PrefuseLib.FIELD_PREFIX + "pos";
 	public final static String SAVED_REFERER_INFO_PROP_NAME = PrefuseLib.FIELD_PREFIX + "referers";
-	
+
 	enum EdgeType { INCLUDE, REFERENCE};
-	
+
     protected static final int ADDING_EDGE_END = 0x7FFFFFFF;
-	
+
 	private OrientGraph m_graph;
-	
-	private Index<Vertex> m_rootIndex; 
-	private Index<Vertex> m_trashIndex; 
-	
+
+	private Index<Vertex> m_rootIndex;
+	private Index<Vertex> m_trashIndex;
+
 	String m_path;
-	
+
 	DBTree (String path)
 	{
 		m_graph = new OrientGraph (path);
 		m_path = path;
 		createIndices ();
 	}
-	
+
 	@Override
 	public Edge addEdge(Object arg0, Vertex arg1, Vertex arg2, String arg3) {
 		//disable the method, to preserve a tree structure
@@ -59,7 +59,9 @@ public class DBTree implements Graph {
 	
 	@Override
 	public Vertex addVertex(Object arg0) {
-		return m_graph.addVertex(arg0);
+		Vertex vertex = m_graph.addVertex(arg0);
+        m_graph.commit();
+        return m_graph.getVertex(vertex.getId());
 	}
 	@Override
 	public Edge getEdge(Object arg0) {
@@ -130,12 +132,10 @@ public class DBTree implements Graph {
 	
 	public Vertex addRoot ()
 	{
-		Vertex root = m_graph.addVertex(null);
+		Vertex root = addVertex(null);
 		m_rootIndex.put(ROOT_KEY_NAME, ROOT_KEY_NAME, root);
 		Object rootId = root.getId();
 		Object oldId = rootId;
-		System.out.println(root.getId());
-		commit ();
 		System.out.println(root.getId());
 		root = m_graph.getVertex(rootId);
 		rootId = root.getId();
@@ -206,6 +206,8 @@ public class DBTree implements Graph {
 		
 		//to make the edge'id is to local db
 		commit ();
+
+        edge = m_graph.addEdge(null, source, target, "a");
 		
 		ArrayList<Object> outEdgeArray = getEdgeIDsToChildren(source, true);
 		
@@ -286,7 +288,6 @@ public class DBTree implements Graph {
 	public EdgeVertex addChild (Vertex parent, int pos)
 	{
 		Vertex child = addVertex(null);
-		commit ();
 		Edge edge = addEdge(parent, child, pos, EdgeType.INCLUDE);
 		return new EdgeVertex(edge, child);
 	}
