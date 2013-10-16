@@ -17,20 +17,20 @@ public class EditAction extends AbstractAction {
 	MindView m_mindView;
 	TableNodeItem m_nodeItem;
 	
-	KeyListener keyListener = new KeyListener() {
-			
+	KeyListener textEditorKeyListener = new KeyListener() {
+
 			@Override
 			public void keyTyped(KeyEvent e) {
 				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 			@Override
 			public void keyReleased(KeyEvent e) {
 				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER)
@@ -40,7 +40,7 @@ public class EditAction extends AbstractAction {
 					String oldText = visMindTree.getText(m_nodeItem);
                     Object bpId = visMindTree.getDBElementId(m_nodeItem);
 
-					m_mindView.removeKeyListener(keyListener);
+					m_mindView.removeKeyListener(textEditorKeyListener);
 
 					String text = m_mindView.getTextEditor().getText();
 					m_mindView.stopEditing();
@@ -50,7 +50,7 @@ public class EditAction extends AbstractAction {
 					
 					m_mindView.getUndoManager().addEdit(executor);
 				}
-				
+
 			}
 		};
 	
@@ -62,7 +62,7 @@ public class EditAction extends AbstractAction {
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		m_nodeItem = m_mindView.getFocusNode ();
-		m_mindView.getTextEditor().addKeyListener(keyListener);
+		m_mindView.getTextEditor().addKeyListener(textEditorKeyListener);
 		m_mindView.editText(m_nodeItem, VisualMindTree.sm_textPropName) ;
 	}
 	

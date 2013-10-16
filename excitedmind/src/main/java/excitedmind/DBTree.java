@@ -252,8 +252,6 @@ public class DBTree implements Graph {
         //If not, the last item will not be save to db.
         //it is the bug of blueprints or orientdb
         source.setProperty(CHILD_EDGES_PROP_NAME, outEdgeArray);
-
-        commit ();
     }
 
 	public void removeRefEdge (Vertex source, int pos)
@@ -365,7 +363,6 @@ public class DBTree implements Graph {
         Object edgeId = outEdgeArray.remove(oldPos);
         outEdgeArray.add(newPos, edgeId);
         parent.setProperty(CHILD_EDGES_PROP_NAME, outEdgeArray);
-        commit ();
     }
 
 
@@ -544,7 +541,9 @@ public class DBTree implements Graph {
 		vertex.removeProperty(SAVED_PARENT_ID_PROP_NAME);
 		vertex.removeProperty(SAVED_POS_PROP_NAME);
 		vertex.removeProperty(SAVED_REFERER_INFO_PROP_NAME);
-		
+
+        m_trashIndex.remove(TRASH_KEY_NAME, TRASH_KEY_NAME, vertex);
+        commit ();
 		return new EdgeVertex(edge, parent);
 	}
 	

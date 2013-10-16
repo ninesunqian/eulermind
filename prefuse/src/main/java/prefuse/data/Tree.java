@@ -346,7 +346,31 @@ public class Tree extends Graph {
         int c = getChildRow(node.getRow(), idx);
         return ( c<0 ? null : getNode(c) );
     }
-    
+
+    public int getIndexInSiblings(int child)
+    {
+        int parent = getParent(child);
+        if (parent == -1)
+            return -1;
+
+        int[] outlinks = (int[])getNodeTable().get(parent, OUTLINKS);
+        for (int i=0; i<getChildCount(parent); i++)
+        {
+            if (getTargetNode(outlinks[i]) == child)
+            {
+                return i;
+            }
+        }
+
+        assert (false);
+        return -1;
+    }
+
+    public int getIndexInSiblings(Node child)
+    {
+        return getIndexInSiblings(child.getRow());
+    }
+
     /**
      * Get the child index (order number of the child) for the given parent
      * node id and child node id.
@@ -357,19 +381,8 @@ public class Tree extends Graph {
      * invalud.
      */
     public int getChildIndex(int parent, int child) {
-        if ( getParent(child) != parent )
-            return -1;
-        
-        int[] outlinks = (int[])getNodeTable().get(parent, OUTLINKS);
-        for (int i=0; i<getChildCount(parent); i++)
-        {
-        	if (getTargetNode(outlinks[i]) == child)
-        	{
-        		return i;
-        	}
-        }
-        
-        return -1;
+        assert ( getParent(child) == parent );
+        return getIndexInSiblings(child);
     }
 
     /**
@@ -469,7 +482,17 @@ public class Tree extends Graph {
     public Node getLastChild(Node node) {
         return getChild(node, node.getChildCount()-1);
     }
-    
+
+    public  boolean hasPreviousSibling (Node node)
+    {
+        return getIndexInSiblings(node) > 0;
+    }
+
+    public boolean hasNextSibling (Node node)
+    {
+        return getIndexInSiblings(node) > getParent(node).getChildCount();
+    }
+
     /**
      * Get the node id of the previous sibling of the given node id.
      * @param node a node id (node table row number)

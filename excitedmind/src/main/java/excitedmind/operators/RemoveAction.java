@@ -11,7 +11,7 @@ import prefuse.data.Node;
 import prefuse.data.Tuple;
 import prefuse.visual.tuple.TableNodeItem;
 
-import excitedmind.MindTree;
+import excitedmind.VisualMindTree;
 import excitedmind.MindView;
 
 public class RemoveAction extends AbstractAction {
@@ -27,7 +27,7 @@ public class RemoveAction extends AbstractAction {
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		m_nodeItem = m_mindView.getFocusNode ();
-		MindTree mindTree = m_mindView.getMindTree();
+		VisualMindTree mindTree = m_mindView.getMindTree();
 		Tuple tuple = m_mindView.getVisualization().getSourceTuple(m_nodeItem);
 		Node node = mindTree.m_tree.getNode(tuple.getRow());
 		m_mindView.getMindTree().moveNodeToTrash(node);

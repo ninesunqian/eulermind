@@ -73,8 +73,6 @@ public class MindView extends Display {
 		m_renderEngine.run();
 	}
 
-	boolean m_needPan;
-
 	private void setMouseControlListener() {
 		addControlListener(new ZoomToFitControl());
 		addControlListener(new ZoomControl());
@@ -84,19 +82,8 @@ public class MindView extends Display {
 
 			public void itemEntered(VisualItem item, MouseEvent e) {
 				if (m_visMindTree.isNode(item)) {
-					m_curFocus = (TableNodeItem) item;
+                    m_visMindTree.setCursor((NodeItem)item);
 					renderTree();
-
-                    /*
-					Rectangle2D bounds = item.getBounds();
-					MindTreeLayout.Params params = MindTreeLayout
-							.getParams((NodeItem) item);
-					System.out.println("    mod = " + params.mod);
-					System.out.println("    prelim = " + params.prelim);
-					System.out.println("    breadth = " + params.breadth);
-					System.out.println("    bounds.y = " + bounds.getY());
-                    */
-
 				}
 
 			}
@@ -105,13 +92,12 @@ public class MindView extends Display {
 				System.out.println("mouse Clicked");
 
 				if (m_visMindTree.isNode(item)) {
-					m_curFocus = (TableNodeItem) item;
 
-					m_renderEngine.holdItem(item);
+					//FIXME:
+					// m_renderEngine.holdItem(item);
 
 					m_visMindTree.ToggleFoldNode((NodeItem)item);
 					renderTree();
-
 				}
 			}
 		});

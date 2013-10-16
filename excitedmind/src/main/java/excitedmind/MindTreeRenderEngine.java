@@ -39,7 +39,6 @@ public class MindTreeRenderEngine {
     private int m_orientation = Constants.ORIENT_LEFT_RIGHT;
     
 	
-	
 	public MindTreeRenderEngine(MindView mindView, String treeGroupName) {
 		m_mindView = mindView;
 		m_vis = m_mindView.getVisualization();
@@ -118,9 +117,6 @@ public class MindTreeRenderEngine {
     	edgeRenderer.setVerticalAlignment2(Constants.CENTER);
     	edgeRenderer.setDefaultLineWidth(1.5);
 
-    	//TODO remove it
-    	//rf.add(new InGroupPredicate(m_treeEdgesGroupName), edgeRenderer);
-    	
     	return new DefaultRendererFactory(nodeRenderer, edgeRenderer);
     }
     

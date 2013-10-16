@@ -45,5 +45,5 @@ public interface Edge extends Tuple {
      * @return the other Node touched by this Edge
      */
     public Node getAdjacentNode(Node n);
-    
+
 } // end of interface Edge

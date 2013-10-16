@@ -112,7 +112,13 @@ public interface Node extends Tuple {
      * @return the number of child nodes
      */
     public int getChildCount();
-    
+
+    /**
+     * Get the ordering index of this in its siblings
+     * @return the index of this,
+     */
+    public int getIndex();
+
     /**
      * Get the ordering index of the give node child in a tree
      * structure.

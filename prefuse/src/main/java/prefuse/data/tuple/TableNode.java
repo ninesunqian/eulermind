@@ -125,11 +125,21 @@ public class TableNode extends TableTuple implements Node {
     public Edge getParentEdge() {
         return m_graph.getSpanningTree().getParentEdge(this);
     }
-    
+
+    /**
+     * @see prefuse.data.Node#getIndex()
+     */
+    public int getIndex()
+    {
+        //TODO change to using outlinks inlinks
+        return m_graph.getSpanningTree().getIndexInSiblings(this);
+    }
+
     /**
      * @see prefuse.data.Node#getChildCount()
      */
     public int getChildCount() {
+        //TODO change to using outlinks inlinks
         return m_graph.getSpanningTree().getChildCount(m_row);
     }
 
@@ -137,6 +147,7 @@ public class TableNode extends TableTuple implements Node {
      * @see prefuse.data.Node#getChildIndex(prefuse.data.Node)
      */
     public int getChildIndex(Node child) {
+        //TODO change to using outlinks inlinks
         return m_graph.getSpanningTree().getChildIndex(this, child);
     }
     

@@ -367,14 +367,4 @@ public class MindTree {
 		assert(m_tree.containsTuple(tuple));
 		return tuple.get(sm_dbIdColumnName);
 	}
-
-    public String getText (Node node)
-    {
-        return node.getString(sm_textColorPropName);
-    }
-
-    public void setText (Node node, String text)
-    {
-        setNodeProperty(node, sm_textPropName, text);
-    }
 }
