@@ -16,6 +16,7 @@ import prefuse.data.Graph;
 import prefuse.util.PrefuseLib;
 
 import javax.swing.undo.AbstractUndoableEdit;
+import javax.swing.undo.CannotUndoException;
 
 public class VisualMindTree extends MindTree {
     public final static String sm_treeGroupName = "tree";
@@ -31,6 +32,14 @@ public class VisualMindTree extends MindTree {
 
     private LinkedHashSet<Node> m_foldedNodes = new LinkedHashSet<Node>();
 
+    abstract class NodeOperatorUndoer extends AbstractUndoableEdit {
+        NodeOperatorUndoer (Stack<Integer> nodePath)
+        {
+            m_nodePath = (Stack<Integer>)nodePath.clone();
+        }
+
+        final Stack<Integer> m_nodePath;
+    }
 
     public VisualMindTree(String dbPath, Object rootId, Visualization vis)
     {
@@ -208,63 +217,159 @@ public class VisualMindTree extends MindTree {
         return (Stack<Integer>) m_cursorPath.clone();
     }
 
-    class AddingChildUndoer
+    private Node getNextCursor ()
     {
-        AddingChildUndoer (Stack<Integer> nodePath)
+        if (m_cursor == m_tree.getRoot())
+            return m_cursor;
+        else if (m_tree.hasNextSibling(m_cursor)) //TODO: tree.hasXXX,  node.getXXX
+            return m_cursor.getNextSibling();
+        else if (m_tree.hasPreviousSibling(m_cursor))
+            return m_cursor.getPreviousSibling();
+        else
+            return m_cursor.getParent();
+    }
+
+    private void removeCursorNodeAndCursorNext()
+    {
+        Node next_cursor = getNextCursor();
+        moveNodeToTrash(getDBElementId(m_cursor.getParent()), m_cursor.getIndex());
+        setCursor(next_cursor);
+    }
+
+    private void restoreNodeAndSetCursor (Object dbId, Stack<Integer> nodePath)
+    {
+        restoreNodeFromTrash(dbId);
+        setCursorByPath(nodePath);
+    }
+
+    class AddingChildUndoer extends NodeOperatorUndoer
+    {
+        AddingChildUndoer (Stack<Integer> nodePath, Object dbId)
         {
-            Stack<Integer> m_nodePath;
-            m_dbId = getDBElementId(m_cursor);
+            super(nodePath);
+            m_dbId = dbId;
         }
         public void undo () {
             setCursorByPath(m_nodePath);
-            Node newCursor = getNextSiblingOrParent();
-            moveNodeToTrash(m_dbId); //  m_dbId --> parent, pos
-            setCursor(newCursor);
-
-
-
+            removeCursorNodeAndCursorNext();
         }
         public void redo () {
-
+            restoreNodeAndSetCursor(m_dbId, m_nodePath);
         }
 
-        Stack<Integer> m_nodePath;
         Object m_dbId;
     }
 
     public AbstractUndoableEdit addChild ()
     {
-        final Stack<Integer> oldCursorPath = copyCursorPath();
-        addChild(getDBElementId(m_cursor), -1);
+        Object childDBId = addChild(getDBElementId(m_cursor), -1);
         setCursor(m_cursor.getChild(m_cursor.getChildCount() - 1));
 
-        return new AbstractUndoableEdit() {
-            public void undo () {
-                moveNodeToTrash(m_cursor)
-
-            }
-            public void redo () {
-
-            }
-        };
+        return new AddingChildUndoer(m_cursorPath, getDBElementId(m_cursor));
     }
 
-    public void addSibling ()
+    public AbstractUndoableEdit addSibling ()
     {
+        Node parent = m_cursor.getParent();
+        int newSiblingIndex = m_cursor.getIndex() + 1;
+        Object newSiblingDBId = addChild(getDBElementId(parent), newSiblingIndex);
+        setCursor(parent.getChild(newSiblingIndex));
 
+        return new AddingChildUndoer(m_cursorPath, getDBElementId(m_cursor));
     }
 
-    public void removeCursorNode ()
+    class AddingReferenceUndoer extends NodeOperatorUndoer
     {
+        AddingReferenceUndoer (Stack<Integer> nodePath, Object refereeDBId, int pos)
+        {
+            super(nodePath);
+            m_refereeDBId = refereeDBId;
+            m_pos = pos;
+        }
+        public void undo () {
+            setCursorByPath(m_nodePath);
+            removeReference(m_refereeDBId, m_pos);
+        }
+        public void redo () {
+            setCursorByPath(m_nodePath);
+            addReference(getDBElementId(m_cursor), m_refereeDBId, m_pos);
+        }
 
+        Object m_refereeDBId;
+        int m_pos;
     }
 
-    public void addReference (Object refereeDBId)
+    public AbstractUndoableEdit addReference (Object refereeDBId)
     {
         addReference(getDBElementId(m_cursor), refereeDBId, -1);
+
+        // add a reference from m_cursor to other node, the m_cursor does not move the referered node
+
+        return new AddingReferenceUndoer(m_cursorPath, refereeDBId, m_cursor.getChildCount()-1);
     }
 
-    public void unfoldNode (VisualItem visualItem)
+
+    class RemovingChildUndoer extends NodeOperatorUndoer
+    {
+        RemovingChildUndoer (Stack<Integer> nodePath, Object dbId)
+        {
+            super(nodePath);
+            m_dbId = dbId;
+        }
+        public void undo () {
+            restoreNodeAndSetCursor(m_dbId, m_nodePath);
+        }
+        public void redo () {
+            setCursorByPath(m_nodePath);
+            removeCursorNodeAndCursorNext();
+        }
+
+        Object m_dbId;
+    }
+
+    class RemovingReferenceUndoer extends NodeOperatorUndoer
+    {
+        //node path is the referer node
+        RemovingReferenceUndoer (Stack<Integer> nodePath, Object refereeDBId, int pos)
+        {
+            super(nodePath);
+            m_refereeDBId = refereeDBId;
+            m_pos = pos;
+        }
+        public void undo () {
+            setCursorByPath(m_nodePath);
+            removeReference(m_refereeDBId, m_pos);
+        }
+        public void redo () {
+            setCursorByPath(m_nodePath);
+            addReference(getDBElementId(m_cursor), m_refereeDBId, m_pos);
+        }
+
+        Object m_refereeDBId;
+        int m_pos;
+    }
+
+    public AbstractUndoableEdit removeCursorNodeUndoable ()
+    {
+        Node parent = m_cursor.getParent();
+        Edge edge = m_tree.getEdge(parent, m_cursor);
+        if (isRefEdge(edge)) {
+            Object refereeDBId =  getDBElementId(m_cursor);
+            int pos = m_cursor.getIndex();
+
+            removeReference(getDBElementId(parent), m_cursor.getIndex());
+            setCursor(parent);
+
+            return new RemovingReferenceUndoer(m_cursorPath, refereeDBId, pos);
+        }
+        else {
+            RemovingChildUndoer undoer = new RemovingChildUndoer(m_cursorPath, getDBElementId(m_cursor));
+            removeCursorNodeAndCursorNext();
+            return undoer;
+        }
+    }
+
+    private void unfoldNode (VisualItem visualItem)
     {
         Node node = (Node)visualItem.getSourceTuple();
 
@@ -313,7 +418,7 @@ public class VisualMindTree extends MindTree {
         visualItem.setExpanded(true);
     }
 
-    public void foldNode (VisualItem visualItem)
+    private void foldNode (VisualItem visualItem)
     {
         final Visualization vis = visualItem.getVisualization();
         Node node = (Node)visualItem.getSourceTuple();
@@ -356,14 +461,42 @@ public class VisualMindTree extends MindTree {
         }, 0);
 
         // detach the descendants of the earliest unfold node
+        /* TODO  now disalble it
         if (m_foldedNodes.size() > 5)
         {
             Node toRemovedNode = m_foldedNodes.iterator().next();
             m_foldedNodes.remove(toRemovedNode);
             detachChildern(toRemovedNode);
         }
+        */
 
         visualItem.setExpanded(false);
+    }
+
+    class TogglingFoldUndoer extends NodeOperatorUndoer{
+        TogglingFoldUndoer (Stack<Integer> nodePath, boolean foldIt)
+        {
+            super(nodePath);
+            m_foldIt = foldIt;
+        }
+
+        public void undo() {
+            setCursorByPath(m_cursorPath);
+            if (m_foldIt)
+                unfoldNode(toVisual(m_cursor));
+            else
+                foldNode(toVisual(m_cursor));
+        }
+
+        public void redo () {
+            setCursorByPath(m_cursorPath);
+            if (m_foldIt)
+                foldNode(toVisual(m_cursor));
+            else
+                unfoldNode(toVisual(m_cursor));
+        }
+
+        boolean m_foldIt;
     }
 
     public void ToggleFoldNode (VisualItem visualItem )
@@ -390,12 +523,11 @@ public class VisualMindTree extends MindTree {
         }
     }
 
-    class SetPropertyUndoer extends AbstractUndoableEdit
+    class SetPropertyUndoer extends NodeOperatorUndoer
     {
         SetPropertyUndoer (Stack<Integer> nodePath, String property, Object oldValue, Object newValue)
         {
-            m_nodePath = nodePath;
-
+            super(nodePath);
             m_property = property;
             m_oldValue = oldValue;
             m_newValue = newValue;
@@ -412,8 +544,6 @@ public class VisualMindTree extends MindTree {
             setCursorByPath(m_cursorPath);
             setCursorProperty(m_property, m_oldValue);
         }
-
-        final Stack<Integer> m_nodePath;
 
         final String m_property;
         final Object m_oldValue;
@@ -433,7 +563,7 @@ public class VisualMindTree extends MindTree {
     private AbstractUndoableEdit setCursorPropertyUndoable  (String property, Object value)
     {
         Object oldValue = setCursorProperty(property, value);
-        return new SetPropertyUndoer((Stack<Integer>) m_cursorPath.clone(), property, value, oldValue);
+        return new SetPropertyUndoer(m_cursorPath, property, value, oldValue);
     }
 
     public AbstractUndoableEdit setText(String text)
@@ -443,4 +573,76 @@ public class VisualMindTree extends MindTree {
 
     //TODO setFontFamliy setSize setColor
 
+    public boolean isRefEdge (Edge edge)
+    {
+        return DBTree.EdgeType.values()[(Integer)edge.get(sm_edgeTypePropName)] == DBTree.EdgeType.INCLUDE;
+    }
+
+    public String getText (Node node)
+    {
+        return node.getString(sm_textPropName);
+    }
+
+    public AbstractUndoableEdit setText (Node node, String str)
+    {
+        return setCursorPropertyUndoable(sm_textPropName, str);
+    }
+
+    /* TODO add stype property
+    public String getTextColor (Node node)
+    {
+        return node.getString(sm_textPropName);
+    }
+
+    public String getFont (Node node)
+    {
+        return node.getString(sm_textPropName);
+    }
+
+    public String getSize (Node node)
+    {
+        return node.getString(sm_textPropName);
+    }
+
+    public String getText (Node node)
+    {
+        return node.getString(sm_textPropName);
+    }
+    */
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -246,11 +246,13 @@ public class MindTree {
     }
 
     //return new child node
-	public void addChild(Object  parentDBId, int pos) {
+	public Object addChild(Object  parentDBId, int pos) {
 		Vertex dbParent = m_dbTree.getVertex(parentDBId);
 		EdgeVertex edgeVertex = m_dbTree.addChild(dbParent, pos);
 		
 		exposeRelation(parentDBId, pos, edgeVertex.m_edge, edgeVertex.m_vertex);
+
+        return edgeVertex.m_vertex.getId();
 
         //TODO add to VisualMindTree return m_tree.getChild(parent, pos);
 	}
