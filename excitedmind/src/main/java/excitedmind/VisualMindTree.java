@@ -3,6 +3,7 @@ package excitedmind;
 import java.util.*;
 
 import prefuse.Visualization;
+import prefuse.util.ColorLib;
 import prefuse.visual.NodeItem;
 import prefuse.visual.EdgeItem;
 import prefuse.visual.VisualItem;
@@ -183,13 +184,17 @@ public class VisualMindTree extends MindTree {
         }
 
         m_cursorDepth = m_cursorPath.size();
-
     }
 
 
     public void setCursor (NodeItem nodeItem)
     {
         setCursor(toSource(nodeItem));
+    }
+
+    public NodeItem getCursor (NodeItem nodeItem)
+    {
+        return toVisual(m_cursor);
     }
 
 
@@ -525,24 +530,27 @@ public class VisualMindTree extends MindTree {
 
     class SetPropertyUndoer extends NodeOperatorUndoer
     {
-        SetPropertyUndoer (Stack<Integer> nodePath, String property, Object oldValue, Object newValue)
+        SetPropertyUndoer (Stack<Integer> nodePath, String property, Object newValue, Object oldValue)
         {
             super(nodePath);
             m_property = property;
             m_oldValue = oldValue;
             m_newValue = newValue;
+            System.out.println("nodePath="+ nodePath + ",   newValue="+m_newValue + ",   oldValue="+m_oldValue);
         }
 
         public void undo ()
         {
-            setCursorByPath(m_cursorPath);
-            setCursorProperty(m_property, m_newValue);
+            setCursorByPath(m_nodePath);
+            setCursorProperty(m_property, m_oldValue);
+            System.out.println("nodePath="+ m_cursorPath + ",   DBId="+getDBElementId(m_cursor) + ",   oldValue="+m_oldValue);
         }
 
         public void redo ()
         {
-            setCursorByPath(m_cursorPath);
-            setCursorProperty(m_property, m_oldValue);
+            setCursorByPath(m_nodePath);
+            setCursorProperty(m_property, m_newValue);
+            System.out.print("nodePath="+ m_cursorPath + ",   DBId="+getDBElementId(m_cursor) + ",   newValue="+m_newValue);
         }
 
         final String m_property;
@@ -566,7 +574,7 @@ public class VisualMindTree extends MindTree {
         return new SetPropertyUndoer(m_cursorPath, property, value, oldValue);
     }
 
-    public AbstractUndoableEdit setText(String text)
+    public AbstractUndoableEdit setCursorText(String text)
     {
         return setCursorPropertyUndoable(sm_textPropName, text);
     }
@@ -575,7 +583,7 @@ public class VisualMindTree extends MindTree {
 
     public boolean isRefEdge (Edge edge)
     {
-        return DBTree.EdgeType.values()[(Integer)edge.get(sm_edgeTypePropName)] == DBTree.EdgeType.INCLUDE;
+        return DBTree.EdgeType.values()[(Integer)edge.get(sm_edgeTypePropName)] == DBTree.EdgeType.REFERENCE;
     }
 
     public String getText (Node node)
@@ -583,15 +591,15 @@ public class VisualMindTree extends MindTree {
         return node.getString(sm_textPropName);
     }
 
-    public AbstractUndoableEdit setText (Node node, String str)
+    public int getNodeColor (NodeItem nodeItem)
     {
-        return setCursorPropertyUndoable(sm_textPropName, str);
-    }
-
-    /* TODO add stype property
-    public String getTextColor (Node node)
-    {
-        return node.getString(sm_textPropName);
+        Node node = toSource(nodeItem);
+        if (node == m_cursor)
+            return ColorLib.rgb(255, 0, 0);
+        else if (getDBElementId(node).equals(getDBElementId(m_cursor)))
+            return ColorLib.rgb(255, 255, 0);
+        else
+            return ColorLib.rgb(255, 255, 255);
     }
 
     public String getFont (Node node)
@@ -604,45 +612,10 @@ public class VisualMindTree extends MindTree {
         return node.getString(sm_textPropName);
     }
 
+    /*
     public String getText (Node node)
     {
         return node.getString(sm_textPropName);
     }
     */
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

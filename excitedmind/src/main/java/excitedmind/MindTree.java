@@ -238,6 +238,10 @@ public class MindTree {
     {
         visitNodeAvatares(sourceId, new Visitor() {
             public void visit(Node sourceNode) {
+                //its child is not displayed
+                if (sourceNode.getChildCount() == 0)
+                    return;
+
                 Node child = m_tree.getChild(sourceNode, edgePosInSourceNode);
                 m_tree.removeChild(child);
             }
@@ -260,17 +264,7 @@ public class MindTree {
 	//return the DBid of node
 	public Object moveNodeToTrash (Object parentDBId, int pos)
 	{
-        /* TODO move to VisualMindTree
-		Node parent = m_tree.getParent (node);
-		int index = m_tree.getChildIndex(parent, node);
-		Vertex vertex = getDBVertex(node);
-        Object dbId = vertex.getId();
-        */
-
         Vertex parent = m_dbTree.getVertex(parentDBId);
-		
-		m_dbTree.trashSubTree(parent, pos);
-
         EdgeVertex edgeChild = m_dbTree.getChildOrReferee(parent, pos);
         Object removedDBId = edgeChild.m_vertex.getId();
 
@@ -282,6 +276,9 @@ public class MindTree {
 			final RefLinkInfo refLinkInfo = (RefLinkInfo) obj;
             hideRelation(m_dbTree.getVertex(refLinkInfo.m_referee), refLinkInfo.m_pos);
 		}
+
+        m_dbTree.trashSubTree(parent, pos);
+
         return removedDBId;
 	}
 	

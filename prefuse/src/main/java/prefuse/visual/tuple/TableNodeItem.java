@@ -193,5 +193,14 @@ public class TableNodeItem extends TableVisualItem implements NodeItem {
     public int getDepth() {
         return m_graph.getSpanningTree().getDepth(m_row);
     }
-    
+
+    /**
+     * @see prefuse.data.Node#getIndex()
+     */
+    public int getIndex()
+    {
+        //TODO change to using outlinks inlinks
+        return m_graph.getSpanningTree().getIndexInSiblings(this);
+    }
+
 } // end of class TableNodeItem

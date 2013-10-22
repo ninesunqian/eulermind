@@ -1,13 +1,11 @@
 package excitedmind.operators;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-
 import javax.swing.AbstractAction;
 import javax.swing.undo.AbstractUndoableEdit;
 
-import prefuse.visual.tuple.TableNodeItem;
+import prefuse.visual.NodeItem;
 
 import excitedmind.VisualMindTree;
 import excitedmind.MindView;
@@ -15,42 +13,31 @@ import excitedmind.MindView;
 public class EditAction extends AbstractAction {
 	
 	MindView m_mindView;
-	TableNodeItem m_nodeItem;
+	NodeItem m_nodeItem;
 	
-	KeyListener textEditorKeyListener = new KeyListener() {
+	KeyListener m_textEditorKeyListener = new KeyListener() {
 
 			@Override
-			public void keyTyped(KeyEvent e) {
-				// TODO Auto-generated method stub
-
-			}
+			public void keyTyped(KeyEvent e) {}
 
 			@Override
-			public void keyReleased(KeyEvent e) {
-				// TODO Auto-generated method stub
-
-			}
+			public void keyReleased(KeyEvent e) {}
 
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER)
 				{
-                    VisualMindTree visMindTree = m_mindView.getMindTree();
+                    VisualMindTree visMindTree = m_mindView.getVisMindTree();
 
-					String oldText = visMindTree.getText(m_nodeItem);
-                    Object bpId = visMindTree.getDBElementId(m_nodeItem);
+                    String text = m_mindView.getTextEditor().getText();
+                    AbstractUndoableEdit undoer = visMindTree.setCursorText(text);
 
-					m_mindView.removeKeyListener(textEditorKeyListener);
+                    m_mindView.removeKeyListener(m_textEditorKeyListener);
+                    m_mindView.stopEditing();
 
-					String text = m_mindView.getTextEditor().getText();
-					m_mindView.stopEditing();
-					
-					Executor executor = new Executor (m_mindView, bpId, oldText, text);
-					executor.redo();
-					
-					m_mindView.getUndoManager().addEdit(executor);
+					m_mindView.getUndoManager().addEdit(undoer);
+                    m_mindView.renderTree();
 				}
-
 			}
 		};
 	
@@ -61,40 +48,9 @@ public class EditAction extends AbstractAction {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		m_nodeItem = m_mindView.getFocusNode ();
-		m_mindView.getTextEditor().addKeyListener(textEditorKeyListener);
+		m_nodeItem = m_mindView.getVisMindTree().getCursor();
+		m_mindView.getTextEditor().addKeyListener(m_textEditorKeyListener);
 		m_mindView.editText(m_nodeItem, VisualMindTree.sm_textPropName) ;
-	}
-	
-	static class Executor extends AbstractUndoableEdit 
-	{
-		private static final long serialVersionUID = 1L;
-		
-		MindView m_mindView;
-		Object m_bpId;
-		
-		String m_newText;
-		String m_oldText;
-
-		Executor (MindView mindView, Object bpId, String oldText, String newText)
-		{
-			m_mindView = mindView;
-			m_bpId = bpId;
-			m_oldText = oldText;
-			m_newText = newText;
-		}
-
-		public void redo ()
-		{
-			m_mindView.getMindTree().setNodeProperty(m_bpId, VisualMindTree.sm_textPropName, m_newText);
-			m_mindView.renderTree ();
-		}
-		
-		public void undo ()
-		{
-			m_mindView.getMindTree().setNodeProperty(m_bpId, VisualMindTree.sm_textPropName, m_oldText);
-			m_mindView.renderTree ();
-		}
 	}
 }
 

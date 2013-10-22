@@ -20,6 +20,7 @@ import prefuse.render.LabelRenderer;
 import prefuse.util.ColorLib;
 import prefuse.util.FontLib;
 import prefuse.util.PrefuseLib;
+import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
 
 public class MindTreeRenderEngine {
@@ -152,15 +153,7 @@ public class MindTreeRenderEngine {
         }
 
         public int getColor(VisualItem item) {
-        	if (item == m_mindView.getFocusNode())
-                return ColorLib.rgb(255, 255, 0);
-        	else if (m_vis.isInGroup(item, Visualization.SEARCH_ITEMS))
-                return ColorLib.rgb(255, 0, 0);
-            else if (m_vis.isInGroup(item, Visualization.FOCUS_ITEMS))
-                return ColorLib.rgb(0, 255, 0);
-            else
-                return ColorLib.rgb(255, 255, 255);
-        	
+            return m_mindView.getVisMindTree().getNodeColor((NodeItem)item);
         }
     }
     

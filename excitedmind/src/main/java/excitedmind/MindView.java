@@ -1,42 +1,27 @@
 package excitedmind;
 
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.Rectangle2D;
 import java.awt.event.MouseEvent;
-import java.util.Iterator;
 
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoManager;
 
 import excitedmind.operators.EditAction;
-import excitedmind.operators.RemoveAction;
-
+import excitedmind.operators.SimpleMindTreeAction;
 import prefuse.Display;
 import prefuse.Visualization;
-import prefuse.action.ActionList;
-import prefuse.action.RepaintAction;
-import prefuse.action.assignment.ColorAction;
-import prefuse.action.distortion.Distortion;
-import prefuse.action.distortion.FisheyeDistortion;
-import prefuse.action.layout.Layout;
-import prefuse.controls.AnchorUpdateControl;
+
 import prefuse.controls.ControlAdapter;
 import prefuse.controls.PanControl;
 import prefuse.controls.WheelZoomControl;
 import prefuse.controls.ZoomControl;
 import prefuse.controls.ZoomToFitControl;
-import prefuse.data.Graph;
-import prefuse.data.Schema;
-import prefuse.data.Table;
-import prefuse.util.ColorLib;
-import prefuse.util.PrefuseLib;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
 import prefuse.visual.sort.TreeDepthItemSorter;
-import prefuse.visual.tuple.TableNodeItem;
 
 /**
  * Demonstration of a node-link tree viewer
@@ -47,7 +32,6 @@ import prefuse.visual.tuple.TableNodeItem;
 public class MindView extends Display {
 
 	private VisualMindTree m_visMindTree;
-	private TableNodeItem m_curFocus;
 
 	MindTreeRenderEngine m_renderEngine;
 
@@ -105,29 +89,43 @@ public class MindView extends Display {
 
 	public void setKeyControlListener() {
 		registerKeyboardAction(new EditAction(this), "edit",
-				KeyStroke.getKeyStroke("F2"), WHEN_FOCUSED);
-		registerKeyboardAction(new RemoveAction(this), "remove",
-				KeyStroke.getKeyStroke("DELETE"), WHEN_FOCUSED);
+				KeyStroke.getKeyStroke("F2"), 0);
+
+		registerKeyboardAction(new SimpleMindTreeAction(this) {
+                    @Override
+                    public AbstractUndoableEdit operateMindTree(ActionEvent e) {
+                        return m_visMindTree.removeCursorNodeUndoable();
+                    }
+        }, "remove", KeyStroke.getKeyStroke("D"), 0);
 
 		registerKeyboardAction(new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (m_undoManager.canUndo())
+				if (m_undoManager.canUndo()) {
 					m_undoManager.undo();
+                    renderTree();
+                }
 
 			}
-		}, "back", KeyStroke.getKeyStroke("F3"), WHEN_FOCUSED);
+		}, "undo", KeyStroke.getKeyStroke("U"), 0);
 
 		registerKeyboardAction(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (m_undoManager.canRedo())
+				if (m_undoManager.canRedo()) {
 					m_undoManager.redo();
-
+                    renderTree();
+                }
 			}
-		}, "redo", KeyStroke.getKeyStroke("F4"), WHEN_FOCUSED);
+		}, "redo", KeyStroke.getKeyStroke("R"), 0);
+
+        registerKeyboardAction(new SimpleMindTreeAction(this) {
+                    @Override
+                    public AbstractUndoableEdit operateMindTree(ActionEvent e) {
+                        return m_visMindTree.addChild();
+                    }
+        }, "add_child", KeyStroke.getKeyStroke("I"), 0);
 	}
 
 	private UndoManager m_undoManager = new UndoManager();
@@ -136,12 +134,8 @@ public class MindView extends Display {
 		return m_undoManager;
 	}
 
-	public VisualMindTree getMindTree() {
+	public VisualMindTree getVisMindTree() {
 		return m_visMindTree;
-	}
-
-	public TableNodeItem getFocusNode() {
-		return m_curFocus;
 	}
 
 } // end of class TreeMap

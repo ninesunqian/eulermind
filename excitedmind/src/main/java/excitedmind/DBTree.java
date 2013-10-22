@@ -13,7 +13,6 @@ import com.tinkerpop.blueprints.Features;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.GraphQuery;
 import com.tinkerpop.blueprints.Index;
-import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 
@@ -21,6 +20,7 @@ public class DBTree implements Graph {
 
 	public final static String EDGE_TYPE_PROP_NAME = PrefuseLib.FIELD_PREFIX + "edgeType";
 	private final static String CHILD_EDGES_PROP_NAME = PrefuseLib.FIELD_PREFIX + "childEdges";
+    private final static String INHERIT_PATH_PROP_NAME = PrefuseLib.FIELD_PREFIX + "inheritPath";
 
 	private final static String ROOT_INDEX_NAME = PrefuseLib.FIELD_PREFIX + "rootIndex";
 	private final static String ROOT_KEY_NAME = PrefuseLib.FIELD_PREFIX + "root";
@@ -33,6 +33,10 @@ public class DBTree implements Graph {
 	public final static String SAVED_REFERER_INFO_PROP_NAME = PrefuseLib.FIELD_PREFIX + "referers";
 
 	enum EdgeType { INCLUDE, REFERENCE};
+
+    enum InheritDirection {SELF, LINEAL_SIBLING,  COLLATERAL_SIBLING,
+                          LINEAL_ANCESTOR, COLLATERAL_ANCESTOR,
+                          LINEAL_DESCENDANT, COLLATERAL_DESCENDANT};
 
     protected static final int ADDING_EDGE_END = 0x7FFFFFFF;
 
@@ -167,7 +171,7 @@ public class DBTree implements Graph {
 			if (ifNullCreate)
 			{
 				outEdgeArray = new ArrayList<Object> ();
-				source.setProperty(CHILD_EDGES_PROP_NAME, outEdgeArray);
+				source.setProperty(propName, outEdgeArray);
 			}
 			else
 			{
@@ -188,11 +192,55 @@ public class DBTree implements Graph {
 	{
 		return getContainerProperty (source, CHILD_EDGES_PROP_NAME, ifNullCreate);
 	}
-	
+
+    private ArrayList<Object> getInheritPath (Vertex source, boolean ifNullCreate)
+    {
+        return getContainerProperty (source, INHERIT_PATH_PROP_NAME, ifNullCreate);
+    }
+
+    public InheritDirection getInheritRelation (Vertex from, Vertex to)
+    {
+        if (from.getId() == to.getId()) {
+            return InheritDirection.SELF;
+        }
+
+        ArrayList fromInheritPath = getInheritPath(from, true);
+        ArrayList toInheritPath = getInheritPath(to, true);
+
+        int fromGeneration = fromInheritPath.size();
+        int toGeneration = toInheritPath.size();
+
+        int i;
+
+        for (i=0; i<fromGeneration && i<toGeneration; i++)
+        {
+            if (! fromInheritPath.get(i).equals(toInheritPath.get(i)))
+            {
+                break;
+            }
+        }
+
+        if (fromGeneration == toGeneration) {
+            if (i==fromGeneration)
+                return InheritDirection.LINEAL_SIBLING;
+            else
+                return InheritDirection.COLLATERAL_SIBLING;
+        } else if (fromGeneration < toGeneration) {
+            if (i==fromGeneration)
+                return InheritDirection.LINEAL_ANCESTOR;
+            else
+                return InheritDirection.COLLATERAL_ANCESTOR;
+
+        } else {
+            if (i==toGeneration)
+                return InheritDirection.LINEAL_DESCENDANT;
+            else
+                return InheritDirection.COLLATERAL_DESCENDANT;
+        }
+    }
 	
 	public EdgeType getEdgeType (Edge edge)
 	{
-//		return (EdgeType)edge.getProperty(EDGE_TYPE_PROP_NAME);
 		return EdgeType.values()[(Integer)edge.getProperty(EDGE_TYPE_PROP_NAME)];
 	}
 	
@@ -207,7 +255,7 @@ public class DBTree implements Graph {
 		//to make the edge'id is to local db
 		commit ();
 
-        edge = m_graph.addEdge(null, source, target, "a");
+        edge = m_graph.getEdge(edge.getId());
 		
 		ArrayList<Object> outEdgeArray = getEdgeIDsToChildren(source, true);
 		
@@ -287,9 +335,21 @@ public class DBTree implements Graph {
 	{
 		Vertex child = addVertex(null);
 		Edge edge = addEdge(parent, child, pos, EdgeType.INCLUDE);
+
+        ArrayList<Object> inheritPath = new ArrayList<Object> ();
+        ArrayList<Object> parentInheritPath = getInheritPath(parent, false);
+
+        if (parentInheritPath != null)
+        {
+            inheritPath.addAll(parentInheritPath);
+        }
+        inheritPath.add(parent.getId());
+
+        child.setProperty(INHERIT_PATH_PROP_NAME, inheritPath);
+
 		return new EdgeVertex(edge, child);
 	}
-	
+
 	public EdgeVertex getChildOrReferee(Vertex parent, int pos)
 	{
 		Edge edge = getEdge(parent, pos);
@@ -459,9 +519,8 @@ public class DBTree implements Graph {
 						int edgeIndex = edgeArray.indexOf(referer.m_edge.getId());
 
 						refLinkInfos.add(new RefLinkInfo(referer.m_vertex.getId(), vertex.getId(), edgeIndex));
-						edgeArray.remove(edgeIndex);
 
-						removeEdge(referer.m_edge);
+						removeRefEdge(referer.m_vertex, edgeIndex);
 					}
 				}
 				
@@ -472,7 +531,9 @@ public class DBTree implements Graph {
 		removedVertex.setProperty(SAVED_PARENT_ID_PROP_NAME, parent.getId());
 		removedVertex.setProperty(SAVED_POS_PROP_NAME, pos);
 		removedVertex.setProperty(SAVED_REFERER_INFO_PROP_NAME, refLinkInfos);
-		
+
+        removeEdge(parent, pos, EdgeType.INCLUDE);
+
 		m_trashIndex.put(TRASH_KEY_NAME, TRASH_KEY_NAME, removedVertex);
 		
 		commit ();
