@@ -7,6 +7,9 @@ package prefuse;
  */
 public interface Constants {
 
+    /** not set any value */
+    public static final int NONE  = Integer.MIN_VALUE;
+
     /** A left-to-right layout orientation */
     public static final int ORIENT_LEFT_RIGHT = 0;
     /** A right-to-left layout orientation */
@@ -19,7 +22,7 @@ public interface Constants {
     public static final int ORIENT_CENTER     = 4;
     /** The total number of orientation values */
     public static final int ORIENTATION_COUNT = 5;
-    
+
     /** A left alignment */
     public static final int LEFT   = 0;
     /** A right alignment */

@@ -78,7 +78,7 @@ public abstract class AbstractShapeRenderer implements Renderer {
     }
 
     /**
-     * Retursn the stroke to use for drawing lines and shape outlines. By
+     * Return the stroke to use for drawing lines and shape outlines. By
      * default returns the value of {@link VisualItem#getStroke()}.
      * Subclasses can override this method to implement custom stroke
      * assignment, though changing the <code>VisualItem</code>'s stroke

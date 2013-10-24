@@ -22,6 +22,9 @@ public class MindTree {
 
 	private final static String sm_dbIdColumnName = "dbElement";
 
+    public final static String sm_outEdgeDBIdsPropName = DBTree.CHILD_EDGES_PROP_NAME;
+    public final static String sm_inheritPathPropName = DBTree.INHERIT_PATH_PROP_NAME;
+
 	public final static String sm_textPropName = "text";
 	public final static String sm_fontFamilyPropName = "fontFamily";
 	public final static String sm_fontSizePropName = "fontSize";
@@ -33,6 +36,8 @@ public class MindTree {
 
     public final static String sm_nodePropNames [] = {
             sm_textPropName,
+            sm_outEdgeDBIdsPropName,
+            sm_inheritPathPropName,
 
             sm_fontFamilyPropName,
             sm_fontSizePropName,
@@ -366,4 +371,14 @@ public class MindTree {
 		assert(m_tree.containsTuple(tuple));
 		return tuple.get(sm_dbIdColumnName);
 	}
+
+    public int getChildCount(Node node)
+    {
+        if (node.getChildCount() > 0) {
+            return node.getChildCount();
+        } else {
+            ArrayList childEdgesDBIds = (ArrayList)node.get(sm_outEdgeDBIdsPropName);
+            return childEdgesDBIds.size();
+        }
+    }
 }

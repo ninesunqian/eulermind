@@ -19,8 +19,8 @@ import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 public class DBTree implements Graph {
 
 	public final static String EDGE_TYPE_PROP_NAME = PrefuseLib.FIELD_PREFIX + "edgeType";
-	private final static String CHILD_EDGES_PROP_NAME = PrefuseLib.FIELD_PREFIX + "childEdges";
-    private final static String INHERIT_PATH_PROP_NAME = PrefuseLib.FIELD_PREFIX + "inheritPath";
+	public final static String CHILD_EDGES_PROP_NAME = PrefuseLib.FIELD_PREFIX + "childEdges";
+    public final static String INHERIT_PATH_PROP_NAME = PrefuseLib.FIELD_PREFIX + "inheritPath";
 
 	private final static String ROOT_INDEX_NAME = PrefuseLib.FIELD_PREFIX + "rootIndex";
 	private final static String ROOT_KEY_NAME = PrefuseLib.FIELD_PREFIX + "root";

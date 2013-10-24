@@ -105,7 +105,7 @@ public class MindTreeRenderEngine {
     
     private DefaultRendererFactory makeItemRendererFactory ()
     {
-	    LabelRenderer nodeRenderer = new LabelRenderer(MindTree.sm_textPropName);
+	    NodeRenderer nodeRenderer = new NodeRenderer(MindTree.sm_textPropName);
     	nodeRenderer.setRenderType(AbstractShapeRenderer.RENDER_TYPE_FILL);
     	nodeRenderer.setHorizontalAlignment(Constants.LEFT);
     	nodeRenderer.setRoundedCorner(8, 8);
@@ -181,7 +181,6 @@ public class MindTreeRenderEngine {
     }
     
     public class EdgeColorAction extends ColorAction {
-
         public EdgeColorAction() {
             super(m_treeEdgesGroupName, VisualItem.STROKECOLOR);
         }
@@ -189,6 +188,25 @@ public class MindTreeRenderEngine {
         public int getColor(VisualItem item) {
             return ColorLib.rgb(200, 200, 200);
         }
+    }
 
+    public class NodeRenderer extends LabelRenderer {
+        public NodeRenderer(String textField) {
+            super(textField);
+        }
+
+        public NodeRenderer(String textField, String imageField) {
+            super(textField, imageField);
+        }
+
+        public int getRenderType(VisualItem item) {
+            VisualMindTree visualMindTree = m_mindView.getVisMindTree();
+            if (visualMindTree.getChildCount((NodeItem)item) == 0) {
+                return RENDER_TYPE_DRAW;
+            }
+            else {
+                return RENDER_TYPE_DRAW_AND_FILL;
+            }
+        }
     }
 }
