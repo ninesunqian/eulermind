@@ -1,6 +1,6 @@
 package excitedmind;
 
-import java.awt.Font;
+import java.awt.*;
 import java.awt.geom.Point2D;
 
 import prefuse.Constants;
@@ -10,6 +10,7 @@ import prefuse.action.ActionList;
 import prefuse.action.RepaintAction;
 import prefuse.action.assignment.ColorAction;
 import prefuse.action.assignment.FontAction;
+import prefuse.action.assignment.StrokeAction;
 import prefuse.data.Graph;
 import prefuse.data.Schema;
 import prefuse.data.Table;
@@ -20,6 +21,8 @@ import prefuse.render.LabelRenderer;
 import prefuse.util.ColorLib;
 import prefuse.util.FontLib;
 import prefuse.util.PrefuseLib;
+import prefuse.util.StrokeLib;
+import prefuse.visual.EdgeItem;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
 
@@ -81,7 +84,8 @@ public class MindTreeRenderEngine {
     	actions.add(new NodeColorAction());
     	actions.add(new NodeTextColorAction());
     	actions.add(new EdgeColorAction());
-    	
+        actions.add(new EdgeStrokeAction());
+
         return actions;
     }
     
@@ -190,6 +194,21 @@ public class MindTreeRenderEngine {
         }
     }
 
+    public class EdgeStrokeAction extends StrokeAction {
+        public EdgeStrokeAction() {
+            super(m_treeEdgesGroupName);
+        }
+
+        public BasicStroke getStroke(VisualItem item) {
+            if (m_mindView.getVisMindTree().isRefEdge((EdgeItem)item)) {
+                float dash [] = {10f, 5f};
+                return StrokeLib.getStroke(1.0f, dash);
+            } else {
+                return StrokeLib.getStroke(1.0f);
+            }
+        }
+    }
+
     public class NodeRenderer extends LabelRenderer {
         public NodeRenderer(String textField) {
             super(textField);
@@ -200,12 +219,26 @@ public class MindTreeRenderEngine {
         }
 
         public int getRenderType(VisualItem item) {
+            //FIXME: add a color action
+            item.setStrokeColor(ColorLib.rgb(150,150,150));
+
             VisualMindTree visualMindTree = m_mindView.getVisMindTree();
-            if (visualMindTree.getChildCount((NodeItem)item) == 0) {
-                return RENDER_TYPE_DRAW;
-            }
-            else {
-                return RENDER_TYPE_DRAW_AND_FILL;
+
+            int childCount = visualMindTree.getChildCount((NodeItem)item);
+
+            if (((NodeItem) item).getChildCount() != 0) {
+                if (item.isExpanded()) {
+                    return RENDER_TYPE_FILL;
+                } else {
+                    return RENDER_TYPE_DRAW_AND_FILL;
+                }
+
+            } else {
+                if (visualMindTree.getChildCount((NodeItem)item) == 0) {
+                    return RENDER_TYPE_FILL;
+                } else {
+                    return RENDER_TYPE_DRAW_AND_FILL;
+                }
             }
         }
     }

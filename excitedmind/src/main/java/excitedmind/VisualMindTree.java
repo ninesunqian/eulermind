@@ -566,7 +566,8 @@ public class VisualMindTree extends MindTree {
         return oldValue;
     }
 
-    //cursor move the next silbling ,
+    //cursor move the next afd
+    // ilbling ,
     //return old cursor
     private AbstractUndoableEdit setCursorPropertyUndoable  (String property, Object value)
     {

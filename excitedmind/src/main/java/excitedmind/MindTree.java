@@ -378,7 +378,8 @@ public class MindTree {
             return node.getChildCount();
         } else {
             ArrayList childEdgesDBIds = (ArrayList)node.get(sm_outEdgeDBIdsPropName);
-            return childEdgesDBIds.size();
+            System.out.println ("getChildCount = " + childEdgesDBIds);
+            return childEdgesDBIds==null ? 0: childEdgesDBIds.size();
         }
     }
 }
