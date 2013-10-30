@@ -3,6 +3,11 @@ package excitedmind;
 import java.util.*;
 
 import prefuse.Visualization;
+import prefuse.data.*;
+import prefuse.data.event.EventConstants;
+import prefuse.data.event.TableListener;
+import prefuse.data.event.TupleSetListener;
+import prefuse.data.tuple.TupleSet;
 import prefuse.util.ColorLib;
 import prefuse.visual.NodeItem;
 import prefuse.visual.EdgeItem;
@@ -10,10 +15,6 @@ import prefuse.visual.VisualItem;
 import prefuse.visual.tuple.TableEdgeItem;
 import prefuse.visual.tuple.TableNodeItem;
 
-import prefuse.data.Edge;
-import prefuse.data.Node;
-import prefuse.data.Tree;
-import prefuse.data.Graph;
 import prefuse.util.PrefuseLib;
 
 import javax.swing.undo.AbstractUndoableEdit;
@@ -52,7 +53,16 @@ public class VisualMindTree extends MindTree {
 
         m_cursor = m_tree.getRoot();
 
-        //TODO: add table Litener, remove event, remove frome m_foldedNodes
+        m_tree.getNodeTable().addTableListener(new TableListener() {
+            @Override
+            public void tableChanged(Table t, int start, int end, int col, int type) {
+                if (type ==  EventConstants.DELETE) {
+                    for (int i=start; i<=end; i++) {
+                        m_foldedNodes.remove(m_tree.getNode(i));
+                    }
+                }
+            }
+        });
     }
 
     private NodeItem toVisual (Node node)
@@ -222,23 +232,54 @@ public class VisualMindTree extends MindTree {
         return (Stack<Integer>) m_cursorPath.clone();
     }
 
-    private Node getNextCursor ()
-    {
-        if (m_cursor == m_tree.getRoot())
-            return m_cursor;
-        else if (m_tree.hasNextSibling(m_cursor)) //TODO: tree.hasXXX,  node.getXXX
-            return m_cursor.getNextSibling();
-        else if (m_tree.hasPreviousSibling(m_cursor))
-            return m_cursor.getPreviousSibling();
-        else
-            return m_cursor.getParent();
-    }
-
     private void removeCursorNodeAndCursorNext()
     {
-        Node next_cursor = getNextCursor();
+        final Node root = m_tree.getRoot();
+        if (getDBElementId(root) == getDBElementId(m_cursor))
+            return;
+
+        Node parent = m_cursor.getParent();
+        Node topParent = parent;
+        for (Node n=parent.getParent(); true ;n=n.getParent())
+        {
+            System.out.println ("clim remove parent : " + getText(n));
+            if (getDBElementId(n).equals(getDBElementId(parent))) {
+                topParent = n;
+            }
+
+            if (n == root) {
+                break;
+            }
+        }
+
+        int i;
+        Node newCursor = root;
+        for (i=m_cursor.getIndex(); i<topParent.getChildCount(); i++) {
+            newCursor = topParent.getChild(i);
+            if (getInheritRelation(m_cursor, newCursor) != DBTree.InheritDirection.COLLATERAL_DESCENDANT) {
+                break;
+            }
+        }
+
+        if (i == topParent.getChildCount()) {
+            for (i=m_cursor.getIndex(); i<=0; i--) {
+                newCursor = topParent.getChild(i);
+                if (getInheritRelation(m_cursor, newCursor) != DBTree.InheritDirection.COLLATERAL_DESCENDANT) {
+                    break;
+                }
+            }
+
+            if (i == -1) {
+                newCursor = root;
+            }
+        }
+
+
+        //using node path, compute the removed node in highest level;
         moveNodeToTrash(getDBElementId(m_cursor.getParent()), m_cursor.getIndex());
-        setCursor(next_cursor);
+
+        setCursor(newCursor);
+
     }
 
     private void restoreNodeAndSetCursor (Object dbId, Stack<Integer> nodePath)
@@ -267,7 +308,7 @@ public class VisualMindTree extends MindTree {
 
     public AbstractUndoableEdit addChild ()
     {
-        Object childDBId = addChild(getDBElementId(m_cursor), -1);
+        Object childDBId = addChild(getDBElementId(m_cursor), DBTree.ADDING_EDGE_END);
         setCursor(m_cursor.getChild(m_cursor.getChildCount() - 1));
 
         return new AddingChildUndoer(m_cursorPath, getDBElementId(m_cursor));
@@ -612,11 +653,4 @@ public class VisualMindTree extends MindTree {
     {
         return node.getString(sm_textPropName);
     }
-
-    /*
-    public String getText (Node node)
-    {
-        return node.getString(sm_textPropName);
-    }
-    */
 }

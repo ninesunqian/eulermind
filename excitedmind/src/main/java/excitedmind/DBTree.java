@@ -198,15 +198,8 @@ public class DBTree implements Graph {
         return getContainerProperty (source, INHERIT_PATH_PROP_NAME, ifNullCreate);
     }
 
-    public InheritDirection getInheritRelation (Vertex from, Vertex to)
+    public InheritDirection getInheritRelation (ArrayList fromInheritPath, ArrayList toInheritPath)
     {
-        if (from.getId() == to.getId()) {
-            return InheritDirection.SELF;
-        }
-
-        ArrayList fromInheritPath = getInheritPath(from, true);
-        ArrayList toInheritPath = getInheritPath(to, true);
-
         int fromGeneration = fromInheritPath.size();
         int toGeneration = toInheritPath.size();
 
@@ -237,6 +230,20 @@ public class DBTree implements Graph {
             else
                 return InheritDirection.COLLATERAL_DESCENDANT;
         }
+
+    }
+
+    public InheritDirection getInheritRelation (Vertex from, Vertex to)
+    {
+        if (from.getId() == to.getId()) {
+            return InheritDirection.SELF;
+        }
+
+        ArrayList fromInheritPath = getInheritPath(from, true);
+        ArrayList toInheritPath = getInheritPath(to, true);
+
+        return getInheritRelation(fromInheritPath, toInheritPath);
+
     }
 	
 	public EdgeType getEdgeType (Edge edge)

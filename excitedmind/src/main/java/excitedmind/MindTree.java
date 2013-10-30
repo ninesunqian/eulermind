@@ -258,7 +258,9 @@ public class MindTree {
 	public Object addChild(Object  parentDBId, int pos) {
 		Vertex dbParent = m_dbTree.getVertex(parentDBId);
 		EdgeVertex edgeVertex = m_dbTree.addChild(dbParent, pos);
-		
+
+        edgeVertex.m_vertex.setProperty(sm_textPropName, "");
+
 		exposeRelation(parentDBId, pos, edgeVertex.m_edge, edgeVertex.m_vertex);
 
         return edgeVertex.m_vertex.getId();
@@ -381,5 +383,11 @@ public class MindTree {
             System.out.println ("getChildCount = " + childEdgesDBIds);
             return childEdgesDBIds==null ? 0: childEdgesDBIds.size();
         }
+    }
+
+    public DBTree.InheritDirection getInheritRelation (Node from, Node to)
+    {
+        return m_dbTree.getInheritRelation ((ArrayList)from.get(sm_inheritPathPropName),
+                (ArrayList)to.get(sm_inheritPathPropName));
     }
 }

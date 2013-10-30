@@ -114,6 +114,7 @@ public class MindTreeRenderEngine {
     	nodeRenderer.setHorizontalAlignment(Constants.LEFT);
     	nodeRenderer.setRoundedCorner(8, 8);
     	nodeRenderer.setHorizontalAlignment(Constants.LEFT);
+        //nodeRenderer.setHorizontalPadding(10);
 
 	    EdgeRenderer edgeRenderer = new EdgeRenderer(Constants.EDGE_TYPE_CURVE);
     	edgeRenderer.setHorizontalAlignment1(Constants.RIGHT);
@@ -216,6 +217,11 @@ public class MindTreeRenderEngine {
 
         public NodeRenderer(String textField, String imageField) {
             super(textField, imageField);
+        }
+
+        protected String getText(VisualItem item) {
+            String s = item.getString(MindTree.sm_textPropName);
+            return  s.length() < 2 ? " " + s + " ": s;
         }
 
         public int getRenderType(VisualItem item) {
