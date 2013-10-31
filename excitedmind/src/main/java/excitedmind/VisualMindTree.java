@@ -6,8 +6,6 @@ import prefuse.Visualization;
 import prefuse.data.*;
 import prefuse.data.event.EventConstants;
 import prefuse.data.event.TableListener;
-import prefuse.data.event.TupleSetListener;
-import prefuse.data.tuple.TupleSet;
 import prefuse.util.ColorLib;
 import prefuse.visual.NodeItem;
 import prefuse.visual.EdgeItem;
@@ -18,7 +16,6 @@ import prefuse.visual.tuple.TableNodeItem;
 import prefuse.util.PrefuseLib;
 
 import javax.swing.undo.AbstractUndoableEdit;
-import javax.swing.undo.CannotUndoException;
 
 public class VisualMindTree extends MindTree {
     public final static String sm_treeGroupName = "tree";
@@ -181,6 +178,21 @@ public class VisualMindTree extends MindTree {
         return toVisual(m_cursor);
     }
 
+    private Stack getNodePrefusePath (Node node)
+    {
+        Stack path = new Stack();
+
+        Node climber = node;
+
+        while (climber != m_tree.getRoot())
+        {
+            path.add(0, climber.getIndex());
+            climber = climber.getParent();
+        }
+
+        return path;
+    }
+
     private void setCursor (Node node)
     {
         m_cursor = node;
@@ -215,11 +227,10 @@ public class VisualMindTree extends MindTree {
 
         for (int pos : path)
         {
+            if (m_cursor.getChild(pos) == null) {
+                unfoldNode(toVisual(m_cursor));
+            }
             m_cursor = m_cursor.getChild(pos);
-
-            //setCursor by path used in undo queue, fold/unfold is regared a operator.
-            //so when setCursorPath, the visual node must be exist.
-            assert (m_cursor != null);
         }
 
         m_cursorPath = path;
@@ -232,6 +243,14 @@ public class VisualMindTree extends MindTree {
         return (Stack<Integer>) m_cursorPath.clone();
     }
 
+    boolean isInDBSubTree(Node node, Node treeRoot)
+    {
+        DBTree.InheritDirection inheritDirection = getInheritDirection(node, treeRoot);
+        return inheritDirection == DBTree.InheritDirection.LINEAL_ANCESTOR ||
+                inheritDirection == DBTree.InheritDirection.SELF;
+
+    }
+
     private void removeCursorNodeAndCursorNext()
     {
         final Node root = m_tree.getRoot();
@@ -239,47 +258,42 @@ public class VisualMindTree extends MindTree {
             return;
 
         Node parent = m_cursor.getParent();
+        System.out.println ("remove'd parent : " + getNodePrefusePath(parent));
         Node topParent = parent;
-        for (Node n=parent.getParent(); true ;n=n.getParent())
+        System.out.println ("remove'd parent's parent : " + getNodePrefusePath(parent.getParent()));
+        for (Node n=parent.getParent(); n!=root ;n=n.getParent())
         {
-            System.out.println ("clim remove parent : " + getText(n));
+            System.out.println ("remove clim path : " + getNodePrefusePath(n));
             if (getDBElementId(n).equals(getDBElementId(parent))) {
                 topParent = n;
-            }
-
-            if (n == root) {
                 break;
             }
         }
 
         int i;
-        Node newCursor = root;
-        for (i=m_cursor.getIndex(); i<topParent.getChildCount(); i++) {
+        Node newCursor = topParent;
+        for (i=m_cursor.getIndex()+1; i<topParent.getChildCount(); i++) {
             newCursor = topParent.getChild(i);
-            if (getInheritRelation(m_cursor, newCursor) != DBTree.InheritDirection.COLLATERAL_DESCENDANT) {
+            if (! isInDBSubTree(newCursor, m_cursor))
                 break;
-            }
         }
 
         if (i == topParent.getChildCount()) {
-            for (i=m_cursor.getIndex(); i<=0; i--) {
+            for (i=m_cursor.getIndex()-1; i<=0; i--) {
                 newCursor = topParent.getChild(i);
-                if (getInheritRelation(m_cursor, newCursor) != DBTree.InheritDirection.COLLATERAL_DESCENDANT) {
+                if (! isInDBSubTree(newCursor, m_cursor))
                     break;
-                }
             }
 
             if (i == -1) {
-                newCursor = root;
+                newCursor = topParent;
             }
         }
-
 
         //using node path, compute the removed node in highest level;
         moveNodeToTrash(getDBElementId(m_cursor.getParent()), m_cursor.getIndex());
 
         setCursor(newCursor);
-
     }
 
     private void restoreNodeAndSetCursor (Object dbId, Stack<Integer> nodePath)

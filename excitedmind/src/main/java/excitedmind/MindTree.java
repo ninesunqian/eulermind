@@ -385,9 +385,9 @@ public class MindTree {
         }
     }
 
-    public DBTree.InheritDirection getInheritRelation (Node from, Node to)
+    public DBTree.InheritDirection getInheritDirection(Node from, Node to)
     {
-        return m_dbTree.getInheritRelation ((ArrayList)from.get(sm_inheritPathPropName),
-                (ArrayList)to.get(sm_inheritPathPropName));
+        return m_dbTree.getInheritDirection((ArrayList) from.get(sm_inheritPathPropName),
+                (ArrayList) to.get(sm_inheritPathPropName));
     }
 }

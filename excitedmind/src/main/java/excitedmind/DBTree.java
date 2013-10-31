@@ -138,6 +138,7 @@ public class DBTree implements Graph {
 	{
 		Vertex root = addVertex(null);
 		m_rootIndex.put(ROOT_KEY_NAME, ROOT_KEY_NAME, root);
+        root.setProperty(INHERIT_PATH_PROP_NAME, new ArrayList ());
 		Object rootId = root.getId();
 		Object oldId = rootId;
 		System.out.println(root.getId());
@@ -198,7 +199,7 @@ public class DBTree implements Graph {
         return getContainerProperty (source, INHERIT_PATH_PROP_NAME, ifNullCreate);
     }
 
-    public InheritDirection getInheritRelation (ArrayList fromInheritPath, ArrayList toInheritPath)
+    public InheritDirection getInheritDirection(ArrayList fromInheritPath, ArrayList toInheritPath)
     {
         int fromGeneration = fromInheritPath.size();
         int toGeneration = toInheritPath.size();
@@ -242,7 +243,7 @@ public class DBTree implements Graph {
         ArrayList fromInheritPath = getInheritPath(from, true);
         ArrayList toInheritPath = getInheritPath(to, true);
 
-        return getInheritRelation(fromInheritPath, toInheritPath);
+        return getInheritDirection(fromInheritPath, toInheritPath);
 
     }
 	
