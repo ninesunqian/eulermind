@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -41,18 +42,19 @@ import prefuse.visual.VisualItem;
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
 public class Mindmap {
+    static Logger m_logger = Logger.getLogger(Mindmap.class.getName());
 
 	public static void main(String argv[]) {
 
         /*
         String tmpdir = System.getProperty("java.io.tmpdir");
-        System.out.println ("tmpdir = " + tmpdir);
+        m_logger.info ("tmpdir = " + tmpdir);
         String dbPath = tmpdir  + "mind_db";
         */
         String dbPath = "d://tmp/mind_db";
 
 		String dbUrl = "local:" + dbPath.replace(File.separatorChar, '/');
-        System.out.println ("dbUrl = " + dbUrl);
+        m_logger.info ("dbUrl = " + dbUrl);
         Runtime rt =Runtime.getRuntime() ;
 
         String rmDirCmd;
@@ -64,7 +66,7 @@ public class Mindmap {
         }
 
         try {
-            System.out.println (rmDirCmd);
+            m_logger.info (rmDirCmd);
             Process process = rt.exec(rmDirCmd);
 
         } catch (IOException e) {

@@ -2,6 +2,7 @@ package excitedmind;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import prefuse.util.PrefuseLib;
 
@@ -17,6 +18,7 @@ import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 
 public class DBTree implements Graph {
+    Logger m_logger = Logger.getLogger(this.getClass().getName());
 
 	public final static String EDGE_TYPE_PROP_NAME = PrefuseLib.FIELD_PREFIX + "edgeType";
 	public final static String CHILD_EDGES_PROP_NAME = PrefuseLib.FIELD_PREFIX + "childEdges";
@@ -141,10 +143,10 @@ public class DBTree implements Graph {
         root.setProperty(INHERIT_PATH_PROP_NAME, new ArrayList ());
 		Object rootId = root.getId();
 		Object oldId = rootId;
-		System.out.println(root.getId());
+		m_logger.info(root.getId().toString());
 		root = m_graph.getVertex(rootId);
 		rootId = root.getId();
-		System.out.println(root.getId());
+		m_logger.info(root.getId().toString());
 		return root;
 	}
 

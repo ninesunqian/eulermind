@@ -2,6 +2,7 @@ package excitedmind;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
+import java.util.logging.Logger;
 
 import prefuse.Constants;
 import prefuse.Visualization;
@@ -27,6 +28,8 @@ import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
 
 public class MindTreeRenderEngine {
+    Logger m_logger = Logger.getLogger(this.getClass().getName());
+
 	private final MindView m_mindView;
 	private final Visualization m_vis;
 	

@@ -3,6 +3,7 @@ package excitedmind;
 import java.util.ArrayList;
 
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import prefuse.data.Edge;
 import prefuse.data.Node;
@@ -19,6 +20,7 @@ import excitedmind.DBTree.RefLinkInfo;
 
 
 public class MindTree {
+    Logger m_logger = Logger.getLogger(this.getClass().getName());
 
 	private final static String sm_dbIdColumnName = "dbElement";
 
@@ -146,7 +148,7 @@ public class MindTree {
 			Node child = m_tree.addChild(parent);
 			Edge edge = m_tree.getEdge(parent, child);
 
-			System.out.println (getDBVertex(parent)+ "->" + edgeVertex.m_vertex+ "   :  " + edgeVertex.m_edge);
+			m_logger.info (getDBVertex(parent)+ "->" + edgeVertex.m_vertex+ "   :  " + edgeVertex.m_edge);
 			loadNodeProperties(edgeVertex.m_vertex, child);
 			loadEdgeProperties(edgeVertex.m_edge, edge);
 		}
@@ -198,7 +200,7 @@ public class MindTree {
 		IntIterator allRows = m_nodeTable.rows();
 
 		ArrayList<Integer> aimRows = new ArrayList<Integer> ();
-		System.out.println ("need node's dbId is" + dbId);
+		m_logger.info ("need node's dbId is" + dbId);
 
 		//collect the node with the same parentDBId to aimRows
 		while (allRows.hasNext()) {
@@ -380,7 +382,7 @@ public class MindTree {
             return node.getChildCount();
         } else {
             ArrayList childEdgesDBIds = (ArrayList)node.get(sm_outEdgeDBIdsPropName);
-            System.out.println ("getChildCount = " + childEdgesDBIds);
+            m_logger.info ("getChildCount = " + childEdgesDBIds);
             return childEdgesDBIds==null ? 0: childEdgesDBIds.size();
         }
     }

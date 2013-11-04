@@ -19,6 +19,7 @@ import javax.swing.undo.AbstractUndoableEdit;
 import java.util.logging.Logger;
 
 public class VisualMindTree extends MindTree {
+    final Logger m_logger = Logger.getLogger(this.getClass().getName());
     public final static String sm_treeGroupName = "tree";
     public final static String sm_treeNodesGroupName = PrefuseLib.getGroupName(sm_treeGroupName, Graph.NODES);
     public final static String sm_treeEdgesGroupName = PrefuseLib.getGroupName(sm_treeGroupName, Graph.EDGES);
@@ -26,7 +27,6 @@ public class VisualMindTree extends MindTree {
     //MindTree
     final Visualization m_vis;
 
-    final Logger m_logger =  Logger.getLogger("VisualMindTree");
 
     Node m_cursor;
     int m_cursorDepth = 0;
@@ -219,12 +219,12 @@ public class VisualMindTree extends MindTree {
             return;
 
         Node parent = m_cursor.getParent();
-        System.out.println ("remove'd parent : " + getDisplayPath(parent));
+        m_logger.info ("remove'd parent : " + getDisplayPath(parent));
         Node topParent = parent;
-        System.out.println ("remove'd parent's parent : " + getDisplayPath(parent.getParent()));
+        m_logger.info ("remove'd parent's parent : " + getDisplayPath(parent.getParent()));
         for (Node n=parent.getParent(); n!=root ;n=n.getParent())
         {
-            System.out.println ("remove clim path : " + getDisplayPath(n));
+            m_logger.info ("remove clim path : " + getDisplayPath(n));
             if (getDBElementId(n).equals(getDBElementId(parent))) {
                 topParent = n;
                 break;
@@ -425,7 +425,7 @@ public class VisualMindTree extends MindTree {
                     TableNodeItem visualNode = (TableNodeItem)vis.getVisualItem(group, node);
                     TableEdgeItem visualEdge = (TableEdgeItem)visualNode.getParentEdge();
 
-                    System.out.println ( "visiableNode " + getText(node));
+                    m_logger.info ( "visiableNode " + getText(node));
                     PrefuseLib.updateVisible(visualNode, true);
                     PrefuseLib.updateVisible(visualEdge, true);
 
@@ -451,7 +451,7 @@ public class VisualMindTree extends MindTree {
         Node node = (Node)visualItem.getSourceTuple();
         final String group = visualItem.getGroup();
 
-        System.out.println ( "foldNode " + getText(node));
+        m_logger.info ( "foldNode " + getText(node));
         if (! visualItem.isExpanded())
         {
             return;
@@ -477,9 +477,9 @@ public class VisualMindTree extends MindTree {
 
                 String text = getText(node);
 
-                System.out.println ( "invisiableNode " + text);
+                m_logger.info ( "invisiableNode " + text);
                 if (m_foldedNodes.contains(node)) {
-                    System.out.println ( "m_foldedNodes contain: " + node + " " + text);
+                    m_logger.info ( "m_foldedNodes contain: " + node + " " + text);
                     return false;
                 } else {
                     return true;
@@ -533,7 +533,7 @@ public class VisualMindTree extends MindTree {
         boolean foldIt = false;
         if (m_cursor.getChildCount() == 0)
         {
-            System.out.println ( "----leaf node un fold " + text);
+            m_logger.info ( "----leaf node un fold " + text);
             unfoldNode(visualItem);
             foldIt = false;
         }
@@ -541,13 +541,13 @@ public class VisualMindTree extends MindTree {
         {
             if (visualItem.isExpanded())
             {
-                System.out.println ( "---- fold " + text);
+                m_logger.info ( "---- fold " + text);
                 foldNode(visualItem);
                 foldIt = true;
             }
             else
             {
-                System.out.println ( "----un fold " + text);
+                m_logger.info ( "----un fold " + text);
                 unfoldNode(visualItem);
                 foldIt = false;
             }
@@ -564,14 +564,14 @@ public class VisualMindTree extends MindTree {
             m_property = property;
             m_oldValue = oldValue;
             m_newValue = newValue;
-            System.out.println("nodePath="+ nodePath + ",   newValue="+m_newValue + ",   oldValue="+m_oldValue);
+            m_logger.info("nodePath="+ nodePath + ",   newValue="+m_newValue + ",   oldValue="+m_oldValue);
         }
 
         public void undo ()
         {
             setCursorByPath(m_nodePath);
             setCursorProperty(m_property, m_oldValue);
-            System.out.println("nodePath="+ m_nodePath + ",   DBId="+getDBElementId(m_cursor) + ",   oldValue="+m_oldValue);
+            m_logger.info("nodePath="+ m_nodePath + ",   DBId="+getDBElementId(m_cursor) + ",   oldValue="+m_oldValue);
         }
 
         public void redo ()

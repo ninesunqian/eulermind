@@ -3,6 +3,7 @@ package excitedmind;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.util.logging.Logger;
 
 import javax.swing.*;
 import javax.swing.undo.AbstractUndoableEdit;
@@ -30,6 +31,8 @@ import prefuse.visual.sort.TreeDepthItemSorter;
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
 public class MindView extends Display {
+
+    Logger m_logger = Logger.getLogger(this.getClass().getName());
 
 	private VisualMindTree m_visMindTree;
 
@@ -203,7 +206,7 @@ public class MindView extends Display {
 			}
 
 			public void itemClicked(VisualItem item, MouseEvent e) {
-				System.out.println("mouse Clicked");
+				m_logger.info("mouse Clicked");
 
 				if (m_visMindTree.isNode(item)) {
                     m_clickedNode = (NodeItem)item;

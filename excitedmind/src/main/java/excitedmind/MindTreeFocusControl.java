@@ -33,6 +33,7 @@ import prefuse.visual.expression.InGroupPredicate;
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
 public class MindTreeFocusControl extends ControlAdapter {
+    Logger m_logger = Logger.getLogger(this.getClass().getName());
 
     private String group = Visualization.FOCUS_ITEMS;
     protected String activity;
@@ -108,7 +109,7 @@ public class MindTreeFocusControl extends ControlAdapter {
      */
     public void itemClicked(VisualItem item, MouseEvent e) {
         if ( !filterCheck(item) ) return;
-        System.out.println ("mouse Clicked");
+        m_logger.info ("mouse Clicked");
         
         /*
         if (item.isInGroup(MindView.sm_treeNodesGroupName))
