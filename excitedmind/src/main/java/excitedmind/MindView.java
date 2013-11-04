@@ -4,8 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 
-import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoManager;
 
@@ -23,6 +22,7 @@ import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
 import prefuse.visual.sort.TreeDepthItemSorter;
 
+
 /**
  * Demonstration of a node-link tree viewer
  * 
@@ -34,6 +34,134 @@ public class MindView extends Display {
 	private VisualMindTree m_visMindTree;
 
 	MindTreeRenderEngine m_renderEngine;
+    NodeItem m_clickedNode;
+
+    static enum State {NORMAL, LINKING, MOVING};
+
+    EditAction m_editAction = new EditAction(this);
+
+    final static String sm_editActionName = "edit";
+    final static String sm_removeActionName = "remove";
+    final static String sm_undoActionName = "undo";
+    final static String sm_redoActionName = "redo";
+    final static String sm_addChildActionName = "addChild";
+    final static String sm_addLinkActionName = "addLink";
+    final static String sm_moveActionName = "move";
+    final static String sm_prepareLinkActionName = "prepareLink";
+    final static String sm_prepareMoveActionName = "prepareMove";
+    final static String sm_toNormalActionAction = "toNormal";
+
+    AbstractAction m_removeAction = new SimpleMindTreeAction(this) {
+        @Override
+        public AbstractUndoableEdit operateMindTree(ActionEvent e) {
+            return m_visMindTree.removeCursorNode();
+        }
+    };
+
+    AbstractAction m_undoAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (m_undoManager.canUndo()) {
+                m_undoManager.undo();
+                renderTree();
+            }
+        }
+    };
+
+    AbstractAction m_redoAction = new AbstractAction() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (m_undoManager.canRedo()) {
+                m_undoManager.redo();
+                renderTree();
+            }
+        }
+    };
+
+    AbstractAction m_addChildAction = new SimpleMindTreeAction(this) {
+        @Override
+        public AbstractUndoableEdit operateMindTree(ActionEvent e) {
+            return m_visMindTree.addChild();
+        }
+    };
+
+    AbstractAction m_addLinkAction = new SimpleMindTreeAction(this) {
+        @Override
+        public AbstractUndoableEdit operateMindTree(ActionEvent e) {
+            return m_visMindTree.addReference(m_clickedNode);
+        }
+    };
+
+    AbstractAction m_moveAction = new SimpleMindTreeAction(this) {
+        @Override
+        public AbstractUndoableEdit operateMindTree(ActionEvent e) {
+            return m_visMindTree.addChild();
+        }
+    };
+
+    AbstractAction m_prepareLinkAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            translate (State.LINKING);
+        }
+    };
+
+    AbstractAction m_prepareMoveAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            translate (State.MOVING);
+        }
+    };
+
+    AbstractAction m_toNormalAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            translate (State.NORMAL);
+        }
+    };
+
+    ActionMap m_mindActionMap = new ActionMap();
+
+    private void setEnabledAllMindActions(boolean enabled)
+    {
+        Object [] keys = m_mindActionMap.keys();
+        for (Object key : keys) {
+            m_mindActionMap.get(key).setEnabled(enabled);
+        }
+    }
+
+    private void setEnabledMindActions(String keys[], boolean enabled)
+    {
+        for (Object key : keys) {
+            m_mindActionMap.get(key).setEnabled(enabled);
+        }
+    }
+
+    State m_state = State.NORMAL;
+
+    void translate(State newState)
+    {
+        if (m_state == newState) {
+            return;
+        }
+
+        m_state = newState;
+
+        switch (newState) {
+            case NORMAL:
+                setEnabledAllMindActions(true);
+            case LINKING:
+                setEnabledAllMindActions(false);
+                setEnabledMindActions(new String []{sm_addLinkActionName, sm_toNormalActionAction}, false);
+                break;
+            case MOVING:
+                setEnabledAllMindActions(false);
+                setEnabledMindActions(new String []{sm_moveActionName, sm_toNormalActionAction}, false);
+                break;
+        }
+
+    }
 
 	public MindView(String path, Object rootId) {
 		super(new Visualization());
@@ -66,8 +194,10 @@ public class MindView extends Display {
 
 			public void itemEntered(VisualItem item, MouseEvent e) {
 				if (m_visMindTree.isNode(item)) {
-                    m_visMindTree.setCursor((NodeItem)item);
-					renderTree();
+                    if (m_state == State.NORMAL) {
+                        m_visMindTree.setCursor((NodeItem)item);
+                        renderTree();
+                    }
 				}
 
 			}
@@ -76,11 +206,30 @@ public class MindView extends Display {
 				System.out.println("mouse Clicked");
 
 				if (m_visMindTree.isNode(item)) {
+                    m_clickedNode = (NodeItem)item;
 
-					//FIXME:
-					// m_renderEngine.holdItem(item);
+					m_renderEngine.holdItem(item);
 
-					m_visMindTree.ToggleFoldNode((NodeItem)item);
+                    AbstractUndoableEdit undoer;
+
+                    switch (m_state) {
+                        case NORMAL:
+                            undoer = m_visMindTree.ToggleFoldNode();
+                            break;
+                        case LINKING:
+                            undoer = m_visMindTree.addReference(m_clickedNode);
+                            break;
+                        case MOVING:
+                            //TODO;
+                            assert(false);
+                            undoer = null;
+                            break;
+                        default:
+                            assert(false);
+                            undoer = null;
+                    }
+                    m_undoManager.addEdit(undoer);
+
 					renderTree();
 				}
 			}
@@ -88,44 +237,25 @@ public class MindView extends Display {
 	}
 
 	public void setKeyControlListener() {
-		registerKeyboardAction(new EditAction(this), "edit",
-				KeyStroke.getKeyStroke("F2"), 0);
+        m_mindActionMap.put(sm_editActionName, m_editAction);
+        m_mindActionMap.put(sm_removeActionName, m_removeAction);
+        m_mindActionMap.put(sm_addChildActionName, m_addChildAction);
+        m_mindActionMap.put(sm_undoActionName, m_undoAction);
+        m_mindActionMap.put(sm_prepareLinkActionName, m_prepareLinkAction);
+        m_mindActionMap.put(sm_prepareMoveActionName, m_prepareLinkAction);
 
-		registerKeyboardAction(new SimpleMindTreeAction(this) {
-                    @Override
-                    public AbstractUndoableEdit operateMindTree(ActionEvent e) {
-                        return m_visMindTree.removeCursorNodeUndoable();
-                    }
-        }, "remove", KeyStroke.getKeyStroke("D"), 0);
+        ActionMap defaultActionMap = getActionMap();
+        m_mindActionMap.setParent(defaultActionMap);
+        setActionMap(m_mindActionMap);
 
-		registerKeyboardAction(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (m_undoManager.canUndo()) {
-					m_undoManager.undo();
-                    renderTree();
-                }
-
-			}
-		}, "undo", KeyStroke.getKeyStroke("U"), 0);
-
-		registerKeyboardAction(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (m_undoManager.canRedo()) {
-					m_undoManager.redo();
-                    renderTree();
-                }
-			}
-		}, "redo", KeyStroke.getKeyStroke("R"), 0);
-
-        registerKeyboardAction(new SimpleMindTreeAction(this) {
-                    @Override
-                    public AbstractUndoableEdit operateMindTree(ActionEvent e) {
-                        return m_visMindTree.addChild();
-                    }
-        }, "add_child", KeyStroke.getKeyStroke("I"), 0);
+        InputMap inputMap = getInputMap();
+        inputMap.put(KeyStroke.getKeyStroke("F2"), sm_editActionName);
+        inputMap.put(KeyStroke.getKeyStroke('d'), sm_removeActionName);
+        inputMap.put(KeyStroke.getKeyStroke('i'), sm_addChildActionName);
+        inputMap.put(KeyStroke.getKeyStroke('u'), sm_undoActionName);
+        inputMap.put(KeyStroke.getKeyStroke('r'), sm_redoActionName);
+        inputMap.put(KeyStroke.getKeyStroke('l'), sm_prepareLinkActionName);
+        inputMap.put(KeyStroke.getKeyStroke('m'), sm_prepareMoveActionName);
 	}
 
 	private UndoManager m_undoManager = new UndoManager();
