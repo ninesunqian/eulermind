@@ -89,20 +89,6 @@ public class MindView extends Display {
         }
     };
 
-    AbstractAction m_addLinkAction = new SimpleMindTreeAction(this) {
-        @Override
-        public AbstractUndoableEdit operateMindTree(ActionEvent e) {
-            return m_visMindTree.addReference(m_clickedNode);
-        }
-    };
-
-    AbstractAction m_moveAction = new SimpleMindTreeAction(this) {
-        @Override
-        public AbstractUndoableEdit operateMindTree(ActionEvent e) {
-            return m_visMindTree.addChild();
-        }
-    };
-
     AbstractAction m_prepareLinkAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
@@ -154,13 +140,14 @@ public class MindView extends Display {
         switch (newState) {
             case NORMAL:
                 setEnabledAllMindActions(true);
+                break;
             case LINKING:
                 setEnabledAllMindActions(false);
-                setEnabledMindActions(new String []{sm_addLinkActionName, sm_toNormalActionAction}, false);
+                setEnabledMindActions(new String []{sm_addLinkActionName, sm_toNormalActionAction}, true);
                 break;
             case MOVING:
                 setEnabledAllMindActions(false);
-                setEnabledMindActions(new String []{sm_moveActionName, sm_toNormalActionAction}, false);
+                setEnabledMindActions(new String []{sm_moveActionName, sm_toNormalActionAction}, true);
                 break;
         }
 
@@ -243,9 +230,14 @@ public class MindView extends Display {
         m_mindActionMap.put(sm_editActionName, m_editAction);
         m_mindActionMap.put(sm_removeActionName, m_removeAction);
         m_mindActionMap.put(sm_addChildActionName, m_addChildAction);
+
         m_mindActionMap.put(sm_undoActionName, m_undoAction);
+        m_mindActionMap.put(sm_redoActionName, m_redoAction);
+
         m_mindActionMap.put(sm_prepareLinkActionName, m_prepareLinkAction);
-        m_mindActionMap.put(sm_prepareMoveActionName, m_prepareLinkAction);
+        m_mindActionMap.put(sm_prepareMoveActionName, m_prepareMoveAction);
+        m_mindActionMap.put(sm_toNormalActionAction, m_toNormalAction);
+
 
         ActionMap defaultActionMap = getActionMap();
         m_mindActionMap.setParent(defaultActionMap);
@@ -255,10 +247,12 @@ public class MindView extends Display {
         inputMap.put(KeyStroke.getKeyStroke("F2"), sm_editActionName);
         inputMap.put(KeyStroke.getKeyStroke('d'), sm_removeActionName);
         inputMap.put(KeyStroke.getKeyStroke('i'), sm_addChildActionName);
+
         inputMap.put(KeyStroke.getKeyStroke('u'), sm_undoActionName);
         inputMap.put(KeyStroke.getKeyStroke('r'), sm_redoActionName);
         inputMap.put(KeyStroke.getKeyStroke('l'), sm_prepareLinkActionName);
         inputMap.put(KeyStroke.getKeyStroke('m'), sm_prepareMoveActionName);
+        inputMap.put(KeyStroke.getKeyStroke("ESCAPE"), sm_toNormalActionAction);
 	}
 
 	private UndoManager m_undoManager = new UndoManager();

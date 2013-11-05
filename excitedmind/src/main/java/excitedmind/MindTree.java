@@ -3,6 +3,7 @@ package excitedmind;
 import java.util.ArrayList;
 
 import java.util.Iterator;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import prefuse.data.Edge;
@@ -79,6 +80,8 @@ public class MindTree {
 	
 	public MindTree(String dbPath, Object rootId)
 	{
+        m_logger.setLevel(Level.WARNING);
+
 		m_tree = new Tree();
 		
 		m_dbTree = new DBTree (dbPath);

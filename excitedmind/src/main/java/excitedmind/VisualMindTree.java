@@ -322,7 +322,7 @@ public class VisualMindTree extends MindTree {
 
     public AbstractUndoableEdit addReference (Object refereeDBId)
     {
-        addReference(getDBElementId(m_cursor), refereeDBId, -1);
+        addReference(getDBElementId(m_cursor), refereeDBId, DBTree.ADDING_EDGE_END);
 
         // add a reference from m_cursor to other node, the m_cursor does not move the referered node
 
