@@ -335,20 +335,6 @@ public class MindTree {
         hideRelation(refererDBId, pos);
     }
 
-    public void moveChild (Object oldParentDBId, int oldPos, Object newParentDBId, int newPos)
-	{
-        if (oldParentDBId.equals(newParentDBId))
-            return;
-
-        Vertex oldParent = m_dbTree.getVertex(oldParentDBId);
-        Vertex newParent = m_dbTree.getVertex(newParentDBId);
-
-        EdgeVertex edgeVertex = m_dbTree.moveChild(oldParent, oldPos, newParent, newPos);
-
-        hideRelation(oldParentDBId, oldPos);
-        exposeRelation(newParentDBId, newPos, edgeVertex.m_edge, edgeVertex.m_vertex);
-	}
-
     public void changeChildPos (final Object parentDBId, final int oldPos, final int newPos)
     {
         Vertex parent = m_dbTree.getVertex(parentDBId);
@@ -360,7 +346,26 @@ public class MindTree {
             }
         });
     }
-	
+
+    public void moveChild (Object oldParentDBId, int oldPos, Object newParentDBId, int newPos)
+	{
+        if (oldParentDBId.equals(newParentDBId)) {
+            if (oldPos != newPos) {
+                changeChildPos(oldParentDBId, oldPos, newPos);
+            }
+
+            return;
+        }
+
+        Vertex oldParent = m_dbTree.getVertex(oldParentDBId);
+        Vertex newParent = m_dbTree.getVertex(newParentDBId);
+
+        EdgeVertex edgeVertex = m_dbTree.moveChild(oldParent, oldPos, newParent, newPos);
+
+        hideRelation(oldParentDBId, oldPos);
+        exposeRelation(newParentDBId, newPos, edgeVertex.m_edge, edgeVertex.m_vertex);
+	}
+
 	public void setNodeProperty (final Object dbId, final String key, final Object value)
 	{
 		Vertex dbNode = m_dbTree.getVertex(dbId);

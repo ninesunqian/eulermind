@@ -42,7 +42,7 @@ public class DBTree implements Graph {
 
     protected static final int ADDING_EDGE_END = 0x7FFFFFFF;
 
-	private OrientGraph m_graph;
+	public OrientGraph m_graph;
 
 	private Index<Vertex> m_rootIndex;
 	private Index<Vertex> m_trashIndex;

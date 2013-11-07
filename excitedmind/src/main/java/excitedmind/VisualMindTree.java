@@ -82,17 +82,24 @@ public class VisualMindTree extends MindTree {
         return (Edge) m_vis.getSourceTuple (edgeItem);
     }
 
-    public boolean isNode(VisualItem item) {
+    public boolean isNode(VisualItem item)
+    {
         return item.isInGroup(sm_treeNodesGroupName);
     }
 
-    private Stack getDisplayPath(Node node)
+    public boolean sameDBNode(Node n1, Node n2)
     {
-        Stack path = new Stack();
+        return getDBElementId(n1) == getDBElementId(n2);
+    }
+
+    private Stack<Integer> getDisplayPath(Node node)
+    {
+        Stack<Integer> path = new Stack<Integer>();
 
         Node climber = node;
+        Node root = m_tree.getRoot();
 
-        while (climber != m_tree.getRoot())
+        while (climber.getRow() != root.getRow())
         {
             path.add(0, climber.getIndex());
             climber = climber.getParent();
@@ -101,6 +108,18 @@ public class VisualMindTree extends MindTree {
         return path;
     }
 
+    private Node getNodeByPath(Stack<Integer> path)
+    {
+        Node node = m_tree.getRoot();
+
+        for (int pos : path) {
+            if (node.getChild(pos) == null) {
+                unfoldNode(toVisual(node));
+            }
+            node = node.getChild(pos);
+        }
+        return node;
+    }
 
     public void moveCursorLeft ()
     {
@@ -192,15 +211,7 @@ public class VisualMindTree extends MindTree {
 
     private void setCursorByPath (Stack<Integer> path)
     {
-        m_cursor = m_tree.getRoot();
-
-        for (int pos : path) {
-            if (m_cursor.getChild(pos) == null) {
-                unfoldNode(toVisual(m_cursor));
-            }
-            m_cursor = m_cursor.getChild(pos);
-        }
-
+        m_cursor = getNodeByPath(path);
         m_cursorDepth = path.size();
     }
 
@@ -363,7 +374,8 @@ public class VisualMindTree extends MindTree {
             m_refereeDBId = refereeDBId;
             m_pos = pos;
         }
-        public void undo () {
+        public void undo ()
+        {
             setCursorByPath(m_nodePath);
             removeReference(m_refereeDBId, m_pos);
         }
@@ -394,6 +406,76 @@ public class VisualMindTree extends MindTree {
             removeCursorNodeAndCursorNext();
             return undoer;
         }
+    }
+
+    private void moveChildImpl(Node oldParent, int oldPos, Node newParent, int newPos)
+    {
+        if (newPos == DBTree.ADDING_EDGE_END) {
+            newPos = newParent.getChildCount();
+        }
+
+        VisualMindTree.this.moveChild (getDBElementId(oldParent), oldPos, getDBElementId(newParent), newPos);
+        setCursor(newParent.getChild(newPos));
+    }
+
+    class MovingChildUndoer extends AbstractUndoableEdit {
+        MovingChildUndoer(Stack<Integer> oldParentPath, int oldPos, Stack<Integer> newParentPath, int newPos)
+        {
+            m_oldParentPath = oldParentPath;
+            m_oldPos = oldPos;
+            m_newParentPath = newParentPath;
+            m_newPos = newPos;
+        }
+
+        public void undo()
+        {
+            moveChild(m_newParentPath, m_newPos, m_oldParentPath, m_oldPos);
+        }
+
+        public void redo()
+        {
+            moveChild(m_oldParentPath, m_oldPos, m_newParentPath, m_newPos);
+        }
+
+        private void moveChild(Stack<Integer> oldParentPath, int oldPos, Stack<Integer> newParentPath, int newPos)
+        {
+            Node oldParent = getNodeByPath(oldParentPath);
+            Node newParent = getNodeByPath(newParentPath);
+            moveChildImpl(oldParent, oldPos, newParent, newPos);
+        }
+
+        Stack<Integer> m_oldParentPath;
+        int m_oldPos;
+        Stack<Integer> m_newParentPath;
+        int m_newPos;
+    }
+
+    public AbstractUndoableEdit resetParent(Node newParent)
+    {
+        if (m_cursor == m_tree.getRoot()) {
+            return null;
+        }
+
+        Node oldParent = m_cursor.getParent();
+
+        if (sameDBNode(newParent, oldParent)) {
+            return null;
+        }
+
+        DBTree.InheritDirection inheritDirection = getInheritDirection(m_cursor, newParent);
+        if (inheritDirection == DBTree.InheritDirection.LINEAL_DESCENDANT) {
+            return null;
+        }
+
+        Stack<Integer> oldParentPath = getDisplayPath(oldParent);
+        Stack<Integer> newParentPath = getDisplayPath(newParent);
+        int oldPos = m_cursor.getIndex();
+        int newPos = newParent.getChildCount();
+
+        MovingChildUndoer undoer = new MovingChildUndoer(oldParentPath, oldPos, newParentPath, newPos);
+
+        moveChild (getDBElementId(oldParent), newPos, getDBElementId(newParent), newPos);
+        return undoer;
     }
 
     private void unfoldNode (VisualItem visualItem)

@@ -9,6 +9,8 @@ import javax.swing.*;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoManager;
 
+import com.orientechnologies.orient.core.db.ODatabaseRecordThreadLocal;
+import com.orientechnologies.orient.core.db.record.ODatabaseRecord;
 import excitedmind.operators.EditAction;
 import excitedmind.operators.SimpleMindTreeAction;
 import prefuse.Display;
@@ -143,11 +145,11 @@ public class MindView extends Display {
                 break;
             case LINKING:
                 setEnabledAllMindActions(false);
-                setEnabledMindActions(new String []{sm_addLinkActionName, sm_toNormalActionAction}, true);
+                setEnabledMindActions(new String []{sm_toNormalActionAction}, true);
                 break;
             case MOVING:
                 setEnabledAllMindActions(false);
-                setEnabledMindActions(new String []{sm_moveActionName, sm_toNormalActionAction}, true);
+                setEnabledMindActions(new String []{sm_toNormalActionAction}, true);
                 break;
         }
 
@@ -202,6 +204,8 @@ public class MindView extends Display {
 
                     AbstractUndoableEdit undoer;
 
+
+                    ODatabaseRecordThreadLocal.INSTANCE.set(m_visMindTree.m_dbTree.m_graph.getRawGraph());
                     switch (m_state) {
                         case NORMAL:
                             undoer = m_visMindTree.ToggleFoldNode();
@@ -210,7 +214,7 @@ public class MindView extends Display {
                             undoer = m_visMindTree.addReference(m_clickedNode);
                             break;
                         case MOVING:
-                            //TODO;
+                            undoer = m_visMindTree.resetParent(m_clickedNode);
                             assert(false);
                             undoer = null;
                             break;
