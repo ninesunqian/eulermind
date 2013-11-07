@@ -215,8 +215,6 @@ public class MindView extends Display {
                             break;
                         case MOVING:
                             undoer = m_visMindTree.resetParent(m_clickedNode);
-                            assert(false);
-                            undoer = null;
                             break;
                         default:
                             assert(false);

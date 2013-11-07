@@ -223,15 +223,15 @@ public class DBTree implements Graph {
                 return InheritDirection.COLLATERAL_SIBLING;
         } else if (fromGeneration < toGeneration) {
             if (i==fromGeneration)
-                return InheritDirection.LINEAL_ANCESTOR;
-            else
-                return InheritDirection.COLLATERAL_ANCESTOR;
-
-        } else {
-            if (i==toGeneration)
                 return InheritDirection.LINEAL_DESCENDANT;
             else
                 return InheritDirection.COLLATERAL_DESCENDANT;
+
+        } else {
+            if (i==toGeneration)
+                return InheritDirection.LINEAL_ANCESTOR;
+            else
+                return InheritDirection.COLLATERAL_ANCESTOR;
         }
 
     }
