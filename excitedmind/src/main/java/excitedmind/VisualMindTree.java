@@ -27,7 +27,6 @@ public class VisualMindTree extends MindTree {
     //MindTree
     final Visualization m_vis;
 
-
     Node m_cursor;
     int m_cursorDepth = 0;
 
@@ -47,6 +46,7 @@ public class VisualMindTree extends MindTree {
         super(dbPath, rootId);
         m_vis = vis;
         m_vis.add(sm_treeGroupName, m_tree);
+        m_vis.add(sm_treeGroupName+"_2", m_tree);
 
         m_cursor = m_tree.getRoot();
 
@@ -99,10 +99,13 @@ public class VisualMindTree extends MindTree {
         Node climber = node;
         Node root = m_tree.getRoot();
 
-        while (climber.getRow() != root.getRow())
+        while (climber != root)
         {
-            path.add(0, climber.getIndex());
+            path.add(0, m_tree.getIndexInSiblings(climber));
             climber = climber.getParent();
+            if (climber.getRow()==root.getRow() && climber != root) {
+                m_logger.info("aaaaaaaaaaaa");
+            }
         }
 
         return path;
@@ -450,12 +453,13 @@ public class VisualMindTree extends MindTree {
         int m_newPos;
     }
 
-    public AbstractUndoableEdit resetParent(Node newParent)
+    public AbstractUndoableEdit resetParent(NodeItem newParentItem)
     {
         if (m_cursor == m_tree.getRoot()) {
             return null;
         }
 
+        Node newParent = toSource(newParentItem);
         Node oldParent = m_cursor.getParent();
 
         if (sameDBNode(newParent, oldParent)) {
@@ -474,7 +478,8 @@ public class VisualMindTree extends MindTree {
 
         MovingChildUndoer undoer = new MovingChildUndoer(oldParentPath, oldPos, newParentPath, newPos);
 
-        moveChild (getDBElementId(oldParent), newPos, getDBElementId(newParent), newPos);
+        moveChildImpl(oldParent, oldPos, newParent, newPos);
+
         return undoer;
     }
 
@@ -702,6 +707,7 @@ public class VisualMindTree extends MindTree {
     public int getNodeColor (NodeItem nodeItem)
     {
         Node node = toSource(nodeItem);
+
         if (node == m_cursor)
             return ColorLib.rgb(255, 0, 0);
         else if (getDBElementId(node).equals(getDBElementId(m_cursor)))

@@ -57,9 +57,9 @@ public class MindTree {
 	public final static String sm_edgeColorPropName = "edgeColor";
     public final static String sm_edgePropNames [] = {sm_edgeTypePropName, sm_edgeColorPropName};
 
-	public Tree m_tree;
-	Table m_nodeTable;
-	Table m_edgeTable;
+	final public Tree m_tree;
+	final public Table m_nodeTable;
+	final public Table m_edgeTable;
 	
 	private String m_edgeTypePropName;
 	
@@ -347,7 +347,7 @@ public class MindTree {
         });
     }
 
-    public void moveChild (Object oldParentDBId, int oldPos, Object newParentDBId, int newPos)
+    public void moveChild(Object oldParentDBId, int oldPos, Object newParentDBId, int newPos)
 	{
         if (oldParentDBId.equals(newParentDBId)) {
             if (oldPos != newPos) {

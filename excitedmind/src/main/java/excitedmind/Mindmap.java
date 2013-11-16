@@ -2,10 +2,7 @@ package excitedmind;
 
 import excitedmind.DBTree.EdgeVertex;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
@@ -16,14 +13,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
-import javax.swing.AbstractAction;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 
 import com.tinkerpop.blueprints.Vertex;
 
@@ -53,7 +43,7 @@ public class Mindmap {
         */
         String dbPath = "d://tmp/mind_db";
 
-		String dbUrl = "local:" + dbPath.replace(File.separatorChar, '/');
+		final String dbUrl = "local:" + dbPath.replace(File.separatorChar, '/');
         m_logger.info ("dbUrl = " + dbUrl);
         Runtime rt =Runtime.getRuntime() ;
 
@@ -78,13 +68,17 @@ public class Mindmap {
 		createTree (dbTree, null, "", 0);
 		dbTree = null;
 		
-		JComponent Mindmap = demo(dbUrl, m_rootVertex.getId());
-		
-		JFrame frame = new JFrame("mindmap core");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setContentPane(Mindmap);
-		frame.pack();
-		frame.setVisible(true);
+
+        EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                MindmapFrame frame = new MindmapFrame(dbUrl, m_rootVertex.getId());
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.pack();
+                frame.setVisible(true);
+
+            }
+        });
 	}
 	
 	static private Vertex m_rootVertex;
@@ -119,61 +113,36 @@ public class Mindmap {
 		}
 	}
 
-	public static JComponent demo(String dbUrl, Object rootId) {
-		Color BACKGROUND = Color.WHITE;
-		Color FOREGROUND = Color.BLACK;
-		
-		final String label = MindTree.sm_textPropName;
-		
-		// create a new treemap
-		final MindView mindView = new MindView (dbUrl, rootId);
-		mindView.setBackground(BACKGROUND);
-		mindView.setForeground(FOREGROUND);
+    static class MindmapFrame extends JFrame {
+        public MindmapFrame(String dbUrl, Object rootId) {
 
-		// create a search panel for the tree map
-		/*
-		JSearchPanel search = new JSearchPanel(mindView.getVisualization(),
-				MindView.sm_treeNodesGroupName, Visualization.SEARCH_ITEMS, label, true, true);
-		search.setShowResultCount(true);
-		search.setBorder(BorderFactory.createEmptyBorder(5, 5, 4, 0));
-		search.setFont(FontLib.getFont("Tahoma", Font.PLAIN, 11));
-		search.setBackground(BACKGROUND);
-		search.setForeground(FOREGROUND);
-		*/
+            JMenuBar menuBar = new JMenuBar();
+            setJMenuBar(menuBar);
+            JMenu openMenu = new JMenu();
 
-		final JFastLabel title = new JFastLabel("                 ");
-		title.setPreferredSize(new Dimension(350, 20));
-		title.setVerticalAlignment(SwingConstants.BOTTOM);
-		title.setBorder(BorderFactory.createEmptyBorder(3, 0, 0, 0));
-		title.setFont(FontLib.getFont("Tahoma", Font.PLAIN, 16));
-		title.setBackground(BACKGROUND);
-		title.setForeground(FOREGROUND);
+            Color BACKGROUND = Color.WHITE;
+            Color FOREGROUND = Color.BLACK;
 
-		mindView.addControlListener(new ControlAdapter() {
-			public void itemEntered(VisualItem item, MouseEvent e) {
-				if (item.canGetString(label))
-					title.setText(item.getString(label));
-					
-			}
+            final String label = MindTree.sm_textPropName;
 
-			public void itemExited(VisualItem item, MouseEvent e) {
-				title.setText(null);
-			}
-		});
+            // create a new treemap
+            final MindView mindView = new MindView (dbUrl, rootId);
+            mindView.setBackground(BACKGROUND);
+            mindView.setForeground(FOREGROUND);
 
-		Box box = new Box(BoxLayout.X_AXIS);
-		box.add(Box.createHorizontalStrut(10));
-		box.add(title);
-		box.add(Box.createHorizontalGlue());
-		//box.add(search);
-		box.add(Box.createHorizontalStrut(3));
-		box.setBackground(BACKGROUND);
 
-		JPanel panel = new JPanel(new BorderLayout());
-		panel.setBackground(BACKGROUND);
-		panel.setForeground(FOREGROUND);
-		panel.add(mindView, BorderLayout.CENTER);
-		panel.add(box, BorderLayout.SOUTH);
-		return panel;
-	}
+            Box box = new Box(BoxLayout.X_AXIS);
+            box.add(Box.createHorizontalStrut(10));
+            box.add(Box.createHorizontalGlue());
+            box.add(Box.createHorizontalStrut(3));
+            box.setBackground(BACKGROUND);
+
+            JPanel panel = new JPanel(new BorderLayout());
+            panel.setBackground(BACKGROUND);
+            panel.setForeground(FOREGROUND);
+            panel.add(mindView, BorderLayout.CENTER);
+            panel.add(box, BorderLayout.SOUTH);
+            add(panel);
+        }
+    }
 } // end of class TreeMap

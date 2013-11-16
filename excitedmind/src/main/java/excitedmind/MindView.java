@@ -204,8 +204,6 @@ public class MindView extends Display {
 
                     AbstractUndoableEdit undoer;
 
-
-                    ODatabaseRecordThreadLocal.INSTANCE.set(m_visMindTree.m_dbTree.m_graph.getRawGraph());
                     switch (m_state) {
                         case NORMAL:
                             undoer = m_visMindTree.ToggleFoldNode();

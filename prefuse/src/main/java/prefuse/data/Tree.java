@@ -55,6 +55,7 @@ public class Tree extends Graph {
     
     /** The node table row number for the root node of the tree. */
     protected int m_root = -1;
+    protected int m_realy_root = -1;
     
     // ------------------------------------------------------------------------
     // Constructors
@@ -119,6 +120,7 @@ public class Tree extends Graph {
                 break;
             }
         }
+        m_realy_root = m_root;
     }
     
     /**
@@ -156,6 +158,7 @@ public class Tree extends Graph {
         }
         
         m_root = addNodeRow();
+        m_realy_root = m_root;
         fireRootChangeEvent (m_root, -1);
         return m_root;
     }
@@ -759,7 +762,9 @@ public class Tree extends Graph {
      * @see Graph#clearSpanningTree()
      */
     public Tree getSpanningTree() {
-        return m_spanning==null ? this : m_spanning;
+        return this;
+        //disable spanning tree;
+        //return m_spanning==null ? this : m_spanning;
     }
     
     /**
@@ -779,6 +784,8 @@ public class Tree extends Graph {
      * @see Graph#clearSpanningTree()
      */
     public Tree getSpanningTree(Node root) {
+        //disable spanning tree;
+        assert (false);
         nodeCheck(root, true);
         if ( m_spanning == null ) {
             if ( m_root == root.getRow() ) {
