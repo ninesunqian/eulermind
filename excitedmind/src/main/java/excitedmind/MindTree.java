@@ -115,7 +115,16 @@ public class MindTree {
 			tuple.set(key, dbElement.getProperty(key));
 		}
 	}
-	
+
+    private static void storeElementProperties(com.tinkerpop.blueprints.Element dbElement, Tuple tuple, String keys[])
+    {
+        for (String key : keys)
+        {
+            if (key != sm_dbIdColumnName)
+                dbElement.setProperty(key, tuple.get(key));
+        }
+    }
+
 	private void loadNodeProperties (Vertex vertex, Node node)
 	{
 		loadElementProperties(vertex, node, sm_nodePropNames);
@@ -125,7 +134,17 @@ public class MindTree {
 	{
 		loadElementProperties(dbEdge, edge, sm_edgePropNames);
 	}
-	
+
+    private void storeNodeProperties (Vertex vertex, Node node)
+    {
+        storeElementProperties(vertex, node, sm_nodePropNames);
+    }
+
+    private void storeEdgeProperties (com.tinkerpop.blueprints.Edge dbEdge, Edge edge)
+    {
+        storeElementProperties(dbEdge, edge, sm_edgePropNames);
+    }
+
 	private Vertex getDBVertex(Node node)
 	{
 		Object dbId = node.get(sm_dbIdColumnName);
@@ -233,10 +252,22 @@ public class MindTree {
 	private void exposeRelation(final Object sourceId, final int edgePosInSourceNode,
                                 final com.tinkerpop.blueprints.Edge dbEdge, final Vertex target)
 	{
+        final Vertex sourceVertex = m_dbTree.getVertex(sourceId);
+
 		visitNodeAvatares(sourceId, new Visitor() {
             public void visit(Node sourceNode) {
-                Node child = m_tree.addNode();
-                Edge edge = m_tree.addChildEdge(sourceNode, child, edgePosInSourceNode);
+                Node child;
+                Edge edge;
+
+                Node placeHolder = sourceNode.getChild(edgePosInSourceNode);
+
+                if (placeHolder != null && getDBElementId(placeHolder) == null) {
+                    child = placeHolder;
+                    edge = m_tree.getEdge(sourceNode, placeHolder);
+                } else {
+                    child = m_tree.addNode();
+                    edge = m_tree.addChildEdge(sourceNode, child, edgePosInSourceNode);
+                }
 
                 loadNodeProperties(target, child);
                 loadEdgeProperties(dbEdge, edge);
@@ -399,5 +430,45 @@ public class MindTree {
     {
         return m_dbTree.getInheritDirection((ArrayList) from.get(sm_inheritPathPropName),
                 (ArrayList) to.get(sm_inheritPathPropName));
+    }
+
+    public Node addPlaceholder(Node parent, int pos)
+    {
+        return m_tree.addChild(parent, pos);
+    }
+
+    public void removePlaceholder(Node node)
+    {
+        m_tree.removeChild(node);
+    }
+
+    //node has other property except dbId;
+    public void syncChildPlaceholder(Node node)
+    {
+        Node parent = node.getParent();
+        Edge edge = node.getParentEdge();
+        int pos = node.getIndex();
+
+        EdgeVertex edgeVertex = m_dbTree.addChild(m_dbTree.getVertex(getDBElementId(parent)), node.getIndex());
+        storeNodeProperties(edgeVertex.m_vertex, node);
+
+        exposeRelation(getDBElementId(parent), pos, edgeVertex.m_edge, edgeVertex.m_vertex);
+    }
+
+    //node has only dbId
+    public void syncReferencePlaceholder(Node node)
+    {
+        Node parent = node.getParent();
+        Edge edge = node.getParentEdge();
+        int pos = node.getIndex();
+
+
+        Vertex sourceVertex = m_dbTree.getVertex(getDBElementId(parent));
+        Vertex targetVertex = m_dbTree.getVertex(getDBElementId(node));
+        com.tinkerpop.blueprints.Edge dbEdge = m_dbTree.addRefEdge(sourceVertex, targetVertex, pos);
+
+        //make node as a placeholer in exposeRelation
+        node.set(sm_dbIdColumnName, null);
+        exposeRelation(getDBElementId(parent), pos, dbEdge, targetVertex);
     }
 }
