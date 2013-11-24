@@ -2030,15 +2030,15 @@ public class Display extends JComponent {
     // ------------------------------------------------------------------------
     // Text Editing
     
-    /**
-     * Returns the TextComponent used for on-screen text editing.
-     * @return the TextComponent used for text editing
+    /**TextComponent used for text editing
      */
     public JTextComponent getTextEditor() {
         return m_editor;
     }
     
     /**
+     * Returns the TextComponent used for on-screen text editing.
+     * @return the
      * Sets the TextComponent used for on-screen text editing.
      * @param tc the TextComponent to use for text editing
      */

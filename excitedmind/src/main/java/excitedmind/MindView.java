@@ -1,16 +1,24 @@
 package excitedmind;
 
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.JTextComponent;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoManager;
 
 import com.orientechnologies.orient.core.db.ODatabaseRecordThreadLocal;
 import com.orientechnologies.orient.core.db.record.ODatabaseRecord;
+import com.tinkerpop.blueprints.Vertex;
 import excitedmind.operators.EditAction;
 import excitedmind.operators.SimpleMindTreeAction;
 import prefuse.Display;
@@ -44,6 +52,9 @@ public class MindView extends Display {
     static enum State {NORMAL, LINKING, MOVING};
 
     EditAction m_editAction = new EditAction(this);
+
+    private JList m_promptList = new JList(new DefaultListModel());
+    private JScrollPane m_promptScrollPane = new JScrollPane(m_promptList);
 
     final static String sm_editActionName = "edit";
     final static String sm_removeActionName = "remove";
@@ -84,12 +95,16 @@ public class MindView extends Display {
         }
     };
 
-    AbstractAction m_addChildAction = new SimpleMindTreeAction(this) {
+    AbstractAction m_addChildAction = new AbstractAction() {
+
+        //TODO:
         @Override
-        public AbstractUndoableEdit operateMindTree(ActionEvent e) {
-            return m_visMindTree.addChild();
+        public void actionPerformed(ActionEvent e) {
+            m_visMindTree.addPlaceholder();
+            renderTree();
         }
     };
+
 
     AbstractAction m_prepareLinkAction = new AbstractAction() {
         @Override
@@ -163,6 +178,14 @@ public class MindView extends Display {
 
 		m_visMindTree = new VisualMindTree(path, rootId, m_vis);
 
+        m_promptScrollPane.setVisible(false);
+        add(m_promptScrollPane);
+
+        m_promptList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        m_promptList.setLayoutOrientation(JList.VERTICAL);
+        m_promptList.setPrototypeCellValue("WWW");
+        m_promptList.setVisibleRowCount(8);
+
 		setItemSorter(new TreeDepthItemSorter());
 
 		m_renderEngine = new MindTreeRenderEngine(this, VisualMindTree.sm_treeGroupName);
@@ -191,7 +214,6 @@ public class MindView extends Display {
                         renderTree();
                     }
 				}
-
 			}
 
 			public void itemClicked(VisualItem item, MouseEvent e) {
@@ -265,4 +287,105 @@ public class MindView extends Display {
 		return m_visMindTree;
 	}
 
+    @Override
+    public void editText(String txt, Rectangle r) {
+        super.editText(txt, r);
+        JTextComponent editor = getTextEditor();
+
+        m_promptScrollPane.setLocation(editor.getX(), editor.getY()+editor.getHeight());
+        m_promptScrollPane.setSize(100, 100);
+        m_promptScrollPane.setVisible(true);
+
+        editor.getDocument().addDocumentListener(m_editTextListener);
+    }
+
+    @Override
+    public void stopEditing() {
+        super.stopEditing();
+        m_promptScrollPane.setVisible(false);
+
+        JTextComponent editor = getTextEditor();
+        editor.getDocument().removeDocumentListener(m_editTextListener);
+    }
+
+    public class QueriedNode {
+        Object m_dbId;
+        String m_text;
+        Object m_parentDBId;
+        String m_parentText;
+
+        QueriedNode (Vertex vertex)
+        {
+            m_dbId = vertex.getId();
+            m_text = vertex.getProperty(MindTree.sm_textPropName);
+
+            DBTree.EdgeVertex edgeVertex = m_visMindTree.m_dbTree.getParent(vertex);
+            m_parentDBId = edgeVertex.m_vertex.getId();
+            m_parentText = edgeVertex.m_vertex.getProperty(MindTree.sm_textPropName);
+        }
+    }
+
+    class QueryWorker extends SwingWorker<Boolean, QueriedNode>
+    {
+        @Override
+        protected Boolean doInBackground() {
+            ((DefaultListModel) m_promptList.getModel()).removeAllElements();
+
+            String inputed = getTextEditor().getText();
+
+            m_logger.info("query vertex: " + inputed);
+
+            for (Vertex vertex : m_visMindTree.m_dbTree.getVertices(MindTree.sm_textPropName, inputed)) {
+                publish(new QueriedNode(vertex));
+
+                if (isCancelled()) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        @Override
+        protected void process(List<QueriedNode> queriedNodes) {
+            DefaultListModel listModel = (DefaultListModel) m_promptList.getModel();
+
+            for (QueriedNode queriedNode : queriedNodes) {
+                m_logger.info("get queriedNode " + queriedNode.m_dbId);
+                listModel.addElement(queriedNode.m_parentText + " -> " + queriedNode.m_text);
+            }
+        }
+    };
+
+    SwingWorker<Boolean, QueriedNode> m_queryWorker;
+
+    DocumentListener m_editTextListener = new DocumentListener() {
+
+        private void restartQueryWorker()
+        {
+            if (m_queryWorker != null) {
+                m_queryWorker.cancel(false);
+            }
+
+            m_queryWorker = new QueryWorker();
+            m_queryWorker.execute();
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent documentEvent) {
+            m_logger.info("insert update");
+            restartQueryWorker();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent documentEvent) {
+            m_logger.info("remove update");
+            restartQueryWorker();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent documentEvent) {
+            //do nothing
+        }
+    };
 } // end of class TreeMap

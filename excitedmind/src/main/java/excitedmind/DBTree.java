@@ -2,19 +2,13 @@ package excitedmind;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.logging.Logger;
 
+import com.tinkerpop.blueprints.*;
 import prefuse.util.PrefuseLib;
 
 import com.orientechnologies.orient.core.db.record.ORecordLazyList;
-import com.tinkerpop.blueprints.Direction;
-import com.tinkerpop.blueprints.Edge;
-import com.tinkerpop.blueprints.Element;
-import com.tinkerpop.blueprints.Features;
-import com.tinkerpop.blueprints.Graph;
-import com.tinkerpop.blueprints.GraphQuery;
-import com.tinkerpop.blueprints.Index;
-import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 
 public class DBTree implements Graph {
@@ -641,5 +635,22 @@ public class DBTree implements Graph {
 		// TODO Auto-generated method stub
 		return m_graph.query();
 	}
-	
+
+    public void createFullTextVertexKeyIndex(String key)
+    {
+        Set<String> indexedKeys = m_graph.getIndexedKeys(Vertex.class);
+
+        for (String indexedKey : indexedKeys) {
+            if (indexedKey.equals(key)) {
+                return;
+            }
+        }
+
+        m_graph.createKeyIndex(key, Vertex.class, new Parameter("type", "FULLTEXT_HASH_INDEX"));
+    }
+
+    public Iterable<Vertex> getVertices(String key, String value)
+    {
+        return m_graph.getVertices(key, value);
+    }
 }

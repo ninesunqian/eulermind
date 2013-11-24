@@ -2,6 +2,7 @@ package excitedmind;
 
 import java.util.*;
 
+import com.tinkerpop.blueprints.Vertex;
 import prefuse.Visualization;
 import prefuse.data.*;
 import prefuse.data.event.EventConstants;
@@ -295,6 +296,7 @@ public class VisualMindTree extends MindTree {
         Object m_dbId;
     }
 
+    //add a empty child
     public AbstractUndoableEdit addChild ()
     {
         Object childDBId = addChild(getDBElementId(m_cursor), DBTree.ADDING_EDGE_END);
@@ -724,5 +726,41 @@ public class VisualMindTree extends MindTree {
     public String getSize (Node node)
     {
         return node.getString(sm_textPropName);
+    }
+
+    public void addPlaceholder()
+    {
+        m_cursor = addPlaceholder(m_cursor, DBTree.ADDING_EDGE_END);
+    }
+
+    public void removePlaceholder()
+    {
+        assert(m_cursor != m_tree.getRoot());
+
+        Node placeholder = m_cursor;
+        m_cursor = placeholder.getParent();
+
+        removePlaceholder(placeholder);
+    }
+
+    //node has other property except dbId;
+    public AbstractUndoableEdit syncChildPlaceholder()
+    {
+        syncChildPlaceholder(m_cursor);
+        return new AddingChildUndoer(getDisplayPath(m_cursor), getDBElementId(m_cursor));
+    }
+
+    //node has only dbId
+    public AbstractUndoableEdit syncReferencePlaceholder()
+    {
+        assert(m_cursor != m_tree.getRoot());
+
+        Node sourceNode = m_cursor.getParent();
+        Object refereeDBId = getDBElementId(m_cursor);
+        int pos = sourceNode.getChildCount() - 1;
+
+        syncReferencePlaceholder(m_cursor);
+
+        return new AddingReferenceUndoer(getDisplayPath(sourceNode), refereeDBId, pos);
     }
 }

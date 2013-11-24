@@ -4,6 +4,7 @@ import excitedmind.DBTree.EdgeVertex;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.io.BufferedReader;
@@ -11,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.logging.Logger;
 
 import javax.swing.*;
@@ -64,10 +66,27 @@ public class Mindmap {
 		}
         
 		DBTree dbTree = new DBTree (dbUrl);
-		
+        dbTree.createFullTextVertexKeyIndex(MindTree.sm_textPropName);
+
+        {
+            for (int i=0; i<10; i++) {
+                Vertex a = dbTree.m_graph.addVertex(null);
+                a.setProperty(MindTree.sm_textPropName, "abc def");
+            }
+
+            for (int i=0; i<10; i++) {
+                Vertex a = dbTree.m_graph.addVertex(null);
+                a.setProperty(MindTree.sm_textPropName, "abcdef");
+            }
+        }
+
+
 		createTree (dbTree, null, "", 0);
+        for (Vertex v : dbTree.getVertices(MindTree.sm_textPropName, "def")) {
+            System.out.println("find :" + v + ": " + v.getProperty(MindTree.sm_textPropName));
+        }
 		dbTree = null;
-		
+
 
         EventQueue.invokeLater(new Runnable() {
             @Override
