@@ -712,7 +712,7 @@ public class VisualMindTree extends MindTree {
 
         if (node == m_cursor)
             return ColorLib.rgb(255, 0, 0);
-        else if (getDBElementId(node).equals(getDBElementId(m_cursor)))
+        else if (!isPlaceholer(node) && getDBElementId(node).equals(getDBElementId(m_cursor)))
             return ColorLib.rgb(255, 255, 0);
         else
             return ColorLib.rgb(255, 255, 255);

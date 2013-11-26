@@ -432,14 +432,16 @@ public class MindTree {
                 (ArrayList) to.get(sm_inheritPathPropName));
     }
 
-    boolean isPlaceholer(Node node)
+    boolean isPlaceholer(Tuple tuple)
     {
-        return (getDBElementId(node) == null || node.get(sm_textPropName) == null);
+        return (getDBElementId(tuple) == null);
     }
 
     public Node addPlaceholder(Node parent, int pos)
     {
-        return m_tree.addChild(parent, pos);
+        Node node = m_tree.addChild(parent, pos);
+        node.set(sm_textPropName, "");
+        return node;
     }
 
     public void removePlaceholder(Node node)

@@ -204,6 +204,10 @@ public class MindTreeRenderEngine {
         }
 
         public BasicStroke getStroke(VisualItem item) {
+            if (m_mindView.getVisMindTree().isPlaceholer(item)) {
+                return StrokeLib.getStroke(1.0f);
+            }
+
             if (m_mindView.getVisMindTree().isRefEdge((EdgeItem)item)) {
                 float dash [] = {10f, 5f};
                 return StrokeLib.getStroke(1.0f, dash);
@@ -224,7 +228,7 @@ public class MindTreeRenderEngine {
 
         protected String getText(VisualItem item) {
             String s = item.getString(MindTree.sm_textPropName);
-            return  s.length() < 2 ? " " + s + " ": s;
+            return  (s==null || s.length() < 2 )? " " + s + " ": s;
         }
 
         public int getRenderType(VisualItem item) {

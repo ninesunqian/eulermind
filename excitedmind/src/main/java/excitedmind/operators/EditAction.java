@@ -30,6 +30,7 @@ public class EditAction extends AbstractAction {
                     VisualMindTree visMindTree = m_mindView.getVisMindTree();
 
                     String text = m_mindView.getTextEditor().getText();
+                    //TODO if is a placeholder node  do something
                     AbstractUndoableEdit undoer = visMindTree.setCursorText(text);
 
                     m_mindView.removeKeyListener(m_textEditorKeyListener);

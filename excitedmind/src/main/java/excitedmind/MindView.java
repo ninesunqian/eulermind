@@ -102,6 +102,12 @@ public class MindView extends Display {
         public void actionPerformed(ActionEvent e) {
             m_visMindTree.addPlaceholder();
             renderTree();
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    m_editAction.actionPerformed(null);
+                }
+            });
         }
     };
 
