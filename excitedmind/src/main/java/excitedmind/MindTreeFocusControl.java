@@ -114,7 +114,7 @@ public class MindTreeFocusControl extends ControlAdapter {
         /*
         if (item.isInGroup(MindView.sm_treeNodesGroupName))
         {
-            m_mindTree.ToggleFoldNode(item);
+            m_mindTree.toggleFoldCursorUndoable(item);
         }
         */
     }

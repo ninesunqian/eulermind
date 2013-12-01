@@ -120,8 +120,14 @@ public class MindTree {
     {
         for (String key : keys)
         {
-            if (key != sm_dbIdColumnName)
-                dbElement.setProperty(key, tuple.get(key));
+            if (key != sm_dbIdColumnName) {
+                Object value = tuple.get(key);
+                if (value == null) {
+                    dbElement.removeProperty(key);
+                } else {
+                    dbElement.setProperty(key, value);
+                }
+            }
         }
     }
 
@@ -219,6 +225,8 @@ public class MindTree {
 	
 	private void visitNodeAvatares(Object dbId, Visitor visiter)
 	{
+        assert(dbId != null);
+
 		IntIterator allRows = m_nodeTable.rows();
 
 		ArrayList<Integer> aimRows = new ArrayList<Integer> ();
@@ -228,7 +236,7 @@ public class MindTree {
 		while (allRows.hasNext()) {
 			int curRow = allRows.nextInt();
 
-			if (dbId == null || m_nodeTable.get(curRow, sm_dbIdColumnName).equals(dbId)) {
+			if (m_nodeTable.get(curRow, sm_dbIdColumnName).equals(dbId)) {
 				aimRows.add(curRow);
 			}
 		}
@@ -247,8 +255,8 @@ public class MindTree {
 		}
 	}
 
-    //Maybe there are more than one reference edge link source ant target
-    //The callers of exposeRelation has getted target and dbEdge, so pass them as argument
+    //Maybe there are more than one reference edge link source target
+    //The callers of exposeRelation has got target and dbEdge, so pass them as argument
     protected void exposeRelation(final Object sourceId, final int edgePosInSourceNode,
                                   final com.tinkerpop.blueprints.Edge dbEdge, final Vertex target)
 	{
@@ -256,18 +264,8 @@ public class MindTree {
 
 		visitNodeAvatares(sourceId, new Visitor() {
             public void visit(Node sourceNode) {
-                Node child;
-                Edge edge;
-
-                Node placeHolder = sourceNode.getChild(edgePosInSourceNode);
-
-                if (placeHolder != null && getDBElementId(placeHolder) == null) {
-                    child = placeHolder;
-                    edge = m_tree.getEdge(sourceNode, placeHolder);
-                } else {
-                    child = m_tree.addNode();
-                    edge = m_tree.addChildEdge(sourceNode, child, edgePosInSourceNode);
-                }
+                Node child = m_tree.addNode();
+                Edge edge = m_tree.addChildEdge(sourceNode, child, edgePosInSourceNode);
 
                 loadNodeProperties(target, child);
                 loadEdgeProperties(dbEdge, edge);
@@ -291,11 +289,11 @@ public class MindTree {
     }
 
     //return new child node
-	public Object addChild(Object  parentDBId, int pos) {
+	public Object addChild(Object  parentDBId, int pos, String text) {
 		Vertex dbParent = m_dbTree.getVertex(parentDBId);
 		EdgeVertex edgeVertex = m_dbTree.addChild(dbParent, pos);
 
-        edgeVertex.m_vertex.setProperty(sm_textPropName, "");
+        edgeVertex.m_vertex.setProperty(sm_textPropName, text);
 
 		exposeRelation(parentDBId, pos, edgeVertex.m_edge, edgeVertex.m_vertex);
 
@@ -305,7 +303,7 @@ public class MindTree {
 	}
 
 	//return the DBid of node
-	public Object moveNodeToTrash (Object parentDBId, int pos)
+	public Object trashNode(Object parentDBId, int pos)
 	{
         Vertex parent = m_dbTree.getVertex(parentDBId);
         EdgeVertex edgeChild = m_dbTree.getChildOrReferee(parent, pos);
@@ -345,7 +343,7 @@ public class MindTree {
 	}
 
 
-    public void addReference(Object refererDBId, Object refereeDBId, int pos) {
+    public void addReference(Object refererDBId, int pos, Object refereeDBId) {
 
         //TODO: move to VisualMindTree: Vertex refererVertex = getDBVertex(referer);
         Vertex refererVertex = m_dbTree.getVertex(refererDBId);
@@ -432,48 +430,23 @@ public class MindTree {
                 (ArrayList) to.get(sm_inheritPathPropName));
     }
 
-    boolean isPlaceholer(Tuple tuple)
+    public String getText(Node node)
     {
-        return (getDBElementId(tuple) == null);
+        return node.getString(sm_textPropName);
     }
 
-    public Node addPlaceholder(Node parent, int pos)
+    public int getNodeColor (Node node)
     {
-        Node node = m_tree.addChild(parent, pos);
-        node.set(sm_textPropName, "");
-        return node;
+        return node.getInt(sm_nodeColorPropName);
     }
 
-    public void removePlaceholder(Node node)
+    public String getFont (Node node)
     {
-        assert(isPlaceholer(node));
-        m_tree.removeChild(node);
+        return node.getString(sm_textPropName);
     }
 
-    //node has other property except dbId;
-    public void syncChildPlaceholder(Node node)
+    public String getSize (Node node)
     {
-        assert(isPlaceholer(node));
-
-        Node parent = node.getParent();
-        Edge edge = node.getParentEdge();
-        int pos = node.getIndex();
-
-        DBTree.EdgeVertex edgeVertex = m_dbTree.addChild(m_dbTree.getVertex(getDBElementId(parent)), node.getIndex());
-        storeNodeProperties(edgeVertex.m_vertex, node);
-
-        exposeRelation(getDBElementId(parent), pos, edgeVertex.m_edge, edgeVertex.m_vertex);
-    }
-
-    //node has only dbId
-    public void syncReferencePlaceholder(Node node)
-    {
-        assert(isPlaceholer(node));
-
-        Node parent = node.getParent();
-        Edge edge = node.getParentEdge();
-        int pos = node.getIndex();
-
-        addReference(getDBElementId(parent), getDBElementId(node), pos);
+        return node.getString(sm_textPropName);
     }
 }

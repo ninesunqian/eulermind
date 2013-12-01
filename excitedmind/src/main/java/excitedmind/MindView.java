@@ -2,7 +2,6 @@ package excitedmind;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 
 import java.util.ArrayList;
@@ -16,8 +15,6 @@ import javax.swing.text.JTextComponent;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoManager;
 
-import com.orientechnologies.orient.core.db.ODatabaseRecordThreadLocal;
-import com.orientechnologies.orient.core.db.record.ODatabaseRecord;
 import com.tinkerpop.blueprints.Vertex;
 import excitedmind.operators.EditAction;
 import excitedmind.operators.SimpleMindTreeAction;
@@ -32,7 +29,6 @@ import prefuse.controls.ZoomToFitControl;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
 import prefuse.visual.sort.TreeDepthItemSorter;
-
 
 /**
  * Demonstration of a node-link tree viewer
@@ -51,7 +47,8 @@ public class MindView extends Display {
 
     static enum State {NORMAL, LINKING, MOVING};
 
-    EditAction m_editAction = new EditAction(this);
+    EditAction m_editAction = new EditAction(this, false);
+    EditAction m_placeholderEditAction = new EditAction(this, true);
 
     private JList m_promptList = new JList(new DefaultListModel());
     private JScrollPane m_promptScrollPane = new JScrollPane(m_promptList);
@@ -70,7 +67,7 @@ public class MindView extends Display {
     AbstractAction m_removeAction = new SimpleMindTreeAction(this) {
         @Override
         public AbstractUndoableEdit operateMindTree(ActionEvent e) {
-            return m_visMindTree.removeCursorNode();
+            return m_visMindTree.removeCursorUndoable();
         }
     };
 
@@ -100,12 +97,18 @@ public class MindView extends Display {
         //TODO:
         @Override
         public void actionPerformed(ActionEvent e) {
-            m_visMindTree.addPlaceholder();
+            m_visMindTree.addPlaceholder(true);
             renderTree();
+            try {
+                //TODO renderer tree and display editor thread sync
+                Thread.sleep(10);
+            } catch (InterruptedException e1) {
+                e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    m_editAction.actionPerformed(null);
+                    m_placeholderEditAction.actionPerformed(null);
                 }
             });
         }
@@ -202,6 +205,11 @@ public class MindView extends Display {
 		renderTree();
 	}
 
+    public JList getPromptJList()
+    {
+        return m_promptList;
+    }
+
 	public void renderTree() {
 		m_renderEngine.run();
 	}
@@ -234,13 +242,13 @@ public class MindView extends Display {
 
                     switch (m_state) {
                         case NORMAL:
-                            undoer = m_visMindTree.ToggleFoldNode();
+                            undoer = m_visMindTree.toggleFoldCursorUndoable();
                             break;
                         case LINKING:
-                            undoer = m_visMindTree.addReference(m_clickedNode);
+                            undoer = m_visMindTree.addReferenceUndoable(m_clickedNode);
                             break;
                         case MOVING:
-                            undoer = m_visMindTree.resetParent(m_clickedNode);
+                            undoer = m_visMindTree.resetParentUndoable(m_clickedNode);
                             break;
                         default:
                             assert(false);
@@ -309,16 +317,19 @@ public class MindView extends Display {
     public void stopEditing() {
         super.stopEditing();
         m_promptScrollPane.setVisible(false);
+        m_queriedNodes.clear();
+        DefaultListModel listModel = (DefaultListModel) m_promptList.getModel();
+        listModel.clear();
 
         JTextComponent editor = getTextEditor();
         editor.getDocument().removeDocumentListener(m_editTextListener);
     }
 
     public class QueriedNode {
-        Object m_dbId;
-        String m_text;
-        Object m_parentDBId;
-        String m_parentText;
+        public Object m_dbId;
+        public String m_text;
+        public Object m_parentDBId;
+        public String m_parentText;
 
         QueriedNode (Vertex vertex)
         {
@@ -331,6 +342,8 @@ public class MindView extends Display {
         }
     }
 
+    public ArrayList<QueriedNode> m_queriedNodes = new ArrayList<QueriedNode>();
+
     class QueryWorker extends SwingWorker<Boolean, QueriedNode>
     {
         @Override
@@ -342,7 +355,9 @@ public class MindView extends Display {
             m_logger.info("query vertex: " + inputed);
 
             for (Vertex vertex : m_visMindTree.m_dbTree.getVertices(MindTree.sm_textPropName, inputed)) {
-                publish(new QueriedNode(vertex));
+                QueriedNode queriedNode = new QueriedNode(vertex);
+                publish(queriedNode);
+                m_queriedNodes.add(queriedNode);
 
                 if (isCancelled()) {
                     return false;
@@ -370,7 +385,7 @@ public class MindView extends Display {
         private void restartQueryWorker()
         {
             if (m_queryWorker != null) {
-                m_queryWorker.cancel(false);
+                m_queryWorker.cancel(true);
             }
 
             m_queryWorker = new QueryWorker();

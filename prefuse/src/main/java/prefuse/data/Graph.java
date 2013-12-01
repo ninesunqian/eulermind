@@ -416,8 +416,8 @@ public class Graph extends CompositeTupleSet {
     protected void updateDegrees(int e, int s, int t, int incr) {
         if ( incr > 0 ) {
             // add links
-            addLink(OUTLINKS, OUTDEGREE, s, e, m_addingEdgePosInTargetNode);
-            addLink(INLINKS, INDEGREE, t, e, m_addingEdgePosInSourceNode);
+            addLink(OUTLINKS, OUTDEGREE, s, e, m_addingEdgePosInSourceNode);
+            addLink(INLINKS, INDEGREE, t, e, m_addingEdgePosInTargetNode);
             
             m_addingEdgePosInTargetNode = ADDING_EDGE_END;
             m_addingEdgePosInSourceNode = ADDING_EDGE_END;
