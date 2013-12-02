@@ -745,6 +745,11 @@ public class VisualMindTree extends MindTree {
         return setCursorPropertyUndoable(sm_textPropName, text);
     }
 
+    public boolean cursorIsPlaceholder()
+    {
+        return isPlaceholer(m_cursor);
+    }
+
     public void setPlaceholderCursorText(String text)
     {
         assert(isPlaceholer(m_cursor));

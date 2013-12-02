@@ -2136,5 +2136,9 @@ public class Display extends JComponent {
         }
         m_editing = false;
     }
+
+    public boolean isEditing() {
+        return m_editing;
+    }
     
 } // end of class Display

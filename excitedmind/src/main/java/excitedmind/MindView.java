@@ -1,8 +1,7 @@
 package excitedmind;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,8 +15,6 @@ import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoManager;
 
 import com.tinkerpop.blueprints.Vertex;
-import excitedmind.operators.EditAction;
-import excitedmind.operators.SimpleMindTreeAction;
 import prefuse.Display;
 import prefuse.Visualization;
 
@@ -47,11 +44,8 @@ public class MindView extends Display {
 
     static enum State {NORMAL, LINKING, MOVING};
 
-    EditAction m_editAction = new EditAction(this, false);
-    EditAction m_placeholderEditAction = new EditAction(this, true);
-
-    private JList m_promptList = new JList(new DefaultListModel());
-    private JScrollPane m_promptScrollPane = new JScrollPane(m_promptList);
+    private JList m_prompter = new JList(new DefaultListModel());
+    private JScrollPane m_promptScrollPane = new JScrollPane(m_prompter);
 
     final static String sm_editActionName = "edit";
     final static String sm_removeActionName = "remove";
@@ -64,7 +58,7 @@ public class MindView extends Display {
     final static String sm_prepareMoveActionName = "prepareMove";
     final static String sm_toNormalActionAction = "toNormal";
 
-    AbstractAction m_removeAction = new SimpleMindTreeAction(this) {
+    AbstractAction m_removeAction = new SimpleMindTreeAction() {
         @Override
         public AbstractUndoableEdit operateMindTree(ActionEvent e) {
             return m_visMindTree.removeCursorUndoable();
@@ -108,7 +102,7 @@ public class MindView extends Display {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    m_placeholderEditAction.actionPerformed(null);
+                    m_editAction.actionPerformed(null);
                 }
             });
         }
@@ -137,6 +131,59 @@ public class MindView extends Display {
     };
 
     ActionMap m_mindActionMap = new ActionMap();
+
+    MouseListener m_prompterMouseListener = new MouseAdapter() {
+        public void mouseClicked(MouseEvent mouseEvent) {
+
+            m_prompter.removeMouseListener(this);
+
+            int idx = m_prompter.getSelectedIndex();
+            QueriedNode selected = m_queriedNodes.get(idx);
+
+            stopEditing();
+
+            AbstractUndoableEdit undoer = getVisMindTree().placeRefereeUndoable(selected.m_dbId);
+            getUndoManager().addEdit(undoer);
+            renderTree();
+        }
+    };
+
+    KeyListener m_editorKeyListener = new KeyAdapter() {
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+            if (e.getKeyCode() == KeyEvent.VK_ENTER)
+            {
+                String text = getTextEditor().getText();
+
+                //stopEditing will set text of cursor
+                stopEditing();
+
+                AbstractUndoableEdit undoer;
+
+                if (m_visMindTree.isPlaceholer(m_visMindTree.getCursor())) {
+                    m_visMindTree.setPlaceholderCursorText(text);
+                    undoer = m_visMindTree.placeNewNodeUndoable();
+                } else {
+                    undoer = m_visMindTree.setCursorText(text);
+                }
+
+                m_undoManager.addEdit(undoer);
+
+                getTextEditor().removeKeyListener(this);
+
+                renderTree();
+            }
+        }
+    };
+
+    AbstractAction m_editAction =  new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            editText(m_visMindTree.getCursor(), VisualMindTree.sm_textPropName) ;
+        }
+    };
+
 
     private void setEnabledAllMindActions(boolean enabled)
     {
@@ -190,10 +237,10 @@ public class MindView extends Display {
         m_promptScrollPane.setVisible(false);
         add(m_promptScrollPane);
 
-        m_promptList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        m_promptList.setLayoutOrientation(JList.VERTICAL);
-        m_promptList.setPrototypeCellValue("WWW");
-        m_promptList.setVisibleRowCount(8);
+        m_prompter.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        m_prompter.setLayoutOrientation(JList.VERTICAL);
+        m_prompter.setPrototypeCellValue("WWW");
+        m_prompter.setVisibleRowCount(8);
 
 		setItemSorter(new TreeDepthItemSorter());
 
@@ -207,7 +254,7 @@ public class MindView extends Display {
 
     public JList getPromptJList()
     {
-        return m_promptList;
+        return m_prompter;
     }
 
 	public void renderTree() {
@@ -222,6 +269,10 @@ public class MindView extends Display {
 		addControlListener(new ControlAdapter() {
 
 			public void itemEntered(VisualItem item, MouseEvent e) {
+                if (isEditing()) {
+                    return;
+                }
+
 				if (m_visMindTree.isNode(item)) {
                     if (m_state == State.NORMAL) {
                         m_visMindTree.setCursor((NodeItem)item);
@@ -231,7 +282,11 @@ public class MindView extends Display {
 			}
 
 			public void itemClicked(VisualItem item, MouseEvent e) {
-				m_logger.info("mouse Clicked");
+                if (isEditing()) {
+                    return;
+                }
+
+                m_logger.info("mouse Clicked");
 
 				if (m_visMindTree.isNode(item)) {
                     m_clickedNode = (NodeItem)item;
@@ -305,20 +360,28 @@ public class MindView extends Display {
     public void editText(String txt, Rectangle r) {
         super.editText(txt, r);
         JTextComponent editor = getTextEditor();
-
-        m_promptScrollPane.setLocation(editor.getX(), editor.getY()+editor.getHeight());
-        m_promptScrollPane.setSize(100, 100);
-        m_promptScrollPane.setVisible(true);
-
         editor.getDocument().addDocumentListener(m_editTextListener);
+        editor.addKeyListener(m_editorKeyListener);
+
+        if (m_visMindTree.cursorIsPlaceholder()) {
+            m_promptScrollPane.setLocation(editor.getX(), editor.getY()+editor.getHeight());
+            m_promptScrollPane.setSize(100, 100);
+            m_promptScrollPane.setVisible(true);
+            m_prompter.addMouseListener(m_prompterMouseListener);
+        }
+
     }
 
     @Override
     public void stopEditing() {
+        m_prompter.removeMouseListener(m_prompterMouseListener);
+        getTextEditor().removeKeyListener(m_editorKeyListener);
+
         super.stopEditing();
+
         m_promptScrollPane.setVisible(false);
         m_queriedNodes.clear();
-        DefaultListModel listModel = (DefaultListModel) m_promptList.getModel();
+        DefaultListModel listModel = (DefaultListModel) m_prompter.getModel();
         listModel.clear();
 
         JTextComponent editor = getTextEditor();
@@ -348,7 +411,7 @@ public class MindView extends Display {
     {
         @Override
         protected Boolean doInBackground() {
-            ((DefaultListModel) m_promptList.getModel()).removeAllElements();
+            ((DefaultListModel) m_prompter.getModel()).removeAllElements();
 
             String inputed = getTextEditor().getText();
 
@@ -369,7 +432,7 @@ public class MindView extends Display {
 
         @Override
         protected void process(List<QueriedNode> queriedNodes) {
-            DefaultListModel listModel = (DefaultListModel) m_promptList.getModel();
+            DefaultListModel listModel = (DefaultListModel) m_prompter.getModel();
 
             for (QueriedNode queriedNode : queriedNodes) {
                 m_logger.info("get queriedNode " + queriedNode.m_dbId);
@@ -409,4 +472,20 @@ public class MindView extends Display {
             //do nothing
         }
     };
+
+    public abstract class SimpleMindTreeAction extends AbstractAction {
+
+        public abstract AbstractUndoableEdit operateMindTree(ActionEvent e);
+
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            AbstractUndoableEdit undoer = operateMindTree(e);
+            if (undoer != null) {
+                getUndoManager().addEdit(undoer);
+            }
+            renderTree ();
+        }
+    }
+
 } // end of class TreeMap
