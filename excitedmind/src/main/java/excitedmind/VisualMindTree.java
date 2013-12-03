@@ -117,11 +117,14 @@ public class VisualMindTree extends MindTree {
         Node node = m_tree.getRoot();
 
         for (int pos : path) {
+
             if (node.getChild(pos) == null) {
                 unfoldNode(toVisual(node));
             }
+
             node = node.getChild(pos);
         }
+
         return node;
     }
 
@@ -351,7 +354,9 @@ public class VisualMindTree extends MindTree {
             //FIXME: prefuse function using dbTree's argument
             m_cursor = m_tree.addChild(m_cursor, getChildCount(m_cursor));
         } else {
-            assert(false);
+            Node parent = m_cursor.getParent();
+            int pos = m_cursor.getIndex() + 1;
+            m_cursor = m_tree.addChild(parent, pos);
         }
         m_cursor.set(sm_textPropName, "");
     }
@@ -537,6 +542,16 @@ public class VisualMindTree extends MindTree {
         return undoer;
     }
 
+    public boolean cursorIsFolded()
+    {
+        if (m_cursor.getChildCount() > 0) {
+            NodeItem item = toVisual(m_cursor);
+            return ! item.isExpanded();
+        } else {
+            return getChildCount(m_cursor) > 0;
+        }
+    }
+
     private void unfoldNode (VisualItem visualItem)
     {
         Node node = (Node)visualItem.getSourceTuple();
@@ -671,12 +686,10 @@ public class VisualMindTree extends MindTree {
     {
         String text = getText(m_cursor);
         VisualItem visualItem = toVisual(m_cursor);
-        boolean foldIt = false;
         if (m_cursor.getChildCount() == 0)
         {
             m_logger.info ( "----leaf node un fold " + text);
             unfoldNode(visualItem);
-            foldIt = false;
         }
         else
         {
@@ -684,13 +697,11 @@ public class VisualMindTree extends MindTree {
             {
                 m_logger.info ( "---- fold " + text);
                 foldNode(visualItem);
-                foldIt = true;
             }
             else
             {
                 m_logger.info ( "----un fold " + text);
                 unfoldNode(visualItem);
-                foldIt = false;
             }
         }
 

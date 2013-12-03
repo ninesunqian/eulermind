@@ -52,6 +52,7 @@ public class MindView extends Display {
     final static String sm_undoActionName = "undo";
     final static String sm_redoActionName = "redo";
     final static String sm_addChildActionName = "addChild";
+    final static String sm_addSiblingActionName = "addSibling";
     final static String sm_addLinkActionName = "addLink";
     final static String sm_moveActionName = "move";
     final static String sm_prepareLinkActionName = "prepareLink";
@@ -86,12 +87,44 @@ public class MindView extends Display {
         }
     };
 
-    AbstractAction m_addChildAction = new AbstractAction() {
+    public AbstractAction m_addChildAction = new AbstractAction() {
 
         //TODO:
         @Override
         public void actionPerformed(ActionEvent e) {
+
+            if (m_visMindTree.cursorIsFolded()) {
+                getUndoManager().addEdit(m_visMindTree.toggleFoldCursorUndoable());
+            }
+
             m_visMindTree.addPlaceholder(true);
+            renderTree();
+            try {
+                //TODO renderer tree and display editor thread sync
+                Thread.sleep(10);
+            } catch (InterruptedException e1) {
+                e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    m_editAction.actionPerformed(null);
+                }
+            });
+        }
+    };
+
+    public AbstractAction m_addSiblingAction = new AbstractAction() {
+
+        //TODO:
+        @Override
+        public void actionPerformed(ActionEvent e) {
+
+            if (m_visMindTree.getCursor() == m_visMindTree.m_tree.getRoot()) {
+                return;
+            }
+
+            m_visMindTree.addPlaceholder(false);
             renderTree();
             try {
                 //TODO renderer tree and display editor thread sync
@@ -142,7 +175,7 @@ public class MindView extends Display {
 
             stopEditing();
 
-            AbstractUndoableEdit undoer = getVisMindTree().placeRefereeUndoable(selected.m_dbId);
+            AbstractUndoableEdit undoer = m_visMindTree.placeRefereeUndoable(selected.m_dbId);
             getUndoManager().addEdit(undoer);
             renderTree();
         }
@@ -321,6 +354,7 @@ public class MindView extends Display {
         m_mindActionMap.put(sm_editActionName, m_editAction);
         m_mindActionMap.put(sm_removeActionName, m_removeAction);
         m_mindActionMap.put(sm_addChildActionName, m_addChildAction);
+        m_mindActionMap.put(sm_addSiblingActionName, m_addSiblingAction);
 
         m_mindActionMap.put(sm_undoActionName, m_undoAction);
         m_mindActionMap.put(sm_redoActionName, m_redoAction);
@@ -338,6 +372,7 @@ public class MindView extends Display {
         inputMap.put(KeyStroke.getKeyStroke("F2"), sm_editActionName);
         inputMap.put(KeyStroke.getKeyStroke('d'), sm_removeActionName);
         inputMap.put(KeyStroke.getKeyStroke('i'), sm_addChildActionName);
+        inputMap.put(KeyStroke.getKeyStroke("ENTER"), sm_addSiblingActionName);
 
         inputMap.put(KeyStroke.getKeyStroke('u'), sm_undoActionName);
         inputMap.put(KeyStroke.getKeyStroke('r'), sm_redoActionName);

@@ -264,6 +264,12 @@ public class MindTree {
 
 		visitNodeAvatares(sourceId, new Visitor() {
             public void visit(Node sourceNode) {
+
+                //if children not attached, skip
+                if (sourceNode.getChildCount() == 0 && getChildCount(sourceNode) > 0) {
+                    return;
+                }
+
                 Node child = m_tree.addNode();
                 Edge edge = m_tree.addChildEdge(sourceNode, child, edgePosInSourceNode);
 

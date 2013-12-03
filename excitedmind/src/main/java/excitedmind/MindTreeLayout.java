@@ -3,6 +3,7 @@ package excitedmind;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import prefuse.Constants;
@@ -12,7 +13,11 @@ import prefuse.data.Graph;
 import prefuse.data.Schema;
 import prefuse.data.tuple.TupleSet;
 import prefuse.util.ArrayLib;
+import prefuse.util.PrefuseLib;
+import prefuse.visual.EdgeItem;
 import prefuse.visual.NodeItem;
+import prefuse.visual.VisualItem;
+import prefuse.visual.tuple.TableNodeItem;
 
 /**
  * <p>TreeLayout that computes a tidy layout of a node-link tree
@@ -233,7 +238,26 @@ public class MindTreeLayout extends TreeLayout {
         Params rp = getParams(root);
 
 		g.getSpanningTree(root);
-        
+
+
+        //对于新建节点，父节点的影子节点也添加了新节点，
+        // 但是父节点的影子如果是闭合的，就不能显示其子节点
+        Iterator items = m_vis.visibleItems();
+        while ( items.hasNext() ) {
+            VisualItem item = (VisualItem)items.next();
+            if (item instanceof TableNodeItem) {
+                NodeItem node = (NodeItem) item;
+                NodeItem parent = (NodeItem) node.getParent();
+                EdgeItem edge = (EdgeItem)node.getParentEdge();
+                if (parent !=null && ! parent.isExpanded()) {
+                    PrefuseLib.updateVisible(node, false);
+                    PrefuseLib.updateVisible(edge, false);
+                }
+
+            }
+        }
+
+
         // do first pass - compute breadth information, collect depth info
         firstWalk(root, 0, 1);
         
