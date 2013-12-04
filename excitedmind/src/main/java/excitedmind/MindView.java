@@ -98,7 +98,18 @@ public class MindView extends Display {
             }
 
             m_visMindTree.addPlaceholder(true);
-            renderTree();
+            renderTree(new Runnable() {
+                @Override
+                public void run() {
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            m_editAction.actionPerformed(null);
+                        }
+                    });
+                }
+            });
+            /*
             try {
                 //TODO renderer tree and display editor thread sync
                 Thread.sleep(10);
@@ -111,6 +122,7 @@ public class MindView extends Display {
                     m_editAction.actionPerformed(null);
                 }
             });
+            */
         }
     };
 
@@ -291,8 +303,12 @@ public class MindView extends Display {
     }
 
 	public void renderTree() {
-		m_renderEngine.run();
+		m_renderEngine.run(null);
 	}
+
+    public void renderTree(Runnable runableAfter) {
+        m_renderEngine.run(runableAfter);
+    }
 
 	private void setMouseControlListener() {
 		addControlListener(new ZoomToFitControl());

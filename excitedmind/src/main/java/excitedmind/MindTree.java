@@ -223,7 +223,7 @@ public class MindTree {
 	 	abstract public void visit (Node node);
 	}
 	
-	private void visitNodeAvatares(Object dbId, Visitor visiter)
+	void visitNodeAvatares(Object dbId, Visitor visiter)
 	{
         assert(dbId != null);
 

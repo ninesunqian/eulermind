@@ -305,6 +305,7 @@ public class VisualMindTree extends MindTree {
     {
         assert(!isPlaceholer(parent));
         Object childDBId = addChild(getDBElementId(parent), pos, text);
+
         Node newNode = parent.getChild(pos);
         setCursor(newNode);
 
@@ -476,7 +477,7 @@ public class VisualMindTree extends MindTree {
             newPos = newParent.getChildCount();
         }
 
-        VisualMindTree.this.moveChild (getDBElementId(oldParent), oldPos, getDBElementId(newParent), newPos);
+        moveChild (getDBElementId(oldParent), oldPos, getDBElementId(newParent), newPos);
         setCursor(newParent.getChild(newPos));
     }
 

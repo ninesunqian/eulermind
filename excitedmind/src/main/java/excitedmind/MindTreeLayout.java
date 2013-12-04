@@ -11,12 +11,15 @@ import prefuse.Display;
 import prefuse.action.layout.graph.TreeLayout;
 import prefuse.data.Graph;
 import prefuse.data.Schema;
+import prefuse.data.Tree;
+import prefuse.data.Tuple;
 import prefuse.data.tuple.TupleSet;
 import prefuse.util.ArrayLib;
 import prefuse.util.PrefuseLib;
 import prefuse.visual.EdgeItem;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
+import prefuse.visual.VisualTree;
 import prefuse.visual.tuple.TableNodeItem;
 
 /**
@@ -237,26 +240,24 @@ public class MindTreeLayout extends TreeLayout {
         NodeItem root = getLayoutRoot();
         Params rp = getParams(root);
 
+        //FIXME: is it needed?
 		g.getSpanningTree(root);
 
-
         //对于新建节点，父节点的影子节点也添加了新节点，
-        // 但是父节点的影子如果是闭合的，就不能显示其子节点
-        Iterator items = m_vis.visibleItems();
-        while ( items.hasNext() ) {
-            VisualItem item = (VisualItem)items.next();
-            if (item instanceof TableNodeItem) {
-                NodeItem node = (NodeItem) item;
-                NodeItem parent = (NodeItem) node.getParent();
-                EdgeItem edge = (EdgeItem)node.getParentEdge();
-                if (parent !=null && ! parent.isExpanded()) {
-                    PrefuseLib.updateVisible(node, false);
-                    PrefuseLib.updateVisible(edge, false);
-                }
+        //但是父节点的影子如果是闭合的，就不能显示其子节点
+        //prefuse 自带的TreeLayou算法，是由其他filter设定visible, 如果visible设置错误， layout就会出错
+        //这块代码可以放到一个 filter内部实现，不过暂时先放到这里
+        Iterator nodes = g.getNodes().tuples();
+        while (nodes.hasNext()) {
+            NodeItem node = (NodeItem)nodes.next();
+            NodeItem parent = (NodeItem) node.getParent();
 
+            if (parent != null && ! parent.isExpanded()) {
+                EdgeItem edge = (EdgeItem)node.getParentEdge();
+                PrefuseLib.updateVisible(node, false);
+                PrefuseLib.updateVisible(edge, false);
             }
         }
-
 
         // do first pass - compute breadth information, collect depth info
         firstWalk(root, 0, 1);

@@ -12,6 +12,9 @@ import prefuse.action.RepaintAction;
 import prefuse.action.assignment.ColorAction;
 import prefuse.action.assignment.FontAction;
 import prefuse.action.assignment.StrokeAction;
+import prefuse.activity.Activity;
+import prefuse.activity.ActivityAdapter;
+import prefuse.activity.ActivityListener;
 import prefuse.data.Graph;
 import prefuse.data.Schema;
 import prefuse.data.Table;
@@ -44,7 +47,8 @@ public class MindTreeRenderEngine {
     
     
     private int m_orientation = Constants.ORIENT_LEFT_RIGHT;
-    
+
+    private RepaintAction m_repaintAction = new RepaintAction();
 	
 	public MindTreeRenderEngine(MindView mindView, String treeGroupName) {
 		m_mindView = mindView;
@@ -64,15 +68,25 @@ public class MindTreeRenderEngine {
         layoutAction.add(makeItemStyleActions());
         m_vis.putAction(sm_layoutAction, layoutAction);
         
-        m_vis.putAction("repaint", new RepaintAction());
+        m_vis.putAction("repaint", m_repaintAction);
         
         m_vis.alwaysRunAfter(sm_layoutAction, "repaint");
         m_vis.alwaysRunAfter(sm_itemStyleActions, "repaint");
         m_vis.alwaysRunAfter(sm_itemPositionActions, "repaint");
 	}
 	
-	public void run ()
+	public void run (final  Runnable runnableAfter)
 	{
+        if (runnableAfter != null) {
+            m_repaintAction.addActivityListener(new ActivityAdapter() {
+                @Override
+                public void activityFinished(Activity a) {
+                    runnableAfter.run();
+                    m_repaintAction.removeActivityListener(this);
+                }
+            });
+        }
+
 		m_vis.run(sm_layoutAction);
 
         //add this line, to make the edge invalid, so prefuse will recompute the position,
