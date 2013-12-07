@@ -75,13 +75,13 @@ public class MindTreeRenderEngine {
         m_vis.alwaysRunAfter(sm_itemPositionActions, "repaint");
 	}
 	
-	public void run (final  Runnable runnableAfter)
+	public void run (final  Runnable runeAfterRePaint)
 	{
-        if (runnableAfter != null) {
+        if (runeAfterRePaint != null) {
             m_repaintAction.addActivityListener(new ActivityAdapter() {
                 @Override
                 public void activityFinished(Activity a) {
-                    runnableAfter.run();
+                    runeAfterRePaint.run();
                     m_repaintAction.removeActivityListener(this);
                 }
             });

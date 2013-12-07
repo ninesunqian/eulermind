@@ -306,8 +306,8 @@ public class MindView extends Display {
 		m_renderEngine.run(null);
 	}
 
-    public void renderTree(Runnable runableAfter) {
-        m_renderEngine.run(runableAfter);
+    public void renderTree(Runnable runAfterRePaint) {
+        m_renderEngine.run(runAfterRePaint);
     }
 
 	private void setMouseControlListener() {
@@ -386,14 +386,14 @@ public class MindView extends Display {
 
         InputMap inputMap = getInputMap();
         inputMap.put(KeyStroke.getKeyStroke("F2"), sm_editActionName);
-        inputMap.put(KeyStroke.getKeyStroke('d'), sm_removeActionName);
-        inputMap.put(KeyStroke.getKeyStroke('i'), sm_addChildActionName);
+        inputMap.put(KeyStroke.getKeyStroke("DELETE"), sm_removeActionName);
+        inputMap.put(KeyStroke.getKeyStroke("INSERT"), sm_addChildActionName);
         inputMap.put(KeyStroke.getKeyStroke("ENTER"), sm_addSiblingActionName);
 
-        inputMap.put(KeyStroke.getKeyStroke('u'), sm_undoActionName);
-        inputMap.put(KeyStroke.getKeyStroke('r'), sm_redoActionName);
-        inputMap.put(KeyStroke.getKeyStroke('l'), sm_prepareLinkActionName);
-        inputMap.put(KeyStroke.getKeyStroke('m'), sm_prepareMoveActionName);
+        inputMap.put(KeyStroke.getKeyStroke("ctrl Z"), sm_undoActionName);
+        inputMap.put(KeyStroke.getKeyStroke("ctrl Y"), sm_redoActionName);
+        inputMap.put(KeyStroke.getKeyStroke("ctrl L"), sm_prepareLinkActionName);
+        inputMap.put(KeyStroke.getKeyStroke("ctrl M"), sm_prepareMoveActionName);
         inputMap.put(KeyStroke.getKeyStroke("ESCAPE"), sm_toNormalActionAction);
 	}
 

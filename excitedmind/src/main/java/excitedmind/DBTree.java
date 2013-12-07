@@ -135,6 +135,8 @@ public class DBTree implements Graph {
 		Vertex root = addVertex(null);
 		m_rootIndex.put(ROOT_KEY_NAME, ROOT_KEY_NAME, root);
         root.setProperty(INHERIT_PATH_PROP_NAME, new ArrayList ());
+        //TODO: simplify it!
+
 		Object rootId = root.getId();
 		Object oldId = rootId;
 		m_logger.info(root.getId().toString());
@@ -434,7 +436,7 @@ public class DBTree implements Graph {
     public ArrayList<EdgeVertex> getReferers(Vertex referee)
 	{
 		Iterator<Edge> edgeIterator = referee.getEdges(Direction.IN).iterator();
-		Edge refEdge = null;
+		Edge refEdge;
 		ArrayList<EdgeVertex> refererArray = new ArrayList<EdgeVertex> ();
 		
 		

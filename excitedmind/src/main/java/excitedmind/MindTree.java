@@ -432,8 +432,12 @@ public class MindTree {
 
     public DBTree.InheritDirection getInheritDirection(Node from, Node to)
     {
-        return m_dbTree.getInheritDirection((ArrayList) from.get(sm_inheritPathPropName),
-                (ArrayList) to.get(sm_inheritPathPropName));
+        ArrayList fromInheritPath = (ArrayList) from.get(sm_inheritPathPropName);
+        ArrayList toInheritPath = (ArrayList) to.get(sm_inheritPathPropName);
+        if (fromInheritPath==null || toInheritPath == null) {
+            int i=1;
+        }
+        return m_dbTree.getInheritDirection(fromInheritPath, toInheritPath);
     }
 
     public String getText(Node node)

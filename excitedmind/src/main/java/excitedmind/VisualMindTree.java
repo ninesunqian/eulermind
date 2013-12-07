@@ -47,7 +47,6 @@ public class VisualMindTree extends MindTree {
         super(dbPath, rootId);
         m_vis = vis;
         m_vis.add(sm_treeGroupName, m_tree);
-        m_vis.add(sm_treeGroupName+"_2", m_tree);
 
         m_cursor = m_tree.getRoot();
 
@@ -233,13 +232,11 @@ public class VisualMindTree extends MindTree {
     private void trashNodeAndCursorNext(Node node)
     {
         final Node root = m_tree.getRoot();
-        if (getDBElementId(root) == getDBElementId(m_cursor))
+        if (getDBElementId(root).equals(getDBElementId(node)))
             return;
 
-        setCursor(node);
-
-        //FIXME: the difference with moveCursorDown
-        Node parent = m_cursor.getParent();
+        //从要删除的节点，向根节点找，找到最接近根的相同dbID的parent节点
+        Node parent = node.getParent();
         m_logger.info ("remove'd parent : " + getDisplayPath(parent));
         Node topParent = parent;
         m_logger.info ("remove'd parent's parent : " + getDisplayPath(parent.getParent()));
@@ -248,27 +245,27 @@ public class VisualMindTree extends MindTree {
             m_logger.info ("remove clim path : " + getDisplayPath(n));
             if (getDBElementId(n).equals(getDBElementId(parent))) {
                 topParent = n;
-                break;
             }
         }
 
-        int i;
+        int start = node.getIndex();
         Node newCursor = topParent;
-        for (i=m_cursor.getIndex()+1; i<topParent.getChildCount(); i++) {
-            newCursor = topParent.getChild(i);
-            if (! isInDBSubTree(newCursor, m_cursor))
+        //在topParent的子节点中，找到两个与被删除节点dbId不同的节点，和一个相同的节点
+        for (int i=start+1; i<topParent.getChildCount(); i++) {
+            Node tmp = topParent.getChild(i);
+            if (!sameDBNode(tmp, node)) {
+                newCursor = tmp;
                 break;
+            }
         }
 
-        if (i == topParent.getChildCount()) {
-            for (i=m_cursor.getIndex()-1; i<=0; i--) {
-                newCursor = topParent.getChild(i);
-                if (! isInDBSubTree(newCursor, m_cursor))
+        if (newCursor == topParent) {
+            for (int i=0; i<start; i++) {
+                Node tmp = topParent.getChild(i);
+                if (!sameDBNode(tmp, node)) {
+                    newCursor = tmp;
                     break;
-            }
-
-            if (i == -1) {
-                newCursor = topParent;
+                }
             }
         }
 
@@ -391,7 +388,9 @@ public class VisualMindTree extends MindTree {
         String text = m_cursor.getString(sm_textPropName);
 
         m_tree.removeChild(m_cursor);
-        return addChildUndoable(parent, pos, text);
+        AbstractUndoableEdit undor =  addChildUndoable(parent, pos, text);
+        m_cursor = parent.getChild(pos);
+        return  undor;
     }
 
     //node has only dbId
@@ -404,9 +403,9 @@ public class VisualMindTree extends MindTree {
         int pos = m_cursor.getIndex();
         m_tree.removeChild(m_cursor);
 
-        AbstractUndoableEdit undoer = addReferenceUndoable(sourceNode, pos, refereeDBId);
+        AbstractUndoableEdit undor = addReferenceUndoable(sourceNode, pos, refereeDBId);
         m_cursor = sourceNode.getChild(pos);
-        return undoer;
+        return undor;
     }
 
 
@@ -465,9 +464,9 @@ public class VisualMindTree extends MindTree {
             return new RemovingReferenceUndoer(getDisplayPath(m_cursor), refereeDBId, pos);
         }
         else {
-            RemovingChildUndoer undoer = new RemovingChildUndoer(getDisplayPath(m_cursor), getDBElementId(m_cursor));
+            RemovingChildUndoer undor = new RemovingChildUndoer(getDisplayPath(m_cursor), getDBElementId(m_cursor));
             trashNodeAndCursorNext(m_cursor);
-            return undoer;
+            return undor;
         }
     }
 
@@ -536,11 +535,11 @@ public class VisualMindTree extends MindTree {
         int oldPos = m_cursor.getIndex();
         int newPos = newParent.getChildCount();
 
-        MovingChildUndoer undoer = new MovingChildUndoer(oldParentPath, oldPos, newParentPath, newPos);
+        MovingChildUndoer undor = new MovingChildUndoer(oldParentPath, oldPos, newParentPath, newPos);
 
         moveChildImpl(oldParent, oldPos, newParent, newPos);
 
-        return undoer;
+        return undor;
     }
 
     public boolean cursorIsFolded()
