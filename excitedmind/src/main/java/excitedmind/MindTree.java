@@ -24,19 +24,19 @@ import excitedmind.DBTree.RefLinkInfo;
 public class MindTree {
     Logger m_logger = Logger.getLogger(this.getClass().getName());
 
-	protected final static String sm_dbIdColumnName = "dbElement";
+	final static String sm_dbIdColumnName = "dbElement";
 
-    public final static String sm_outEdgeDBIdsPropName = DBTree.CHILD_EDGES_PROP_NAME;
-    public final static String sm_inheritPathPropName = DBTree.INHERIT_PATH_PROP_NAME;
+    final static String sm_outEdgeDBIdsPropName = DBTree.CHILD_EDGES_PROP_NAME;
+    final static String sm_inheritPathPropName = DBTree.INHERIT_PATH_PROP_NAME;
 
-	public final static String sm_textPropName = "text";
-	public final static String sm_fontFamilyPropName = "fontFamily";
-	public final static String sm_fontSizePropName = "fontSize";
-	public final static String sm_boldPropName = "bold";
-	public final static String sm_italicPropName = "italic";
-	public final static String sm_underlinedPropName = "underlined";
-	public final static String sm_nodeColorPropName = "nodeColor";
-	public final static String sm_textColorPropName = "textColor";
+	final static String sm_textPropName = "text";
+	final static String sm_fontFamilyPropName = "fontFamily";
+	final static String sm_fontSizePropName = "fontSize";
+	final static String sm_boldPropName = "bold";
+	final static String sm_italicPropName = "italic";
+	final static String sm_underlinedPropName = "underlined";
+	final static String sm_nodeColorPropName = "nodeColor";
+	final static String sm_textColorPropName = "textColor";
 
     public final static String sm_nodePropNames [] = {
             sm_textPropName,
@@ -459,109 +459,43 @@ public class MindTree {
         return node.getString(sm_textPropName);
     }
 
+    public void setText(Node node, String text)
+    {
+        setNodeProperty (getDBId(node), sm_textPropName, text);
+    }
+
     public int getNodeColor (Node node)
     {
         return node.getInt(sm_nodeColorPropName);
     }
 
-    public String getFont (Node node)
+    public void setNodeColor (Node node, int rgba)
     {
-        return node.getString(sm_textPropName);
+        setNodeProperty (getDBId(node), sm_nodeColorPropName, rgba);
     }
 
-    public String getSize (Node node)
+    public String getFontFamily (Node node)
     {
-        return node.getString(sm_textPropName);
+        return node.getString(sm_fontFamilyPropName);
     }
 
-    public Stack<Integer> getNodePath(Node node)
+    public void setFontFamily (Node node, String fontFamily)
     {
-        Stack<Integer> path = new Stack<Integer>();
-
-        Node climber = node;
-        Node root = m_displayTree.getRoot();
-
-        while (climber != root)
-        {
-            path.add(0, m_displayTree.getIndexInSiblings(climber));
-            climber = climber.getParent();
-            if (climber.getRow()==root.getRow() && climber != root) {
-                m_logger.info("aaaaaaaaaaaa");
-            }
-        }
-
-        return path;
+        setNodeProperty (getDBId(node), sm_fontFamilyPropName, fontFamily);
     }
 
-    public Node getNodeByPath(Stack<Integer> path)
+    public int getFontSize (Node node)
     {
-        Node node = m_displayTree.getRoot();
-
-        for (int pos : path) {
-
-            if (node.getChildCount() == 0) {
-                attachChildren(node);
-            }
-
-            node = node.getChild(pos);
-
-            if (node == null) {
-                return null;
-            }
-        }
-
-        return node;
+        return node.getInt(sm_fontSizePropName);
     }
 
-
-    public Node getRoot()
+    public void getFontSize (Node node, int size)
     {
-        return m_displayTree.getRoot();
-    }
-
-    public Node topSameDBNode(Node node)
-    {
-        Node topNode = node;
-        Node root = getRoot();
-
-        m_logger.info ("remove'd node's node : " + getNodePath(node.getParent()));
-        for (Node n=node.getParent(); n!=root ;n=n.getParent())
-        {
-            m_logger.info ("remove clim path : " + getNodePath(n));
-            if (getDBId(n).equals(getDBId(node))) {
-                topNode = n;
-            }
-        }
-
-        return topNode;
-    }
-
-    public Node getFamiliarNode (Node node)
-    {
-        int start = node.getIndex();
-        Node parent = node.getParent();
-        Node familiar;
-        //在topParent的子节点中，找到两个与被删除节点dbId不同的节点，和一个相同的节点
-        for (int i=start+1; i<parent.getChildCount(); i++) {
-            Node tmp = parent.getChild(i);
-            if (!sameDBNode(tmp, node)) {
-                return tmp;
-            }
-        }
-
-        for (int i=0; i<start; i++) {
-            Node tmp = parent.getChild(i);
-            if (!sameDBNode(tmp, node)) {
-                return tmp;
-            }
-        }
-        return parent;
+        setNodeProperty (getDBId(node), sm_fontSizePropName, size);
     }
 
     public boolean isRefEdge (Edge edge)
     {
         return DBTree.EdgeType.values()[(Integer)edge.get(sm_edgeTypePropName)] == DBTree.EdgeType.REFERENCE;
     }
-
-
 }

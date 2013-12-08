@@ -133,7 +133,7 @@ public class MindView extends Display {
         @Override
         public void actionPerformed(ActionEvent e) {
 
-            if (m_mindTreeController.getCursor() == m_mindTreeController.m_mindTree.getRoot()) {
+            if (m_mindTreeController.getCursorNode() == m_mindTreeController.getRoot()) {
                 return;
             }
 
@@ -207,7 +207,7 @@ public class MindView extends Display {
 
                 AbstractUndoableEdit undoer;
 
-                if (m_mindTreeController.isPlaceholer(m_mindTreeController.getCursor())) {
+                if (m_mindTreeController.isPlaceholer(m_mindTreeController.getCursorNode())) {
                     m_mindTreeController.setPlaceholderCursorText(text);
                     undoer = m_mindTreeController.placeNewNodeUndoable();
                 } else {
@@ -226,7 +226,7 @@ public class MindView extends Display {
     AbstractAction m_editAction =  new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            editText(m_mindTreeController.getCursor(), MindTree.sm_textPropName) ;
+            editText(m_mindTreeController.toVisual(m_mindTreeController.getCursorNode()), MindTree.sm_textPropName) ;
         }
     };
 
