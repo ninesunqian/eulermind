@@ -37,7 +37,8 @@ public class MindView extends Display {
 
     Logger m_logger = Logger.getLogger(this.getClass().getName());
 
-	private VisualMindTree m_visMindTree;
+    private MindTree m_mindTree;
+	private MindTreeController m_mindTreeController;
 
 	MindTreeRenderEngine m_renderEngine;
     NodeItem m_clickedNode;
@@ -62,7 +63,7 @@ public class MindView extends Display {
     AbstractAction m_removeAction = new SimpleMindTreeAction() {
         @Override
         public AbstractUndoableEdit operateMindTree(ActionEvent e) {
-            return m_visMindTree.removeCursorUndoable();
+            return m_mindTreeController.removeCursorUndoable();
         }
     };
 
@@ -93,11 +94,11 @@ public class MindView extends Display {
         @Override
         public void actionPerformed(ActionEvent e) {
 
-            if (m_visMindTree.cursorIsFolded()) {
-                getUndoManager().addEdit(m_visMindTree.toggleFoldCursorUndoable());
+            if (m_mindTreeController.cursorIsFolded()) {
+                getUndoManager().addEdit(m_mindTreeController.toggleFoldCursorUndoable());
             }
 
-            m_visMindTree.addPlaceholder(true);
+            m_mindTreeController.addPlaceholder(true);
             renderTree(new Runnable() {
                 @Override
                 public void run() {
@@ -132,11 +133,11 @@ public class MindView extends Display {
         @Override
         public void actionPerformed(ActionEvent e) {
 
-            if (m_visMindTree.getCursor() == m_visMindTree.m_tree.getRoot()) {
+            if (m_mindTreeController.getCursor() == m_mindTreeController.m_mindTree.getRoot()) {
                 return;
             }
 
-            m_visMindTree.addPlaceholder(false);
+            m_mindTreeController.addPlaceholder(false);
             renderTree();
             try {
                 //TODO renderer tree and display editor thread sync
@@ -187,7 +188,7 @@ public class MindView extends Display {
 
             stopEditing();
 
-            AbstractUndoableEdit undoer = m_visMindTree.placeRefereeUndoable(selected.m_dbId);
+            AbstractUndoableEdit undoer = m_mindTreeController.placeRefereeUndoable(selected.m_dbId);
             getUndoManager().addEdit(undoer);
             renderTree();
         }
@@ -206,11 +207,11 @@ public class MindView extends Display {
 
                 AbstractUndoableEdit undoer;
 
-                if (m_visMindTree.isPlaceholer(m_visMindTree.getCursor())) {
-                    m_visMindTree.setPlaceholderCursorText(text);
-                    undoer = m_visMindTree.placeNewNodeUndoable();
+                if (m_mindTreeController.isPlaceholer(m_mindTreeController.getCursor())) {
+                    m_mindTreeController.setPlaceholderCursorText(text);
+                    undoer = m_mindTreeController.placeNewNodeUndoable();
                 } else {
-                    undoer = m_visMindTree.setCursorText(text);
+                    undoer = m_mindTreeController.setCursorText(text);
                 }
 
                 m_undoManager.addEdit(undoer);
@@ -225,7 +226,7 @@ public class MindView extends Display {
     AbstractAction m_editAction =  new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            editText(m_visMindTree.getCursor(), VisualMindTree.sm_textPropName) ;
+            editText(m_mindTreeController.getCursor(), MindTree.sm_textPropName) ;
         }
     };
 
@@ -277,7 +278,14 @@ public class MindView extends Display {
 
 		setHighQuality(true);
 
-		m_visMindTree = new VisualMindTree(path, rootId, m_vis);
+        String treeGroup = "tree";
+        m_mindTree = new MindTree(path, rootId);
+        m_vis.add(treeGroup, m_mindTree.m_displayTree);
+
+		m_mindTreeController = new MindTreeController(m_mindTree, m_vis, treeGroup);
+
+        setItemSorter(new TreeDepthItemSorter());
+        m_renderEngine = new MindTreeRenderEngine(this, treeGroup);
 
         m_promptScrollPane.setVisible(false);
         add(m_promptScrollPane);
@@ -287,9 +295,6 @@ public class MindView extends Display {
         m_prompter.setPrototypeCellValue("WWW");
         m_prompter.setVisibleRowCount(8);
 
-		setItemSorter(new TreeDepthItemSorter());
-
-		m_renderEngine = new MindTreeRenderEngine(this, VisualMindTree.sm_treeGroupName);
 
 		setMouseControlListener();
 		setKeyControlListener();
@@ -322,9 +327,9 @@ public class MindView extends Display {
                     return;
                 }
 
-				if (m_visMindTree.isNode(item)) {
+				if (m_mindTreeController.isNode(item)) {
                     if (m_state == State.NORMAL) {
-                        m_visMindTree.setCursor((NodeItem)item);
+                        m_mindTreeController.setCursor((NodeItem)item);
                         renderTree();
                     }
 				}
@@ -337,7 +342,7 @@ public class MindView extends Display {
 
                 m_logger.info("mouse Clicked");
 
-				if (m_visMindTree.isNode(item)) {
+				if (m_mindTreeController.isNode(item)) {
                     m_clickedNode = (NodeItem)item;
 
 					m_renderEngine.holdItem(item);
@@ -346,13 +351,13 @@ public class MindView extends Display {
 
                     switch (m_state) {
                         case NORMAL:
-                            undoer = m_visMindTree.toggleFoldCursorUndoable();
+                            undoer = m_mindTreeController.toggleFoldCursorUndoable();
                             break;
                         case LINKING:
-                            undoer = m_visMindTree.addReferenceUndoable(m_clickedNode);
+                            undoer = m_mindTreeController.addReferenceUndoable(m_clickedNode);
                             break;
                         case MOVING:
-                            undoer = m_visMindTree.resetParentUndoable(m_clickedNode);
+                            undoer = m_mindTreeController.resetParentUndoable(m_clickedNode);
                             break;
                         default:
                             assert(false);
@@ -403,8 +408,8 @@ public class MindView extends Display {
 		return m_undoManager;
 	}
 
-	public VisualMindTree getVisMindTree() {
-		return m_visMindTree;
+	public MindTreeController getMindTreeController() {
+		return m_mindTreeController;
 	}
 
     @Override
@@ -414,7 +419,7 @@ public class MindView extends Display {
         editor.getDocument().addDocumentListener(m_editTextListener);
         editor.addKeyListener(m_editorKeyListener);
 
-        if (m_visMindTree.cursorIsPlaceholder()) {
+        if (m_mindTreeController.cursorIsPlaceholder()) {
             m_promptScrollPane.setLocation(editor.getX(), editor.getY()+editor.getHeight());
             m_promptScrollPane.setSize(100, 100);
             m_promptScrollPane.setVisible(true);
@@ -450,7 +455,7 @@ public class MindView extends Display {
             m_dbId = vertex.getId();
             m_text = vertex.getProperty(MindTree.sm_textPropName);
 
-            DBTree.EdgeVertex edgeVertex = m_visMindTree.m_dbTree.getParent(vertex);
+            DBTree.EdgeVertex edgeVertex = m_mindTreeController.m_mindTree.m_dbTree.getParent(vertex);
             m_parentDBId = edgeVertex.m_vertex.getId();
             m_parentText = edgeVertex.m_vertex.getProperty(MindTree.sm_textPropName);
         }
@@ -468,7 +473,7 @@ public class MindView extends Display {
 
             m_logger.info("query vertex: " + inputed);
 
-            for (Vertex vertex : m_visMindTree.m_dbTree.getVertices(MindTree.sm_textPropName, inputed)) {
+            for (Vertex vertex : m_mindTreeController.m_mindTree.m_dbTree.getVertices(MindTree.sm_textPropName, inputed)) {
                 QueriedNode queriedNode = new QueriedNode(vertex);
                 publish(queriedNode);
                 m_queriedNodes.add(queriedNode);

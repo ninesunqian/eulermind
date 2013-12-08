@@ -231,6 +231,7 @@ public class MindTreeLayout extends TreeLayout {
      */
     public void run(double frac) {
         Graph g = (Graph)m_vis.getGroup(m_group);
+
         initSchema(g.getNodes());
         
         Point2D a = getLayoutAnchor();
@@ -250,7 +251,7 @@ public class MindTreeLayout extends TreeLayout {
         Iterator nodes = g.getNodes().tuples();
         while (nodes.hasNext()) {
             NodeItem node = (NodeItem)nodes.next();
-            NodeItem parent = (NodeItem) node.getParent();
+            NodeItem parent = (NodeItem)node.getParent();
 
             if (parent != null && ! parent.isExpanded()) {
                 EdgeItem edge = (EdgeItem)node.getParentEdge();

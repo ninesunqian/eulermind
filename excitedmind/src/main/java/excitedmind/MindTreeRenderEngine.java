@@ -14,10 +14,7 @@ import prefuse.action.assignment.FontAction;
 import prefuse.action.assignment.StrokeAction;
 import prefuse.activity.Activity;
 import prefuse.activity.ActivityAdapter;
-import prefuse.activity.ActivityListener;
 import prefuse.data.Graph;
-import prefuse.data.Schema;
-import prefuse.data.Table;
 import prefuse.render.DefaultRendererFactory;
 import prefuse.render.EdgeRenderer;
 import prefuse.render.AbstractShapeRenderer;
@@ -175,7 +172,23 @@ public class MindTreeRenderEngine {
         }
 
         public int getColor(VisualItem item) {
-            return m_mindView.getVisMindTree().getNodeColor((NodeItem)item);
+            /*
+            return m_mindView.getMindTreeController().getNodeColor((NodeItem)item);
+
+            public int getNodeColor (NodeItem nodeItem)
+            {
+                Node node = toSource(nodeItem);
+
+                if (node == m_cursor)
+                    return ColorLib.rgb(255, 0, 0);
+                else if (!isPlaceholer(node) && getDBId(node).equals(getDBId(m_cursor)))
+                    return ColorLib.rgb(255, 255, 0);
+                else
+                    return ColorLib.rgb(255, 255, 255);
+            }
+            */
+            return ColorLib.rgb(255, 255, 255);
+
         }
     }
     
@@ -218,11 +231,11 @@ public class MindTreeRenderEngine {
         }
 
         public BasicStroke getStroke(VisualItem item) {
-            if (m_mindView.getVisMindTree().isPlaceholer(item)) {
+            if (m_mindView.getMindTreeController().isPlaceholer(item)) {
                 return StrokeLib.getStroke(1.0f);
             }
 
-            if (m_mindView.getVisMindTree().isRefEdge((EdgeItem)item)) {
+            if (m_mindView.getMindTreeController().m_mindTree.isRefEdge((EdgeItem) item)) {
                 float dash [] = {10f, 5f};
                 return StrokeLib.getStroke(1.0f, dash);
             } else {
@@ -249,9 +262,9 @@ public class MindTreeRenderEngine {
             //FIXME: add a color action
             item.setStrokeColor(ColorLib.rgb(150,150,150));
 
-            VisualMindTree visualMindTree = m_mindView.getVisMindTree();
+            MindTreeController mindTreeController = m_mindView.getMindTreeController();
 
-            int childCount = visualMindTree.getChildCount((NodeItem)item);
+            int childCount = mindTreeController.m_mindTree.getChildCount((NodeItem)item);
 
             if (((NodeItem) item).getChildCount() != 0) {
                 if (item.isExpanded()) {
@@ -261,7 +274,7 @@ public class MindTreeRenderEngine {
                 }
 
             } else {
-                if (visualMindTree.getChildCount((NodeItem)item) == 0) {
+                if (mindTreeController.m_mindTree.getChildCount((NodeItem)item) == 0) {
                     return RENDER_TYPE_FILL;
                 } else {
                     return RENDER_TYPE_DRAW_AND_FILL;

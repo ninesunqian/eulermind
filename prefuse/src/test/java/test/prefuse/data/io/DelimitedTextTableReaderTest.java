@@ -14,7 +14,6 @@ import test.prefuse.data.TableTestData;
 public class DelimitedTextTableReaderTest extends TestCase implements TableTestData {
  
     public void testReadTableInputStream() {
-        /*
         // prepare data
         byte[] data = TAB_DELIMITED_DATA.getBytes();
         InputStream is = new ByteArrayInputStream(data);
@@ -74,7 +73,6 @@ public class DelimitedTextTableReaderTest extends TestCase implements TableTestD
 //        f.getContentPane().add(jsp);
 //        f.pack();
 //        f.setVisible(true);
-        */
     }
 
 }

@@ -6,7 +6,6 @@ import prefuse.Visualization;
 import prefuse.data.*;
 import prefuse.data.event.EventConstants;
 import prefuse.data.event.TableListener;
-import prefuse.util.ColorLib;
 import prefuse.visual.NodeItem;
 import prefuse.visual.EdgeItem;
 import prefuse.visual.VisualItem;
@@ -18,140 +17,58 @@ import prefuse.util.PrefuseLib;
 import javax.swing.undo.AbstractUndoableEdit;
 import java.util.logging.Logger;
 
-public class VisualMindTree extends MindTree {
+public class MindTreeController {
     final Logger m_logger = Logger.getLogger(this.getClass().getName());
-    public final static String sm_treeGroupName = "tree";
-    public final static String sm_treeNodesGroupName = PrefuseLib.getGroupName(sm_treeGroupName, Graph.NODES);
-    public final static String sm_treeEdgesGroupName = PrefuseLib.getGroupName(sm_treeGroupName, Graph.EDGES);
+    public final String m_treeGroupName;
+    public final String m_treeNodesGroupName;
+    public final String m_treeEdgesGroupName;
 
     //MindTree
     final Visualization m_vis;
+    final MindTree m_mindTree;
 
     Node m_cursor;
+    int m_cursorDepth;
     Node m_savedCursor = null;
-    int m_cursorDepth = 0;
 
     private LinkedHashSet<Node> m_foldedNodes = new LinkedHashSet<Node>();
 
-    abstract class NodeOperatorUndoer extends AbstractUndoableEdit {
-        NodeOperatorUndoer (Stack<Integer> nodePath)
-        {
-            m_nodePath = nodePath;
-        }
-
-        final Stack<Integer> m_nodePath;
+    public void setCursor(Node node)
+    {
+        m_cursor = node;
+        m_cursorDepth = m_mindTree.getNodePath(m_cursor).size();
     }
 
-    public VisualMindTree(String dbPath, Object rootId, Visualization vis)
+    public void setCursorByPath(Stack<Integer> path)
     {
-        super(dbPath, rootId);
-        m_vis = vis;
-        m_vis.add(sm_treeGroupName, m_tree);
-
-        m_cursor = m_tree.getRoot();
-
-        m_tree.getNodeTable().addTableListener(new TableListener() {
-            @Override
-            public void tableChanged(Table t, int start, int end, int col, int type) {
-                if (type ==  EventConstants.DELETE) {
-                    for (int i=start; i<=end; i++) {
-                        m_foldedNodes.remove(m_tree.getNode(i));
-                    }
-                }
-            }
-        });
-    }
-
-    private NodeItem toVisual (Node node)
-    {
-        return (NodeItem) m_vis.getVisualItem(sm_treeNodesGroupName, node);
-    }
-
-    private EdgeItem toVisual (Edge edge)
-    {
-        return (EdgeItem) m_vis.getVisualItem(sm_treeEdgesGroupName, edge);
-    }
-
-    private Node toSource (NodeItem nodeItem)
-    {
-        return (Node) m_vis.getSourceTuple (nodeItem);
-    }
-
-    private Edge toSource (EdgeItem edgeItem)
-    {
-        return (Edge) m_vis.getSourceTuple (edgeItem);
-    }
-
-    public boolean isNode(VisualItem item)
-    {
-        return item.isInGroup(sm_treeNodesGroupName);
-    }
-
-    public boolean sameDBNode(Node n1, Node n2)
-    {
-        return getDBElementId(n1) == getDBElementId(n2);
-    }
-
-    private Stack<Integer> getDisplayPath(Node node)
-    {
-        Stack<Integer> path = new Stack<Integer>();
-
-        Node climber = node;
-        Node root = m_tree.getRoot();
-
-        while (climber != root)
-        {
-            path.add(0, m_tree.getIndexInSiblings(climber));
-            climber = climber.getParent();
-            if (climber.getRow()==root.getRow() && climber != root) {
-                m_logger.info("aaaaaaaaaaaa");
-            }
-        }
-
-        return path;
-    }
-
-    private Node getNodeByPath(Stack<Integer> path)
-    {
-        Node node = m_tree.getRoot();
-
-        for (int pos : path) {
-
-            if (node.getChild(pos) == null) {
-                unfoldNode(toVisual(node));
-            }
-
-            node = node.getChild(pos);
-        }
-
-        return node;
+        m_cursor = m_mindTree.getNodeByPath(path);
+        m_cursorDepth = path.size();
     }
 
     public void moveCursorLeft ()
     {
-        if (m_cursor == m_tree.getRoot())
-            return;
-
-        m_cursor = m_tree.getParent(m_cursor);
-        m_cursorDepth = getDisplayPath(m_cursor).size();
+        if (m_cursor != m_mindTree.m_displayTree.getRoot()) {
+            m_cursor = m_cursor.getParent();
+            m_cursorDepth ++;
+        }
     }
 
     public void moveCursorRight ()
     {
-        if (m_cursor.getChildCount() == 0)
-            return;
-
-        m_cursor = m_tree.getChild(m_cursor, 0);
-        m_cursorDepth = getDisplayPath(m_cursor).size();
+        if (m_cursor != m_mindTree.m_displayTree.getRoot()) {
+            m_cursor = m_cursor.getParent();
+            m_cursorDepth ++;
+        }
     }
 
 
     public void moveCursorUp ()
     {
+        /* TODO
         Node cur = m_cursor;
         int depth = m_cursorDepth;
 
-        while (!m_tree.hasPreviousSibling(cur) && depth > 0) {
+        while (!m_displayTree.hasPreviousSibling(cur) && depth > 0) {
             cur = cur.getParent();
             depth --;
         }
@@ -168,14 +85,16 @@ public class VisualMindTree extends MindTree {
         }
 
         m_cursor = cur;
+        */
     }
 
     public void moveCursorDown ()
     {
+        /* TODO
         Node cur = m_cursor;
         int depth = m_cursorDepth;
 
-        while (!m_tree.hasNextSibling(cur) && depth > 0) {
+        while (!m_displayTree.hasNextSibling(cur) && depth > 0) {
             cur = cur.getParent();
             depth --;
         }
@@ -192,6 +111,63 @@ public class VisualMindTree extends MindTree {
         }
 
         m_cursor = cur;
+        */
+    }
+
+
+    abstract class NodeOperatorUndoer extends AbstractUndoableEdit {
+        NodeOperatorUndoer (Stack<Integer> nodePath)
+        {
+            m_nodePath = nodePath;
+        }
+
+        final Stack<Integer> m_nodePath;
+    }
+
+    public MindTreeController(MindTree mindTree, Visualization vis, String treeGroupName)
+    {
+        m_mindTree = mindTree;
+        m_vis = vis;
+
+        m_treeGroupName = treeGroupName;
+        m_treeNodesGroupName = PrefuseLib.getGroupName(m_treeGroupName, Graph.NODES);
+        m_treeEdgesGroupName = PrefuseLib.getGroupName(m_treeGroupName, Graph.EDGES);
+
+        m_mindTree.m_displayEdgeTable.addTableListener(new TableListener() {
+            @Override
+            public void tableChanged(Table t, int start, int end, int col, int type) {
+                if (type ==  EventConstants.DELETE) {
+                    for (int i=start; i<=end; i++) {
+                        m_foldedNodes.remove(m_mindTree.m_displayTree.getNode(i));
+                    }
+                }
+            }
+        });
+    }
+
+    private NodeItem toVisual (Node node)
+    {
+        return (NodeItem) m_vis.getVisualItem(m_treeNodesGroupName, node);
+    }
+
+    private EdgeItem toVisual (Edge edge)
+    {
+        return (EdgeItem) m_vis.getVisualItem(m_treeEdgesGroupName, edge);
+    }
+
+    private Node toSource (NodeItem nodeItem)
+    {
+        return (Node) m_vis.getSourceTuple (nodeItem);
+    }
+
+    private Edge toSource (EdgeItem edgeItem)
+    {
+        return (Edge) m_vis.getSourceTuple (edgeItem);
+    }
+
+    public boolean isNode(VisualItem item)
+    {
+        return item.isInGroup(m_treeNodesGroupName);
     }
 
     public NodeItem getCursor ()
@@ -199,85 +175,33 @@ public class VisualMindTree extends MindTree {
         return toVisual(m_cursor);
     }
 
-    private void setCursor (Node node)
-    {
-        m_cursor = node;
-        Node climber = m_cursor;
-
-        while (climber != m_tree.getRoot())
-        {
-            climber = climber.getParent();
-        }
-    }
-
     public void setCursor (NodeItem nodeItem)
     {
         setCursor(toSource(nodeItem));
     }
 
-    private void setCursorByPath (Stack<Integer> path)
-    {
-        m_cursor = getNodeByPath(path);
-        m_cursorDepth = path.size();
-    }
-
-    private boolean isInDBSubTree(Node node, Node treeRoot)
-    {
-        DBTree.InheritDirection inheritDirection = getInheritDirection(node, treeRoot);
-        return inheritDirection == DBTree.InheritDirection.LINEAL_ANCESTOR ||
-                inheritDirection == DBTree.InheritDirection.SELF;
-
-    }
-
     private void trashNodeAndCursorNext(Node node)
     {
-        final Node root = m_tree.getRoot();
-        if (getDBElementId(root).equals(getDBElementId(node)))
+        final Node root = m_mindTree.getRoot();
+        if (m_mindTree.sameDBNode(root, node)) {
             return;
+        }
 
         //从要删除的节点，向根节点找，找到最接近根的相同dbID的parent节点
         Node parent = node.getParent();
-        m_logger.info ("remove'd parent : " + getDisplayPath(parent));
-        Node topParent = parent;
-        m_logger.info ("remove'd parent's parent : " + getDisplayPath(parent.getParent()));
-        for (Node n=parent.getParent(); n!=root ;n=n.getParent())
-        {
-            m_logger.info ("remove clim path : " + getDisplayPath(n));
-            if (getDBElementId(n).equals(getDBElementId(parent))) {
-                topParent = n;
-            }
-        }
+        Node topParent = m_mindTree.topSameDBNode(parent);
 
-        int start = node.getIndex();
-        Node newCursor = topParent;
-        //在topParent的子节点中，找到两个与被删除节点dbId不同的节点，和一个相同的节点
-        for (int i=start+1; i<topParent.getChildCount(); i++) {
-            Node tmp = topParent.getChild(i);
-            if (!sameDBNode(tmp, node)) {
-                newCursor = tmp;
-                break;
-            }
-        }
-
-        if (newCursor == topParent) {
-            for (int i=0; i<start; i++) {
-                Node tmp = topParent.getChild(i);
-                if (!sameDBNode(tmp, node)) {
-                    newCursor = tmp;
-                    break;
-                }
-            }
-        }
+        Node newCursor = m_mindTree.getFamiliarNode(topParent.getChild(node.getIndex()));
 
         //using node path, compute the removed node in highest level;
-        trashNode(getDBElementId(m_cursor.getParent()), m_cursor.getIndex());
+        m_mindTree.trashNode(m_mindTree.getDBId(m_cursor.getParent()), m_cursor.getIndex());
 
         setCursor(newCursor);
     }
 
     private void restoreNodeAndSetCursor (Object dbId, Stack<Integer> nodePath)
     {
-        restoreNodeFromTrash(dbId);
+        m_mindTree.restoreNodeFromTrash(dbId);
         setCursorByPath(nodePath);
     }
 
@@ -289,7 +213,7 @@ public class VisualMindTree extends MindTree {
             m_dbId = dbId;
         }
         public void undo () {
-            trashNodeAndCursorNext(getNodeByPath(m_nodePath));
+            trashNodeAndCursorNext(m_mindTree.getNodeByPath(m_nodePath));
         }
         public void redo () {
             restoreNodeAndSetCursor(m_dbId, m_nodePath);
@@ -301,12 +225,12 @@ public class VisualMindTree extends MindTree {
     private AbstractUndoableEdit addChildUndoable(Node parent, int pos, String text)
     {
         assert(!isPlaceholer(parent));
-        Object childDBId = addChild(getDBElementId(parent), pos, text);
+        Object childDBId = m_mindTree.addChild(m_mindTree.getDBId(parent), pos, text);
 
         Node newNode = parent.getChild(pos);
         setCursor(newNode);
 
-        return new AddingChildUndoer(getDisplayPath(newNode), getDBElementId(newNode));
+        return new AddingChildUndoer(m_mindTree.getNodePath(newNode), m_mindTree.getDBId(newNode));
     }
 
     class AddingReferenceUndoer extends NodeOperatorUndoer
@@ -319,11 +243,11 @@ public class VisualMindTree extends MindTree {
         }
         public void undo () {
             setCursorByPath(m_nodePath);
-            removeReference(m_refereeDBId, m_pos);
+            m_mindTree.removeReference(m_refereeDBId, m_pos);
         }
         public void redo () {
             setCursorByPath(m_nodePath);
-            addReference(getDBElementId(m_cursor), m_pos, m_refereeDBId);
+            m_mindTree.addReference(m_mindTree.getDBId(m_cursor), m_pos, m_refereeDBId);
         }
 
         Object m_refereeDBId;
@@ -332,17 +256,16 @@ public class VisualMindTree extends MindTree {
 
     public AbstractUndoableEdit addReferenceUndoable(Node referer, int pos, Object refereeDBId)
     {
-        addReference(getDBElementId(referer), pos, refereeDBId);
+        m_mindTree.addReference(m_mindTree.getDBId(referer), pos, refereeDBId);
 
         // add a reference from m_cursor to other node, the m_cursor does not move the referered node
 
-        return new AddingReferenceUndoer(getDisplayPath(referer), pos, refereeDBId);
+        return new AddingReferenceUndoer(m_mindTree.getNodePath(referer), pos, refereeDBId);
     }
 
     public AbstractUndoableEdit addReferenceUndoable(Node refereeNode)
     {
-        Object refereeDBId = getDBElementId(refereeNode);
-        return addReferenceUndoable(m_cursor, m_cursor.getChildCount(), refereeDBId);
+        return addReferenceUndoable(m_cursor, m_cursor.getChildCount(), m_mindTree.getDBId(refereeNode));
     }
 
     public void addPlaceholder(boolean asChild)
@@ -350,44 +273,44 @@ public class VisualMindTree extends MindTree {
         m_savedCursor = m_cursor;
         if (asChild) {
             //FIXME: prefuse function using dbTree's argument
-            m_cursor = m_tree.addChild(m_cursor, getChildCount(m_cursor));
+            m_cursor = m_mindTree.m_displayTree.addChild(m_cursor, m_mindTree.getChildCount(m_cursor));
         } else {
             Node parent = m_cursor.getParent();
             int pos = m_cursor.getIndex() + 1;
-            m_cursor = m_tree.addChild(parent, pos);
+            m_cursor = m_mindTree.m_displayTree.addChild(parent, pos);
         }
-        m_cursor.set(sm_textPropName, "");
+        m_cursor.set(m_mindTree.sm_textPropName, "");
     }
 
     public void removePlaceholder()
     {
         assert(isPlaceholer(m_cursor));
-        assert(m_cursor != m_tree.getRoot());
+        assert(m_cursor != m_mindTree.m_displayTree.getRoot());
 
         Node placeholder = m_cursor;
         m_cursor = m_savedCursor;
 
-        m_tree.removeChild(placeholder);
+        m_mindTree.m_displayTree.removeChild(placeholder);
     }
 
     //include node and edge, the edge is used rendering
     public boolean isPlaceholer(Tuple tuple)
     {
-        return (getDBElementId(tuple) == null);
+        return (m_mindTree.getDBId(tuple) == null);
     }
 
 
     //node has other property except dbId;
     public AbstractUndoableEdit placeNewNodeUndoable()
     {
-        assert(m_cursor != m_tree.getRoot());
+        assert(m_cursor != m_mindTree.m_displayTree.getRoot());
         assert(isPlaceholer(m_cursor));
 
         Node parent = m_cursor.getParent();
         int pos = m_cursor.getIndex();
-        String text = m_cursor.getString(sm_textPropName);
+        String text = m_cursor.getString(m_mindTree.sm_textPropName);
 
-        m_tree.removeChild(m_cursor);
+        m_mindTree.m_displayTree.removeChild(m_cursor);
         AbstractUndoableEdit undor =  addChildUndoable(parent, pos, text);
         m_cursor = parent.getChild(pos);
         return  undor;
@@ -396,12 +319,12 @@ public class VisualMindTree extends MindTree {
     //node has only dbId
     public AbstractUndoableEdit placeRefereeUndoable(Object refereeDBId)
     {
-        assert(m_cursor != m_tree.getRoot());
+        assert(m_cursor != m_mindTree.m_displayTree.getRoot());
         assert(isPlaceholer(m_cursor));
 
         Node sourceNode = m_cursor.getParent();
         int pos = m_cursor.getIndex();
-        m_tree.removeChild(m_cursor);
+        m_mindTree.m_displayTree.removeChild(m_cursor);
 
         AbstractUndoableEdit undor = addReferenceUndoable(sourceNode, pos, refereeDBId);
         m_cursor = sourceNode.getChild(pos);
@@ -421,7 +344,7 @@ public class VisualMindTree extends MindTree {
             restoreNodeAndSetCursor(m_dbId, m_nodePath);
         }
         public void redo () {
-            trashNodeAndCursorNext(getNodeByPath(m_nodePath));
+            trashNodeAndCursorNext(m_mindTree.getNodeByPath(m_nodePath));
         }
 
         Object m_dbId;
@@ -439,11 +362,11 @@ public class VisualMindTree extends MindTree {
         public void undo ()
         {
             setCursorByPath(m_nodePath);
-            removeReference(m_refereeDBId, m_pos);
+            m_mindTree.removeReference(m_refereeDBId, m_pos);
         }
         public void redo () {
             setCursorByPath(m_nodePath);
-            addReference(getDBElementId(m_cursor), m_pos, m_refereeDBId);
+            m_mindTree.addReference(m_mindTree.getDBId(m_cursor), m_pos, m_refereeDBId);
         }
 
         Object m_refereeDBId;
@@ -453,18 +376,19 @@ public class VisualMindTree extends MindTree {
     public AbstractUndoableEdit removeCursorUndoable()
     {
         Node parent = m_cursor.getParent();
-        Edge edge = m_tree.getEdge(parent, m_cursor);
-        if (isRefEdge(edge)) {
-            Object refereeDBId =  getDBElementId(m_cursor);
+        Edge edge = m_mindTree.m_displayTree.getEdge(parent, m_cursor);
+        if (m_mindTree.isRefEdge(edge)) {
+            Object refereeDBId = m_mindTree.getDBId(m_cursor);
             int pos = m_cursor.getIndex();
 
-            removeReference(getDBElementId(parent), m_cursor.getIndex());
+            m_mindTree.removeReference(m_mindTree.getDBId(parent), m_cursor.getIndex());
             setCursor(parent);
 
-            return new RemovingReferenceUndoer(getDisplayPath(m_cursor), refereeDBId, pos);
+            return new RemovingReferenceUndoer(m_mindTree.getNodePath(m_cursor), refereeDBId, pos);
         }
         else {
-            RemovingChildUndoer undor = new RemovingChildUndoer(getDisplayPath(m_cursor), getDBElementId(m_cursor));
+            RemovingChildUndoer undor = new RemovingChildUndoer(m_mindTree.getNodePath(m_cursor),
+                    m_mindTree.getDBId(m_cursor));
             trashNodeAndCursorNext(m_cursor);
             return undor;
         }
@@ -476,7 +400,8 @@ public class VisualMindTree extends MindTree {
             newPos = newParent.getChildCount();
         }
 
-        moveChild (getDBElementId(oldParent), oldPos, getDBElementId(newParent), newPos);
+        m_mindTree.moveChild(m_mindTree.getDBId(oldParent), oldPos,
+                m_mindTree.getDBId(newParent), newPos);
         setCursor(newParent.getChild(newPos));
     }
 
@@ -501,8 +426,8 @@ public class VisualMindTree extends MindTree {
 
         private void moveChild(Stack<Integer> oldParentPath, int oldPos, Stack<Integer> newParentPath, int newPos)
         {
-            Node oldParent = getNodeByPath(oldParentPath);
-            Node newParent = getNodeByPath(newParentPath);
+            Node oldParent = m_mindTree.getNodeByPath(oldParentPath);
+            Node newParent = m_mindTree.getNodeByPath(newParentPath);
             moveChildImpl(oldParent, oldPos, newParent, newPos);
         }
 
@@ -514,24 +439,24 @@ public class VisualMindTree extends MindTree {
 
     public AbstractUndoableEdit resetParentUndoable(NodeItem newParentItem)
     {
-        if (m_cursor == m_tree.getRoot()) {
+        if (m_cursor == m_mindTree.m_displayTree.getRoot()) {
             return null;
         }
 
         Node newParent = toSource(newParentItem);
         Node oldParent = m_cursor.getParent();
 
-        if (sameDBNode(newParent, oldParent)) {
+        if (m_mindTree.sameDBNode(newParent, oldParent)) {
             return null;
         }
 
-        DBTree.InheritDirection inheritDirection = getInheritDirection(m_cursor, newParent);
+        DBTree.InheritDirection inheritDirection = m_mindTree.getInheritDirection(m_cursor, newParent);
         if (inheritDirection == DBTree.InheritDirection.LINEAL_DESCENDANT) {
             return null;
         }
 
-        Stack<Integer> oldParentPath = getDisplayPath(oldParent);
-        Stack<Integer> newParentPath = getDisplayPath(newParent);
+        Stack<Integer> oldParentPath = m_mindTree.getNodePath(oldParent);
+        Stack<Integer> newParentPath = m_mindTree.getNodePath(newParent);
         int oldPos = m_cursor.getIndex();
         int newPos = newParent.getChildCount();
 
@@ -548,7 +473,7 @@ public class VisualMindTree extends MindTree {
             NodeItem item = toVisual(m_cursor);
             return ! item.isExpanded();
         } else {
-            return getChildCount(m_cursor) > 0;
+            return m_mindTree.getChildCount(m_cursor) > 0;
         }
     }
 
@@ -571,7 +496,7 @@ public class VisualMindTree extends MindTree {
             final String group = visualItem.getGroup();
 
             //unfold descendants deeply, to the folded descendants
-            m_tree.deepTraverse(node,new Tree.Processor() {
+            m_mindTree.m_displayTree.deepTraverse(node,new Tree.Processor() {
                 public boolean run(Node node, int level) {
 
                     if (node == unfoldTreeRoot) {
@@ -581,7 +506,7 @@ public class VisualMindTree extends MindTree {
                     TableNodeItem visualNode = (TableNodeItem)vis.getVisualItem(group, node);
                     TableEdgeItem visualEdge = (TableEdgeItem)visualNode.getParentEdge();
 
-                    m_logger.info ( "visiableNode " + getText(node));
+                    m_logger.info ( "visiableNode " + m_mindTree.getText(node));
                     PrefuseLib.updateVisible(visualNode, true);
                     PrefuseLib.updateVisible(visualEdge, true);
 
@@ -595,7 +520,7 @@ public class VisualMindTree extends MindTree {
         }
         else // node  is the leaf of prefuse Tree
         {
-            attachChildren(node);
+            m_mindTree.attachChildren(node);
         }
 
         visualItem.setExpanded(true);
@@ -607,7 +532,7 @@ public class VisualMindTree extends MindTree {
         Node node = (Node)visualItem.getSourceTuple();
         final String group = visualItem.getGroup();
 
-        m_logger.info ( "foldNode " + getText(node));
+        m_logger.info ( "foldNode " + m_mindTree.getText(node));
         if (! visualItem.isExpanded())
         {
             return;
@@ -618,7 +543,7 @@ public class VisualMindTree extends MindTree {
         final Node foldTreeRoot = node;
 
         //set descendants unvisible deeply, to the folded descendants
-        m_tree.deepTraverse(node,new Tree.Processor() {
+        m_mindTree.m_displayTree.deepTraverse(node,new Tree.Processor() {
             public boolean run(Node node, int level) {
                 if (node == foldTreeRoot)
                 {
@@ -631,7 +556,7 @@ public class VisualMindTree extends MindTree {
                 PrefuseLib.updateVisible(visualNode, false);
                 PrefuseLib.updateVisible(visualEdge, false);
 
-                String text = getText(node);
+                String text = m_mindTree.getText(node);
 
                 m_logger.info ( "invisiableNode " + text);
                 if (m_foldedNodes.contains(node)) {
@@ -684,7 +609,7 @@ public class VisualMindTree extends MindTree {
 
     public AbstractUndoableEdit toggleFoldCursorUndoable()
     {
-        String text = getText(m_cursor);
+        String text = m_mindTree.getText(m_cursor);
         VisualItem visualItem = toVisual(m_cursor);
         if (m_cursor.getChildCount() == 0)
         {
@@ -705,7 +630,7 @@ public class VisualMindTree extends MindTree {
             }
         }
 
-        return new TogglingFoldUndoer (getDisplayPath(m_cursor), false);
+        return new TogglingFoldUndoer (m_mindTree.getNodePath(m_cursor), false);
     }
 
     class SetPropertyUndoer extends NodeOperatorUndoer
@@ -723,14 +648,14 @@ public class VisualMindTree extends MindTree {
         {
             setCursorByPath(m_nodePath);
             setCursorProperty(m_property, m_oldValue);
-            m_logger.info("nodePath="+ m_nodePath + ",   DBId="+getDBElementId(m_cursor) + ",   oldValue="+m_oldValue);
+            m_logger.info("nodePath="+ m_nodePath + ",   DBId="+m_mindTree.getDBId(m_cursor) + ",   oldValue="+m_oldValue);
         }
 
         public void redo ()
         {
             setCursorByPath(m_nodePath);
             setCursorProperty(m_property, m_newValue);
-            System.out.print("nodePath="+ m_nodePath + ",   DBId="+getDBElementId(m_cursor) + ",   newValue="+m_newValue);
+            System.out.print("nodePath="+ m_nodePath + ",   DBId="+m_mindTree.getDBId(m_cursor) + ",   newValue="+m_newValue);
         }
 
         final String m_property;
@@ -741,19 +666,19 @@ public class VisualMindTree extends MindTree {
     private Object setCursorProperty (String property, Object value)
     {
         Object oldValue = m_cursor.get(property);
-        setNodeProperty(getDBElementId(m_cursor), property, value);
+        m_mindTree.setNodeProperty(m_mindTree.getDBId(m_cursor), property, value);
         return oldValue;
     }
 
     private AbstractUndoableEdit setCursorPropertyUndoable(String property, Object value)
     {
         Object oldValue = setCursorProperty(property, value);
-        return new SetPropertyUndoer(getDisplayPath(m_cursor), property, value, oldValue);
+        return new SetPropertyUndoer(m_mindTree.getNodePath(m_cursor), property, value, oldValue);
     }
 
     public AbstractUndoableEdit setCursorText(String text)
     {
-        return setCursorPropertyUndoable(sm_textPropName, text);
+        return setCursorPropertyUndoable(m_mindTree.sm_textPropName, text);
     }
 
     public boolean cursorIsPlaceholder()
@@ -764,25 +689,9 @@ public class VisualMindTree extends MindTree {
     public void setPlaceholderCursorText(String text)
     {
         assert(isPlaceholer(m_cursor));
-        m_cursor.set(sm_textPropName, text);
+        m_cursor.set(m_mindTree.sm_textPropName, text);
     }
 
     //TODO setFontFamliy setSize setColor
 
-    public boolean isRefEdge (Edge edge)
-    {
-        return DBTree.EdgeType.values()[(Integer)edge.get(sm_edgeTypePropName)] == DBTree.EdgeType.REFERENCE;
-    }
-
-    public int getNodeColor (NodeItem nodeItem)
-    {
-        Node node = toSource(nodeItem);
-
-        if (node == m_cursor)
-            return ColorLib.rgb(255, 0, 0);
-        else if (!isPlaceholer(node) && getDBElementId(node).equals(getDBElementId(m_cursor)))
-            return ColorLib.rgb(255, 255, 0);
-        else
-            return ColorLib.rgb(255, 255, 255);
-    }
 }
