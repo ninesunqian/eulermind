@@ -35,30 +35,41 @@ import prefuse.visual.sort.TreeDepthItemSorter;
  */
 public class MindView extends Display {
 
+    static enum State {NORMAL, LINKING, MOVING};
+
+    final static String sm_editActionName = "edit";
+
+    final static String sm_undoActionName = "undo";
+    final static String sm_redoActionName = "redo";
+
+    final static String sm_addChildActionName = "addChild";
+    final static String sm_addSiblingActionName = "addSibling";
+    final static String sm_addLinkActionName = "addLink";
+    final static String sm_removeActionName = "remove";
+
+    final static String sm_prepareLinkActionName = "prepareLink";
+    final static String sm_prepareMoveActionName = "prepareMove";
+    final static String sm_moveActionName = "move";
+
+    final static String sm_toNormalActionAction = "toNormal";
+
+    final static String sm_cursorLeft = "cursorLeft";
+    final static String sm_cursorRight = "cursorRight";
+    final static String sm_cursorUp = "cursorUp";
+    final static String sm_cursorDown = "cursorDown";
+
     Logger m_logger = Logger.getLogger(this.getClass().getName());
 
-    private MindTree m_mindTree;
-	private MindTreeController m_mindTreeController;
+	final public MindTreeController m_mindTreeController;
+    final public MindTree m_mindTree;
 
 	MindTreeRenderEngine m_renderEngine;
     NodeItem m_clickedNode;
 
-    static enum State {NORMAL, LINKING, MOVING};
+    State m_state = State.NORMAL;
 
     private JList m_prompter = new JList(new DefaultListModel());
     private JScrollPane m_promptScrollPane = new JScrollPane(m_prompter);
-
-    final static String sm_editActionName = "edit";
-    final static String sm_removeActionName = "remove";
-    final static String sm_undoActionName = "undo";
-    final static String sm_redoActionName = "redo";
-    final static String sm_addChildActionName = "addChild";
-    final static String sm_addSiblingActionName = "addSibling";
-    final static String sm_addLinkActionName = "addLink";
-    final static String sm_moveActionName = "move";
-    final static String sm_prepareLinkActionName = "prepareLink";
-    final static String sm_prepareMoveActionName = "prepareMove";
-    final static String sm_toNormalActionAction = "toNormal";
 
     AbstractAction m_removeAction = new SimpleMindTreeAction() {
         @Override
@@ -230,6 +241,10 @@ public class MindView extends Display {
         }
     };
 
+    AbstractAction m_cursorLeftAction = new MovingCursorAction(Direction.LEFT);
+    AbstractAction m_cursorRightAction = new MovingCursorAction(Direction.RIGHT);
+    AbstractAction m_cursorUpAction = new MovingCursorAction(Direction.UP);
+    AbstractAction m_cursorDownAction = new MovingCursorAction(Direction.DOWN);
 
     private void setEnabledAllMindActions(boolean enabled)
     {
@@ -245,8 +260,6 @@ public class MindView extends Display {
             m_mindActionMap.get(key).setEnabled(enabled);
         }
     }
-
-    State m_state = State.NORMAL;
 
     void translate(State newState)
     {
@@ -269,7 +282,6 @@ public class MindView extends Display {
                 setEnabledMindActions(new String []{sm_toNormalActionAction}, true);
                 break;
         }
-
     }
 
 	public MindView(String path, Object rootId) {
@@ -329,7 +341,7 @@ public class MindView extends Display {
 
 				if (m_mindTreeController.isNode(item)) {
                     if (m_state == State.NORMAL) {
-                        m_mindTreeController.setCursor((NodeItem)item);
+                        m_mindTreeController.setCursorNode((NodeItem) item);
                         renderTree();
                     }
 				}
@@ -385,6 +397,11 @@ public class MindView extends Display {
         m_mindActionMap.put(sm_toNormalActionAction, m_toNormalAction);
 
 
+        m_mindActionMap.put(sm_cursorLeft, m_cursorLeftAction);
+        m_mindActionMap.put(sm_cursorRight, m_cursorRightAction);
+        m_mindActionMap.put(sm_cursorUp, m_cursorUpAction);
+        m_mindActionMap.put(sm_cursorDown, m_cursorDownAction);
+
         ActionMap defaultActionMap = getActionMap();
         m_mindActionMap.setParent(defaultActionMap);
         setActionMap(m_mindActionMap);
@@ -400,6 +417,11 @@ public class MindView extends Display {
         inputMap.put(KeyStroke.getKeyStroke("ctrl L"), sm_prepareLinkActionName);
         inputMap.put(KeyStroke.getKeyStroke("ctrl M"), sm_prepareMoveActionName);
         inputMap.put(KeyStroke.getKeyStroke("ESCAPE"), sm_toNormalActionAction);
+
+        inputMap.put(KeyStroke.getKeyStroke("LEFT"), sm_cursorLeft);
+        inputMap.put(KeyStroke.getKeyStroke("RIGHT"), sm_cursorRight);
+        inputMap.put(KeyStroke.getKeyStroke("UP"), sm_cursorUp);
+        inputMap.put(KeyStroke.getKeyStroke("DOWN"), sm_cursorDown);
 	}
 
 	private UndoManager m_undoManager = new UndoManager();
@@ -539,6 +561,36 @@ public class MindView extends Display {
             AbstractUndoableEdit undoer = operateMindTree(e);
             if (undoer != null) {
                 getUndoManager().addEdit(undoer);
+            }
+            renderTree ();
+        }
+    }
+
+    enum Direction {LEFT, RIGHT, UP, DOWN};
+    public class MovingCursorAction extends AbstractAction {
+
+        Direction m_direction;
+        public MovingCursorAction(Direction direction) {
+            m_direction = direction;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            m_logger.info("get a cusor event "  + m_direction);
+            switch (m_direction)
+            {
+                case LEFT:
+                    m_mindTreeController.moveCursorLeft();
+                    break;
+                case RIGHT:
+                    m_mindTreeController.moveCursorRight();
+                    break;
+                case UP:
+                    m_mindTreeController.moveCursorUp();
+                    break;
+                case DOWN:
+                    m_mindTreeController.moveCursorDown();
+                    break;
             }
             renderTree ();
         }

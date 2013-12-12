@@ -15,6 +15,7 @@ import prefuse.action.assignment.StrokeAction;
 import prefuse.activity.Activity;
 import prefuse.activity.ActivityAdapter;
 import prefuse.data.Graph;
+import prefuse.data.Node;
 import prefuse.render.DefaultRendererFactory;
 import prefuse.render.EdgeRenderer;
 import prefuse.render.AbstractShapeRenderer;
@@ -172,23 +173,17 @@ public class MindTreeRenderEngine {
         }
 
         public int getColor(VisualItem item) {
-            /*
-            return m_mindView.getMindTreeController().getNodeColor((NodeItem)item);
+            MindTreeController mindTreeController = m_mindView.m_mindTreeController;
 
-            public int getNodeColor (NodeItem nodeItem)
-            {
-                Node node = toSource(nodeItem);
+            Node node = mindTreeController.toSource((NodeItem)item);
+            Node cursorNode = mindTreeController.getCursorNode();
 
-                if (node == m_cursor)
-                    return ColorLib.rgb(255, 0, 0);
-                else if (!isPlaceholer(node) && getDBId(node).equals(getDBId(m_cursor)))
-                    return ColorLib.rgb(255, 255, 0);
-                else
-                    return ColorLib.rgb(255, 255, 255);
-            }
-            */
-            return ColorLib.rgb(255, 255, 255);
-
+            if (node == cursorNode)
+                return ColorLib.rgb(255, 0, 0);
+            else if (!mindTreeController.isPlaceholer(node) && mindTreeController.m_mindTree.sameDBNode(node,cursorNode))
+                return ColorLib.rgb(255, 255, 0);
+            else
+                return ColorLib.rgb(255, 255, 255);
         }
     }
     

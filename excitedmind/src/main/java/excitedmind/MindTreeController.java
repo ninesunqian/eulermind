@@ -140,10 +140,10 @@ public class MindTreeController {
 
     public void moveCursorDown()
     {
-        m_cursor.moveLeft();
+        m_cursor.moveDown();
     }
 
-    public void setCursor(Node node)
+    public void setCursorNode(Node node)
     {
         m_cursor.setCursorNode(toVisual(node));
     }
@@ -187,12 +187,20 @@ public class MindTreeController {
 
     public NodeItem toVisual (Node node)
     {
-        return (NodeItem) m_vis.getVisualItem(m_treeNodesGroupName, node);
+        if (node instanceof NodeItem) {
+            return  (NodeItem) node;
+        } else {
+            return (NodeItem) m_vis.getVisualItem(m_treeNodesGroupName, node);
+        }
     }
 
     public EdgeItem toVisual (Edge edge)
     {
-        return (EdgeItem) m_vis.getVisualItem(m_treeEdgesGroupName, edge);
+        if (edge instanceof EdgeItem) {
+            return (EdgeItem) edge;
+        } else {
+            return (EdgeItem) m_vis.getVisualItem(m_treeEdgesGroupName, edge);
+        }
     }
 
     public Node toSource (NodeItem nodeItem)
@@ -228,7 +236,7 @@ public class MindTreeController {
         //using node path, compute the removed node in highest level;
         m_mindTree.trashNode(m_mindTree.getDBId(cursorNode.getParent()), cursorNode.getIndex());
 
-        setCursor(newCursor);
+        setCursorNode(newCursor);
     }
 
     private void restoreNodeAndSetCursor (Object dbId, Stack<Integer> nodePath)
@@ -260,7 +268,7 @@ public class MindTreeController {
         Object childDBId = m_mindTree.addChild(m_mindTree.getDBId(parent), pos, text);
 
         Node newNode = parent.getChild(pos);
-        setCursor(newNode);
+        setCursorNode(newNode);
 
         return new AddingChildUndoer(getNodePath(newNode), m_mindTree.getDBId(newNode));
     }
@@ -423,7 +431,7 @@ public class MindTreeController {
             int pos = cursorNode.getIndex();
 
             m_mindTree.removeReference(m_mindTree.getDBId(parent), cursorNode.getIndex());
-            setCursor(parent);
+            setCursorNode(parent);
 
             return new RemovingReferenceUndoer(getNodePath(parent), refereeDBId, pos);
         }
@@ -443,7 +451,7 @@ public class MindTreeController {
 
         m_mindTree.moveChild(m_mindTree.getDBId(oldParent), oldPos,
                 m_mindTree.getDBId(newParent), newPos);
-        setCursor(newParent.getChild(newPos));
+        setCursorNode(newParent.getChild(newPos));
     }
 
     class MovingChildUndoer extends AbstractUndoableEdit {

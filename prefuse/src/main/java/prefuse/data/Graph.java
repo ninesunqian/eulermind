@@ -771,7 +771,7 @@ public class Graph extends CompositeTupleSet {
     public TupleSet getNodes() {
         return getSet(NODES);
     }
-    
+
     /**
      * Get the backing node table.
      * @return the table of node values
@@ -787,7 +787,12 @@ public class Graph extends CompositeTupleSet {
     public int getNodeCount() {
         return getNodeTable().getRowCount();
     }
-    
+
+    public IntIterator getNodes(Predicate filter) {
+        return getNodeTable().rows(filter);
+    }
+
+
     /**
      * Get the Node tuple instance corresponding to a node id.
      * @param n a node id (node table row number)
@@ -924,6 +929,14 @@ public class Graph extends CompositeTupleSet {
      */
     public Table getEdgeTable() {
         return (Table)getSet(EDGES);
+    }
+
+    /**
+     * Get the backing edge table.
+     * @return the table of edge values
+     */
+    public IntIterator getEdges(Predicate filter) {
+        return getEdgeTable().rows(filter);
     }
     /**
      * Get the number of edges in this graph.
