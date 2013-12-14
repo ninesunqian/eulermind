@@ -11,6 +11,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 public class TreeCursor {
@@ -20,8 +21,8 @@ public class TreeCursor {
 
     NodeItem m_currentCursor;
 
-    ArrayList<NodeItem> m_xAxis = new ArrayList<NodeItem>();
-    ArrayList<NodeItem> m_yAxis = new ArrayList<NodeItem>();
+    ArrayList<NodeItem> m_xAxis;
+    ArrayList<NodeItem> m_yAxis;
 
     int m_originXIndex;
     int m_originYIndex;
@@ -33,8 +34,7 @@ public class TreeCursor {
 
     public TreeCursor(VisualTree tree) {
         m_tree = tree;
-        m_originCursor = (NodeItem)tree.getRoot();
-        m_currentCursor = m_originCursor;
+        setCursorNode((NodeItem)tree.getRoot());
     }
 
     public NodeItem getCursorNode()
@@ -44,7 +44,13 @@ public class TreeCursor {
 
     public void setCursorNode(NodeItem node)
     {
-        buildXYAxis(node);
+        m_originCursor = node;
+        m_currentCursor = node;
+
+        //build m_xAxis and m_yAxis by lazy mode.
+        //so we can setCurserNode before layout tree
+        m_xAxis = null;
+        m_yAxis = null;
     }
 
     private void buildXYAxis(NodeItem originCursor)
@@ -52,31 +58,51 @@ public class TreeCursor {
         m_originCursor = originCursor;
         m_currentCursor = originCursor;
 
-        m_xAxis.clear();
-        m_yAxis.clear();
+        m_xAxis = new ArrayList<NodeItem>();
+        m_yAxis = new ArrayList<NodeItem>();
 
         NodeItem root = (NodeItem)m_tree.getRoot();
-        NodeItem node = m_originCursor;
+        NodeItem lefter = m_originCursor;
 
-        while (node != root) {
-            m_xAxis.add(0, node);
-            node = (NodeItem)node.getParent();
+        //add m_originCursor and lefters
+        while (lefter != root) {
+            m_xAxis.add(0, lefter);
+            lefter = (NodeItem)lefter.getParent();
         }
         m_xAxis.add(0, root);
-        //TODO: add right child nodes
 
+        //add righters
+        NodeItem righter = m_originCursor;
+        while (righter.getChildCount() > 0 && righter.isExpanded() == true) {
+            Iterator children = righter.children();
+            NodeItem right = null;
 
+            while (children.hasNext()) {
+                NodeItem child = (NodeItem)children.next();
+
+                if (right == null ||
+                        Math.abs(child.getY() - righter.getY()) < Math.abs(right.getY() - righter.getY())) {
+                    right = child;
+                }
+            }
+            m_xAxis.add(right);
+
+            righter = right;
+        }
+
+        //fill uper and downer
         Table nodeTable = m_tree.getNodeTable();
         IntIterator allRows = nodeTable.rows(new VisiblePredicate());
+        NodeItem upDowner;
 
         while (allRows.hasNext()) {
             int row = allRows.nextInt();
-            node = (NodeItem) m_tree.getNode(row);
-            if (overlayInXAxis(node, m_originCursor) || node.isExpanded() == false) {
-                if (overlayInXAxis(node, m_originCursor)) {
-                    m_logger.info(m_originCursor.getString("text") + ": overlay node: " + node.getString("text"));
+            upDowner = (NodeItem) m_tree.getNode(row);
+            if (overlayInXAxis(upDowner, m_originCursor) || upDowner.isExpanded() == false) {
+                if (overlayInXAxis(upDowner, m_originCursor)) {
+                    m_logger.fine(m_originCursor.getString("text") + ": overlay upDowner: " + upDowner.getString("text"));
                 }
-                m_yAxis.add(node);
+                m_yAxis.add(upDowner);
             }
         }
 
@@ -115,7 +141,7 @@ public class TreeCursor {
 
     public NodeItem moveLeft()
     {
-        if (m_currentYIndex != m_originYIndex) {
+        if (m_xAxis == null || m_currentYIndex != m_originYIndex) {
             buildXYAxis(m_currentCursor);
         }
 
@@ -130,7 +156,7 @@ public class TreeCursor {
 
     public NodeItem moveRight()
     {
-        if (m_currentYIndex != m_originYIndex) {
+        if (m_xAxis == null || m_currentYIndex != m_originYIndex) {
             buildXYAxis(m_currentCursor);
         }
 
@@ -145,7 +171,7 @@ public class TreeCursor {
 
     public NodeItem moveUp()
     {
-        if (m_currentXIndex != m_originXIndex) {
+        if (m_xAxis == null || m_currentXIndex != m_originXIndex) {
             buildXYAxis(m_currentCursor);
         }
         if (m_currentYIndex > 0) {
@@ -158,7 +184,7 @@ public class TreeCursor {
 
     public NodeItem moveDown()
     {
-        if (m_currentXIndex != m_originXIndex) {
+        if (m_xAxis == null || m_currentXIndex != m_originXIndex) {
             buildXYAxis(m_currentCursor);
         }
 
