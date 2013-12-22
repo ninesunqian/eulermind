@@ -15,7 +15,7 @@
 
     <properties>
         <orient_ver>1.5.0</orient_ver>
-        <libdir>${project.basedir}/../lib</libdir>
+        <libdir>${project.basedir}/lib</libdir>
         <jar.manifest.mainclass>excitedmind.Mindmap</jar.manifest.mainclass>
     </properties>
 
@@ -23,53 +23,61 @@
 
         <dependency>
             <groupId>${project.groupId}</groupId>
-			<artifactId>prefuse</artifactId>
+            <artifactId>prefuse</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-			<groupId>com.tinkerpop.blueprints</groupId>
-			<artifactId>blueprints-core</artifactId>
-			<version>2.4.0</version>
+            <groupId>com.tinkerpop.blueprints</groupId>
+            <artifactId>blueprints-core</artifactId>
+            <version>2.4.0</version>
         </dependency>
 
         <dependency>
-			<groupId>com.tinkerpop.blueprints</groupId>
-			<artifactId>blueprints-orient-graph</artifactId>
-			<version>2.4.0</version>
+            <groupId>com.tinkerpop.blueprints</groupId>
+            <artifactId>blueprints-orient-graph</artifactId>
+            <version>2.4.0</version>
         </dependency>
 
         <!--
-		<dependency>
-			<groupId>com.orientechnologies</groupId>
-			<artifactId>orientdb-server</artifactId>
-			<version>${orient_ver}</version>
-		</dependency>
+        <dependency>
+            <groupId>com.orientechnologies</groupId>
+            <artifactId>orientdb-server</artifactId>
+            <version>${orient_ver}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>com.orientechnologies</groupId>
-			<artifactId>orientdb-enterprise</artifactId>
-			<version>${orient_ver}</version>
-		</dependency>
+        <dependency>
+            <groupId>com.orientechnologies</groupId>
+            <artifactId>orientdb-enterprise</artifactId>
+            <version>${orient_ver}</version>
+        </dependency>
         -->
 
-		<dependency>
-			<groupId>com.orientechnologies</groupId>
-			<artifactId>orientdb-tools</artifactId>
-			<version>${orient_ver}</version>
-		</dependency>
+        <dependency>
+            <groupId>com.orientechnologies</groupId>
+            <artifactId>orientdb-tools</artifactId>
+            <version>${orient_ver}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>com.orientechnologies</groupId>
-			<artifactId>orient-commons</artifactId>
-			<version>${orient_ver}</version>
-		</dependency>
+        <dependency>
+            <groupId>com.orientechnologies</groupId>
+            <artifactId>orient-commons</artifactId>
+            <version>${orient_ver}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>com.orientechnologies</groupId>
-			<artifactId>orientdb-core</artifactId>
-			<version>${orient_ver}</version>
-		</dependency>
+        <dependency>
+            <groupId>com.orientechnologies</groupId>
+            <artifactId>orientdb-core</artifactId>
+            <version>${orient_ver}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.smc</groupId>
+            <artifactId>smc</artifactId>
+            <version>6.3.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/statemap.jar</systemPath>
+        </dependency>
 
     </dependencies>
 
@@ -84,6 +92,52 @@
                     <target>1.6</target>
                 </configuration>
             </plugin>
+            <!-- the smc plugin does not support new smc version
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>smc-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>smc</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <verbose>true</verbose>
+                    <sync>true</sync>
+                </configuration>
+            </plugin>
+            -->
+
+            <plugin>
+                <artifactId>exec-maven-plugin</artifactId>
+                <groupId>org.codehaus.mojo</groupId>
+
+                <configuration>
+                    <executions>
+                        <execution>
+                            <id>smc</id>
+                            <phase>generate-sources</phase>
+                            <goals>
+                                <goal>exec</goal>
+                            </goals>
+                            <configuration>
+                                <executable>java</executable>
+                                <arguments>
+                                    <argument>-jar</argument>
+                                    <argument>${basedir}/tools/smc.jar</argument>
+                                    <argument>-java</argument>
+                                    <argument>-d</argument>
+                                    <argument>${project.build.sourceDirectory}/excitedmind/</argument>
+                                    <argument>${project.build.sourceDirectory}/../smc/MindViewFSM.sm</argument>
+                                </arguments>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 

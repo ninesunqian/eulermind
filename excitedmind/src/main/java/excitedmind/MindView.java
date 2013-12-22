@@ -327,6 +327,18 @@ public class MindView extends Display {
         m_renderEngine.run(runAfterRePaint);
     }
 
+    //TODO
+    NodeItem m_enteredNode = null;
+    Timer m_setCursorTimer = new Timer(1000, new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            if (m_state == State.NORMAL) {
+                m_mindTreeController.setCursorNode((NodeItem) m_enteredNode);
+                renderTree();
+            }
+        }
+    });
+
 	private void setMouseControlListener() {
 		addControlListener(new ZoomToFitControl());
 		addControlListener(new ZoomControl());
@@ -341,11 +353,14 @@ public class MindView extends Display {
 
 				if (m_mindTreeController.isNode(item)) {
                     if (m_state == State.NORMAL) {
-                        m_mindTreeController.setCursorNode((NodeItem) item);
-                        renderTree();
+                        m_setCursorTimer.start();
                     }
 				}
 			}
+
+            public void itemExited(VisualItem item, MouseEvent e) {
+                m_setCursorTimer.stop();
+            }
 
 			public void itemClicked(VisualItem item, MouseEvent e) {
                 if (isEditing()) {
@@ -353,6 +368,7 @@ public class MindView extends Display {
                 }
 
                 m_logger.info("mouse Clicked");
+                m_setCursorTimer.stop();
 
 				if (m_mindTreeController.isNode(item)) {
                     m_clickedNode = (NodeItem)item;
