@@ -1,0 +1,76 @@
+%{
+%}
+
+%class MindView
+%package excitedmind
+%fsmclass MindViewFSM
+
+%start MindViewStateMap::Normal
+
+%map MindViewStateMap
+%%
+
+Normal
+{
+    Edit
+        Editing
+        {
+
+        }
+
+    Insert
+        Inserting
+        {
+
+        }
+
+    Move
+        Moving
+        {
+
+        }
+
+    Highlight
+        Highlighting
+        {
+
+        }
+}
+
+Editing
+{
+    Stop
+        Normal
+        {
+
+        }
+}
+
+Inserting
+{
+    Stop
+        Normal
+        {
+
+        }
+}
+
+Moving
+{
+    Stop
+        Normal
+        {
+
+        }
+}
+
+Highlighting
+{
+    Stop
+        Normal
+        {
+
+        }
+}
+
+%%

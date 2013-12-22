@@ -68,6 +68,8 @@ public class MindView extends Display {
 
     State m_state = State.NORMAL;
 
+    private MindViewFSM m_fsm;
+
     private JList m_prompter = new JList(new DefaultListModel());
     private JScrollPane m_promptScrollPane = new JScrollPane(m_prompter);
 
@@ -312,6 +314,8 @@ public class MindView extends Display {
 		setKeyControlListener();
 
 		renderTree();
+
+        m_fsm = new MindViewFSM(this);
 	}
 
     public JList getPromptJList()
