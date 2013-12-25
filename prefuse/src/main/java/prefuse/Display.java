@@ -2124,11 +2124,14 @@ public class Display extends JComponent {
      * editText() methods which include a VisualItem as an argument was called),
      * the item is updated with the edited text.
      */
-    public void stopEditing() {
+    public void stopEditing(boolean confirm) {
         m_editor.setVisible(false);
         if ( m_editItem != null ) {
             String txt = m_editor.getText();
-            m_editItem.set(m_editAttribute, txt);
+            if (confirm) {
+                m_editItem.set(m_editAttribute, txt);
+            }
+
             m_editItem = null;
             m_editAttribute = null;
             m_editor.setBackground(null);

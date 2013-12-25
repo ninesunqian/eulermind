@@ -12,26 +12,26 @@
 
 Normal
 {
-    Edit
+    StartEditing
         Editing
         {
 
         }
 
-    Insert
+    StartInserting
         Inserting
         {
 
         }
 
-    Move
+    StartMoving
         Moving
         {
 
         }
 
-    Highlight
-        Highlighting
+    StartRefocusing
+        Refocusing
         {
 
         }
@@ -39,37 +39,37 @@ Normal
 
 Editing
 {
-    Stop
+    StopEditing(confirm: boolean)
         Normal
         {
-
+            _owner.stopEditing(confirm)
         }
 }
 
 Inserting
 {
-    Stop
+    StopInserting(confirm: boolean)
         Normal
         {
-
+            _owner.stopInserting(confirm)
         }
 }
 
 Moving
 {
-    Stop
+    StopMoving(confirm: boolean)
         Normal
         {
-
+            _owner.stopMoving(confirm)
         }
 }
 
-Highlighting
+Refocusing
 {
     Stop
-        Normal
+        Normal(confirm: boolean)
         {
-
+            _owner.stopRefocusing(confirm)
         }
 }
 

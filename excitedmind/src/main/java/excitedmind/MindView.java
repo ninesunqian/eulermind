@@ -70,8 +70,7 @@ public class MindView extends Display {
 
     private MindViewFSM m_fsm;
 
-    private JList m_prompter = new JList(new DefaultListModel());
-    private JScrollPane m_promptScrollPane = new JScrollPane(m_prompter);
+    private MindPrompter m_prompter;
 
     AbstractAction m_removeAction = new SimpleMindTreeAction() {
         @Override
@@ -196,8 +195,8 @@ public class MindView extends Display {
 
             m_prompter.removeMouseListener(this);
 
-            int idx = m_prompter.getSelectedIndex();
-            QueriedNode selected = m_queriedNodes.get(idx);
+            int selectedIndex = m_prompter.getSelectedIndex();
+            MindPrompter.PromptedNode selected = m_prompter.getPromptedNode(selectedIndex);
 
             stopEditing();
 
@@ -301,14 +300,7 @@ public class MindView extends Display {
         setItemSorter(new TreeDepthItemSorter());
         m_renderEngine = new MindTreeRenderEngine(this, treeGroup);
 
-        m_promptScrollPane.setVisible(false);
-        add(m_promptScrollPane);
-
-        m_prompter.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        m_prompter.setLayoutOrientation(JList.VERTICAL);
-        m_prompter.setPrototypeCellValue("WWW");
-        m_prompter.setVisibleRowCount(8);
-
+        m_prompter = new MindPrompter(this, m_mindTree.m_dbTree);
 
 		setMouseControlListener();
 		setKeyControlListener();
@@ -317,11 +309,6 @@ public class MindView extends Display {
 
         m_fsm = new MindViewFSM(this);
 	}
-
-    public JList getPromptJList()
-    {
-        return m_prompter;
-    }
 
 	public void renderTree() {
 		m_renderEngine.run(null);
@@ -458,118 +445,23 @@ public class MindView extends Display {
     public void editText(String txt, Rectangle r) {
         super.editText(txt, r);
         JTextComponent editor = getTextEditor();
-        editor.getDocument().addDocumentListener(m_editTextListener);
         editor.addKeyListener(m_editorKeyListener);
 
         if (m_mindTreeController.cursorIsPlaceholder()) {
-            m_promptScrollPane.setLocation(editor.getX(), editor.getY()+editor.getHeight());
-            m_promptScrollPane.setSize(100, 100);
-            m_promptScrollPane.setVisible(true);
+            m_prompter.show(editor);
             m_prompter.addMouseListener(m_prompterMouseListener);
         }
-
     }
 
     @Override
-    public void stopEditing() {
+    public void stopEditing(boolean updateNode) {
         m_prompter.removeMouseListener(m_prompterMouseListener);
         getTextEditor().removeKeyListener(m_editorKeyListener);
 
-        super.stopEditing();
+        super.stopEditing(updateNode);
 
-        m_promptScrollPane.setVisible(false);
-        m_queriedNodes.clear();
-        DefaultListModel listModel = (DefaultListModel) m_prompter.getModel();
-        listModel.clear();
-
-        JTextComponent editor = getTextEditor();
-        editor.getDocument().removeDocumentListener(m_editTextListener);
+        m_prompter.hide();
     }
-
-    public class QueriedNode {
-        public Object m_dbId;
-        public String m_text;
-        public Object m_parentDBId;
-        public String m_parentText;
-
-        QueriedNode (Vertex vertex)
-        {
-            m_dbId = vertex.getId();
-            m_text = vertex.getProperty(MindTree.sm_textPropName);
-
-            DBTree.EdgeVertex edgeVertex = m_mindTreeController.m_mindTree.m_dbTree.getParent(vertex);
-            m_parentDBId = edgeVertex.m_vertex.getId();
-            m_parentText = edgeVertex.m_vertex.getProperty(MindTree.sm_textPropName);
-        }
-    }
-
-    public ArrayList<QueriedNode> m_queriedNodes = new ArrayList<QueriedNode>();
-
-    class QueryWorker extends SwingWorker<Boolean, QueriedNode>
-    {
-        @Override
-        protected Boolean doInBackground() {
-            ((DefaultListModel) m_prompter.getModel()).removeAllElements();
-
-            String inputed = getTextEditor().getText();
-
-            m_logger.info("query vertex: " + inputed);
-
-            for (Vertex vertex : m_mindTreeController.m_mindTree.m_dbTree.getVertices(MindTree.sm_textPropName, inputed)) {
-                QueriedNode queriedNode = new QueriedNode(vertex);
-                publish(queriedNode);
-                m_queriedNodes.add(queriedNode);
-
-                if (isCancelled()) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        @Override
-        protected void process(List<QueriedNode> queriedNodes) {
-            DefaultListModel listModel = (DefaultListModel) m_prompter.getModel();
-
-            for (QueriedNode queriedNode : queriedNodes) {
-                m_logger.info("get queriedNode " + queriedNode.m_dbId);
-                listModel.addElement(queriedNode.m_parentText + " -> " + queriedNode.m_text);
-            }
-        }
-    };
-
-    SwingWorker<Boolean, QueriedNode> m_queryWorker;
-
-    DocumentListener m_editTextListener = new DocumentListener() {
-
-        private void restartQueryWorker()
-        {
-            if (m_queryWorker != null) {
-                m_queryWorker.cancel(true);
-            }
-
-            m_queryWorker = new QueryWorker();
-            m_queryWorker.execute();
-        }
-
-        @Override
-        public void insertUpdate(DocumentEvent documentEvent) {
-            m_logger.info("insert update");
-            restartQueryWorker();
-        }
-
-        @Override
-        public void removeUpdate(DocumentEvent documentEvent) {
-            m_logger.info("remove update");
-            restartQueryWorker();
-        }
-
-        @Override
-        public void changedUpdate(DocumentEvent documentEvent) {
-            //do nothing
-        }
-    };
 
     public abstract class SimpleMindTreeAction extends AbstractAction {
 
@@ -615,5 +507,46 @@ public class MindView extends Display {
             renderTree ();
         }
     }
+
+    public void startEditing()
+    {
+
+    }
+
+    public void stopEditing(boolean confirm)
+    {
+
+    }
+
+    public void startInserting()
+    {
+
+    }
+
+    public void stopInserting(boolean confirm)
+    {
+
+    }
+
+    public void startMoving()
+    {
+
+    }
+
+    public void stopMoving(boolean confirm)
+    {
+
+    }
+
+    public void startRefocusing()
+    {
+
+    }
+
+    public void stopRefocusing(boolean confirm)
+    {
+
+    }
+
 
 } // end of class TreeMap
