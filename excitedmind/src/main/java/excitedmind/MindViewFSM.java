@@ -37,42 +37,66 @@ public class MindViewFSM
         return;
     }
 
-    public void Edit()
+    public void StartEditing()
     {
-        _transition = "Edit";
-        getState().Edit(this);
+        _transition = "StartEditing";
+        getState().StartEditing(this);
         _transition = "";
         return;
     }
 
-    public void Highlight()
+    public void StartInserting()
     {
-        _transition = "Highlight";
-        getState().Highlight(this);
+        _transition = "StartInserting";
+        getState().StartInserting(this);
         _transition = "";
         return;
     }
 
-    public void Insert()
+    public void StartMoving()
     {
-        _transition = "Insert";
-        getState().Insert(this);
+        _transition = "StartMoving";
+        getState().StartMoving(this);
         _transition = "";
         return;
     }
 
-    public void Move()
+    public void StartRefocusing()
     {
-        _transition = "Move";
-        getState().Move(this);
+        _transition = "StartRefocusing";
+        getState().StartRefocusing(this);
         _transition = "";
         return;
     }
 
-    public void Stop()
+    public void StopEditing(boolean confirm)
     {
-        _transition = "Stop";
-        getState().Stop(this);
+        _transition = "StopEditing";
+        getState().StopEditing(this, confirm);
+        _transition = "";
+        return;
+    }
+
+    public void StopInserting(boolean confirm)
+    {
+        _transition = "StopInserting";
+        getState().StopInserting(this, confirm);
+        _transition = "";
+        return;
+    }
+
+    public void StopMoving(boolean confirm)
+    {
+        _transition = "StopMoving";
+        getState().StopMoving(this, confirm);
+        _transition = "";
+        return;
+    }
+
+    public void StopRefocusing(boolean confirm)
+    {
+        _transition = "StopRefocusing";
+        getState().StopRefocusing(this, confirm);
         _transition = "";
         return;
     }
@@ -141,27 +165,42 @@ public class MindViewFSM
         protected void entry(MindViewFSM context) {}
         protected void exit(MindViewFSM context) {}
 
-        protected void Edit(MindViewFSM context)
+        protected void StartEditing(MindViewFSM context)
         {
             Default(context);
         }
 
-        protected void Highlight(MindViewFSM context)
+        protected void StartInserting(MindViewFSM context)
         {
             Default(context);
         }
 
-        protected void Insert(MindViewFSM context)
+        protected void StartMoving(MindViewFSM context)
         {
             Default(context);
         }
 
-        protected void Move(MindViewFSM context)
+        protected void StartRefocusing(MindViewFSM context)
         {
             Default(context);
         }
 
-        protected void Stop(MindViewFSM context)
+        protected void StopEditing(MindViewFSM context, boolean confirm)
+        {
+            Default(context);
+        }
+
+        protected void StopInserting(MindViewFSM context, boolean confirm)
+        {
+            Default(context);
+        }
+
+        protected void StopMoving(MindViewFSM context, boolean confirm)
+        {
+            Default(context);
+        }
+
+        protected void StopRefocusing(MindViewFSM context, boolean confirm)
         {
             Default(context);
         }
@@ -203,8 +242,8 @@ public class MindViewFSM
             new MindViewStateMap_Inserting("MindViewStateMap.Inserting", 2);
         public static final MindViewStateMap_Moving Moving =
             new MindViewStateMap_Moving("MindViewStateMap.Moving", 3);
-        public static final MindViewStateMap_Highlighting Highlighting =
-            new MindViewStateMap_Highlighting("MindViewStateMap.Highlighting", 4);
+        public static final MindViewStateMap_Refocusing Refocusing =
+            new MindViewStateMap_Refocusing("MindViewStateMap.Refocusing", 4);
     }
 
     protected static class MindViewStateMap_Default
@@ -243,7 +282,7 @@ public class MindViewFSM
         }
 
         @Override
-        protected void Edit(MindViewFSM context)
+        protected void StartEditing(MindViewFSM context)
         {
 
             (context.getState()).exit(context);
@@ -253,31 +292,40 @@ public class MindViewFSM
         }
 
         @Override
-        protected void Highlight(MindViewFSM context)
+        protected void StartInserting(MindViewFSM context)
         {
 
-            (context.getState()).exit(context);
-            context.setState(MindViewStateMap.Highlighting);
-            (context.getState()).entry(context);
+            if ( a== 1 && b==0)
+            {
+                (context.getState()).exit(context);
+                // No actions.
+                context.setState(MindViewStateMap.Inserting);
+                (context.getState()).entry(context);
+            }
+            else
+            {
+                super.StartInserting(context);
+            }
+
             return;
         }
 
         @Override
-        protected void Insert(MindViewFSM context)
-        {
-
-            (context.getState()).exit(context);
-            context.setState(MindViewStateMap.Inserting);
-            (context.getState()).entry(context);
-            return;
-        }
-
-        @Override
-        protected void Move(MindViewFSM context)
+        protected void StartMoving(MindViewFSM context)
         {
 
             (context.getState()).exit(context);
             context.setState(MindViewStateMap.Moving);
+            (context.getState()).entry(context);
+            return;
+        }
+
+        @Override
+        protected void StartRefocusing(MindViewFSM context)
+        {
+
+            (context.getState()).exit(context);
+            context.setState(MindViewStateMap.Refocusing);
             (context.getState()).entry(context);
             return;
         }
@@ -306,12 +354,22 @@ public class MindViewFSM
         }
 
         @Override
-        protected void Stop(MindViewFSM context)
+        protected void StopEditing(MindViewFSM context, boolean confirm)
         {
+            MindView ctxt = context.getOwner();
 
             (context.getState()).exit(context);
-            context.setState(MindViewStateMap.Normal);
-            (context.getState()).entry(context);
+            context.clearState();
+            try
+            {
+                ctxt._owner.stopEditing(confirm);
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Normal);
+                (context.getState()).entry(context);
+            }
+
             return;
         }
 
@@ -339,12 +397,22 @@ public class MindViewFSM
         }
 
         @Override
-        protected void Stop(MindViewFSM context)
+        protected void StopInserting(MindViewFSM context, boolean confirm)
         {
+            MindView ctxt = context.getOwner();
 
             (context.getState()).exit(context);
-            context.setState(MindViewStateMap.Normal);
-            (context.getState()).entry(context);
+            context.clearState();
+            try
+            {
+                ctxt._owner.stopInserting(confirm);
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Normal);
+                (context.getState()).entry(context);
+            }
+
             return;
         }
 
@@ -372,12 +440,22 @@ public class MindViewFSM
         }
 
         @Override
-        protected void Stop(MindViewFSM context)
+        protected void StopMoving(MindViewFSM context, boolean confirm)
         {
+            MindView ctxt = context.getOwner();
 
             (context.getState()).exit(context);
-            context.setState(MindViewStateMap.Normal);
-            (context.getState()).entry(context);
+            context.clearState();
+            try
+            {
+                ctxt._owner.stopMoving(confirm);
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Normal);
+                (context.getState()).entry(context);
+            }
+
             return;
         }
 
@@ -392,25 +470,35 @@ public class MindViewFSM
         private static final long serialVersionUID = 1L;
     }
 
-    private static final class MindViewStateMap_Highlighting
+    private static final class MindViewStateMap_Refocusing
         extends MindViewStateMap_Default
     {
     //-------------------------------------------------------
     // Member methods.
     //
 
-        private MindViewStateMap_Highlighting(String name, int id)
+        private MindViewStateMap_Refocusing(String name, int id)
         {
             super (name, id);
         }
 
         @Override
-        protected void Stop(MindViewFSM context)
+        protected void StopRefocusing(MindViewFSM context, boolean confirm)
         {
+            MindView ctxt = context.getOwner();
 
             (context.getState()).exit(context);
-            context.setState(MindViewStateMap.Normal);
-            (context.getState()).entry(context);
+            context.clearState();
+            try
+            {
+                ctxt._owner.stopRefocusing(confirm);
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Normal);
+                (context.getState()).entry(context);
+            }
+
             return;
         }
 

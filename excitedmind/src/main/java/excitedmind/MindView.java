@@ -106,42 +106,14 @@ public class MindView extends Display {
         @Override
         public void actionPerformed(ActionEvent e) {
 
-            if (m_mindTreeController.cursorIsFolded()) {
-                getUndoManager().addEdit(m_mindTreeController.toggleFoldCursorUndoable());
-            }
-
-            m_mindTreeController.addPlaceholder(true);
-            renderTree(new Runnable() {
-                @Override
-                public void run() {
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            m_editAction.actionPerformed(null);
-                        }
-                    });
-                }
-            });
-            /*
-            try {
-                //TODO renderer tree and display editor thread sync
-                Thread.sleep(10);
-            } catch (InterruptedException e1) {
-                e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            }
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    m_editAction.actionPerformed(null);
-                }
-            });
-            */
+            //TODO translate to Inserting
         }
     };
 
     public AbstractAction m_addSiblingAction = new AbstractAction() {
+        //TODO translate to Inserting
+        //TODO add argument addchild or add sibling
 
-        //TODO:
         @Override
         public void actionPerformed(ActionEvent e) {
 
@@ -149,20 +121,7 @@ public class MindView extends Display {
                 return;
             }
 
-            m_mindTreeController.addPlaceholder(false);
-            renderTree();
-            try {
-                //TODO renderer tree and display editor thread sync
-                Thread.sleep(10);
-            } catch (InterruptedException e1) {
-                e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            }
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    m_editAction.actionPerformed(null);
-                }
-            });
+            //TODO: translate to Inserting
         }
     };
 
@@ -518,9 +477,33 @@ public class MindView extends Display {
 
     }
 
-    public void startInserting()
+    public void startInserting(boolean asChild)
     {
+        if (asChild) {
+            if (m_mindTreeController.cursorIsFolded()) {
+                getUndoManager().addEdit(m_mindTreeController.toggleFoldCursorUndoable());
+            }
+        } else {
+            //TODO: if addSibling this is a add grant before , or add it before translate state
+            if (m_mindTreeController.getCursorNode() == m_mindTreeController.getRoot()) {
+                assert(false);
+                return;
+            }
+        }
 
+        m_mindTreeController.addPlaceholder(asChild);
+        renderTree(new Runnable() {
+            @Override
+            public void run() {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        //TODO: display editor, but not translate to EDITING
+                        m_editAction.actionPerformed(null);
+                    }
+                });
+            }
+        });
     }
 
     public void stopInserting(boolean confirm)

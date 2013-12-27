@@ -19,6 +19,7 @@ Normal
         }
 
     StartInserting
+    [ a== 1 && b==0]
         Inserting
         {
 
@@ -42,7 +43,7 @@ Editing
     StopEditing(confirm: boolean)
         Normal
         {
-            _owner.stopEditing(confirm)
+            _owner.stopEditing(confirm);
         }
 }
 
@@ -51,7 +52,7 @@ Inserting
     StopInserting(confirm: boolean)
         Normal
         {
-            _owner.stopInserting(confirm)
+            _owner.stopInserting(confirm);
         }
 }
 
@@ -60,16 +61,16 @@ Moving
     StopMoving(confirm: boolean)
         Normal
         {
-            _owner.stopMoving(confirm)
+            _owner.stopMoving(confirm);
         }
 }
 
 Refocusing
 {
-    Stop
-        Normal(confirm: boolean)
+    StopRefocusing(confirm: boolean)
+        Normal
         {
-            _owner.stopRefocusing(confirm)
+            _owner.stopRefocusing(confirm);
         }
 }
 
