@@ -2140,6 +2140,10 @@ public class Display extends JComponent {
         m_editing = false;
     }
 
+    public void stopEditing() {
+        stopEditing(true);
+    }
+
     public boolean isEditing() {
         return m_editing;
     }

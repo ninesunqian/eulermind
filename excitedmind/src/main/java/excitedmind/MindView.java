@@ -110,6 +110,11 @@ public class MindView extends Display {
         }
     };
 
+    public void alert(String msg)
+    {
+        JOptionPane.showMessageDialog(null, msg);
+    }
+
     public AbstractAction m_addSiblingAction = new AbstractAction() {
         //TODO translate to Inserting
         //TODO add argument addchild or add sibling
@@ -118,6 +123,7 @@ public class MindView extends Display {
         public void actionPerformed(ActionEvent e) {
 
             if (m_mindTreeController.getCursorNode() == m_mindTreeController.getRoot()) {
+                alert("you must open the root parent");
                 return;
             }
 
@@ -157,7 +163,7 @@ public class MindView extends Display {
             int selectedIndex = m_prompter.getSelectedIndex();
             MindPrompter.PromptedNode selected = m_prompter.getPromptedNode(selectedIndex);
 
-            stopEditing();
+            super.stopEditing(true);
 
             AbstractUndoableEdit undoer = m_mindTreeController.placeRefereeUndoable(selected.m_dbId);
             getUndoManager().addEdit(undoer);
@@ -165,7 +171,33 @@ public class MindView extends Display {
         }
     };
 
-    KeyListener m_editorKeyListener = new KeyAdapter() {
+    KeyListener m_editorKeyListenerForEditing = new KeyAdapter() {
+
+        @Override
+        public void keyPressed(KeyEvent e)
+        {
+            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                String text = getTextEditor().getText();
+
+                //stopEditing will set text of cursor
+                stopEditing(false);
+
+                AbstractUndoableEdit undoer;
+
+                undoer = m_mindTreeController.setCursorText(text);
+                m_undoManager.addEdit(undoer);
+
+                getTextEditor().removeKeyListener(this);
+                renderTree();
+            }
+            else if (e.getKeyCode() == KeyEvent.VK_ESCAPE)  {
+                //TODO
+
+            }
+        }
+    };
+
+    KeyListener m_editorKeyListenerForInserting = new KeyAdapter() {
 
         @Override
         public void keyPressed(KeyEvent e) {
@@ -178,26 +210,17 @@ public class MindView extends Display {
 
                 AbstractUndoableEdit undoer;
 
-                if (m_mindTreeController.isPlaceholer(m_mindTreeController.getCursorNode())) {
-                    m_mindTreeController.setPlaceholderCursorText(text);
-                    undoer = m_mindTreeController.placeNewNodeUndoable();
-                } else {
-                    undoer = m_mindTreeController.setCursorText(text);
-                }
+                m_mindTreeController.setPlaceholderCursorText(text);
+                undoer = m_mindTreeController.placeNewNodeUndoable();
 
                 m_undoManager.addEdit(undoer);
 
                 getTextEditor().removeKeyListener(this);
-
                 renderTree();
             }
-        }
-    };
-
-    AbstractAction m_editAction =  new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            editText(m_mindTreeController.toVisual(m_mindTreeController.getCursorNode()), MindTree.sm_textPropName) ;
+            else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                //TODO
+            }
         }
     };
 
@@ -412,8 +435,7 @@ public class MindView extends Display {
         }
     }
 
-    @Override
-    public void stopEditing(boolean updateNode) {
+    public void stopEditing() {
         m_prompter.removeMouseListener(m_prompterMouseListener);
         getTextEditor().removeKeyListener(m_editorKeyListener);
 
@@ -469,7 +491,10 @@ public class MindView extends Display {
 
     public void startEditing()
     {
+        editText(m_mindTreeController.toVisual(m_mindTreeController.getCursorNode()), MindTree.sm_textPropName) ;
 
+        JTextComponent editor = getTextEditor();
+        editor.addKeyListener(m_editorKeyListenerForEditing);
     }
 
     public void stopEditing(boolean confirm)
@@ -484,7 +509,6 @@ public class MindView extends Display {
                 getUndoManager().addEdit(m_mindTreeController.toggleFoldCursorUndoable());
             }
         } else {
-            //TODO: if addSibling this is a add grant before , or add it before translate state
             if (m_mindTreeController.getCursorNode() == m_mindTreeController.getRoot()) {
                 assert(false);
                 return;
@@ -499,7 +523,13 @@ public class MindView extends Display {
                     @Override
                     public void run() {
                         //TODO: display editor, but not translate to EDITING
-                        m_editAction.actionPerformed(null);
+                        editText(m_mindTreeController.toVisual(m_mindTreeController.getCursorNode()), MindTree.sm_textPropName) ;
+
+                        JTextComponent editor = getTextEditor();
+                        editor.addKeyListener(m_editorKeyListenerForInserting);
+
+                        m_prompter.show(editor);
+                        m_prompter.addMouseListener(m_prompterMouseListener);
                     }
                 });
             }
