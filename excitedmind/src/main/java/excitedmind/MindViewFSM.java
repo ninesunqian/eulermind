@@ -86,18 +86,10 @@ public class MindViewFSM
         return;
     }
 
-    public void ok(NodeItem newParent)
+    public void ok(NodeItem nodeItem)
     {
         _transition = "ok";
-        getState().ok(this, newParent);
-        _transition = "";
-        return;
-    }
-
-    public void ok(NodeItem target)
-    {
-        _transition = "ok";
-        getState().ok(this, target);
+        getState().ok(this, nodeItem);
         _transition = "";
         return;
     }
@@ -260,12 +252,7 @@ public class MindViewFSM
             Default(context);
         }
 
-        protected void ok(MindViewFSM context, NodeItem newParent)
-        {
-            Default(context);
-        }
-
-        protected void ok(MindViewFSM context, NodeItem target)
+        protected void ok(MindViewFSM context, NodeItem nodeItem)
         {
             Default(context);
         }
@@ -561,20 +548,10 @@ public class MindViewFSM
         @Override
         protected void startLinking(MindViewFSM context)
         {
-            MindView ctxt = context.getOwner();
 
             (context.getState()).exit(context);
-            context.clearState();
-            try
-            {
-                ctxt.startLinking();
-            }
-            finally
-            {
-                context.setState(MindViewStateMap.Moving);
-                (context.getState()).entry(context);
-            }
-
+            context.setState(MindViewStateMap.Moving);
+            (context.getState()).entry(context);
             return;
         }
 
@@ -698,7 +675,7 @@ public class MindViewFSM
             context.clearState();
             try
             {
-                ctxt.stopEditing(confirm);
+                ctxt.stopEditing(true);
             }
             finally
             {
@@ -806,7 +783,7 @@ public class MindViewFSM
         }
 
         @Override
-        protected void ok(MindViewFSM context, NodeItem newParent)
+        protected void ok(MindViewFSM context, NodeItem nodeItem)
         {
             MindView ctxt = context.getOwner();
 
@@ -814,7 +791,7 @@ public class MindViewFSM
             context.clearState();
             try
             {
-                ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(newParent));
+                ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(nodeItem));
             }
             finally
             {
@@ -859,7 +836,7 @@ public class MindViewFSM
         }
 
         @Override
-        protected void ok(MindViewFSM context, NodeItem target)
+        protected void ok(MindViewFSM context, NodeItem nodeItem)
         {
             MindView ctxt = context.getOwner();
 
@@ -867,7 +844,7 @@ public class MindViewFSM
             context.clearState();
             try
             {
-                ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(target));
+                ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(nodeItem));
             }
             finally
             {

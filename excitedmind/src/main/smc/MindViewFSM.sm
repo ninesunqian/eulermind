@@ -88,7 +88,6 @@ Entry
     startLinking
         Moving
         {
-            startLinking();
         }
 }
 
@@ -97,7 +96,7 @@ Editing
     ok
         Normal
         {
-            stopEditing(confirm);
+            stopEditing(true);
         }
     cancel
         Normal
@@ -122,10 +121,10 @@ Inserting
 
 Moving
 {
-    ok(newParent: NodeItem)
+    ok(nodeItem: NodeItem)
         Normal
         {
-            m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(newParent));
+            m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(nodeItem));
         }
     cancel
         Normal
@@ -136,10 +135,10 @@ Moving
 
 Linking
 {
-    ok(target: NodeItem)
+    ok(nodeItem: NodeItem)
         Normal
         {
-            m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(target));
+            m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(nodeItem));
         }
     cancel
         Normal
