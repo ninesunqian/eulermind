@@ -4,6 +4,7 @@
 %class MindView
 %package excitedmind
 %fsmclass MindViewFSM
+%import prefuse.visual.NodeItem
 
 %start MindViewStateMap::Normal
 
@@ -11,65 +12,139 @@
 %%
 
 Normal
+Exit
+    {
+        stopCursorTimer();
+    }
+Entry
+    {
+        renderTree();
+    }
 {
-    StartEditing
+    mouseInNode(nodeItem: NodeItem)
+        nil
+    {
+        startCursorTimer(nodeItem);
+    }
+
+    mouseOutNode
+        nil
+    {
+        stopCursorTimer();
+    }
+
+    cursorTimeout(nodeItem: NodeItem)
+        Normal
+    {
+        m_mindTreeController.setCursorNode(ctxt.m_mindTreeController.toSource(nodeItem));
+    }
+
+    toggleFold
+        Normal
+        {
+            m_undoManager.addEdit(ctxt.m_mindTreeController.toggleFoldCursorUndoable());
+        }
+
+    remove
+        [ ctxt.m_mindTreeController.getCursorNode() != ctxt.m_mindTreeController.getRoot() ]
+        Normal
+        {
+            m_undoManager.addEdit(ctxt.m_mindTreeController.removeCursorUndoable());
+        }
+
+
+    undo
+        [ ctxt.m_undoManager.canUndo() ]
+        Normal
+        {
+            m_undoManager.undo();
+        }
+
+    redo
+        [ ctxt.m_undoManager.canRedo()]
+        Normal
+        {
+            m_undoManager.redo();
+        }
+
+    startEditing
         Editing
         {
-
+            startEditing();
         }
 
-    StartInserting
+    startInserting(asChild: boolean)
         Inserting
         {
-
+            startInserting(asChild);
         }
 
-    StartMoving
+    startMoving
         Moving
         {
-
+            startEditing();
         }
 
-    StartRefocusing
-        Refocusing
+    startLinking
+        Moving
         {
-
+            startLinking();
         }
 }
 
 Editing
 {
-    StopEditing(confirm: boolean)
+    ok
         Normal
         {
-            _owner.stopEditing(confirm);
+            stopEditing(confirm);
+        }
+    cancel
+        Normal
+        {
+            stopEditing(false);
         }
 }
 
 Inserting
 {
-    StopInserting(confirm: boolean)
+    ok(fromPrompter: boolean)
         Normal
         {
-            _owner.stopInserting(confirm);
+            stopInserting(true, fromPrompter);
+        }
+    cancel
+        Normal
+        {
+            stopInserting(false, false);
         }
 }
 
 Moving
 {
-    StopMoving(confirm: boolean)
+    ok(newParent: NodeItem)
         Normal
         {
-            _owner.stopMoving(confirm);
+            m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(newParent));
+        }
+    cancel
+        Normal
+        {
+
         }
 }
 
-Refocusing
+Linking
 {
-    StopRefocusing(confirm: boolean)
+    ok(target: NodeItem)
         Normal
         {
-            _owner.stopRefocusing(confirm);
+            m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(target));
+        }
+    cancel
+        Normal
+        {
+
         }
 }
 

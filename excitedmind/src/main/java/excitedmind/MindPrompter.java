@@ -77,6 +77,9 @@ public class MindPrompter {
 
     public void hide()
     {
+        if (m_jScrollPane.isVisible() == false)
+            return;
+
         m_jScrollPane.setVisible(false);
         m_promptedNodes.clear();
 

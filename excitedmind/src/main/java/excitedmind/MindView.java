@@ -1,20 +1,14 @@
 package excitedmind;
 
-import java.awt.*;
 import java.awt.event.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoManager;
 
-import com.tinkerpop.blueprints.Vertex;
 import prefuse.Display;
 import prefuse.Visualization;
 
@@ -82,10 +76,7 @@ public class MindView extends Display {
     AbstractAction m_undoAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (m_undoManager.canUndo()) {
-                m_undoManager.undo();
-                renderTree();
-            }
+            m_fsm.undo();
         }
     };
 
@@ -93,32 +84,30 @@ public class MindView extends Display {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (m_undoManager.canRedo()) {
-                m_undoManager.redo();
-                renderTree();
-            }
+                m_fsm.redo();
         }
     };
 
     public AbstractAction m_addChildAction = new AbstractAction() {
-
-        //TODO:
         @Override
         public void actionPerformed(ActionEvent e) {
-
-            //TODO translate to Inserting
+           startInserting(true);
         }
     };
 
-    public void alert(String msg)
+    public AbstractAction m_editAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            startEditing();
+        }
+    };
+
+    void alert(String msg)
     {
         JOptionPane.showMessageDialog(null, msg);
     }
 
     public AbstractAction m_addSiblingAction = new AbstractAction() {
-        //TODO translate to Inserting
-        //TODO add argument addchild or add sibling
-
         @Override
         public void actionPerformed(ActionEvent e) {
 
@@ -126,8 +115,7 @@ public class MindView extends Display {
                 alert("you must open the root parent");
                 return;
             }
-
-            //TODO: translate to Inserting
+            startInserting(false);
         }
     };
 
@@ -135,14 +123,14 @@ public class MindView extends Display {
     AbstractAction m_prepareLinkAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            translate (State.LINKING);
+            m_fsm.startLinking();
         }
     };
 
     AbstractAction m_prepareMoveAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            translate (State.MOVING);
+            m_fsm.startMoving();
         }
     };
 
@@ -157,69 +145,20 @@ public class MindView extends Display {
 
     MouseListener m_prompterMouseListener = new MouseAdapter() {
         public void mouseClicked(MouseEvent mouseEvent) {
-
-            m_prompter.removeMouseListener(this);
-
-            int selectedIndex = m_prompter.getSelectedIndex();
-            MindPrompter.PromptedNode selected = m_prompter.getPromptedNode(selectedIndex);
-
-            super.stopEditing(true);
-
-            AbstractUndoableEdit undoer = m_mindTreeController.placeRefereeUndoable(selected.m_dbId);
-            getUndoManager().addEdit(undoer);
-            renderTree();
+            m_fsm.ok(true);
         }
     };
 
-    KeyListener m_editorKeyListenerForEditing = new KeyAdapter() {
+    KeyListener m_editorKeyListener = new KeyAdapter() {
 
         @Override
         public void keyPressed(KeyEvent e)
         {
             if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                String text = getTextEditor().getText();
-
-                //stopEditing will set text of cursor
-                stopEditing(false);
-
-                AbstractUndoableEdit undoer;
-
-                undoer = m_mindTreeController.setCursorText(text);
-                m_undoManager.addEdit(undoer);
-
-                getTextEditor().removeKeyListener(this);
-                renderTree();
+                m_fsm.ok();
             }
             else if (e.getKeyCode() == KeyEvent.VK_ESCAPE)  {
-                //TODO
-
-            }
-        }
-    };
-
-    KeyListener m_editorKeyListenerForInserting = new KeyAdapter() {
-
-        @Override
-        public void keyPressed(KeyEvent e) {
-            if (e.getKeyCode() == KeyEvent.VK_ENTER)
-            {
-                String text = getTextEditor().getText();
-
-                //stopEditing will set text of cursor
-                stopEditing();
-
-                AbstractUndoableEdit undoer;
-
-                m_mindTreeController.setPlaceholderCursorText(text);
-                undoer = m_mindTreeController.placeNewNodeUndoable();
-
-                m_undoManager.addEdit(undoer);
-
-                getTextEditor().removeKeyListener(this);
-                renderTree();
-            }
-            else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                //TODO
+                m_fsm.cancel();
             }
         }
     };
@@ -244,6 +183,7 @@ public class MindView extends Display {
         }
     }
 
+    //TODO: normal linking moving : disable key press
     void translate(State newState)
     {
         if (m_state == newState) {
@@ -283,11 +223,12 @@ public class MindView extends Display {
         m_renderEngine = new MindTreeRenderEngine(this, treeGroup);
 
         m_prompter = new MindPrompter(this, m_mindTree.m_dbTree);
+        m_prompter.addMouseListener(m_prompterMouseListener);
 
 		setMouseControlListener();
 		setKeyControlListener();
 
-		renderTree();
+        getTextEditor().addKeyListener(m_editorKeyListener);
 
         m_fsm = new MindViewFSM(this);
 	}
@@ -307,7 +248,6 @@ public class MindView extends Display {
         public void actionPerformed(ActionEvent actionEvent) {
             if (m_state == State.NORMAL) {
                 m_mindTreeController.setCursorNode((NodeItem) m_enteredNode);
-                renderTree();
             }
         }
     });
@@ -365,8 +305,6 @@ public class MindView extends Display {
                             undoer = null;
                     }
                     m_undoManager.addEdit(undoer);
-
-					renderTree();
 				}
 			}
 		});
@@ -413,49 +351,23 @@ public class MindView extends Display {
         inputMap.put(KeyStroke.getKeyStroke("DOWN"), sm_cursorDown);
 	}
 
-	private UndoManager m_undoManager = new UndoManager();
-
-	public UndoManager getUndoManager() {
-		return m_undoManager;
-	}
+	UndoManager m_undoManager = new UndoManager();
 
 	public MindTreeController getMindTreeController() {
 		return m_mindTreeController;
 	}
 
-    @Override
-    public void editText(String txt, Rectangle r) {
-        super.editText(txt, r);
-        JTextComponent editor = getTextEditor();
-        editor.addKeyListener(m_editorKeyListener);
-
-        if (m_mindTreeController.cursorIsPlaceholder()) {
-            m_prompter.show(editor);
-            m_prompter.addMouseListener(m_prompterMouseListener);
-        }
-    }
-
-    public void stopEditing() {
-        m_prompter.removeMouseListener(m_prompterMouseListener);
-        getTextEditor().removeKeyListener(m_editorKeyListener);
-
-        super.stopEditing(updateNode);
-
-        m_prompter.hide();
-    }
-
     public abstract class SimpleMindTreeAction extends AbstractAction {
 
         public abstract AbstractUndoableEdit operateMindTree(ActionEvent e);
-
 
         @Override
         public void actionPerformed(ActionEvent e) {
             AbstractUndoableEdit undoer = operateMindTree(e);
             if (undoer != null) {
-                getUndoManager().addEdit(undoer);
+                m_undoManager.addEdit(undoer);
+                m_fsm.instantEvent();
             }
-            renderTree ();
         }
     }
 
@@ -485,28 +397,50 @@ public class MindView extends Display {
                     m_mindTreeController.moveCursorDown();
                     break;
             }
-            renderTree ();
+
+            m_fsm.instantEvent();
         }
     }
 
     public void startEditing()
     {
-        editText(m_mindTreeController.toVisual(m_mindTreeController.getCursorNode()), MindTree.sm_textPropName) ;
-
-        JTextComponent editor = getTextEditor();
-        editor.addKeyListener(m_editorKeyListenerForEditing);
+        showEditor(false);
     }
 
     public void stopEditing(boolean confirm)
     {
+        if (confirm) {
+            String text = getTextEditor().getText();
+            AbstractUndoableEdit undoer = m_mindTreeController.setCursorText(text);
+            m_undoManager.addEdit(undoer);
+        }
 
+        hideEditor();
+    }
+
+    public void showEditor(boolean withPrompter)
+    {
+        if (getTextEditor().isVisible())
+            return;
+
+        editText(m_mindTreeController.toVisual(m_mindTreeController.getCursorNode()), MindTree.sm_textPropName) ;
+
+        if (withPrompter) {
+            m_prompter.show(getTextEditor());
+        }
+    }
+
+    public void hideEditor()
+    {
+        super.stopEditing(false);
+        m_prompter.hide();
     }
 
     public void startInserting(boolean asChild)
     {
         if (asChild) {
             if (m_mindTreeController.cursorIsFolded()) {
-                getUndoManager().addEdit(m_mindTreeController.toggleFoldCursorUndoable());
+                m_undoManager.addEdit(m_mindTreeController.toggleFoldCursorUndoable());
             }
         } else {
             if (m_mindTreeController.getCursorNode() == m_mindTreeController.getRoot()) {
@@ -516,29 +450,43 @@ public class MindView extends Display {
         }
 
         m_mindTreeController.addPlaceholder(asChild);
+
         renderTree(new Runnable() {
             @Override
             public void run() {
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        //TODO: display editor, but not translate to EDITING
-                        editText(m_mindTreeController.toVisual(m_mindTreeController.getCursorNode()), MindTree.sm_textPropName) ;
-
-                        JTextComponent editor = getTextEditor();
-                        editor.addKeyListener(m_editorKeyListenerForInserting);
-
-                        m_prompter.show(editor);
-                        m_prompter.addMouseListener(m_prompterMouseListener);
+                        showEditor(true);
                     }
                 });
             }
         });
     }
 
-    public void stopInserting(boolean confirm)
+    public void stopInserting(boolean confirm, boolean fromPrompter)
     {
+        if (confirm) {
+            if (fromPrompter) {
+                int selectedIndex = m_prompter.getSelectedIndex();
+                MindPrompter.PromptedNode selected = m_prompter.getPromptedNode(selectedIndex);
 
+                AbstractUndoableEdit undoer = m_mindTreeController.placeRefereeUndoable(selected.m_dbId);
+                m_undoManager.addEdit(undoer);
+
+            } else {
+                String text = getTextEditor().getText();
+                m_mindTreeController.setPlaceholderCursorText(text);
+
+                AbstractUndoableEdit undoer = m_mindTreeController.placeNewNodeUndoable();
+                m_undoManager.addEdit(undoer);
+            }
+
+        } else {
+            m_mindTreeController.removePlaceholder();
+        }
+
+        hideEditor();
     }
 
     public void startMoving()
@@ -546,20 +494,20 @@ public class MindView extends Display {
 
     }
 
-    public void stopMoving(boolean confirm)
-    {
-
+    Timer m_cursorTimer;
+    public void startCursorTimer(final NodeItem nodeItem) {
+        m_cursorTimer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                m_fsm.cursorTimeout(nodeItem);
+            }
+        });
+        m_cursorTimer.start();
     }
 
-    public void startRefocusing()
+    public void stopCursorTimer()
     {
-
+        m_cursorTimer.stop();
+        m_cursorTimer = null;
     }
-
-    public void stopRefocusing(boolean confirm)
-    {
-
-    }
-
-
 } // end of class TreeMap

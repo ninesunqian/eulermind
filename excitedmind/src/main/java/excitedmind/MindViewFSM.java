@@ -10,6 +10,7 @@
 
 package excitedmind;
 
+import prefuse.visual.NodeItem;
 
 public class MindViewFSM
     extends statemap.FSMContext
@@ -37,66 +38,130 @@ public class MindViewFSM
         return;
     }
 
-    public void StartEditing()
+    public void cancel()
     {
-        _transition = "StartEditing";
-        getState().StartEditing(this);
+        _transition = "cancel";
+        getState().cancel(this);
         _transition = "";
         return;
     }
 
-    public void StartInserting()
+    public void cursorTimeout(NodeItem nodeItem)
     {
-        _transition = "StartInserting";
-        getState().StartInserting(this);
+        _transition = "cursorTimeout";
+        getState().cursorTimeout(this, nodeItem);
         _transition = "";
         return;
     }
 
-    public void StartMoving()
+    public void mouseInNode(NodeItem nodeItem)
     {
-        _transition = "StartMoving";
-        getState().StartMoving(this);
+        _transition = "mouseInNode";
+        getState().mouseInNode(this, nodeItem);
         _transition = "";
         return;
     }
 
-    public void StartRefocusing()
+    public void mouseOutNode()
     {
-        _transition = "StartRefocusing";
-        getState().StartRefocusing(this);
+        _transition = "mouseOutNode";
+        getState().mouseOutNode(this);
         _transition = "";
         return;
     }
 
-    public void StopEditing(boolean confirm)
+    public void ok()
     {
-        _transition = "StopEditing";
-        getState().StopEditing(this, confirm);
+        _transition = "ok";
+        getState().ok(this);
         _transition = "";
         return;
     }
 
-    public void StopInserting(boolean confirm)
+    public void ok(boolean fromPrompter)
     {
-        _transition = "StopInserting";
-        getState().StopInserting(this, confirm);
+        _transition = "ok";
+        getState().ok(this, fromPrompter);
         _transition = "";
         return;
     }
 
-    public void StopMoving(boolean confirm)
+    public void ok(NodeItem newParent)
     {
-        _transition = "StopMoving";
-        getState().StopMoving(this, confirm);
+        _transition = "ok";
+        getState().ok(this, newParent);
         _transition = "";
         return;
     }
 
-    public void StopRefocusing(boolean confirm)
+    public void ok(NodeItem target)
     {
-        _transition = "StopRefocusing";
-        getState().StopRefocusing(this, confirm);
+        _transition = "ok";
+        getState().ok(this, target);
+        _transition = "";
+        return;
+    }
+
+    public void redo()
+    {
+        _transition = "redo";
+        getState().redo(this);
+        _transition = "";
+        return;
+    }
+
+    public void remove()
+    {
+        _transition = "remove";
+        getState().remove(this);
+        _transition = "";
+        return;
+    }
+
+    public void startEditing()
+    {
+        _transition = "startEditing";
+        getState().startEditing(this);
+        _transition = "";
+        return;
+    }
+
+    public void startInserting(boolean asChild)
+    {
+        _transition = "startInserting";
+        getState().startInserting(this, asChild);
+        _transition = "";
+        return;
+    }
+
+    public void startLinking()
+    {
+        _transition = "startLinking";
+        getState().startLinking(this);
+        _transition = "";
+        return;
+    }
+
+    public void startMoving()
+    {
+        _transition = "startMoving";
+        getState().startMoving(this);
+        _transition = "";
+        return;
+    }
+
+    public void toggleFold()
+    {
+        _transition = "toggleFold";
+        getState().toggleFold(this);
+        _transition = "";
+        return;
+    }
+
+    public void undo()
+    {
+        _transition = "undo";
+        getState().undo(this);
         _transition = "";
         return;
     }
@@ -165,42 +230,82 @@ public class MindViewFSM
         protected void entry(MindViewFSM context) {}
         protected void exit(MindViewFSM context) {}
 
-        protected void StartEditing(MindViewFSM context)
+        protected void cancel(MindViewFSM context)
         {
             Default(context);
         }
 
-        protected void StartInserting(MindViewFSM context)
+        protected void cursorTimeout(MindViewFSM context, NodeItem nodeItem)
         {
             Default(context);
         }
 
-        protected void StartMoving(MindViewFSM context)
+        protected void mouseInNode(MindViewFSM context, NodeItem nodeItem)
         {
             Default(context);
         }
 
-        protected void StartRefocusing(MindViewFSM context)
+        protected void mouseOutNode(MindViewFSM context)
         {
             Default(context);
         }
 
-        protected void StopEditing(MindViewFSM context, boolean confirm)
+        protected void ok(MindViewFSM context)
         {
             Default(context);
         }
 
-        protected void StopInserting(MindViewFSM context, boolean confirm)
+        protected void ok(MindViewFSM context, boolean fromPrompter)
         {
             Default(context);
         }
 
-        protected void StopMoving(MindViewFSM context, boolean confirm)
+        protected void ok(MindViewFSM context, NodeItem newParent)
         {
             Default(context);
         }
 
-        protected void StopRefocusing(MindViewFSM context, boolean confirm)
+        protected void ok(MindViewFSM context, NodeItem target)
+        {
+            Default(context);
+        }
+
+        protected void redo(MindViewFSM context)
+        {
+            Default(context);
+        }
+
+        protected void remove(MindViewFSM context)
+        {
+            Default(context);
+        }
+
+        protected void startEditing(MindViewFSM context)
+        {
+            Default(context);
+        }
+
+        protected void startInserting(MindViewFSM context, boolean asChild)
+        {
+            Default(context);
+        }
+
+        protected void startLinking(MindViewFSM context)
+        {
+            Default(context);
+        }
+
+        protected void startMoving(MindViewFSM context)
+        {
+            Default(context);
+        }
+
+        protected void toggleFold(MindViewFSM context)
+        {
+            Default(context);
+        }
+
+        protected void undo(MindViewFSM context)
         {
             Default(context);
         }
@@ -242,8 +347,8 @@ public class MindViewFSM
             new MindViewStateMap_Inserting("MindViewStateMap.Inserting", 2);
         public static final MindViewStateMap_Moving Moving =
             new MindViewStateMap_Moving("MindViewStateMap.Moving", 3);
-        public static final MindViewStateMap_Refocusing Refocusing =
-            new MindViewStateMap_Refocusing("MindViewStateMap.Refocusing", 4);
+        public static final MindViewStateMap_Linking Linking =
+            new MindViewStateMap_Linking("MindViewStateMap.Linking", 4);
     }
 
     protected static class MindViewStateMap_Default
@@ -282,51 +387,262 @@ public class MindViewFSM
         }
 
         @Override
-        protected void StartEditing(MindViewFSM context)
-        {
+        protected void entry(MindViewFSM context)
+            {
+                MindView ctxt = context.getOwner();
 
-            (context.getState()).exit(context);
-            context.setState(MindViewStateMap.Editing);
-            (context.getState()).entry(context);
+            ctxt.renderTree();
             return;
         }
 
         @Override
-        protected void StartInserting(MindViewFSM context)
-        {
+        protected void exit(MindViewFSM context)
+            {
+            MindView ctxt = context.getOwner();
 
-            if ( a== 1 && b==0)
+            ctxt.stopCursorTimer();
+            return;
+        }
+
+        @Override
+        protected void cursorTimeout(MindViewFSM context, NodeItem nodeItem)
+        {
+            MindView ctxt = context.getOwner();
+
+            (context.getState()).exit(context);
+            context.clearState();
+            try
+            {
+                ctxt.m_mindTreeController.setCursorNode(ctxt.m_mindTreeController.toSource(nodeItem));
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Normal);
+                (context.getState()).entry(context);
+            }
+
+            return;
+        }
+
+        @Override
+        protected void mouseInNode(MindViewFSM context, NodeItem nodeItem)
+        {
+            MindView ctxt = context.getOwner();
+
+            MindViewState endState = context.getState();
+            context.clearState();
+            try
+            {
+                ctxt.startCursorTimer(nodeItem);
+            }
+            finally
+            {
+                context.setState(endState);
+            }
+
+            return;
+        }
+
+        @Override
+        protected void mouseOutNode(MindViewFSM context)
+        {
+            MindView ctxt = context.getOwner();
+
+            MindViewState endState = context.getState();
+            context.clearState();
+            try
+            {
+                ctxt.stopCursorTimer();
+            }
+            finally
+            {
+                context.setState(endState);
+            }
+
+            return;
+        }
+
+        @Override
+        protected void redo(MindViewFSM context)
+        {
+            MindView ctxt = context.getOwner();
+
+            if ( ctxt.m_undoManager.canRedo())
             {
                 (context.getState()).exit(context);
-                // No actions.
-                context.setState(MindViewStateMap.Inserting);
-                (context.getState()).entry(context);
+                context.clearState();
+                try
+                {
+                    ctxt.m_undoManager.redo();
+                }
+                finally
+                {
+                    context.setState(MindViewStateMap.Normal);
+                    (context.getState()).entry(context);
+                }
+
             }
             else
             {
-                super.StartInserting(context);
+                super.redo(context);
             }
 
             return;
         }
 
         @Override
-        protected void StartMoving(MindViewFSM context)
+        protected void remove(MindViewFSM context)
         {
+            MindView ctxt = context.getOwner();
 
-            (context.getState()).exit(context);
-            context.setState(MindViewStateMap.Moving);
-            (context.getState()).entry(context);
+            if ( ctxt.m_mindTreeController.getCursorNode() != ctxt.m_mindTreeController.getRoot() )
+            {
+                (context.getState()).exit(context);
+                context.clearState();
+                try
+                {
+                    ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.removeCursorUndoable());
+                }
+                finally
+                {
+                    context.setState(MindViewStateMap.Normal);
+                    (context.getState()).entry(context);
+                }
+
+            }
+            else
+            {
+                super.remove(context);
+            }
+
             return;
         }
 
         @Override
-        protected void StartRefocusing(MindViewFSM context)
+        protected void startEditing(MindViewFSM context)
         {
+            MindView ctxt = context.getOwner();
 
             (context.getState()).exit(context);
-            context.setState(MindViewStateMap.Refocusing);
-            (context.getState()).entry(context);
+            context.clearState();
+            try
+            {
+                ctxt.startEditing();
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Editing);
+                (context.getState()).entry(context);
+            }
+
+            return;
+        }
+
+        @Override
+        protected void startInserting(MindViewFSM context, boolean asChild)
+        {
+            MindView ctxt = context.getOwner();
+
+            (context.getState()).exit(context);
+            context.clearState();
+            try
+            {
+                ctxt.startInserting(asChild);
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Inserting);
+                (context.getState()).entry(context);
+            }
+
+            return;
+        }
+
+        @Override
+        protected void startLinking(MindViewFSM context)
+        {
+            MindView ctxt = context.getOwner();
+
+            (context.getState()).exit(context);
+            context.clearState();
+            try
+            {
+                ctxt.startLinking();
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Moving);
+                (context.getState()).entry(context);
+            }
+
+            return;
+        }
+
+        @Override
+        protected void startMoving(MindViewFSM context)
+        {
+            MindView ctxt = context.getOwner();
+
+            (context.getState()).exit(context);
+            context.clearState();
+            try
+            {
+                ctxt.startEditing();
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Moving);
+                (context.getState()).entry(context);
+            }
+
+            return;
+        }
+
+        @Override
+        protected void toggleFold(MindViewFSM context)
+        {
+            MindView ctxt = context.getOwner();
+
+            (context.getState()).exit(context);
+            context.clearState();
+            try
+            {
+                ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.toggleFoldCursorUndoable());
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Normal);
+                (context.getState()).entry(context);
+            }
+
+            return;
+        }
+
+        @Override
+        protected void undo(MindViewFSM context)
+        {
+            MindView ctxt = context.getOwner();
+
+            if ( ctxt.m_undoManager.canUndo() )
+            {
+                (context.getState()).exit(context);
+                context.clearState();
+                try
+                {
+                    ctxt.m_undoManager.undo();
+                }
+                finally
+                {
+                    context.setState(MindViewStateMap.Normal);
+                    (context.getState()).entry(context);
+                }
+
+            }
+            else
+            {
+                super.undo(context);
+            }
+
             return;
         }
 
@@ -354,7 +670,7 @@ public class MindViewFSM
         }
 
         @Override
-        protected void StopEditing(MindViewFSM context, boolean confirm)
+        protected void cancel(MindViewFSM context)
         {
             MindView ctxt = context.getOwner();
 
@@ -362,7 +678,27 @@ public class MindViewFSM
             context.clearState();
             try
             {
-                ctxt._owner.stopEditing(confirm);
+                ctxt.stopEditing(false);
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Normal);
+                (context.getState()).entry(context);
+            }
+
+            return;
+        }
+
+        @Override
+        protected void ok(MindViewFSM context)
+        {
+            MindView ctxt = context.getOwner();
+
+            (context.getState()).exit(context);
+            context.clearState();
+            try
+            {
+                ctxt.stopEditing(confirm);
             }
             finally
             {
@@ -397,7 +733,7 @@ public class MindViewFSM
         }
 
         @Override
-        protected void StopInserting(MindViewFSM context, boolean confirm)
+        protected void cancel(MindViewFSM context)
         {
             MindView ctxt = context.getOwner();
 
@@ -405,7 +741,27 @@ public class MindViewFSM
             context.clearState();
             try
             {
-                ctxt._owner.stopInserting(confirm);
+                ctxt.stopInserting(false, false);
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Normal);
+                (context.getState()).entry(context);
+            }
+
+            return;
+        }
+
+        @Override
+        protected void ok(MindViewFSM context, boolean fromPrompter)
+        {
+            MindView ctxt = context.getOwner();
+
+            (context.getState()).exit(context);
+            context.clearState();
+            try
+            {
+                ctxt.stopInserting(true, fromPrompter);
             }
             finally
             {
@@ -440,7 +796,17 @@ public class MindViewFSM
         }
 
         @Override
-        protected void StopMoving(MindViewFSM context, boolean confirm)
+        protected void cancel(MindViewFSM context)
+        {
+
+            (context.getState()).exit(context);
+            context.setState(MindViewStateMap.Normal);
+            (context.getState()).entry(context);
+            return;
+        }
+
+        @Override
+        protected void ok(MindViewFSM context, NodeItem newParent)
         {
             MindView ctxt = context.getOwner();
 
@@ -448,7 +814,7 @@ public class MindViewFSM
             context.clearState();
             try
             {
-                ctxt._owner.stopMoving(confirm);
+                ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(newParent));
             }
             finally
             {
@@ -470,20 +836,30 @@ public class MindViewFSM
         private static final long serialVersionUID = 1L;
     }
 
-    private static final class MindViewStateMap_Refocusing
+    private static final class MindViewStateMap_Linking
         extends MindViewStateMap_Default
     {
     //-------------------------------------------------------
     // Member methods.
     //
 
-        private MindViewStateMap_Refocusing(String name, int id)
+        private MindViewStateMap_Linking(String name, int id)
         {
             super (name, id);
         }
 
         @Override
-        protected void StopRefocusing(MindViewFSM context, boolean confirm)
+        protected void cancel(MindViewFSM context)
+        {
+
+            (context.getState()).exit(context);
+            context.setState(MindViewStateMap.Normal);
+            (context.getState()).entry(context);
+            return;
+        }
+
+        @Override
+        protected void ok(MindViewFSM context, NodeItem target)
         {
             MindView ctxt = context.getOwner();
 
@@ -491,7 +867,7 @@ public class MindViewFSM
             context.clearState();
             try
             {
-                ctxt._owner.stopRefocusing(confirm);
+                ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(target));
             }
             finally
             {
