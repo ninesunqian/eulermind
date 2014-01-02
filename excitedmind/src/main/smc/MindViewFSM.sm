@@ -39,6 +39,28 @@ Entry
         m_mindTreeController.setCursorNode(ctxt.m_mindTreeController.toSource(nodeItem));
     }
 
+    cursorLeft
+        Normal
+    {
+        m_mindTreeController.moveCursorLeft();
+    }
+
+    cursorRight
+        Normal
+    {
+        m_mindTreeController.moveCursorRight();
+    }
+    cursorUp
+        Normal
+    {
+        m_mindTreeController.moveCursorUp();
+    }
+    cursorDown
+        Normal
+    {
+        m_mindTreeController.moveCursorDown();
+    }
+
     toggleFold
         Normal
         {
@@ -46,7 +68,7 @@ Entry
         }
 
     remove
-        [ ctxt.m_mindTreeController.getCursorNode() != ctxt.m_mindTreeController.getRoot() ]
+        [ ctxt.canRemove() ]
         Normal
         {
             m_undoManager.addEdit(ctxt.m_mindTreeController.removeCursorUndoable());
@@ -74,6 +96,7 @@ Entry
         }
 
     startInserting(asChild: boolean)
+        [ ctxt.canStartInserting(asChild) ]
         Inserting
         {
             startInserting(asChild);
@@ -82,7 +105,6 @@ Entry
     startMoving
         Moving
         {
-            startEditing();
         }
 
     startLinking

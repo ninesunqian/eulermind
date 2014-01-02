@@ -226,11 +226,11 @@ public class MindTreeRenderEngine {
         }
 
         public BasicStroke getStroke(VisualItem item) {
-            if (m_mindView.getMindTreeController().isPlaceholer(item)) {
+            if (m_mindView.m_mindTreeController.isPlaceholer(item)) {
                 return StrokeLib.getStroke(1.0f);
             }
 
-            if (m_mindView.getMindTreeController().m_mindTree.isRefEdge((EdgeItem) item)) {
+            if (m_mindView.m_mindTreeController.m_mindTree.isRefEdge((EdgeItem) item)) {
                 float dash [] = {10f, 5f};
                 return StrokeLib.getStroke(1.0f, dash);
             } else {
@@ -257,7 +257,7 @@ public class MindTreeRenderEngine {
             //FIXME: add a color action
             item.setStrokeColor(ColorLib.rgb(150,150,150));
 
-            MindTreeController mindTreeController = m_mindView.getMindTreeController();
+            MindTreeController mindTreeController = m_mindView.m_mindTreeController;
 
             int childCount = mindTreeController.m_mindTree.getChildCount((NodeItem)item);
 

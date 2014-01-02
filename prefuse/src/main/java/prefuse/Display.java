@@ -39,14 +39,12 @@ import javax.swing.text.JTextComponent;
 import prefuse.activity.Activity;
 import prefuse.activity.SlowInSlowOutPacer;
 import prefuse.controls.Control;
-import prefuse.data.Graph;
 import prefuse.data.expression.AndPredicate;
 import prefuse.data.expression.BooleanLiteral;
 import prefuse.data.expression.Predicate;
 import prefuse.data.expression.parser.ExpressionParser;
 import prefuse.render.Renderer;
 import prefuse.util.ColorLib;
-import prefuse.util.PrefuseLib;
 import prefuse.util.StringLib;
 import prefuse.util.UpdateListener;
 import prefuse.util.collections.CopyOnWriteArrayList;
@@ -2050,8 +2048,8 @@ public class Display extends JComponent {
     
     /**
      * Edit text for the given VisualItem and attribute. Presents a text
-     * editing widget spaning the item's bounding box. Use stopEditing()
-     * to hide the text widget. When stopEditing() is called, the data field
+     * editing widget spaning the item's bounding box. Use stopEditing2()
+     * to hide the text widget. When stopEditing2() is called, the data field
      * will automatically be updated with the VisualItem.
      * @param item the VisualItem to edit
      * @param attribute the attribute to edit
@@ -2079,8 +2077,8 @@ public class Display extends JComponent {
     
     /**
      * Edit text for the given VisualItem and field. Presents a text
-     * editing widget spaning the given bounding box. Use stopEditing()
-     * to hide the text widget. When stopEditing() is called, the field
+     * editing widget spaning the given bounding box. Use stopEditing2()
+     * to hide the text widget. When stopEditing2() is called, the field
      * will automatically be updated with the VisualItem.
      * @param item the VisualItem to edit
      * @param attribute the attribute to edit
@@ -2101,7 +2099,7 @@ public class Display extends JComponent {
     
     /**
      * Show a text editing widget containing the given text and spanning the
-     * specified bounding box. Use stopEditing() to hide the text widget. Use
+     * specified bounding box. Use stopEditing2() to hide the text widget. Use
      * the method calls getTextEditor().getText() to get the resulting edited
      * text.
      * @param txt the text string to display in the text widget
@@ -2124,7 +2122,7 @@ public class Display extends JComponent {
      * editText() methods which include a VisualItem as an argument was called),
      * the item is updated with the edited text.
      */
-    public void stopEditing(boolean confirm) {
+    public void stopEditing2(boolean confirm) {
         m_editor.setVisible(false);
         if ( m_editItem != null ) {
             String txt = m_editor.getText();
@@ -2141,7 +2139,7 @@ public class Display extends JComponent {
     }
 
     public void stopEditing() {
-        stopEditing(true);
+        stopEditing2(true);
     }
 
     public boolean isEditing() {

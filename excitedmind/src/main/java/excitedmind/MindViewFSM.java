@@ -46,10 +46,42 @@ public class MindViewFSM
         return;
     }
 
+    public void cursorDown()
+    {
+        _transition = "cursorDown";
+        getState().cursorDown(this);
+        _transition = "";
+        return;
+    }
+
+    public void cursorLeft()
+    {
+        _transition = "cursorLeft";
+        getState().cursorLeft(this);
+        _transition = "";
+        return;
+    }
+
+    public void cursorRight()
+    {
+        _transition = "cursorRight";
+        getState().cursorRight(this);
+        _transition = "";
+        return;
+    }
+
     public void cursorTimeout(NodeItem nodeItem)
     {
         _transition = "cursorTimeout";
         getState().cursorTimeout(this, nodeItem);
+        _transition = "";
+        return;
+    }
+
+    public void cursorUp()
+    {
+        _transition = "cursorUp";
+        getState().cursorUp(this);
         _transition = "";
         return;
     }
@@ -227,7 +259,27 @@ public class MindViewFSM
             Default(context);
         }
 
+        protected void cursorDown(MindViewFSM context)
+        {
+            Default(context);
+        }
+
+        protected void cursorLeft(MindViewFSM context)
+        {
+            Default(context);
+        }
+
+        protected void cursorRight(MindViewFSM context)
+        {
+            Default(context);
+        }
+
         protected void cursorTimeout(MindViewFSM context, NodeItem nodeItem)
+        {
+            Default(context);
+        }
+
+        protected void cursorUp(MindViewFSM context)
         {
             Default(context);
         }
@@ -392,6 +444,66 @@ public class MindViewFSM
         }
 
         @Override
+        protected void cursorDown(MindViewFSM context)
+        {
+            MindView ctxt = context.getOwner();
+
+            (context.getState()).exit(context);
+            context.clearState();
+            try
+            {
+                ctxt.m_mindTreeController.moveCursorDown();
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Normal);
+                (context.getState()).entry(context);
+            }
+
+            return;
+        }
+
+        @Override
+        protected void cursorLeft(MindViewFSM context)
+        {
+            MindView ctxt = context.getOwner();
+
+            (context.getState()).exit(context);
+            context.clearState();
+            try
+            {
+                ctxt.m_mindTreeController.moveCursorLeft();
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Normal);
+                (context.getState()).entry(context);
+            }
+
+            return;
+        }
+
+        @Override
+        protected void cursorRight(MindViewFSM context)
+        {
+            MindView ctxt = context.getOwner();
+
+            (context.getState()).exit(context);
+            context.clearState();
+            try
+            {
+                ctxt.m_mindTreeController.moveCursorRight();
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Normal);
+                (context.getState()).entry(context);
+            }
+
+            return;
+        }
+
+        @Override
         protected void cursorTimeout(MindViewFSM context, NodeItem nodeItem)
         {
             MindView ctxt = context.getOwner();
@@ -401,6 +513,26 @@ public class MindViewFSM
             try
             {
                 ctxt.m_mindTreeController.setCursorNode(ctxt.m_mindTreeController.toSource(nodeItem));
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Normal);
+                (context.getState()).entry(context);
+            }
+
+            return;
+        }
+
+        @Override
+        protected void cursorUp(MindViewFSM context)
+        {
+            MindView ctxt = context.getOwner();
+
+            (context.getState()).exit(context);
+            context.clearState();
+            try
+            {
+                ctxt.m_mindTreeController.moveCursorUp();
             }
             finally
             {
@@ -482,7 +614,7 @@ public class MindViewFSM
         {
             MindView ctxt = context.getOwner();
 
-            if ( ctxt.m_mindTreeController.getCursorNode() != ctxt.m_mindTreeController.getRoot() )
+            if ( ctxt.canRemove() )
             {
                 (context.getState()).exit(context);
                 context.clearState();
@@ -530,16 +662,24 @@ public class MindViewFSM
         {
             MindView ctxt = context.getOwner();
 
-            (context.getState()).exit(context);
-            context.clearState();
-            try
+            if ( ctxt.canStartInserting(asChild) )
             {
-                ctxt.startInserting(asChild);
+                (context.getState()).exit(context);
+                context.clearState();
+                try
+                {
+                    ctxt.startInserting(asChild);
+                }
+                finally
+                {
+                    context.setState(MindViewStateMap.Inserting);
+                    (context.getState()).entry(context);
+                }
+
             }
-            finally
+            else
             {
-                context.setState(MindViewStateMap.Inserting);
-                (context.getState()).entry(context);
+                super.startInserting(context, asChild);
             }
 
             return;
@@ -558,20 +698,10 @@ public class MindViewFSM
         @Override
         protected void startMoving(MindViewFSM context)
         {
-            MindView ctxt = context.getOwner();
 
             (context.getState()).exit(context);
-            context.clearState();
-            try
-            {
-                ctxt.startEditing();
-            }
-            finally
-            {
-                context.setState(MindViewStateMap.Moving);
-                (context.getState()).entry(context);
-            }
-
+            context.setState(MindViewStateMap.Moving);
+            (context.getState()).entry(context);
             return;
         }
 
