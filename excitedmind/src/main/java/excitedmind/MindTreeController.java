@@ -559,7 +559,7 @@ public class MindTreeController {
                     TableNodeItem visualNode = (TableNodeItem)vis.getVisualItem(group, node);
                     TableEdgeItem visualEdge = (TableEdgeItem)visualNode.getParentEdge();
 
-                    m_logger.info ( "visiableNode " + m_mindTree.getText(node));
+                    //m_logger.info ( "visiableNode " + m_mindTree.getText(node));
                     PrefuseLib.updateVisible(visualNode, true);
                     PrefuseLib.updateVisible(visualEdge, true);
 
@@ -611,7 +611,7 @@ public class MindTreeController {
 
                 String text = m_mindTree.getText(node);
 
-                m_logger.info ( "invisiableNode " + text);
+                //m_logger.info ( "invisiableNode " + text);
                 if (m_foldedNodes.contains(node)) {
                     m_logger.info ( "m_foldedNodes contain: " + node + " " + text);
                     return false;

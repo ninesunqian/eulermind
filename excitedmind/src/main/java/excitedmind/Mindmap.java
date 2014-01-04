@@ -36,35 +36,34 @@ import prefuse.visual.VisualItem;
 public class Mindmap {
     static Logger m_logger = Logger.getLogger(Mindmap.class.getName());
 
+    public static void deleteDir(String path)
+    {
+        File file = new File(path);
+        if (file.exists())
+        {
+            if (file.isDirectory())
+            {
+                File[] files = file.listFiles();
+                for (File subFile : files)
+                {
+                    if (subFile.isDirectory())
+                        deleteDir(subFile.getPath());
+                    else
+                        subFile.delete();
+                }
+            }
+            file.delete();
+        }
+    }
 	public static void main(String argv[]) {
 
-        /*
-        String tmpdir = System.getProperty("java.io.tmpdir");
-        m_logger.info ("tmpdir = " + tmpdir);
-        String dbPath = tmpdir  + "mind_db";
-        */
         String dbPath = "d://tmp/mind_db";
 
 		final String dbUrl = "local:" + dbPath.replace(File.separatorChar, '/');
         m_logger.info ("dbUrl = " + dbUrl);
-        Runtime rt =Runtime.getRuntime() ;
 
-        String rmDirCmd;
-        if (File.separatorChar == '/') {
-            rmDirCmd = "/bin/rm -rf  " + dbPath;
-        }
-        else {
-            rmDirCmd = " rmdir /s /q " + dbPath;
-        }
+        deleteDir(dbPath);
 
-        try {
-            m_logger.info (rmDirCmd);
-            Process process = rt.exec(rmDirCmd);
-
-        } catch (IOException e) {
-			e.printStackTrace();
-		}
-        
 		DBTree dbTree = new DBTree (dbUrl);
         dbTree.createFullTextVertexKeyIndex(MindTree.sm_textPropName);
 

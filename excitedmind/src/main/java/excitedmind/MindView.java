@@ -81,9 +81,9 @@ public class MindView extends Display {
 		setMouseControlListener();
 		setKeyControlListener();
 
-        m_fsm = new MindViewFSM(this);
+        m_fsm = new MindViewFSM(this, MindViewFSM.MindViewStateMap.Normal);
         //TODO m_fsm.setState(m_fsm.MindViewStateMap.Normal);
-        //m_fsm.enterStartState();
+        m_fsm.enterStartState();
 	}
 
 	public void renderTree() {
@@ -103,22 +103,23 @@ public class MindView extends Display {
 
 			public void itemEntered(VisualItem item, MouseEvent e) {
 				if (m_mindTreeController.isNode(item)) {
+                    m_logger.info("mouse entered event---");
                     m_fsm.mouseInNode((NodeItem)item);
 				}
 			}
 
             public void itemExited(VisualItem item, MouseEvent e) {
                 if (m_mindTreeController.isNode(item)) {
+                    m_logger.info("mouse exit event---");
                     m_fsm.mouseOutNode();
                 }
             }
 
-			public void itemClicked(VisualItem item, MouseEvent e) {
+			public void itemPressed(VisualItem item, MouseEvent e) {
 				if (m_mindTreeController.isNode(item)) {
-                    m_fsm.toggleFold();
+                    m_logger.info("mouse click event---");
+                    m_fsm.press((NodeItem)item);
 				}
-                //TODO: mouse press, move to other node, mouse UP event
-                // mouse dragged
 			}
 
 		});
@@ -220,7 +221,7 @@ public class MindView extends Display {
     private Timer m_cursorTimer;
 
     void startCursorTimer(final NodeItem nodeItem) {
-        m_cursorTimer = new Timer(1000, new ActionListener() {
+        m_cursorTimer = new Timer(500, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 m_fsm.cursorTimeout(nodeItem);
@@ -359,12 +360,10 @@ public class MindView extends Display {
 
     final static String sm_addChildActionName = "addChild";
     final static String sm_addSiblingActionName = "addSibling";
-    final static String sm_addLinkActionName = "addLink";
     final static String sm_removeActionName = "remove";
 
-    final static String sm_startLinkActionName = "prepareLink";
-    final static String sm_startMoveActionName = "prepareMove";
-    final static String sm_moveActionName = "move";
+    final static String sm_startLinkActionName = "startLink";
+    final static String sm_startMoveActionName = "startMove";
 
     final static String sm_toNormalActionAction = "toNormal";
 

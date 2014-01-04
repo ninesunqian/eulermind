@@ -118,10 +118,10 @@ public class MindViewFSM
         return;
     }
 
-    public void ok(NodeItem nodeItem)
+    public void press(NodeItem nodeItem)
     {
-        _transition = "ok";
-        getState().ok(this, nodeItem);
+        _transition = "press";
+        getState().press(this, nodeItem);
         _transition = "";
         return;
     }
@@ -170,14 +170,6 @@ public class MindViewFSM
     {
         _transition = "startMoving";
         getState().startMoving(this);
-        _transition = "";
-        return;
-    }
-
-    public void toggleFold()
-    {
-        _transition = "toggleFold";
-        getState().toggleFold(this);
         _transition = "";
         return;
     }
@@ -304,7 +296,7 @@ public class MindViewFSM
             Default(context);
         }
 
-        protected void ok(MindViewFSM context, NodeItem nodeItem)
+        protected void press(MindViewFSM context, NodeItem nodeItem)
         {
             Default(context);
         }
@@ -335,11 +327,6 @@ public class MindViewFSM
         }
 
         protected void startMoving(MindViewFSM context)
-        {
-            Default(context);
-        }
-
-        protected void toggleFold(MindViewFSM context)
         {
             Default(context);
         }
@@ -582,6 +569,28 @@ public class MindViewFSM
         }
 
         @Override
+        protected void press(MindViewFSM context, NodeItem nodeItem)
+        {
+            MindView ctxt = context.getOwner();
+
+            (context.getState()).exit(context);
+            context.clearState();
+            try
+            {
+                ctxt.m_logger.info("---click -----");
+                ctxt.m_mindTreeController.setCursorNode(ctxt.m_mindTreeController.toSource(nodeItem));
+                ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.toggleFoldCursorUndoable());
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Normal);
+                (context.getState()).entry(context);
+            }
+
+            return;
+        }
+
+        @Override
         protected void redo(MindViewFSM context)
         {
             MindView ctxt = context.getOwner();
@@ -690,7 +699,7 @@ public class MindViewFSM
         {
 
             (context.getState()).exit(context);
-            context.setState(MindViewStateMap.Moving);
+            context.setState(MindViewStateMap.Linking);
             (context.getState()).entry(context);
             return;
         }
@@ -702,26 +711,6 @@ public class MindViewFSM
             (context.getState()).exit(context);
             context.setState(MindViewStateMap.Moving);
             (context.getState()).entry(context);
-            return;
-        }
-
-        @Override
-        protected void toggleFold(MindViewFSM context)
-        {
-            MindView ctxt = context.getOwner();
-
-            (context.getState()).exit(context);
-            context.clearState();
-            try
-            {
-                ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.toggleFoldCursorUndoable());
-            }
-            finally
-            {
-                context.setState(MindViewStateMap.Normal);
-                (context.getState()).entry(context);
-            }
-
             return;
         }
 
@@ -913,7 +902,7 @@ public class MindViewFSM
         }
 
         @Override
-        protected void ok(MindViewFSM context, NodeItem nodeItem)
+        protected void press(MindViewFSM context, NodeItem nodeItem)
         {
             MindView ctxt = context.getOwner();
 
@@ -966,7 +955,7 @@ public class MindViewFSM
         }
 
         @Override
-        protected void ok(MindViewFSM context, NodeItem nodeItem)
+        protected void press(MindViewFSM context, NodeItem nodeItem)
         {
             MindView ctxt = context.getOwner();
 
@@ -974,7 +963,7 @@ public class MindViewFSM
             context.clearState();
             try
             {
-                ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(nodeItem));
+                ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.addReferenceUndoable(ctxt.m_mindTreeController.toSource(nodeItem)));
             }
             finally
             {

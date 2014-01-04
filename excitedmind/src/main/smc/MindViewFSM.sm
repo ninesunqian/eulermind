@@ -61,9 +61,11 @@ Entry
         m_mindTreeController.moveCursorDown();
     }
 
-    toggleFold
+    press(nodeItem: NodeItem)
         Normal
         {
+            m_logger.info("---click -----");
+            m_mindTreeController.setCursorNode(ctxt.m_mindTreeController.toSource(nodeItem));
             m_undoManager.addEdit(ctxt.m_mindTreeController.toggleFoldCursorUndoable());
         }
 
@@ -108,7 +110,7 @@ Entry
         }
 
     startLinking
-        Moving
+        Linking
         {
         }
 }
@@ -143,7 +145,7 @@ Inserting
 
 Moving
 {
-    ok(nodeItem: NodeItem)
+    press(nodeItem: NodeItem)
         Normal
         {
             m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(nodeItem));
@@ -157,10 +159,10 @@ Moving
 
 Linking
 {
-    ok(nodeItem: NodeItem)
+    press(nodeItem: NodeItem)
         Normal
         {
-            m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(nodeItem));
+            m_undoManager.addEdit(ctxt.m_mindTreeController.addReferenceUndoable(ctxt.m_mindTreeController.toSource(nodeItem)));
         }
     cancel
         Normal
