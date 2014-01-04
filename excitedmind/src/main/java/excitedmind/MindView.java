@@ -2,6 +2,8 @@ package excitedmind;
 
 import java.awt.event.*;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.logging.Logger;
 
 import javax.swing.*;
@@ -19,6 +21,9 @@ import prefuse.controls.ZoomToFitControl;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
 import prefuse.visual.sort.TreeDepthItemSorter;
+
+import statemap.FSMContext;
+import statemap.State;
 
 /**
  * Demonstration of a node-link tree viewer
@@ -39,6 +44,20 @@ public class MindView extends Display {
     private MindViewFSM m_fsm;
 
     private MindPrompter m_prompter;
+
+
+    private PropertyChangeListener m_fsmStateChangeListener =  new PropertyChangeListener ()
+    {
+
+        public void propertyChange(PropertyChangeEvent event) {
+            String propertyName = event.getPropertyName();
+            State previousState = (State) event.getOldValue();
+            State newState = (State) event.getNewValue();
+
+            m_logger.info( "FSM: " + "  event: " + propertyName + ": " + "[" + previousState  + " -> " + newState + "]");
+
+        }
+    };
 
     MouseListener m_prompterMouseListener = new MouseAdapter() {
         public void mouseClicked(MouseEvent mouseEvent) {
@@ -82,7 +101,7 @@ public class MindView extends Display {
 		setKeyControlListener();
 
         m_fsm = new MindViewFSM(this, MindViewFSM.MindViewStateMap.Normal);
-        //TODO m_fsm.setState(m_fsm.MindViewStateMap.Normal);
+        m_fsm.addStateChangeListener(m_fsmStateChangeListener);
         m_fsm.enterStartState();
 	}
 
