@@ -420,7 +420,8 @@ public class MindTreeController {
             m_mindTree.addReference(m_mindTree.getDBId(cursorNode), m_pos, m_refereeDBId);
 
         }
-        public void redo() {
+        public void redo()
+        {
             setCursorByPath(m_nodePath);
             m_mindTree.removeReference(m_refereeDBId, m_pos);
         }

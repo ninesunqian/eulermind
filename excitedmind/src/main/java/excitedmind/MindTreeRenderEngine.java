@@ -108,7 +108,7 @@ public class MindTreeRenderEngine {
     {
         
         MindTreeLayout treeLayout = 
-        	new MindTreeLayout(m_treeGroupName, m_orientation, 50, 0, 0);
+        	new MindTreeLayout(m_treeGroupName, m_orientation, 50, 50, 50);
         
     	treeLayout.setOrientation(Constants.ORIENT_LEFT_RIGHT);
         //must set the anchor, if not, the anchor will move to the center of display, every time.

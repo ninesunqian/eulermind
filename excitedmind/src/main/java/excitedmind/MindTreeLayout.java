@@ -293,11 +293,11 @@ public class MindTreeLayout extends TreeLayout {
                 np.mod = 0;
             } else {
             	Params lp = getParams(l);
-        		np.mod = lp.mod + lp.breadth;
+                np.mod = lp.mod + lp.breadth + m_bspace;
         		np.prelim = np.mod;
             }
             
-        	np.breadth = v ? nBounds.getWidth() : nBounds.getHeight() + m_bspace;
+            np.breadth = v ? nBounds.getWidth() : nBounds.getHeight();
         }
         else if ( expanded )
         {
@@ -318,14 +318,15 @@ public class MindTreeLayout extends TreeLayout {
 
         	if ( left != null ) {
         		Params lp = getParams(left);
-    			np.mod = lp.mod + lp.breadth + spacing(left, n, true);
+                np.mod = lp.mod + lp.breadth + spacing(left, n, true);
+
     			np.prelim = np.mod + midpoint;
         	} else {
         		np.prelim = midpoint;
         	}
 
         	Params lastChildParams = getParams(rightMost);
-        	np.breadth = lastChildParams.mod + lastChildParams.breadth;
+            np.breadth = lastChildParams.mod + lastChildParams.breadth;
         }
     }
     
