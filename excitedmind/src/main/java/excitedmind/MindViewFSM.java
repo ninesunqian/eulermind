@@ -431,6 +431,13 @@ public class MindViewFSM
         }
 
         @Override
+        protected void Default(MindViewFSM context)
+        {
+
+            return;
+        }
+
+        @Override
         protected void cursorDown(MindViewFSM context)
         {
             MindView ctxt = context.getOwner();
@@ -577,7 +584,6 @@ public class MindViewFSM
             context.clearState();
             try
             {
-                ctxt.m_logger.info("---click -----");
                 ctxt.m_mindTreeController.setCursorNode(ctxt.m_mindTreeController.toSource(nodeItem));
                 ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.toggleFoldCursorUndoable());
             }
@@ -766,6 +772,13 @@ public class MindViewFSM
         }
 
         @Override
+        protected void Default(MindViewFSM context)
+        {
+
+            return;
+        }
+
+        @Override
         protected void cancel(MindViewFSM context)
         {
             MindView ctxt = context.getOwner();
@@ -826,6 +839,13 @@ public class MindViewFSM
         private MindViewStateMap_Inserting(String name, int id)
         {
             super (name, id);
+        }
+
+        @Override
+        protected void Default(MindViewFSM context)
+        {
+
+            return;
         }
 
         @Override
@@ -892,6 +912,13 @@ public class MindViewFSM
         }
 
         @Override
+        protected void Default(MindViewFSM context)
+        {
+
+            return;
+        }
+
+        @Override
         protected void cancel(MindViewFSM context)
         {
 
@@ -942,6 +969,13 @@ public class MindViewFSM
         private MindViewStateMap_Linking(String name, int id)
         {
             super (name, id);
+        }
+
+        @Override
+        protected void Default(MindViewFSM context)
+        {
+
+            return;
         }
 
         @Override

@@ -122,21 +122,18 @@ public class MindView extends Display {
 
 			public void itemEntered(VisualItem item, MouseEvent e) {
 				if (m_mindTreeController.isNode(item)) {
-                    m_logger.info("mouse entered event---");
                     m_fsm.mouseInNode((NodeItem)item);
 				}
 			}
 
             public void itemExited(VisualItem item, MouseEvent e) {
                 if (m_mindTreeController.isNode(item)) {
-                    m_logger.info("mouse exit event---");
                     m_fsm.mouseOutNode();
                 }
             }
 
 			public void itemPressed(VisualItem item, MouseEvent e) {
 				if (m_mindTreeController.isNode(item)) {
-                    m_logger.info("mouse click event---");
                     m_fsm.press((NodeItem)item);
 				}
 			}

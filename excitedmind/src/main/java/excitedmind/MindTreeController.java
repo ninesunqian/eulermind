@@ -31,7 +31,7 @@ public class MindTreeController {
     TreeCursor m_cursor;
     Node m_savedCursor = null;
 
-    private LinkedHashSet<Node> m_foldedNodes = new LinkedHashSet<Node>();
+    private LinkedHashSet<Integer> m_foldedNodes = new LinkedHashSet<Integer>();
 
     public Stack<Integer> getNodePath(Node node)
     {
@@ -39,6 +39,8 @@ public class MindTreeController {
 
         Node climber = node;
         Node root = m_mindTree.m_displayTree.getRoot();
+
+        assert (climber != null);
 
         while (climber != root)
         {
@@ -120,6 +122,7 @@ public class MindTreeController {
     public Node setCursorByPath(Stack<Integer> path)
     {
         Node node = getNodeByPath(path);
+        assert(node.getRow() != -1);
         m_cursor.setCursorNode(toVisual(node));
         return node;
     }
@@ -145,6 +148,7 @@ public class MindTreeController {
 
     public void setCursorNode(Node node)
     {
+        assert(node.getRow() != -1);
         m_cursor.setCursorNode(toVisual(node));
     }
 
@@ -176,7 +180,7 @@ public class MindTreeController {
             public void tableChanged(Table t, int start, int end, int col, int type) {
                 if (type ==  EventConstants.DELETE) {
                     for (int i=start; i<=end; i++) {
-                        m_foldedNodes.remove(m_mindTree.m_displayTree.getNode(i));
+                        m_foldedNodes.remove(i);
                     }
                 }
             }
@@ -233,8 +237,12 @@ public class MindTreeController {
 
         Node newCursor = getFamiliarNode(topParent.getChild(node.getIndex()));
 
+        assert(newCursor.isValid());
+
         //using node path, compute the removed node in highest level;
         m_mindTree.trashNode(m_mindTree.getDBId(cursorNode.getParent()), cursorNode.getIndex());
+
+        assert(newCursor.isValid());
 
         setCursorNode(newCursor);
     }
@@ -405,15 +413,16 @@ public class MindTreeController {
             m_refereeDBId = refereeDBId;
             m_pos = pos;
         }
-        public void undo ()
+        public void undo()
         {
-            setCursorByPath(m_nodePath);
-            m_mindTree.removeReference(m_refereeDBId, m_pos);
-        }
-        public void redo () {
             Node cursorNode = getCursorNode();
             setCursorByPath(m_nodePath);
             m_mindTree.addReference(m_mindTree.getDBId(cursorNode), m_pos, m_refereeDBId);
+
+        }
+        public void redo() {
+            setCursorByPath(m_nodePath);
+            m_mindTree.removeReference(m_refereeDBId, m_pos);
         }
 
         Object m_refereeDBId;
@@ -430,10 +439,12 @@ public class MindTreeController {
             Object refereeDBId = m_mindTree.getDBId(cursorNode);
             int pos = cursorNode.getIndex();
 
+            RemovingReferenceUndoer undoer = new RemovingReferenceUndoer(getNodePath(parent), refereeDBId, pos);
+
             m_mindTree.removeReference(m_mindTree.getDBId(parent), cursorNode.getIndex());
             setCursorNode(parent);
 
-            return new RemovingReferenceUndoer(getNodePath(parent), refereeDBId, pos);
+            return undoer;
         }
         else {
             RemovingChildUndoer undor = new RemovingChildUndoer(getNodePath(cursorNode),
@@ -591,7 +602,7 @@ public class MindTreeController {
             return;
         }
 
-        m_foldedNodes.add(node);
+        m_foldedNodes.add(node.getRow());
 
         final Node foldTreeRoot = node;
 
@@ -612,7 +623,7 @@ public class MindTreeController {
                 String text = m_mindTree.getText(node);
 
                 //m_logger.info ( "invisiableNode " + text);
-                if (m_foldedNodes.contains(node)) {
+                if (m_foldedNodes.contains(node.getRow())) {
                     m_logger.info ( "m_foldedNodes contain: " + node + " " + text);
                     return false;
                 } else {

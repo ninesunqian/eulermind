@@ -64,7 +64,6 @@ Entry
     press(nodeItem: NodeItem)
         Normal
         {
-            m_logger.info("---click -----");
             m_mindTreeController.setCursorNode(ctxt.m_mindTreeController.toSource(nodeItem));
             m_undoManager.addEdit(ctxt.m_mindTreeController.toggleFoldCursorUndoable());
         }
@@ -113,6 +112,12 @@ Entry
         Linking
         {
         }
+
+    Default
+        nil
+    {
+
+    }
 }
 
 Editing
@@ -127,6 +132,11 @@ Editing
         {
             stopEditing(false);
         }
+    Default
+        nil
+    {
+
+    }
 }
 
 Inserting
@@ -141,6 +151,11 @@ Inserting
         {
             stopInserting(false, false);
         }
+    Default
+        nil
+    {
+
+    }
 }
 
 Moving
@@ -155,6 +170,11 @@ Moving
         {
 
         }
+    Default
+        nil
+    {
+
+    }
 }
 
 Linking
@@ -169,6 +189,11 @@ Linking
         {
 
         }
+    Default
+        nil
+    {
+
+    }
 }
 
 %%
