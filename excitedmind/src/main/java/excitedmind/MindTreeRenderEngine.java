@@ -20,10 +20,7 @@ import prefuse.render.DefaultRendererFactory;
 import prefuse.render.EdgeRenderer;
 import prefuse.render.AbstractShapeRenderer;
 import prefuse.render.LabelRenderer;
-import prefuse.util.ColorLib;
-import prefuse.util.FontLib;
-import prefuse.util.PrefuseLib;
-import prefuse.util.StrokeLib;
+import prefuse.util.*;
 import prefuse.visual.EdgeItem;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
@@ -107,8 +104,8 @@ public class MindTreeRenderEngine {
     private Action makeItemPositionActions ()
     {
         
-        MindTreeLayout treeLayout = 
-        	new MindTreeLayout(m_treeGroupName, m_orientation, 50, 50, 50);
+        MindTreeLayout treeLayout =
+        	new MindTreeLayout(m_treeGroupName, m_orientation, 50, 5, 5);
         
     	treeLayout.setOrientation(Constants.ORIENT_LEFT_RIGHT);
         //must set the anchor, if not, the anchor will move to the center of display, every time.
@@ -250,6 +247,13 @@ public class MindTreeRenderEngine {
 
         protected String getText(VisualItem item) {
             String s = item.getString(MindTree.sm_textPropName);
+
+            //wxg add for test
+            if (item instanceof NodeItem) {
+                s += MindTreeLayout.getSubTreeRectString((NodeItem) item);
+                return s;
+            } //wxg for test
+
             return  (s==null || s.length() < 2 )? " " + s + " ": s;
         }
 
@@ -275,6 +279,11 @@ public class MindTreeRenderEngine {
                     return RENDER_TYPE_DRAW_AND_FILL;
                 }
             }
+        }
+
+        public void render(Graphics2D g, VisualItem item) {
+            super.render(g, item);
+            GraphicsLib.paint(g, item, MindTreeLayout.getSubTreeRect((NodeItem) item), getStroke(item), RENDER_TYPE_DRAW);
         }
     }
 }

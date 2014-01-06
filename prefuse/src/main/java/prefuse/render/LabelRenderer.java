@@ -299,7 +299,12 @@ public class LabelRenderer extends AbstractShapeRenderer {
         
         return str==null ? text : str.toString();
     }
-    
+
+    @Override
+    protected void drawShape(Graphics2D g, VisualItem item, Shape shape) {
+        super.drawShape(g, item, shape);    //To change body of overridden methods use File | Settings | File Templates.
+    }
+
     /**
      * @see prefuse.render.AbstractShapeRenderer#getRawShape(prefuse.visual.VisualItem)
      */
@@ -530,6 +535,7 @@ public class LabelRenderer extends AbstractShapeRenderer {
         if (type==RENDER_TYPE_DRAW || type==RENDER_TYPE_DRAW_AND_FILL) {
             GraphicsLib.paint(g,item,shape,getStroke(item),RENDER_TYPE_DRAW);
         }
+
     }
     
     private final void drawString(Graphics2D g, FontMetrics fm, String text,

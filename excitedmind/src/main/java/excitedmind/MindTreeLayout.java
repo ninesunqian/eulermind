@@ -424,15 +424,29 @@ public class MindTreeLayout extends TreeLayout {
         
         public double shift;
         public double change;
-        
-        // for not aligned tree, the position in deep direction
-        public double deepSize;
+
         // for not aligned tree, the size in deep direction
+        public double deepSize;
+        // for not aligned tree, the position in deep direction
         double depth;
         
         public void clear() {
             prelim = mod = shift = change = 0;
         }
+    }
+
+    static public Rectangle2D getSubTreeRect(NodeItem node)
+    {
+        Params p = getParams(node);
+        //assert orient is left_to_right
+        return new Rectangle2D.Double(node.getX(), node.getY() - p.breadth/2, p.deepSize, p.breadth);
+    }
+
+    static public String getSubTreeRectString(NodeItem node)
+    {
+        Rectangle2D.Double rect = (Rectangle2D.Double) getSubTreeRect(node);
+        return String.format("[x1:%.0f, y1:%.0f, x2:%.0f, y2:%.0f]",
+                rect.getMinX(), rect.getMinY(), rect.getMaxX(), rect.getMaxY());
     }
     
 } // end of class NodeLinkTreeLayout
