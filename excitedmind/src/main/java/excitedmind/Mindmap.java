@@ -102,7 +102,7 @@ public class Mindmap {
 	static private Vertex m_rootVertex;
 	static private void createTree (DBTree dbTree, Vertex parent, String parentText, int level)
 	{
-		if (level >= 4)
+		if (level >= 3)
 		{
 			return;
 			

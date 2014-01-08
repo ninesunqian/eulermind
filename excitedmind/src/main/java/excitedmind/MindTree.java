@@ -98,7 +98,7 @@ public class MindTree {
 		Node root = m_displayTree.addRoot();
 		loadNodeProperties(m_dbTree.getVertex(rootId), root);
 
-        final int initialLevel = 2;
+        final int initialLevel = 1;
 		m_displayTree.deepTraverse(root, new Tree.Processor() {
             public boolean run(Node node, int level) {
                 attachChildren(node);

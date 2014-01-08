@@ -2,7 +2,6 @@ package excitedmind;
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
@@ -11,16 +10,10 @@ import prefuse.Display;
 import prefuse.action.layout.graph.TreeLayout;
 import prefuse.data.Graph;
 import prefuse.data.Schema;
-import prefuse.data.Tree;
-import prefuse.data.Tuple;
 import prefuse.data.tuple.TupleSet;
-import prefuse.util.ArrayLib;
 import prefuse.util.PrefuseLib;
 import prefuse.visual.EdgeItem;
 import prefuse.visual.NodeItem;
-import prefuse.visual.VisualItem;
-import prefuse.visual.VisualTree;
-import prefuse.visual.tuple.TableNodeItem;
 
 /**
  * <p>TreeLayout that computes a tidy layout of a node-link tree
@@ -44,7 +37,6 @@ public class MindTreeLayout extends TreeLayout {
 
     private int    m_orientation;  // the orientation of the tree
     private double m_bspace = 20;   // the spacing between sibling nodes
-    private double m_tspace = 20;  // the spacing between subtrees
     private double m_dspace = 20;  // the spacing between depth levels
     private double m_offset = 20;  // pixel offset for root node position
     
@@ -70,18 +62,16 @@ public class MindTreeLayout extends TreeLayout {
      * {@link prefuse.Constants#ORIENT_BOTTOM_TOP}.
      * @param dspace the spacing to maintain between depth levels of the tree
      * @param bspace the spacing to maintain between sibling nodes
-     * @param tspace the spacing to maintain between neighboring subtrees
      */
     public MindTreeLayout(String group, int orientation,
-            double dspace, double bspace, double tspace)
+            double dspace, double bspace)
     {
         super(group);
         m_orientation = orientation;
         
         m_dspace = dspace;
         m_bspace = bspace;
-        m_tspace = tspace;
-        
+
     }
     
     // ------------------------------------------------------------------------
@@ -150,22 +140,6 @@ public class MindTreeLayout extends TreeLayout {
     }
     
     /**
-     * Set the spacing between neighboring subtrees.
-     * @param s the subtree spacing to use
-     */
-    public void setSubtreeSpacing(double s) {
-        m_tspace = s;
-    }
-    
-    /**
-     * Get the spacing between neighboring subtrees.
-     * @return the subtree spacing
-     */
-    public double getSubtreeSpacing() {
-        return m_tspace;
-    }
-    
-    /**
      * Set the offset value for placing the root node of the tree. The
      * dimension in which this offset is applied is dependent upon the
      * orientation of the tree. For example, in a left-to-right orientation,
@@ -217,13 +191,6 @@ public class MindTreeLayout extends TreeLayout {
         return m_tmpa;
     }
     
-    private double spacing(NodeItem l, NodeItem r, boolean siblings) {
-        boolean w = ( m_orientation == Constants.ORIENT_TOP_BOTTOM ||
-                      m_orientation == Constants.ORIENT_BOTTOM_TOP );
-        return (siblings ? m_bspace : m_tspace);
-    }
-    
-    
     // ------------------------------------------------------------------------
     
     /**
@@ -264,7 +231,7 @@ public class MindTreeLayout extends TreeLayout {
         firstWalk(root, 0, 1);
         
         // do second pass - assign layout positions
-        secondWalk(root, null, -rp.prelim, 0);
+        secondWalk(root, null, -rp.posInChild, 0);
     }
 
     private void firstWalk(NodeItem n, int num, int depth) {
@@ -288,51 +255,48 @@ public class MindTreeLayout extends TreeLayout {
         if ( n.getChildCount() == 0 || !expanded ) // is leaf
         { 
             NodeItem l = (NodeItem)n.getPreviousSibling();
+            np.breadth = (v ? nBounds.getWidth() : nBounds.getHeight())  + m_bspace;
+
             if ( l == null ) {
-                np.prelim = 0;
-                np.mod = 0;
+                np.subTreeTopInSibling = 0;
+
             } else {
             	Params lp = getParams(l);
-                np.mod = lp.mod + lp.breadth + m_bspace;
-        		np.prelim = np.mod;
+                np.subTreeTopInSibling = lp.subTreeTopInSibling + lp.breadth;
             }
-            
-            np.breadth = v ? nBounds.getWidth() : nBounds.getHeight();
+
+            np.posInChild = np.breadth * 0.5;
         }
         else if ( expanded )
         {
         	NodeItem leftMost = (NodeItem)n.getFirstChild();
         	NodeItem rightMost = (NodeItem)n.getLastChild();
-        	//NodeItem defaultAncestor = leftMost;
+
         	NodeItem c = leftMost;
         	for ( int i=0; c != null; ++i, c = (NodeItem)c.getNextSibling() )
         	{
         		firstWalk(c, i, depth+1);
-        		//defaultAncestor = apportion(c, defaultAncestor);
         	}
 
-        	double midpoint = 0.5 *
-        	(getParams(leftMost).prelim + getParams(rightMost).prelim);
+            Params lastChildParams = getParams(rightMost);
+            np.breadth = lastChildParams.subTreeTopInSibling + lastChildParams.breadth;
 
-        	NodeItem left = (NodeItem)n.getPreviousSibling();
+            NodeItem left = (NodeItem)n.getPreviousSibling();
+            if ( left != null ) {
+                Params lp = getParams(left);
+                np.subTreeTopInSibling = lp.subTreeTopInSibling + lp.breadth;
 
-        	if ( left != null ) {
-        		Params lp = getParams(left);
-                np.mod = lp.mod + lp.breadth + spacing(left, n, true);
+            } else {
+                np.subTreeTopInSibling = 0;
+            }
 
-    			np.prelim = np.mod + midpoint;
-        	} else {
-        		np.prelim = midpoint;
-        	}
-
-        	Params lastChildParams = getParams(rightMost);
-            np.breadth = lastChildParams.mod + lastChildParams.breadth;
+            np.posInChild = np.breadth * 0.5;
         }
     }
     
     private void secondWalk(NodeItem n, NodeItem p, double m, int depth) {
         Params np = getParams(n);
-        setBreadth(n, p, np.prelim + m);
+        setBreadth(n, p, np.posInChild + m);
         
     	setDepth(n, p, np.depth);
         
@@ -341,7 +305,8 @@ public class MindTreeLayout extends TreeLayout {
             for ( NodeItem c = (NodeItem)n.getFirstChild();
                   c != null; c = (NodeItem)c.getNextSibling() )
             {
-                secondWalk(c, n, m + np.mod, depth);
+                Params cp = getParams(c);
+                secondWalk(c, n, m + cp.subTreeTopInSibling, depth);
             }
         }
         
@@ -416,9 +381,9 @@ public class MindTreeLayout extends TreeLayout {
      */
     public static class Params implements Cloneable {
     	//the root node position (left top point of node) of subtree in siblings forest area
-        public double prelim;
+        public double posInChild;
     	//the top position of subtree in siblings forest area. suppose m_orientation is left-to-right
-        public double mod;
+        public double subTreeTopInSibling;
         //the breadth of subtree 
         public double breadth;
         
@@ -431,7 +396,7 @@ public class MindTreeLayout extends TreeLayout {
         double depth;
         
         public void clear() {
-            prelim = mod = shift = change = 0;
+            posInChild = subTreeTopInSibling = shift = change = 0;
         }
     }
 
@@ -444,9 +409,10 @@ public class MindTreeLayout extends TreeLayout {
 
     static public String getSubTreeRectString(NodeItem node)
     {
+        Params np = getParams(node);
         Rectangle2D.Double rect = (Rectangle2D.Double) getSubTreeRect(node);
-        return String.format("[x1:%.0f, y1:%.0f, x2:%.0f, y2:%.0f]",
-                rect.getMinX(), rect.getMinY(), rect.getMaxX(), rect.getMaxY());
+        return String.format("[x;%.0f, y:%.0f][subTreeTopInSibling:%.0f, posInChild:%.0f, breadth:%.0f]",
+                node.getX(), node.getY(), np.subTreeTopInSibling, np.posInChild, np.breadth);
     }
     
 } // end of class NodeLinkTreeLayout
