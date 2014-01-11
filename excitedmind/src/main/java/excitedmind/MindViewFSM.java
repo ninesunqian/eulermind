@@ -417,6 +417,7 @@ public class MindViewFSM
             {
                 MindView ctxt = context.getOwner();
 
+            ctxt.mouse_control_set_enabled(true);
             ctxt.renderTree();
             return;
         }
@@ -772,6 +773,15 @@ public class MindViewFSM
         }
 
         @Override
+        protected void entry(MindViewFSM context)
+            {
+                MindView ctxt = context.getOwner();
+
+            ctxt.mouse_control_set_enabled(false);
+            return;
+        }
+
+        @Override
         protected void Default(MindViewFSM context)
         {
 
@@ -839,6 +849,15 @@ public class MindViewFSM
         private MindViewStateMap_Inserting(String name, int id)
         {
             super (name, id);
+        }
+
+        @Override
+        protected void entry(MindViewFSM context)
+            {
+                MindView ctxt = context.getOwner();
+
+            ctxt.mouse_control_set_enabled(false);
+            return;
         }
 
         @Override

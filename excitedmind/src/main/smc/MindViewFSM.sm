@@ -18,6 +18,7 @@ Exit
     }
 Entry
     {
+        mouse_control_set_enabled(true);
         renderTree();
     }
 {
@@ -121,6 +122,10 @@ Entry
 }
 
 Editing
+Entry
+    {
+        mouse_control_set_enabled(false);
+    }
 {
     ok
         Normal
@@ -140,6 +145,10 @@ Editing
 }
 
 Inserting
+Entry
+    {
+        mouse_control_set_enabled(false);
+    }
 {
     ok(fromPrompter: boolean)
         Normal

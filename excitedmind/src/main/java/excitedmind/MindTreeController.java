@@ -320,28 +320,28 @@ public class MindTreeController {
     public void addPlaceholder(boolean asChild)
     {
         Node cursorNode = getCursorNode();
+        Node newNode;
         m_savedCursor = cursorNode;
         if (asChild) {
             //FIXME: prefuse function using dbTree's argument
-            cursorNode = m_mindTree.m_displayTree.addChild(cursorNode, m_mindTree.getChildCount(cursorNode));
+            newNode = m_mindTree.m_displayTree.addChild(cursorNode, m_mindTree.getChildCount(cursorNode));
         } else {
             Node parent = cursorNode.getParent();
             int pos = cursorNode.getIndex() + 1;
-            cursorNode = m_mindTree.m_displayTree.addChild(parent, pos);
+            newNode = m_mindTree.m_displayTree.addChild(parent, pos);
         }
-        cursorNode.set(m_mindTree.sm_textPropName, "");
+        newNode.set(m_mindTree.sm_textPropName, "");
+        setCursorNode(newNode);
     }
 
     public void removePlaceholder()
     {
-        Node cursorNode = getCursorNode();
-        assert(isPlaceholer(cursorNode));
-        assert(cursorNode != m_mindTree.m_displayTree.getRoot());
+        Node placeholderNode = getCursorNode();
+        assert(isPlaceholer(placeholderNode));
+        assert(placeholderNode != m_mindTree.m_displayTree.getRoot());
 
-        Node placeholder = cursorNode;
-        cursorNode = m_savedCursor;
-
-        m_mindTree.m_displayTree.removeChild(placeholder);
+        m_mindTree.m_displayTree.removeChild(placeholderNode);
+        setCursorNode(m_savedCursor);
     }
 
     //include node and edge, the edge is used rendering
@@ -364,7 +364,6 @@ public class MindTreeController {
 
         m_mindTree.m_displayTree.removeChild(cursorNode);
         AbstractUndoableEdit undor =  addChildUndoable(parent, pos, text);
-        cursorNode = parent.getChild(pos);
         return  undor;
     }
 
@@ -381,7 +380,6 @@ public class MindTreeController {
         m_mindTree.m_displayTree.removeChild(cursorNode);
 
         AbstractUndoableEdit undor = addReferenceUndoable(sourceNode, pos, refereeDBId);
-        cursorNode = sourceNode.getChild(pos);
         return undor;
     }
 

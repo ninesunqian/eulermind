@@ -34,6 +34,8 @@ public class MindPrompter {
 
     public MindPrompter(JComponent parentView, DBTree dbTree)
     {
+        m_dbTree = dbTree;
+
         m_jList = new JList(new DefaultListModel());
         m_jScrollPane = new JScrollPane(m_jList);
 
@@ -69,6 +71,7 @@ public class MindPrompter {
     public void show(JTextComponent editor)
     {
         editor.getDocument().addDocumentListener(m_editTextListener);
+        m_followedEditor = editor;
 
         m_jScrollPane.setLocation(editor.getX(), editor.getY() + editor.getHeight());
         m_jScrollPane.setSize(100, 100);
@@ -135,8 +138,13 @@ public class MindPrompter {
             m_text = vertex.getProperty(MindTree.sm_textPropName);
 
             DBTree.EdgeVertex edgeVertex = m_dbTree.getParent(vertex);
-            m_parentDBId = edgeVertex.m_vertex.getId();
-            m_parentText = edgeVertex.m_vertex.getProperty(MindTree.sm_textPropName);
+            if (edgeVertex == null) {
+                m_parentDBId = null;
+                m_parentText = null;
+            } else {
+                m_parentDBId = edgeVertex.m_vertex.getId();
+                m_parentText = edgeVertex.m_vertex.getProperty(MindTree.sm_textPropName);
+            }
         }
     }
 
@@ -171,7 +179,12 @@ public class MindPrompter {
 
             for (PromptedNode promptedNode : promptedNodes) {
                 m_logger.info("get promptedNode " + promptedNode.m_dbId);
-                listModel.addElement(promptedNode.m_parentText + " -> " + promptedNode.m_text);
+
+                if (promptedNode.m_parentText != null) {
+                    listModel.addElement(promptedNode.m_parentText + " -> " + promptedNode.m_text);
+                } else  {
+                    listModel.addElement("root: " + promptedNode.m_text);
+                }
             }
         }
     };

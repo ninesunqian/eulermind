@@ -71,7 +71,11 @@ public class MindView extends Display {
         public void keyPressed(KeyEvent e)
         {
             if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                m_fsm.ok();
+                if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Inserting) {
+                    m_fsm.ok(false);
+                } else {
+                    m_fsm.ok();
+                }
             }
             else if (e.getKeyCode() == KeyEvent.VK_ESCAPE)  {
                 m_fsm.cancel();
@@ -113,12 +117,19 @@ public class MindView extends Display {
         m_renderEngine.run(runAfterRePaint);
     }
 
+    ControlAdapter m_zoomToFitContol;
+    ControlAdapter m_zoomControl;
+    ControlAdapter m_wheelZoomControl;
+    ControlAdapter m_panControl;
+    ControlAdapter m_mouseInoutControl;
+
 	private void setMouseControlListener() {
-		addControlListener(new ZoomToFitControl());
-		addControlListener(new ZoomControl());
-		addControlListener(new WheelZoomControl());
-		addControlListener(new PanControl());
-		addControlListener(new ControlAdapter() {
+		m_zoomToFitContol = new ZoomToFitControl();
+		m_zoomControl = new ZoomControl();
+		m_wheelZoomControl = new WheelZoomControl();
+		m_panControl = new PanControl();
+
+		m_mouseInoutControl = (new ControlAdapter() {
 
 			public void itemEntered(VisualItem item, MouseEvent e) {
 				if (m_mindTreeController.isNode(item)) {
@@ -139,8 +150,22 @@ public class MindView extends Display {
 			}
 
 		});
+
+        addControlListener(m_zoomToFitContol);
+        addControlListener(m_zoomControl);
+        addControlListener(m_wheelZoomControl);
+        addControlListener(m_panControl);
+        addControlListener(m_mouseInoutControl);
 	}
 
+    void mouse_control_set_enabled(boolean enabled)
+    {
+        m_zoomToFitContol.setEnabled(enabled);
+        m_zoomControl.setEnabled(enabled);
+        m_wheelZoomControl.setEnabled(enabled);
+        m_panControl.setEnabled(enabled);
+        m_mouseInoutControl.setEnabled(enabled);
+    }
 
     void startEditing()
     {
