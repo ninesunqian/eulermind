@@ -255,7 +255,8 @@ public class MindTreeLayout extends TreeLayout {
         if ( n.getChildCount() == 0 || !expanded ) // is leaf
         { 
             NodeItem l = (NodeItem)n.getPreviousSibling();
-            np.breadth = (v ? nBounds.getWidth() : nBounds.getHeight())  + m_bspace;
+            np.breadth = nBounds.getHeight()  + m_bspace;
+            m_logger.info(String.format("nodeWidth: %.2f, nodeHeight: %.2f, m_bspace: %.2f", nBounds.getWidth(), nBounds.getHeight(), m_bspace));
 
             if ( l == null ) {
                 np.subTreeTopInSibling = 0;
@@ -400,19 +401,4 @@ public class MindTreeLayout extends TreeLayout {
         }
     }
 
-    static public Rectangle2D getSubTreeRect(NodeItem node)
-    {
-        Params p = getParams(node);
-        //assert orient is left_to_right
-        return new Rectangle2D.Double(node.getX(), node.getY() - p.breadth/2, p.deepSize, p.breadth);
-    }
-
-    static public String getSubTreeRectString(NodeItem node)
-    {
-        Params np = getParams(node);
-        Rectangle2D.Double rect = (Rectangle2D.Double) getSubTreeRect(node);
-        return String.format("[x;%.0f, y:%.0f][subTreeTopInSibling:%.0f, posInChild:%.0f, breadth:%.0f]",
-                node.getX(), node.getY(), np.subTreeTopInSibling, np.posInChild, np.breadth);
-    }
-    
 } // end of class NodeLinkTreeLayout

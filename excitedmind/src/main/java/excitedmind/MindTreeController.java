@@ -552,9 +552,9 @@ public class MindTreeController {
                 return;
             }
 
-            assert (m_foldedNodes.contains(node));
+            assert (m_foldedNodes.contains(node.getRow()));
 
-            m_foldedNodes.remove(node);
+            m_foldedNodes.remove(node.getRow());
 
             final Visualization vis = visualItem.getVisualization();
             final Node unfoldTreeRoot = node;
@@ -575,7 +575,7 @@ public class MindTreeController {
                     PrefuseLib.updateVisible(visualNode, true);
                     PrefuseLib.updateVisible(visualEdge, true);
 
-                    if (m_foldedNodes.contains(node)) {
+                    if (m_foldedNodes.contains(node.getRow())) {
                         return false;
                     } else {
                         return true;
@@ -638,7 +638,7 @@ public class MindTreeController {
         if (m_foldedNodes.size() > 5)
         {
             Node toRemovedNode = m_foldedNodes.iterator().next();
-            m_foldedNodes.remove(toRemovedNode);
+            m_foldedNodes.remove(toRemovedNode.getRow());
             detachChildern(toRemovedNode);
         }
         */

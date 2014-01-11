@@ -291,7 +291,7 @@ public class LabelRenderer extends AbstractShapeRenderer {
         
         // compute the text height
         m_textDim.height = fm.getHeight() * nlines;
-        
+
         return str==null ? text : str.toString();
     }
 

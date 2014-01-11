@@ -59,8 +59,11 @@ public class MindTreeRenderEngine {
         m_vis.putAction(sm_itemPositionActions, makeItemPositionActions());
         
         ActionList layoutAction = new ActionList();
-        layoutAction.add(makeItemPositionActions());
+
+        //style action must be before layout action
         layoutAction.add(makeItemStyleActions());
+        layoutAction.add(makeItemPositionActions());
+
         m_vis.putAction(sm_layoutAction, layoutAction);
         
         m_vis.putAction("repaint", m_repaintAction);
