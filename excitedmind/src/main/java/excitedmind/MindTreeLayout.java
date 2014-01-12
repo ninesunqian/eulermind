@@ -220,7 +220,7 @@ public class MindTreeLayout extends TreeLayout {
             NodeItem node = (NodeItem)nodes.next();
             NodeItem parent = (NodeItem)node.getParent();
 
-            if (parent != null && ! parent.isExpanded()) {
+            if (parent != null && (parent.isExpanded() == false || parent.isVisible() == false)) {
                 EdgeItem edge = (EdgeItem)node.getParentEdge();
                 PrefuseLib.updateVisible(node, false);
                 PrefuseLib.updateVisible(edge, false);
@@ -256,7 +256,6 @@ public class MindTreeLayout extends TreeLayout {
         { 
             NodeItem l = (NodeItem)n.getPreviousSibling();
             np.breadth = nBounds.getHeight()  + m_bspace;
-            m_logger.info(String.format("nodeWidth: %.2f, nodeHeight: %.2f, m_bspace: %.2f", nBounds.getWidth(), nBounds.getHeight(), m_bspace));
 
             if ( l == null ) {
                 np.subTreeTopInSibling = 0;

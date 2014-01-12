@@ -134,7 +134,10 @@ public class DBTree implements Graph {
 	{
 		Vertex root = addVertex(null);
 		m_rootIndex.put(ROOT_KEY_NAME, ROOT_KEY_NAME, root);
-        root.setProperty(INHERIT_PATH_PROP_NAME, new ArrayList ());
+
+        ArrayList inheritPath = new ArrayList();
+        inheritPath.add(root.getId());
+        root.setProperty(INHERIT_PATH_PROP_NAME, inheritPath);
         //TODO: simplify it!
 
 		Object rootId = root.getId();
@@ -164,13 +167,13 @@ public class DBTree implements Graph {
 	public ArrayList<Object> getContainerProperty (Vertex source, String propName, boolean ifNullCreate)
 	{
 		//Because outEdgeArray must be convert to ORecordLazyList, so its type is not ArrayList.
-		Object outEdgeArray = source.getProperty(propName);
-		if (outEdgeArray == null)
+		Object container = source.getProperty(propName);
+		if (container == null)
 		{
 			if (ifNullCreate)
 			{
-				outEdgeArray = new ArrayList<Object> ();
-				source.setProperty(propName, outEdgeArray);
+				container = new ArrayList<Object> ();
+				source.setProperty(propName, container);
 			}
 			else
 			{
@@ -178,13 +181,13 @@ public class DBTree implements Graph {
 			}
 		}
 		
-		if (outEdgeArray instanceof ORecordLazyList)
+		if (container instanceof ORecordLazyList)
 		{
-			ORecordLazyList implArray = (ORecordLazyList)outEdgeArray;
+			ORecordLazyList implArray = (ORecordLazyList)container;
 			implArray.setAutoConvertToRecord(false);
 		}
 		
-		return (ArrayList<Object>)outEdgeArray;
+		return (ArrayList<Object>)container;
 	}
 	
 	private ArrayList<Object> getEdgeIDsToChildren (Vertex source, boolean ifNullCreate)
@@ -213,18 +216,18 @@ public class DBTree implements Graph {
         }
 
         if (fromGeneration == toGeneration) {
-            if (i==fromGeneration)
+            if (i == fromGeneration)
                 return InheritDirection.LINEAL_SIBLING;
             else
                 return InheritDirection.COLLATERAL_SIBLING;
         } else if (fromGeneration < toGeneration) {
-            if (i==fromGeneration)
+            if (i == fromGeneration)
                 return InheritDirection.LINEAL_DESCENDANT;
             else
                 return InheritDirection.COLLATERAL_DESCENDANT;
 
         } else {
-            if (i==toGeneration)
+            if (i == toGeneration)
                 return InheritDirection.LINEAL_ANCESTOR;
             else
                 return InheritDirection.COLLATERAL_ANCESTOR;
@@ -349,7 +352,7 @@ public class DBTree implements Graph {
         {
             inheritPath.addAll(parentInheritPath);
         }
-        inheritPath.add(parent.getId());
+        inheritPath.add(child.getId());
 
         child.setProperty(INHERIT_PATH_PROP_NAME, inheritPath);
 

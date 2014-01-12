@@ -110,6 +110,9 @@ public class MindTree {
 
 	private static void loadElementProperties(com.tinkerpop.blueprints.Element dbElement, Tuple tuple, String keys[])
 	{
+        if (dbElement == null || dbElement.getId() == null) {
+            System.out.println ("nullllllllllllllllllll");
+        }
 		tuple.set(sm_dbIdColumnName, dbElement.getId());
 		for (String key : keys)
 		{
@@ -313,17 +316,34 @@ public class MindTree {
 	public Object trashNode(Object parentDBId, int pos)
 	{
         Vertex parent = m_dbTree.getVertex(parentDBId);
-        EdgeVertex edgeChild = m_dbTree.getChildOrReferee(parent, pos);
+        final EdgeVertex edgeChild = m_dbTree.getChildOrReferee(parent, pos);
         Object removedDBId = edgeChild.m_vertex.getId();
 
-        hideRelation(parent, pos);
+        final ArrayList<Object> inheritPathOfTrashedNode =
+                m_dbTree.getContainerProperty(edgeChild.m_vertex, sm_inheritPathPropName, true);
 
-		ArrayList<Object> refLinkInfoes = m_dbTree.getContainerProperty (edgeChild.m_vertex, DBTree.SAVED_REFERER_INFO_PROP_NAME, true);
-		for (Object obj : refLinkInfoes)
-		{
-			final RefLinkInfo refLinkInfo = (RefLinkInfo) obj;
-            hideRelation(m_dbTree.getVertex(refLinkInfo.m_referee), refLinkInfo.m_pos);
-		}
+        m_displayTree.deepTraverse(m_displayTree.getRoot(),  new Tree.Processor() {
+            public boolean run(Node node, int level) {
+
+                m_logger.info ("remove traverse: " + node.getString(sm_textPropName));
+
+                ArrayList inheritPathOfTreeNode = (ArrayList) node.get(sm_inheritPathPropName);
+
+                DBTree.InheritDirection inheritDirection = m_dbTree.getInheritDirection(inheritPathOfTrashedNode,
+                        inheritPathOfTreeNode);
+
+                System.out.println (edgeChild.m_vertex.getProperty(sm_textPropName) +"-->" + node.getString(sm_textPropName)
+                        + ": " + inheritDirection);
+
+                if (node.get(sm_dbIdColumnName).equals(edgeChild.m_vertex.getId()) ||
+                        inheritDirection == DBTree.InheritDirection.LINEAL_DESCENDANT ) {
+                    m_displayTree.removeChild(node);
+                    return false;
+                }
+                return true;
+            }
+
+        });
 
         m_dbTree.trashSubTree(parent, pos);
 
@@ -343,7 +363,7 @@ public class MindTree {
         for (final RefLinkInfo refLinkInfo : context.m_refLinkInfos) {
             final Vertex refererVertex = m_dbTree.getVertex(refLinkInfo.m_referer);
             final Vertex refereeVertex = m_dbTree.getVertex(refLinkInfo.m_referee);
-            final com.tinkerpop.blueprints.Edge refDBEdge = m_dbTree.getEdge (refereeVertex, refLinkInfo.m_pos);
+            final com.tinkerpop.blueprints.Edge refDBEdge = m_dbTree.getEdge (refererVertex, refLinkInfo.m_pos);
 
             exposeRelation(refererVertex, refLinkInfo.m_pos, refDBEdge, refereeVertex);
         }

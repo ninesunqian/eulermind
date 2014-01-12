@@ -250,6 +250,10 @@ public class MindTreeRenderEngine {
 
         protected String getText(VisualItem item) {
             String s = item.getString(MindTree.sm_textPropName);
+            Object dbId = item.get(MindTree.sm_dbIdColumnName);
+            if (dbId != null) {
+                s += dbId.toString();
+            }
             return  (s==null || s.length() < 2 )? " " + s + " ": s;
         }
 

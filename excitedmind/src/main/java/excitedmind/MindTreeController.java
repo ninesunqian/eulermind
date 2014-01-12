@@ -86,7 +86,7 @@ public class MindTreeController {
         Node root = getRoot();
 
         m_logger.info ("remove'd node's node : " + getNodePath(node.getParent()));
-        for (Node n=node.getParent(); n!=root ;n=n.getParent())
+        for (Node n=node.getParent(); n!=root; n=n.getParent())
         {
             m_logger.info ("remove clim path : " + getNodePath(n));
             if (m_mindTree.sameDBNode(n, node)) {

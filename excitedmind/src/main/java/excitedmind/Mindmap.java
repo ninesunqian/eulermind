@@ -65,8 +65,11 @@ public class Mindmap {
         deleteDir(dbPath);
 
 		DBTree dbTree = new DBTree (dbUrl);
+
         dbTree.createFullTextVertexKeyIndex(MindTree.sm_textPropName);
 
+
+        /*
         {
             for (int i=0; i<10; i++) {
                 Vertex a = dbTree.m_graph.addVertex(null);
@@ -78,12 +81,14 @@ public class Mindmap {
                 a.setProperty(MindTree.sm_textPropName, "abcdef");
             }
         }
-
+        */
 
 		createTree (dbTree, null, "", 0);
+        /*
         for (Vertex v : dbTree.getVertices(MindTree.sm_textPropName, "def")) {
             System.out.println("find :" + v + ": " + v.getProperty(MindTree.sm_textPropName));
         }
+        */
 		dbTree = null;
 
 
