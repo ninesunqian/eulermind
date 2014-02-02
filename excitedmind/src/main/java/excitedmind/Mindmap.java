@@ -5,6 +5,7 @@ import excitedmind.DBTree.EdgeVertex;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.io.BufferedReader;
@@ -141,7 +142,14 @@ public class Mindmap {
 
             JMenuBar menuBar = new JMenuBar();
             setJMenuBar(menuBar);
-            JMenu openMenu = new JMenu();
+            JMenu fileMenu = new JMenu("文件");
+            fileMenu.setMnemonic('F');
+            menuBar.add(fileMenu);
+
+            JMenuItem openMenuItem = new JMenuItem("open", KeyEvent.VK_O);
+            fileMenu.add(openMenuItem);
+
+            setJMenuBar(menuBar);
 
             Color BACKGROUND = Color.WHITE;
             Color FOREGROUND = Color.BLACK;

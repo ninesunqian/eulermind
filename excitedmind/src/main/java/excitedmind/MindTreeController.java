@@ -219,6 +219,9 @@ public class MindTreeController {
 
     public boolean isNode(VisualItem item)
     {
+        if (item == null)
+            return false;
+
         return item.isInGroup(m_treeNodesGroupName);
     }
 
@@ -349,7 +352,6 @@ public class MindTreeController {
     {
         return (m_mindTree.getDBId(tuple) == null);
     }
-
 
     //node has other property except dbId;
     public AbstractUndoableEdit placeNewNodeUndoable()

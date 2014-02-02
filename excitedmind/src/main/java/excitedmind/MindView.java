@@ -1,7 +1,10 @@
 package excitedmind;
 
+import java.awt.*;
+import java.awt.dnd.DragSource;
 import java.awt.event.*;
 
+import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.logging.Logger;
@@ -22,7 +25,6 @@ import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
 import prefuse.visual.sort.TreeDepthItemSorter;
 
-import statemap.FSMContext;
 import statemap.State;
 
 /**
@@ -45,6 +47,9 @@ public class MindView extends Display {
 
     private MindPrompter m_prompter;
 
+    NodeItem m_dropNode;
+    enum DropPosition {OUTSIDE, TOP, BOTTOM, RIGHT};
+    DropPosition m_dropPosition;
 
     private PropertyChangeListener m_fsmStateChangeListener =  new PropertyChangeListener ()
     {
@@ -100,7 +105,6 @@ public class MindView extends Display {
         m_prompter.addMouseListener(m_prompterMouseListener);
 
         getTextEditor().addKeyListener(m_editorKeyListener);
-
 		setMouseControlListener();
 		setKeyControlListener();
 
@@ -121,7 +125,148 @@ public class MindView extends Display {
     ControlAdapter m_zoomControl;
     ControlAdapter m_wheelZoomControl;
     ControlAdapter m_panControl;
-    ControlAdapter m_mouseInoutControl;
+    ControlAdapter m_mouseControl;
+
+    DropPosition getDropPosition(NodeItem node, double x, double y)
+    {
+        Rectangle2D bounds = node.getBounds();
+        if (bounds.contains(x, y))
+        {
+            if (x > bounds.getCenterX()) {
+                return DropPosition.RIGHT;
+            }
+
+            if (y > bounds.getCenterY()) {
+                return DropPosition.BOTTOM;
+
+            } else {
+                return DropPosition.TOP;
+            }
+        } else {
+            return DropPosition.OUTSIDE;
+        }
+    }
+
+    class MouseControl extends ControlAdapter {
+
+        long m_ctrlReleaseTime;
+        boolean m_ctrlDowned;
+
+        MouseControl() {
+            m_ctrlReleaseTime = 0;
+            m_ctrlDowned = false;
+        }
+
+        public void itemEntered(VisualItem item, MouseEvent e) {
+            if (!m_mindTreeController.isNode(item)) {
+                return;
+            }
+            m_fsm.itemEntered((NodeItem)item);
+        }
+
+        public void itemExited(VisualItem item, MouseEvent e) {
+            if (!m_mindTreeController.isNode(item)) {
+                return;
+            }
+            m_fsm.itemExited((NodeItem)item);
+        }
+
+        public void itemPressed(VisualItem item, MouseEvent e) {
+            if (!m_mindTreeController.isNode(item)) {
+                return;
+            }
+            m_fsm.itemPressed((NodeItem)item);
+        }
+
+        public void itemClicked(VisualItem item, MouseEvent e) {
+            if (!m_mindTreeController.isNode(item)) {
+                return;
+            }
+            m_fsm.itemClicked();
+        }
+
+        public void itemDragged(VisualItem item, MouseEvent e) {
+            if (!m_mindTreeController.isNode(item)) {
+                return;
+            }
+
+            m_logger.info("itemDragged : " + item.getString(MindTree.sm_textPropName));
+
+            setCursor(m_ctrlDowned ? DragSource.DefaultLinkDrop : DragSource.DefaultMoveDrop);
+
+            if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Normal) {
+                m_fsm.itemDragged((NodeItem)item);
+
+                m_dropNode = null;
+                m_dropPosition = DropPosition.OUTSIDE;
+
+            } else if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
+
+                Point mousePoint = e.getPoint();
+                VisualItem dropTarget = findItem(mousePoint);
+
+                NodeItem dropNode;
+                DropPosition dropPosition;
+
+                if (dropTarget != null && m_mindTreeController.isNode(dropTarget)) {
+                    dropNode = (NodeItem)dropTarget;
+                    dropPosition = getDropPosition(dropNode, mousePoint.getX(), mousePoint.getY());
+                } else {
+                    dropNode = null;
+                    dropPosition = DropPosition.OUTSIDE;
+                }
+
+                if (m_dropNode != dropNode || m_dropPosition != dropPosition) {
+                    renderTree();
+                    m_dropNode = dropNode;
+                    m_dropPosition = dropPosition;
+                }
+            }
+        }
+
+        public void itemReleased(VisualItem item, MouseEvent e) {
+            if (!m_mindTreeController.isNode(item)) {
+                return;
+            }
+            m_logger.info("itemReleased : " + item.getString(MindTree.sm_textPropName));
+
+            if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
+                VisualItem dropTarget = findItem(e.getPoint());
+                if (dropTarget != null && m_mindTreeController.isNode(dropTarget)) {
+                    NodeItem dropNode = (NodeItem)dropTarget;
+                    m_logger.info(String.format("--- ctrlDown %s, release time %dms", m_ctrlDowned ?"true":"false", System.currentTimeMillis() - m_ctrlReleaseTime));
+                    m_fsm.itemDropped(dropNode, m_ctrlDowned || System.currentTimeMillis() - m_ctrlReleaseTime < 500);
+                    m_dropNode = null;
+                    m_dropPosition = DropPosition.OUTSIDE;
+                }else {
+                    m_fsm.cancel();
+                }
+            }
+        }
+
+        public void itemKeyPressed(VisualItem item, KeyEvent e) {
+            if (!m_mindTreeController.isNode(item)) {
+                return;
+            }
+
+            if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+                m_ctrlDowned = true;
+            }
+        }
+
+        public void itemKeyReleased(VisualItem item, KeyEvent e) {
+            if (!m_mindTreeController.isNode(item)) {
+                return;
+            }
+
+            if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+                //setCursor(DragSource.DefaultMoveDrop);
+                //setCursor(DragSource.DefaultMoveDrop);
+                m_ctrlReleaseTime = System.currentTimeMillis();
+                m_ctrlDowned = false;
+            }
+        }
+    };
 
 	private void setMouseControlListener() {
 		m_zoomToFitContol = new ZoomToFitControl();
@@ -129,33 +274,13 @@ public class MindView extends Display {
 		m_wheelZoomControl = new WheelZoomControl();
 		m_panControl = new PanControl();
 
-		m_mouseInoutControl = (new ControlAdapter() {
-
-			public void itemEntered(VisualItem item, MouseEvent e) {
-				if (m_mindTreeController.isNode(item)) {
-                    m_fsm.mouseInNode((NodeItem)item);
-				}
-			}
-
-            public void itemExited(VisualItem item, MouseEvent e) {
-                if (m_mindTreeController.isNode(item)) {
-                    m_fsm.mouseOutNode();
-                }
-            }
-
-			public void itemPressed(VisualItem item, MouseEvent e) {
-				if (m_mindTreeController.isNode(item)) {
-                    m_fsm.press((NodeItem)item);
-				}
-			}
-
-		});
+		m_mouseControl = new MouseControl();
 
         addControlListener(m_zoomToFitContol);
         addControlListener(m_zoomControl);
         addControlListener(m_wheelZoomControl);
         addControlListener(m_panControl);
-        addControlListener(m_mouseInoutControl);
+        addControlListener(m_mouseControl);
 	}
 
     void mouse_control_set_enabled(boolean enabled)
@@ -164,7 +289,7 @@ public class MindView extends Display {
         m_zoomControl.setEnabled(enabled);
         m_wheelZoomControl.setEnabled(enabled);
         m_panControl.setEnabled(enabled);
-        m_mouseInoutControl.setEnabled(enabled);
+        m_mouseControl.setEnabled(enabled);
     }
 
     void startEditing()
@@ -254,9 +379,18 @@ public class MindView extends Display {
         hideEditor();
     }
 
-    void startMoving()
+    void setMoveCursor()
     {
+        setCursor(DragSource.DefaultMoveDrop);
+    }
 
+    void setLinkCursor()
+    {
+    }
+
+    void setDefaultCursor()
+    {
+        setCursor(null);
     }
 
     private Timer m_cursorTimer;
@@ -279,6 +413,7 @@ public class MindView extends Display {
             m_cursorTimer = null;
         }
     }
+
 
     AbstractAction m_cursorLeftAction = new AbstractAction() {
         @Override
@@ -379,22 +514,6 @@ public class MindView extends Display {
         }
     };
 
-
-    AbstractAction m_startLinkAction = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
-            m_fsm.startLinking();
-        }
-    };
-
-    AbstractAction m_startMoveAction = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
-            m_fsm.startMoving();
-        }
-    };
-
-
     final static String sm_editActionName = "edit";
     final static String sm_undoActionName = "undo";
     final static String sm_redoActionName = "redo";
@@ -430,10 +549,6 @@ public class MindView extends Display {
 
         m_mindActionMap.put(sm_undoActionName, m_undoAction);
         m_mindActionMap.put(sm_redoActionName, m_redoAction);
-
-        m_mindActionMap.put(sm_startLinkActionName, m_startLinkAction);
-        m_mindActionMap.put(sm_startMoveActionName, m_startMoveAction);
-
 
         m_mindActionMap.put(sm_cursorLeft, m_cursorLeftAction);
         m_mindActionMap.put(sm_cursorRight, m_cursorRightAction);

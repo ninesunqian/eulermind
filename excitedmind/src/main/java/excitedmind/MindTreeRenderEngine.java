@@ -2,6 +2,7 @@ package excitedmind;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
+import java.awt.geom.RectangularShape;
 import java.util.logging.Logger;
 
 import prefuse.Constants;
@@ -44,7 +45,11 @@ public class MindTreeRenderEngine {
     private int m_orientation = Constants.ORIENT_LEFT_RIGHT;
 
     private RepaintAction m_repaintAction = new RepaintAction();
-	
+
+    private int m_cursorBackColor = ColorLib.rgb(210, 210, 210);
+    private int m_shadowBackColor = ColorLib.rgb(240, 240, 240);
+    private int m_normalBackColor = ColorLib.rgb(255, 255, 255);
+
 	public MindTreeRenderEngine(MindView mindView, String treeGroupName) {
 		m_mindView = mindView;
 		m_vis = m_mindView.getVisualization();
@@ -179,11 +184,11 @@ public class MindTreeRenderEngine {
             Node cursorNode = mindTreeController.getCursorNode();
 
             if (node == cursorNode)
-                return ColorLib.rgb(255, 0, 0);
+                return m_cursorBackColor;
             else if (!mindTreeController.isPlaceholer(node) && mindTreeController.m_mindTree.sameDBNode(node,cursorNode))
-                return ColorLib.rgb(255, 255, 0);
+                return m_shadowBackColor;
             else
-                return ColorLib.rgb(255, 255, 255);
+                return m_normalBackColor;
         }
     }
     
@@ -278,6 +283,72 @@ public class MindTreeRenderEngine {
                 } else {
                     return RENDER_TYPE_DRAW_AND_FILL;
                 }
+            }
+        }
+
+        public void render(Graphics2D g, VisualItem item) {
+            super.render(g, item);
+
+            if (item == m_mindView.m_dropNode) {
+                RectangularShape shape = (RectangularShape)getShape(item);
+
+                float x = (float)shape.getX();
+                float y = (float)shape.getY();
+                float width = (float)shape.getWidth();
+                float height = (float)shape.getHeight();
+
+                float colorStartX = x;
+                float colorStartY = y;
+                float colorEndX = x + width;
+                float colorEndY = y + width;
+
+                switch (m_mindView.m_dropPosition){
+                    case TOP:
+                        m_logger.info("TOP gradient");
+                        height /= 2;
+
+                        colorStartX = colorEndX = x;
+                        colorStartY = y + height;
+                        colorEndY = y;
+                        break;
+
+                    case BOTTOM:
+                        m_logger.info("bottom gradient");
+                        y += height / 2;
+                        height /= 2;
+
+                        colorStartX = colorEndX = x;
+                        colorStartY = y;
+                        colorEndY = y + height;
+                        break;
+
+                    case RIGHT:
+                        m_logger.info("right gradient");
+                        x += width / 2;
+                        width /= 2;
+
+                        colorStartY = colorEndY = y;
+                        colorStartX = x;
+                        colorEndX = x + width;
+                        break;
+
+                    case OUTSIDE:
+                        return;
+                }
+
+                int red = ColorLib.red(m_cursorBackColor);
+                int green = ColorLib.green(m_cursorBackColor);
+                int blue = ColorLib.blue(m_cursorBackColor);
+
+                red = green = blue = 128;
+
+                GradientPaint gradientPaint =new GradientPaint(colorStartX, colorStartY,
+                        ColorLib.getColor(red, green, blue, 0),
+                        colorEndX, colorEndY,
+                        ColorLib.getColor(red, green, blue, 128), false);
+
+                g.setPaint(gradientPaint);
+                g.fillRect((int)x, (int)y, (int)width, (int)height);
             }
         }
     }

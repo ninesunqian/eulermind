@@ -1,7 +1,5 @@
 package prefuse.data;
 
-import java.lang.annotation.Target;
-import java.util.EventListener;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
@@ -55,7 +53,7 @@ public class Tree extends Graph {
     
     /** The node table row number for the root node of the tree. */
     protected int m_root = -1;
-    protected int m_realy_root = -1;
+    protected int m_really_root = -1;
     
     // ------------------------------------------------------------------------
     // Constructors
@@ -120,7 +118,7 @@ public class Tree extends Graph {
                 break;
             }
         }
-        m_realy_root = m_root;
+        m_really_root = m_root;
     }
     
     /**
@@ -143,7 +141,22 @@ public class Tree extends Graph {
         m_root = root;
         fireRootChangeEvent (m_root, oldRoot);
     }
-    
+
+    /**
+     * set the really root of tree
+     */
+    public void restoreReallyRoot() {
+        if (m_really_root != m_root) {
+            setRoot(m_really_root);
+        }
+    }
+
+    /**
+     *
+     */
+
+
+
     // ------------------------------------------------------------------------
     // Tree Mutators
     
@@ -158,11 +171,11 @@ public class Tree extends Graph {
         }
         
         m_root = addNodeRow();
-        m_realy_root = m_root;
+        m_really_root = m_root;
         fireRootChangeEvent (m_root, -1);
         return m_root;
     }
-    
+
     /**
      * Add a new root node to an empty Tree.
      * @return the newly added root Node
@@ -175,6 +188,33 @@ public class Tree extends Graph {
         int child = super.addNodeRow();
         addChildEdge(parent, child, pos);
         return child;
+    }
+
+    public int addParent(int child) {
+
+        if (child == m_really_root) {
+            int newParent = super.addNodeRow();
+            addChildEdge(newParent, child, 0);
+
+            m_root = newParent;
+            m_really_root = m_root;
+            fireRootChangeEvent (m_root, child);
+
+            return newParent;
+
+        } else {
+            int oldParent = getParent(child);
+            int oldParentEdge = getParentEdge(child);
+            int oldIndex = getChildIndex(oldParent, child);
+
+            removeEdge(oldParentEdge);
+
+            int newParent = super.addNodeRow();
+
+            addChildEdge(newParent, child, 0);
+            addChildEdge(oldParent, newParent, oldIndex);
+            return newParent;
+        }
     }
     
     /**

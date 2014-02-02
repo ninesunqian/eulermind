@@ -5,6 +5,7 @@
 %package excitedmind
 %fsmclass MindViewFSM
 %import prefuse.visual.NodeItem
+%import java.awt.dnd.DragSource
 
 %start MindViewStateMap::Normal
 
@@ -20,15 +21,16 @@ Entry
     {
         mouse_control_set_enabled(true);
         renderTree();
+        setCursor(null);
     }
 {
-    mouseInNode(nodeItem: NodeItem)
+    itemEntered(nodeItem: NodeItem)
         nil
     {
         startCursorTimer(nodeItem);
     }
 
-    mouseOutNode
+    itemExited(nodeItem: NodeItem)
         nil
     {
         stopCursorTimer();
@@ -51,6 +53,7 @@ Entry
     {
         m_mindTreeController.moveCursorRight();
     }
+
     cursorUp
         Normal
     {
@@ -62,11 +65,21 @@ Entry
         m_mindTreeController.moveCursorDown();
     }
 
-    press(nodeItem: NodeItem)
+    itemPressed(nodeItem: NodeItem)
         Normal
         {
             m_mindTreeController.setCursorNode(ctxt.m_mindTreeController.toSource(nodeItem));
+        }
+
+    itemClicked()
+        Normal
+        {
             m_undoManager.addEdit(ctxt.m_mindTreeController.toggleFoldCursorUndoable());
+        }
+
+    itemDragged(nodeItem: NodeItem)
+        Dragging
+        {
         }
 
     remove
@@ -102,16 +115,6 @@ Entry
         Inserting
         {
             startInserting(asChild);
-        }
-
-    startMoving
-        Moving
-        {
-        }
-
-    startLinking
-        Linking
-        {
         }
 
     Default
@@ -167,32 +170,22 @@ Entry
     }
 }
 
-Moving
+Dragging
 {
-    press(nodeItem: NodeItem)
-        Normal
-        {
-            m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(nodeItem));
-        }
-    cancel
-        Normal
-        {
-
-        }
-    Default
-        nil
-    {
-
-    }
-}
-
-Linking
-{
-    press(nodeItem: NodeItem)
+    itemDropped(nodeItem: NodeItem, add_ctrl: boolean)
+        [add_ctrl == true]
         Normal
         {
             m_undoManager.addEdit(ctxt.m_mindTreeController.addReferenceUndoable(ctxt.m_mindTreeController.toSource(nodeItem)));
         }
+
+    itemDropped(nodeItem: NodeItem, add_ctrl: boolean)
+        [add_ctrl == false]
+        Normal
+        {
+            m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(nodeItem));
+        }
+
     cancel
         Normal
         {

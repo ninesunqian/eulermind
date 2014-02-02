@@ -11,6 +11,7 @@
 package excitedmind;
 
 import prefuse.visual.NodeItem;
+import java.awt.dnd.DragSource;
 
 public class MindViewFSM
     extends statemap.FSMContext
@@ -86,18 +87,58 @@ public class MindViewFSM
         return;
     }
 
-    public void mouseInNode(NodeItem nodeItem)
+    public void itemAimed(NodeItem nodeItem)
     {
-        _transition = "mouseInNode";
-        getState().mouseInNode(this, nodeItem);
+        _transition = "itemAimed";
+        getState().itemAimed(this, nodeItem);
         _transition = "";
         return;
     }
 
-    public void mouseOutNode()
+    public void itemClicked()
     {
-        _transition = "mouseOutNode";
-        getState().mouseOutNode(this);
+        _transition = "itemClicked";
+        getState().itemClicked(this);
+        _transition = "";
+        return;
+    }
+
+    public void itemDragged(NodeItem nodeItem)
+    {
+        _transition = "itemDragged";
+        getState().itemDragged(this, nodeItem);
+        _transition = "";
+        return;
+    }
+
+    public void itemDropped(NodeItem nodeItem, boolean add_ctrl)
+    {
+        _transition = "itemDropped";
+        getState().itemDropped(this, nodeItem, add_ctrl);
+        _transition = "";
+        return;
+    }
+
+    public void itemEntered(NodeItem nodeItem)
+    {
+        _transition = "itemEntered";
+        getState().itemEntered(this, nodeItem);
+        _transition = "";
+        return;
+    }
+
+    public void itemExited(NodeItem nodeItem)
+    {
+        _transition = "itemExited";
+        getState().itemExited(this, nodeItem);
+        _transition = "";
+        return;
+    }
+
+    public void itemPressed(NodeItem nodeItem)
+    {
+        _transition = "itemPressed";
+        getState().itemPressed(this, nodeItem);
         _transition = "";
         return;
     }
@@ -114,14 +155,6 @@ public class MindViewFSM
     {
         _transition = "ok";
         getState().ok(this, fromPrompter);
-        _transition = "";
-        return;
-    }
-
-    public void press(NodeItem nodeItem)
-    {
-        _transition = "press";
-        getState().press(this, nodeItem);
         _transition = "";
         return;
     }
@@ -154,22 +187,6 @@ public class MindViewFSM
     {
         _transition = "startInserting";
         getState().startInserting(this, asChild);
-        _transition = "";
-        return;
-    }
-
-    public void startLinking()
-    {
-        _transition = "startLinking";
-        getState().startLinking(this);
-        _transition = "";
-        return;
-    }
-
-    public void startMoving()
-    {
-        _transition = "startMoving";
-        getState().startMoving(this);
         _transition = "";
         return;
     }
@@ -276,12 +293,37 @@ public class MindViewFSM
             Default(context);
         }
 
-        protected void mouseInNode(MindViewFSM context, NodeItem nodeItem)
+        protected void itemAimed(MindViewFSM context, NodeItem nodeItem)
         {
             Default(context);
         }
 
-        protected void mouseOutNode(MindViewFSM context)
+        protected void itemClicked(MindViewFSM context)
+        {
+            Default(context);
+        }
+
+        protected void itemDragged(MindViewFSM context, NodeItem nodeItem)
+        {
+            Default(context);
+        }
+
+        protected void itemDropped(MindViewFSM context, NodeItem nodeItem, boolean add_ctrl)
+        {
+            Default(context);
+        }
+
+        protected void itemEntered(MindViewFSM context, NodeItem nodeItem)
+        {
+            Default(context);
+        }
+
+        protected void itemExited(MindViewFSM context, NodeItem nodeItem)
+        {
+            Default(context);
+        }
+
+        protected void itemPressed(MindViewFSM context, NodeItem nodeItem)
         {
             Default(context);
         }
@@ -292,11 +334,6 @@ public class MindViewFSM
         }
 
         protected void ok(MindViewFSM context, boolean fromPrompter)
-        {
-            Default(context);
-        }
-
-        protected void press(MindViewFSM context, NodeItem nodeItem)
         {
             Default(context);
         }
@@ -317,16 +354,6 @@ public class MindViewFSM
         }
 
         protected void startInserting(MindViewFSM context, boolean asChild)
-        {
-            Default(context);
-        }
-
-        protected void startLinking(MindViewFSM context)
-        {
-            Default(context);
-        }
-
-        protected void startMoving(MindViewFSM context)
         {
             Default(context);
         }
@@ -371,10 +398,8 @@ public class MindViewFSM
             new MindViewStateMap_Editing("MindViewStateMap.Editing", 1);
         public static final MindViewStateMap_Inserting Inserting =
             new MindViewStateMap_Inserting("MindViewStateMap.Inserting", 2);
-        public static final MindViewStateMap_Moving Moving =
-            new MindViewStateMap_Moving("MindViewStateMap.Moving", 3);
-        public static final MindViewStateMap_Linking Linking =
-            new MindViewStateMap_Linking("MindViewStateMap.Linking", 4);
+        public static final MindViewStateMap_Dragging Dragging =
+            new MindViewStateMap_Dragging("MindViewStateMap.Dragging", 3);
     }
 
     protected static class MindViewStateMap_Default
@@ -419,6 +444,7 @@ public class MindViewFSM
 
             ctxt.mouse_control_set_enabled(true);
             ctxt.renderTree();
+            ctxt.setCursor(null);
             return;
         }
 
@@ -539,7 +565,37 @@ public class MindViewFSM
         }
 
         @Override
-        protected void mouseInNode(MindViewFSM context, NodeItem nodeItem)
+        protected void itemClicked(MindViewFSM context)
+        {
+            MindView ctxt = context.getOwner();
+
+            (context.getState()).exit(context);
+            context.clearState();
+            try
+            {
+                ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.toggleFoldCursorUndoable());
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Normal);
+                (context.getState()).entry(context);
+            }
+
+            return;
+        }
+
+        @Override
+        protected void itemDragged(MindViewFSM context, NodeItem nodeItem)
+        {
+
+            (context.getState()).exit(context);
+            context.setState(MindViewStateMap.Dragging);
+            (context.getState()).entry(context);
+            return;
+        }
+
+        @Override
+        protected void itemEntered(MindViewFSM context, NodeItem nodeItem)
         {
             MindView ctxt = context.getOwner();
 
@@ -558,7 +614,7 @@ public class MindViewFSM
         }
 
         @Override
-        protected void mouseOutNode(MindViewFSM context)
+        protected void itemExited(MindViewFSM context, NodeItem nodeItem)
         {
             MindView ctxt = context.getOwner();
 
@@ -577,7 +633,7 @@ public class MindViewFSM
         }
 
         @Override
-        protected void press(MindViewFSM context, NodeItem nodeItem)
+        protected void itemPressed(MindViewFSM context, NodeItem nodeItem)
         {
             MindView ctxt = context.getOwner();
 
@@ -586,7 +642,6 @@ public class MindViewFSM
             try
             {
                 ctxt.m_mindTreeController.setCursorNode(ctxt.m_mindTreeController.toSource(nodeItem));
-                ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.toggleFoldCursorUndoable());
             }
             finally
             {
@@ -698,26 +753,6 @@ public class MindViewFSM
                 super.startInserting(context, asChild);
             }
 
-            return;
-        }
-
-        @Override
-        protected void startLinking(MindViewFSM context)
-        {
-
-            (context.getState()).exit(context);
-            context.setState(MindViewStateMap.Linking);
-            (context.getState()).entry(context);
-            return;
-        }
-
-        @Override
-        protected void startMoving(MindViewFSM context)
-        {
-
-            (context.getState()).exit(context);
-            context.setState(MindViewStateMap.Moving);
-            (context.getState()).entry(context);
             return;
         }
 
@@ -918,14 +953,14 @@ public class MindViewFSM
         private static final long serialVersionUID = 1L;
     }
 
-    private static final class MindViewStateMap_Moving
+    private static final class MindViewStateMap_Dragging
         extends MindViewStateMap_Default
     {
     //-------------------------------------------------------
     // Member methods.
     //
 
-        private MindViewStateMap_Moving(String name, int id)
+        private MindViewStateMap_Dragging(String name, int id)
         {
             super (name, id);
         }
@@ -948,80 +983,49 @@ public class MindViewFSM
         }
 
         @Override
-        protected void press(MindViewFSM context, NodeItem nodeItem)
+        protected void itemAimed(MindViewFSM context, NodeItem nodeItem)
+        {
+
+            return;
+        }
+
+        @Override
+        protected void itemDropped(MindViewFSM context, NodeItem nodeItem, boolean add_ctrl)
         {
             MindView ctxt = context.getOwner();
 
-            (context.getState()).exit(context);
-            context.clearState();
-            try
+            if (add_ctrl == true)
             {
-                ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(nodeItem));
+                (context.getState()).exit(context);
+                context.clearState();
+                try
+                {
+                    ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.addReferenceUndoable(ctxt.m_mindTreeController.toSource(nodeItem)));
+                }
+                finally
+                {
+                    context.setState(MindViewStateMap.Normal);
+                    (context.getState()).entry(context);
+                }
+
             }
-            finally
+            else if (add_ctrl == false)
             {
-                context.setState(MindViewStateMap.Normal);
-                (context.getState()).entry(context);
-            }
+                (context.getState()).exit(context);
+                context.clearState();
+                try
+                {
+                    ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(nodeItem));
+                }
+                finally
+                {
+                    context.setState(MindViewStateMap.Normal);
+                    (context.getState()).entry(context);
+                }
 
-            return;
-        }
-
-    //-------------------------------------------------------
-    // Member data.
-    //
-
-        //---------------------------------------------------
-        // Constants.
-        //
-
-        private static final long serialVersionUID = 1L;
-    }
-
-    private static final class MindViewStateMap_Linking
-        extends MindViewStateMap_Default
-    {
-    //-------------------------------------------------------
-    // Member methods.
-    //
-
-        private MindViewStateMap_Linking(String name, int id)
-        {
-            super (name, id);
-        }
-
-        @Override
-        protected void Default(MindViewFSM context)
-        {
-
-            return;
-        }
-
-        @Override
-        protected void cancel(MindViewFSM context)
-        {
-
-            (context.getState()).exit(context);
-            context.setState(MindViewStateMap.Normal);
-            (context.getState()).entry(context);
-            return;
-        }
-
-        @Override
-        protected void press(MindViewFSM context, NodeItem nodeItem)
-        {
-            MindView ctxt = context.getOwner();
-
-            (context.getState()).exit(context);
-            context.clearState();
-            try
+            }            else
             {
-                ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.addReferenceUndoable(ctxt.m_mindTreeController.toSource(nodeItem)));
-            }
-            finally
-            {
-                context.setState(MindViewStateMap.Normal);
-                (context.getState()).entry(context);
+                super.itemDropped(context, nodeItem, add_ctrl);
             }
 
             return;
