@@ -302,7 +302,7 @@ public class MindTreeRenderEngine {
                 float colorEndX = x + width;
                 float colorEndY = y + width;
 
-                switch (m_mindView.m_dropPosition){
+                switch (m_mindView.m_hittedPosition){
                     case TOP:
                         m_logger.info("TOP gradient");
                         height /= 2;

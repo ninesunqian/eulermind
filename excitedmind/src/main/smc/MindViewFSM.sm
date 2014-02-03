@@ -183,7 +183,7 @@ Dragging
         [add_ctrl == false]
         Normal
         {
-            m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(nodeItem));
+            m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(ctxt.m_mindTreeController.toSource(nodeItem)));
         }
 
     cancel

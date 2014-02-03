@@ -87,14 +87,6 @@ public class MindViewFSM
         return;
     }
 
-    public void itemAimed(NodeItem nodeItem)
-    {
-        _transition = "itemAimed";
-        getState().itemAimed(this, nodeItem);
-        _transition = "";
-        return;
-    }
-
     public void itemClicked()
     {
         _transition = "itemClicked";
@@ -289,11 +281,6 @@ public class MindViewFSM
         }
 
         protected void cursorUp(MindViewFSM context)
-        {
-            Default(context);
-        }
-
-        protected void itemAimed(MindViewFSM context, NodeItem nodeItem)
         {
             Default(context);
         }
@@ -983,13 +970,6 @@ public class MindViewFSM
         }
 
         @Override
-        protected void itemAimed(MindViewFSM context, NodeItem nodeItem)
-        {
-
-            return;
-        }
-
-        @Override
         protected void itemDropped(MindViewFSM context, NodeItem nodeItem, boolean add_ctrl)
         {
             MindView ctxt = context.getOwner();
@@ -1015,7 +995,7 @@ public class MindViewFSM
                 context.clearState();
                 try
                 {
-                    ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(nodeItem));
+                    ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(ctxt.m_mindTreeController.toSource(nodeItem)));
                 }
                 finally
                 {

@@ -305,6 +305,7 @@ public class MindTreeController {
         int m_pos;
     }
 
+
     public AbstractUndoableEdit addReferenceUndoable(Node referer, int pos, Object refereeDBId)
     {
         m_mindTree.addReference(m_mindTree.getDBId(referer), pos, refereeDBId);
@@ -314,8 +315,16 @@ public class MindTreeController {
         return new AddingReferenceUndoer(getNodePath(referer), pos, refereeDBId);
     }
 
+    boolean canAddReference(Node refereeNode)
+    {
+        Node cursorNode = getCursorNode();
+        return !m_mindTree.sameDBNode(refereeNode, cursorNode)
+                && !m_mindTree.sameDBNode(refereeNode.getParent(), cursorNode);
+    }
+
     public AbstractUndoableEdit addReferenceUndoable(Node refereeNode)
     {
+        assert(canAddReference(refereeNode));
         Node cursorNode = getCursorNode();
         return addReferenceUndoable(cursorNode, cursorNode.getChildCount(), m_mindTree.getDBId(refereeNode));
     }
@@ -498,7 +507,15 @@ public class MindTreeController {
         int m_newPos;
     }
 
-    public AbstractUndoableEdit resetParentUndoable(NodeItem newParentItem)
+    public boolean canResetParent(Node newParent)
+    {
+        Node cursorNode =getCursorNode();
+        return ! m_mindTree.sameDBNode(newParent, cursorNode)
+                && ! m_mindTree.sameDBNode(cursorNode.getParent(), newParent)
+                && !m_mindTree.isInDBSubTree(newParent, cursorNode);
+    }
+
+    public AbstractUndoableEdit resetParentUndoable(Node newParent)
     {
         Node cursorNode = getCursorNode();
 
@@ -506,7 +523,6 @@ public class MindTreeController {
             return null;
         }
 
-        Node newParent = toSource(newParentItem);
         Node oldParent = cursorNode.getParent();
 
         if (m_mindTree.sameDBNode(newParent, oldParent)) {

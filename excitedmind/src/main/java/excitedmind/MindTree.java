@@ -466,7 +466,7 @@ public class MindTree {
         return getDBId(n1) == getDBId(n2);
     }
 
-    private boolean isInDBSubTree(Node node, Node treeRoot)
+    public boolean isInDBSubTree(Node node, Node treeRoot)
     {
         DBTree.InheritDirection inheritDirection = getInheritDirection(node, treeRoot);
         return inheritDirection == DBTree.InheritDirection.LINEAL_ANCESTOR ||
