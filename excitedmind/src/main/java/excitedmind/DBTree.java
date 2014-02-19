@@ -186,8 +186,9 @@ public class DBTree implements Graph {
 			ORecordLazyList implArray = (ORecordLazyList)container;
 			implArray.setAutoConvertToRecord(false);
 		}
-		
-		return (ArrayList<Object>)container;
+
+        //return a copy list, to avoid being clear by Graph.commit
+        return new ArrayList((ArrayList<Object>)container);
 	}
 	
 	private ArrayList<Object> getEdgeIDsToChildren (Vertex source, boolean ifNullCreate)

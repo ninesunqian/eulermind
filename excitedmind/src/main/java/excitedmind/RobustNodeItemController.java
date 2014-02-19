@@ -2,6 +2,7 @@ package excitedmind;
 
 import prefuse.Display;
 import prefuse.controls.ControlAdapter;
+import prefuse.util.GraphLib;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
 
@@ -18,7 +19,7 @@ import java.util.logging.Logger;
  * Time: 下午6:52
  * To change this template use File | Settings | File Templates.
  */
-public class RobustNodeItemController extends ControlAdapter {
+public abstract class RobustNodeItemController extends ControlAdapter {
 
     Logger m_logger = Logger.getLogger(this.getClass().getName());
 
@@ -31,6 +32,8 @@ public class RobustNodeItemController extends ControlAdapter {
 
     NodeItem m_hittedNode;
     HittedPosition m_hittedPosition;
+
+    Point m_mousePressPoint;
 
     RobustNodeItemController(Display display) {
         m_ctrlReleaseTime = 0;
@@ -85,6 +88,8 @@ public class RobustNodeItemController extends ControlAdapter {
         if (item instanceof NodeItem) {
             nodeItemPressed((NodeItem) item, e);
         }
+
+        m_mousePressPoint = e.getPoint();
     }
 
     public void nodeItemPressed(NodeItem item, MouseEvent e) {
@@ -118,7 +123,12 @@ public class RobustNodeItemController extends ControlAdapter {
             return;
         }
 
-        m_logger.info("itemDragged : " + item.getString(MindTree.sm_textPropName));
+        //m_logger.info("itemDragged : " + item.getString(MindTree.sm_textPropName));
+
+        Point point = e.getPoint();
+        if (point.distance(m_mousePressPoint) < 10) {
+            return;
+        }
 
         NodeItem nodeItem = (NodeItem)item;
         nodeItemDragged(nodeItem, e);
@@ -165,7 +175,7 @@ public class RobustNodeItemController extends ControlAdapter {
             return;
         }
 
-        m_logger.info("itemReleased : " + item.getString(MindTree.sm_textPropName));
+        //m_logger.info("itemReleased : " + item.getString(MindTree.sm_textPropName));
 
         NodeItem nodeItem = (NodeItem)item;
         nodeItemReleased(nodeItem, e);
@@ -173,13 +183,12 @@ public class RobustNodeItemController extends ControlAdapter {
         Point mousePoint = e.getPoint();
         VisualItem hittedTarget = m_display.findItem(mousePoint);
 
-        if (hittedTarget == null || ! (hittedTarget instanceof NodeItem)) {
+        if (hittedTarget != null && hittedTarget instanceof NodeItem) {
+            HittedPosition hittedPosition = getHittedPosition((NodeItem)hittedTarget, mousePoint.getX(), mousePoint.getY());
+            nodeItemDropped(nodeItem, (NodeItem)hittedTarget, hittedPosition, releaseWithCtrl());
+        } else {
             nodeItemDropped(nodeItem, null, HittedPosition.OUTSIDE, releaseWithCtrl());
-            return;
         }
-
-        HittedPosition hittedPosition = getHittedPosition((NodeItem)hittedTarget, mousePoint.getX(), mousePoint.getY());
-        nodeItemDropped(nodeItem, (NodeItem)hittedTarget, hittedPosition, releaseWithCtrl());
 
         m_hittedNode = null;
         m_hittedPosition = HittedPosition.OUTSIDE;

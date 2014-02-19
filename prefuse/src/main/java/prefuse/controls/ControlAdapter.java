@@ -16,7 +16,7 @@ import prefuse.visual.VisualItem;
 public class ControlAdapter implements Control {
 
     private boolean m_enabled = true;
-    
+
     /**
      * @see prefuse.controls.Control#isEnabled()
      */

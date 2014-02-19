@@ -5,6 +5,7 @@ import java.awt.event.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import javax.swing.*;
@@ -44,9 +45,6 @@ public class MindView extends Display {
     private MindViewFSM m_fsm;
 
     private MindPrompter m_prompter;
-
-    NodeItem m_dropNode;
-    RobustNodeItemController.HittedPosition m_hittedPosition;
 
     private PropertyChangeListener m_fsmStateChangeListener =  new PropertyChangeListener ()
     {
@@ -93,6 +91,7 @@ public class MindView extends Display {
         String treeGroup = "tree";
         m_mindTree = new MindTree(path, rootId);
         m_vis.add(treeGroup, m_mindTree.m_displayTree);
+        m_vis.re
 		m_mindTreeController = new MindTreeController(m_mindTree, m_vis, treeGroup);
 
         setItemSorter(new TreeDepthItemSorter());
@@ -122,125 +121,137 @@ public class MindView extends Display {
     ControlAdapter m_zoomControl;
     ControlAdapter m_wheelZoomControl;
     ControlAdapter m_panControl;
-    ControlAdapter m_mouseControl;
+    MouseControl m_mouseControl;
 
     class MouseControl extends RobustNodeItemController {
 
+        public NodeItem m_hittedNode;
+        public HittedPosition m_hittedPosition;
+
         MouseControl() {
             super(MindView.this);
+            m_hittedNode = null;
+            m_hittedPosition = HittedPosition.OUTSIDE;
         }
 
+        @Override
         public void nodeItemEntered(NodeItem item, MouseEvent e) {
             m_fsm.itemEntered(item);
         }
 
+        @Override
         public void nodeItemExited(NodeItem item, MouseEvent e) {
             m_fsm.itemExited(item);
         }
 
+        @Override
         public void nodeItemPressed(NodeItem item, MouseEvent e) {
             m_fsm.itemPressed(item);
         }
 
+        @Override
         public void nodeItemClicked(NodeItem item, MouseEvent e) {
             m_fsm.itemClicked();
         }
 
+        @Override
         public void nodeItemDragged(NodeItem item, MouseEvent e) {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Normal) {
                 m_fsm.itemDragged(item);
-                setCursor(m_ctrlDowned ? DragSource.DefaultLinkDrop : DragSource.DefaultMoveDrop);
+                setCursor(e.isControlDown() ? DragSource.DefaultLinkDrop : DragSource.DefaultMoveDrop);
             }
         }
 
-        //TODO: when aim at null, aimedIn, aimedOut
+        private boolean notMoveToOtherNode(NodeItem sourceNode, NodeItem hittedNode) {
+            return hittedNode == null || hittedNode == sourceNode;
+        }
+
+        private boolean operatorEnabled(NodeItem sourceNode, NodeItem hittedNode, boolean ctrlDowned)
+        {
+            if (ctrlDowned) {
+                return m_mindTreeController.canAddReference(m_mindTreeController.toSource(hittedNode));
+            } else {
+                return m_mindTreeController.canResetParent(m_mindTreeController.toSource(hittedNode));
+            }
+        }
+
+        private void setCursorByNode(NodeItem sourceNode, NodeItem hittedNode, boolean ctrlDowned)
+        {
+            boolean cursorEnabled = notMoveToOtherNode(sourceNode, hittedNode) ||
+                    operatorEnabled(sourceNode, hittedNode, ctrlDowned);
+
+            if (ctrlDowned) {
+                setCursor(cursorEnabled ? DragSource.DefaultLinkDrop : DragSource.DefaultLinkNoDrop);
+            } else {
+                setCursor(cursorEnabled ? DragSource.DefaultMoveDrop : DragSource.DefaultMoveNoDrop);
+            }
+        }
+
         //if dropNode or dropPostion changed, give the event
-        public void nodeItemHitted(NodeItem item, NodeItem dropNode,
-                                   RobustNodeItemController.HittedPosition hittedPosition, boolean m_ctrlDowned) {
-             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
-
-                if (dropNode != null && dropNode != m_dropNode) {
-                    if (m_ctrlDowned) {
-                        if (dropNode == item
-                                ||  m_mindTreeController.canAddReference(m_mindTreeController.toSource(dropNode))) {
-                            setCursor(DragSource.DefaultLinkDrop);
-                        } else {
-                            setCursor(DragSource.DefaultLinkNoDrop);
-                        }
-                    } else {
-                        if (dropNode == item
-                            ||  m_mindTreeController.canResetParent(m_mindTreeController.toSource(dropNode))) {
-                            setCursor(DragSource.DefaultMoveDrop);
-                        } else {
-                            setCursor(DragSource.DefaultMoveNoDrop);
-                        }
-                    }
-                }
-
-                //TODO: dropNode
-                renderTree();
-                m_dropNode = dropNode;
+        @Override
+        public void nodeItemHitted(NodeItem item, NodeItem hittedNode,
+                                   RobustNodeItemController.HittedPosition hittedPosition, boolean ctrlDowned) {
+            if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
+                m_hittedNode = hittedNode;
                 m_hittedPosition = hittedPosition;
+                setCursorByNode(item, hittedNode, ctrlDowned);
+                renderTree();
+                System.out.print((ArrayList)hittedNode.get(MindTree.sm_inheritPathPropName));
             }
         }
 
-        public void nodeItemMissed(NodeItem item, NodeItem dropNode) {
-            renderTree();
-            m_dropNode = null;
-            m_hittedPosition = RobustNodeItemController.HittedPosition.OUTSIDE;
-
+        private void clearHittedNode()
+        {
+            m_hittedNode = null;
+            m_hittedPosition = HittedPosition.OUTSIDE;
         }
 
-        public void itemReleased(VisualItem item, MouseEvent e) {
-            if (!m_mindTreeController.isNode(item)) {
-                return;
-            }
-            m_logger.info("itemReleased : " + item.getString(MindTree.sm_textPropName));
-
+        @Override
+        public void nodeItemMissed(NodeItem item, NodeItem dropNode, boolean ctrlDowned) {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
-                VisualItem dropTarget = findItem(e.getPoint());
-                if (dropTarget != null && m_mindTreeController.isNode(dropTarget)) {
-                    NodeItem dropNode = (NodeItem)dropTarget;
-                    m_logger.info(String.format("--- ctrlDown %s, release time %dms", m_ctrlDowned ?"true":"false", System.currentTimeMillis() - m_ctrlReleaseTime));
-                    if (m_ctrlDowned || System.currentTimeMillis() - m_ctrlReleaseTime < 500) {
-                        if (m_mindTreeController.canAddReference(m_mindTreeController.toSource(dropNode))) {
-                            m_fsm.itemDropped(dropNode, true);
-                        }
-                    } else {
-                        if (m_mindTreeController.canResetParent(m_mindTreeController.toSource(dropNode))) {
-                            m_fsm.itemDropped(dropNode, false);
-                        }
-                    }
-                    m_dropNode = null;
-                    m_hittedPosition = RobustNodeItemController.HittedPosition.OUTSIDE;
-                }else {
+                setCursorByNode(item, null, ctrlDowned);
+                renderTree();
+            }
+            clearHittedNode();
+        }
+
+        @Override
+        public void nodeItemDropped(NodeItem item, NodeItem dropNode, RobustNodeItemController.HittedPosition hittedPosition, boolean ctrlDowned) {
+            m_logger.info("nodeItemDropped");
+            if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
+
+                if (notMoveToOtherNode(item, dropNode)) {
                     m_fsm.cancel();
+                } else {
+                    m_logger.info(String.format("--- ctrlDown %s, release time %dms", ctrlDowned ?"true":"false", System.currentTimeMillis() - m_ctrlReleaseTime));
+                    if (operatorEnabled(item, dropNode, ctrlDowned)) {
+                        m_fsm.itemDropped(dropNode, ctrlDowned);
+                    } else {
+                        m_fsm.cancel();
+                    }
+                }
+            }
+
+            clearHittedNode();
+        }
+
+        @Override
+        public void nodeItemKeyPressed(NodeItem item, KeyEvent e)
+        {
+            if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
+                if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+                    setCursorByNode(item, m_hittedNode, true);
                 }
             }
         }
 
-        //drop to null
-        public void nodeItemDropped(NodeItem item, NodeItem dropNode, RobustNodeItemController.HittedPosition hittedPosition, boolean m_ctrlDowned) {
+        @Override
+        public void nodeItemKeyReleased(NodeItem item, KeyEvent e)
+        {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
-                if (dropNode != null) {
-                    m_logger.info(String.format("--- ctrlDown %s, release time %dms", m_ctrlDowned ?"true":"false", System.currentTimeMillis() - m_ctrlReleaseTime));
-                    if (m_ctrlDowned) {
-                        if (m_mindTreeController.canAddReference(m_mindTreeController.toSource(dropNode))) {
-                            m_fsm.itemDropped(dropNode, true);
-                        }
-                    } else {
-                        if (m_mindTreeController.canResetParent(m_mindTreeController.toSource(dropNode))) {
-                            m_fsm.itemDropped(dropNode, false);
-                        }
-                    }
-
-                }  else {
-                    m_fsm.cancel();
+                if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+                    setCursorByNode(item, m_hittedNode, false);
                 }
-
-                m_dropNode = null;
-                m_hittedPosition = RobustNodeItemController.HittedPosition.OUTSIDE;
-
             }
         }
     };

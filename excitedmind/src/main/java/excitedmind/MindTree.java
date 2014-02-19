@@ -108,15 +108,22 @@ public class MindTree {
         }, 0);
 	}
 
-	private static void loadElementProperties(com.tinkerpop.blueprints.Element dbElement, Tuple tuple, String keys[])
+	private void loadElementProperties(com.tinkerpop.blueprints.Element dbElement, Tuple tuple, String keys[])
 	{
-        if (dbElement == null || dbElement.getId() == null) {
-            System.out.println ("nullllllllllllllllllll");
-        }
+        assert(dbElement != null && dbElement.getId() != null);
+
 		tuple.set(sm_dbIdColumnName, dbElement.getId());
 		for (String key : keys)
 		{
-			tuple.set(key, dbElement.getProperty(key));
+            Object value;
+            if (key == sm_inheritPathPropName || key == sm_outEdgeDBIdsPropName) {
+                value = m_dbTree.getContainerProperty((Vertex)dbElement, key, true);
+                assert(((ArrayList)value).size() != 0);
+            } else {
+                value = dbElement.getProperty(key);
+            }
+            tuple.set(key, value);
+
 		}
 	}
 
@@ -129,6 +136,9 @@ public class MindTree {
                 if (value == null) {
                     dbElement.removeProperty(key);
                 } else {
+                    if (key == sm_inheritPathPropName) {
+                        assert(((ArrayList)value).size() != 0);
+                    }
                     dbElement.setProperty(key, value);
                 }
             }
@@ -455,9 +465,6 @@ public class MindTree {
     {
         ArrayList fromInheritPath = (ArrayList) from.get(sm_inheritPathPropName);
         ArrayList toInheritPath = (ArrayList) to.get(sm_inheritPathPropName);
-        if (fromInheritPath==null || toInheritPath == null) {
-            int i=1;
-        }
         return m_dbTree.getInheritDirection(fromInheritPath, toInheritPath);
     }
 

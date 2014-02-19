@@ -289,7 +289,8 @@ public class MindTreeRenderEngine {
         public void render(Graphics2D g, VisualItem item) {
             super.render(g, item);
 
-            if (item == m_mindView.m_dropNode) {
+            if (item != m_mindView.m_mindTreeController.toVisual(m_mindView.m_mindTreeController.getCursorNode())
+                    && item == m_mindView.m_mouseControl.m_hittedNode) {
                 RectangularShape shape = (RectangularShape)getShape(item);
 
                 float x = (float)shape.getX();
@@ -302,7 +303,7 @@ public class MindTreeRenderEngine {
                 float colorEndX = x + width;
                 float colorEndY = y + width;
 
-                switch (m_mindView.m_hittedPosition){
+                switch (m_mindView.m_mouseControl.m_hittedPosition){
                     case TOP:
                         m_logger.info("TOP gradient");
                         height /= 2;
