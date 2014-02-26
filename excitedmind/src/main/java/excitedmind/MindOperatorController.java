@@ -4,34 +4,20 @@ import java.util.*;
 
 import prefuse.Visualization;
 import prefuse.data.*;
-import prefuse.data.event.EventConstants;
-import prefuse.data.event.TableListener;
-import prefuse.visual.NodeItem;
-import prefuse.visual.EdgeItem;
-import prefuse.visual.VisualItem;
-import prefuse.visual.VisualTree;
-import prefuse.visual.tuple.TableEdgeItem;
-import prefuse.visual.tuple.TableNodeItem;
 
 import prefuse.util.PrefuseLib;
 
 import javax.swing.undo.AbstractUndoableEdit;
 import java.util.logging.Logger;
 
-public class MindTreeController {
+public class MindOperatorController {
     final Logger m_logger = Logger.getLogger(this.getClass().getName());
     public final String m_treeGroupName;
     public final String m_treeNodesGroupName;
     public final String m_treeEdgesGroupName;
 
     //MindTree
-    final Visualization m_vis;
     final MindTree m_mindTree;
-
-    TreeCursor m_cursor;
-    Node m_savedCursor = null;
-
-    private LinkedHashSet<Integer> m_foldedNodes = new LinkedHashSet<Integer>();
 
     public Stack<Integer> getNodePath(Node node)
     {
@@ -119,14 +105,6 @@ public class MindTreeController {
         return parent;
     }
 
-    public Node setCursorByPath(Stack<Integer> path)
-    {
-        Node node = getNodeByPath(path);
-        assert(node.getRow() != -1);
-        m_cursor.setCursorNode(toVisual(node));
-        return node;
-    }
-
     public void moveCursorLeft()
     {
         m_cursor.moveLeft();
@@ -166,63 +144,12 @@ public class MindTreeController {
         final Stack<Integer> m_nodePath;
     }
 
-    public MindTreeController(MindTree mindTree, Visualization vis, String treeGroupName)
+    public MindOperatorController(MindTree mindTree, Visualization vis, String treeGroupName)
     {
         m_mindTree = mindTree;
-        m_vis = vis;
 
         m_treeGroupName = treeGroupName;
-        m_treeNodesGroupName = PrefuseLib.getGroupName(m_treeGroupName, Graph.NODES);
         m_treeEdgesGroupName = PrefuseLib.getGroupName(m_treeGroupName, Graph.EDGES);
-
-        m_mindTree.m_displayEdgeTable.addTableListener(new TableListener() {
-            @Override
-            public void tableChanged(Table t, int start, int end, int col, int type) {
-                if (type ==  EventConstants.DELETE) {
-                    for (int i=start; i<=end; i++) {
-                        m_foldedNodes.remove(i);
-                    }
-                }
-            }
-        });
-
-        m_cursor = new TreeCursor((VisualTree)m_vis.getVisualGroup(m_treeGroupName));
-    }
-
-    public NodeItem toVisual (Node node)
-    {
-        if (node instanceof NodeItem) {
-            return  (NodeItem) node;
-        } else {
-            return (NodeItem) m_vis.getVisualItem(m_treeNodesGroupName, node);
-        }
-    }
-
-    public EdgeItem toVisual (Edge edge)
-    {
-        if (edge instanceof EdgeItem) {
-            return (EdgeItem) edge;
-        } else {
-            return (EdgeItem) m_vis.getVisualItem(m_treeEdgesGroupName, edge);
-        }
-    }
-
-    public Node toSource (NodeItem nodeItem)
-    {
-        return (Node) m_vis.getSourceTuple (nodeItem);
-    }
-
-    public Edge toSource (EdgeItem edgeItem)
-    {
-        return (Edge) m_vis.getSourceTuple (edgeItem);
-    }
-
-    public boolean isNode(VisualItem item)
-    {
-        if (item == null)
-            return false;
-
-        return item.isInGroup(m_treeNodesGroupName);
     }
 
     private void trashNodeAndCursorNext(Node node)
@@ -549,179 +476,6 @@ public class MindTreeController {
         moveChildImpl(oldParent, oldPos, newParent, newPos);
 
         return undor;
-    }
-
-    public boolean cursorIsFolded()
-    {
-        Node cursorNode = getCursorNode();
-
-        if (cursorNode.getChildCount() > 0) {
-            NodeItem item = toVisual(cursorNode);
-            return ! item.isExpanded();
-        } else {
-            return m_mindTree.getChildCount(cursorNode) > 0;
-        }
-    }
-
-    private void unfoldNode (VisualItem visualItem)
-    {
-        Node node = (Node)visualItem.getSourceTuple();
-
-        if (node.getChildCount() > 0) { // node is not a leaf node
-
-            if (visualItem.isExpanded()) {
-                return;
-            }
-
-            assert (m_foldedNodes.contains(node.getRow()));
-
-            m_foldedNodes.remove(node.getRow());
-
-            final Visualization vis = visualItem.getVisualization();
-            final Node unfoldTreeRoot = node;
-            final String group = visualItem.getGroup();
-
-            //unfold descendants deeply, to the folded descendants
-            m_mindTree.m_displayTree.deepTraverse(node,new Tree.Processor() {
-                public boolean run(Node node, int level) {
-
-                    if (node == unfoldTreeRoot) {
-                        return true;
-                    }
-
-                    TableNodeItem visualNode = (TableNodeItem)vis.getVisualItem(group, node);
-                    TableEdgeItem visualEdge = (TableEdgeItem)visualNode.getParentEdge();
-
-                    //m_logger.info ( "visiableNode " + m_mindTree.getText(node));
-                    PrefuseLib.updateVisible(visualNode, true);
-                    PrefuseLib.updateVisible(visualEdge, true);
-
-                    if (m_foldedNodes.contains(node.getRow())) {
-                        return false;
-                    } else {
-                        return true;
-                    }
-                }
-            }, 0);
-        }
-        else // node  is the leaf of prefuse Tree
-        {
-            m_mindTree.attachChildren(node);
-        }
-
-        visualItem.setExpanded(true);
-    }
-
-    private void foldNode (VisualItem visualItem)
-    {
-        final Visualization vis = visualItem.getVisualization();
-        Node node = (Node)visualItem.getSourceTuple();
-        final String group = visualItem.getGroup();
-
-        m_logger.info ( "foldNode " + m_mindTree.getText(node));
-        if (! visualItem.isExpanded())
-        {
-            return;
-        }
-
-        m_foldedNodes.add(node.getRow());
-
-        final Node foldTreeRoot = node;
-
-        //set descendants unvisible deeply, to the folded descendants
-        m_mindTree.m_displayTree.deepTraverse(node,new Tree.Processor() {
-            public boolean run(Node node, int level) {
-                if (node == foldTreeRoot)
-                {
-                    return true;
-                }
-
-                TableNodeItem visualNode = (TableNodeItem)vis.getVisualItem(group, node);
-                TableEdgeItem visualEdge = (TableEdgeItem)visualNode.getParentEdge();
-
-                PrefuseLib.updateVisible(visualNode, false);
-                PrefuseLib.updateVisible(visualEdge, false);
-
-                String text = m_mindTree.getText(node);
-
-                //m_logger.info ( "invisiableNode " + text);
-                if (m_foldedNodes.contains(node.getRow())) {
-                    m_logger.info ( "m_foldedNodes contain: " + node + " " + text);
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-        }, 0);
-
-        // detach the descendants of the earliest unfold node
-        /* TODO  now disable it
-        if (m_foldedNodes.size() > 5)
-        {
-            Node toRemovedNode = m_foldedNodes.iterator().next();
-            m_foldedNodes.remove(toRemovedNode.getRow());
-            detachChildern(toRemovedNode);
-        }
-        */
-
-        visualItem.setExpanded(false);
-    }
-
-    class TogglingFoldUndoer extends NodeOperatorUndoer{
-        TogglingFoldUndoer (Stack<Integer> nodePath, boolean foldIt)
-        {
-            super(nodePath);
-            m_foldIt = foldIt;
-        }
-
-        public void undo() {
-            setCursorByPath(m_nodePath);
-            Node cursorNode = getCursorNode();
-
-            if (m_foldIt)
-                unfoldNode(toVisual(cursorNode));
-            else
-                foldNode(toVisual(cursorNode));
-        }
-
-        public void redo () {
-            setCursorByPath(m_nodePath);
-            Node cursorNode = getCursorNode();
-
-            if (m_foldIt)
-                foldNode(toVisual(cursorNode));
-            else
-                unfoldNode(toVisual(cursorNode));
-        }
-
-        boolean m_foldIt;
-    }
-
-    public AbstractUndoableEdit toggleFoldCursorUndoable()
-    {
-        Node cursorNode = getCursorNode();
-        String text = m_mindTree.getText(cursorNode);
-        VisualItem visualItem = toVisual(cursorNode);
-        if (cursorNode.getChildCount() == 0)
-        {
-            m_logger.info ( "----leaf node un fold " + text);
-            unfoldNode(visualItem);
-        }
-        else
-        {
-            if (visualItem.isExpanded())
-            {
-                m_logger.info ( "---- fold " + text);
-                foldNode(visualItem);
-            }
-            else
-            {
-                m_logger.info ( "----un fold " + text);
-                unfoldNode(visualItem);
-            }
-        }
-
-        return new TogglingFoldUndoer (getNodePath(cursorNode), false);
     }
 
     class SetPropertyUndoer extends NodeOperatorUndoer

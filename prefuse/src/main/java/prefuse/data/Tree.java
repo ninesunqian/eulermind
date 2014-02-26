@@ -1,6 +1,7 @@
 package prefuse.data;
 
 import java.util.Iterator;
+import java.util.Stack;
 import java.util.logging.Logger;
 
 import prefuse.data.event.TreeRootChangeListener;
@@ -861,6 +862,5 @@ public class Tree extends Graph {
             }
         }
     }
-    
-    
+
 } // end of class Tree

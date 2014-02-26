@@ -26,15 +26,15 @@ public class MindPrompter {
     private JScrollPane m_jScrollPane = new JScrollPane(m_jList);
 
     private JTextComponent m_followedEditor;
-    private DBTree m_dbTree;
+    private MindDB m_mindDb;
 
     private ArrayList<PromptedNode> m_promptedNodes = new ArrayList<PromptedNode>();
 
     private SwingWorker<Boolean, PromptedNode> m_queryWorker;
 
-    public MindPrompter(JComponent parentView, DBTree dbTree)
+    public MindPrompter(JComponent parentView, MindDB mindDb)
     {
-        m_dbTree = dbTree;
+        m_mindDb = mindDb;
 
         m_jList = new JList(new DefaultListModel());
         m_jScrollPane = new JScrollPane(m_jList);
@@ -137,7 +137,7 @@ public class MindPrompter {
             m_dbId = vertex.getId();
             m_text = vertex.getProperty(MindTree.sm_textPropName);
 
-            DBTree.EdgeVertex edgeVertex = m_dbTree.getParent(vertex);
+            MindDB.EdgeVertex edgeVertex = m_mindDb.getParent(vertex);
             if (edgeVertex == null) {
                 m_parentDBId = null;
                 m_parentText = null;
@@ -159,7 +159,7 @@ public class MindPrompter {
 
             m_logger.info("query vertex: " + inputed);
 
-            for (Vertex vertex : m_dbTree.getVertices(MindTree.sm_textPropName, inputed)) {
+            for (Vertex vertex : m_mindDb.getVertices(MindTree.sm_textPropName, inputed)) {
                 PromptedNode promptedNode = new PromptedNode(vertex);
                 publish(promptedNode);
                 m_promptedNodes.add(promptedNode);

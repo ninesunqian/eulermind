@@ -11,7 +11,7 @@ import prefuse.util.PrefuseLib;
 import com.orientechnologies.orient.core.db.record.ORecordLazyList;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 
-public class DBTree implements Graph {
+public class MindDB implements Graph {
     Logger m_logger = Logger.getLogger(this.getClass().getName());
 
 	public final static String EDGE_TYPE_PROP_NAME = PrefuseLib.FIELD_PREFIX + "edgeType";
@@ -43,7 +43,7 @@ public class DBTree implements Graph {
 
 	String m_path;
 
-	DBTree (String path)
+    MindDB(String path)
 	{
 		m_graph = new OrientGraph (path);
 		m_path = path;

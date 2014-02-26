@@ -1,29 +1,21 @@
 package excitedmind;
 
-import java.awt.dnd.DragSource;
-import java.awt.event.*;
-
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.logging.Logger;
+import prefuse.Display;
+import prefuse.Visualization;
+import prefuse.controls.*;
+import prefuse.visual.NodeItem;
+import prefuse.visual.sort.TreeDepthItemSorter;
+import statemap.State;
 
 import javax.swing.*;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoManager;
-
-import prefuse.Display;
-import prefuse.Visualization;
-
-import prefuse.controls.ControlAdapter;
-import prefuse.controls.PanControl;
-import prefuse.controls.WheelZoomControl;
-import prefuse.controls.ZoomControl;
-import prefuse.controls.ZoomToFitControl;
-import prefuse.visual.NodeItem;
-import prefuse.visual.sort.TreeDepthItemSorter;
-
-import statemap.State;
+import java.awt.dnd.DragSource;
+import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.logging.Logger;
 
 /**
  * Demonstration of a node-link tree viewer
@@ -31,7 +23,7 @@ import statemap.State;
  * @version 1.0
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
-public class MindView extends Display {
+public class MindView2 extends Display {
 
     Logger m_logger = Logger.getLogger(this.getClass().getName());
 
@@ -82,7 +74,7 @@ public class MindView extends Display {
         }
     };
 
-	public MindView(String path, Object rootId) {
+	public MindView2(String path, Object rootId) {
 		super(new Visualization());
 		setSize(700, 600);
 		setHighQuality(true);
@@ -127,7 +119,7 @@ public class MindView extends Display {
         public HittedPosition m_hittedPosition;
 
         MouseControl() {
-            super(MindView.this);
+            super(MindView2.this);
             m_hittedNode = null;
             m_hittedPosition = HittedPosition.OUTSIDE;
         }
@@ -188,7 +180,7 @@ public class MindView extends Display {
         //if dropNode or dropPostion changed, give the event
         @Override
         public void nodeItemHitted(NodeItem item, NodeItem hittedNode,
-                                   RobustNodeItemController.HittedPosition hittedPosition, boolean ctrlDowned) {
+                                   HittedPosition hittedPosition, boolean ctrlDowned) {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
                 m_hittedNode = hittedNode;
                 m_hittedPosition = hittedPosition;
@@ -214,7 +206,7 @@ public class MindView extends Display {
         }
 
         @Override
-        public void nodeItemDropped(NodeItem item, NodeItem dropNode, RobustNodeItemController.HittedPosition hittedPosition, boolean ctrlDowned) {
+        public void nodeItemDropped(NodeItem item, NodeItem dropNode, HittedPosition hittedPosition, boolean ctrlDowned) {
             m_logger.info("nodeItemDropped");
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
 

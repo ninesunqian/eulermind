@@ -1,32 +1,15 @@
 package excitedmind;
 
-import excitedmind.DBTree.EdgeVertex;
+import excitedmind.MindDB.EdgeVertex;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.geom.Point2D;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Random;
 import java.util.logging.Logger;
 
 import javax.swing.*;
 
 import com.tinkerpop.blueprints.Vertex;
-
-import prefuse.Display;
-import prefuse.Visualization;
-import prefuse.controls.ControlAdapter;
-import prefuse.util.FontLib;
-import prefuse.util.ui.JFastLabel;
-import prefuse.util.ui.JSearchPanel;
-import prefuse.visual.VisualItem;
 
 /**
  * Demonstration of a node-link tree viewer
@@ -65,32 +48,32 @@ public class Mindmap {
 
         deleteDir(dbPath);
 
-		DBTree dbTree = new DBTree (dbUrl);
+		MindDB mindDb = new MindDB(dbUrl);
 
-        dbTree.createFullTextVertexKeyIndex(MindTree.sm_textPropName);
+        mindDb.createFullTextVertexKeyIndex(MindTree.sm_textPropName);
 
 
         /*
         {
             for (int i=0; i<10; i++) {
-                Vertex a = dbTree.m_graph.addVertex(null);
+                Vertex a = mindDb.m_graph.addVertex(null);
                 a.setProperty(MindTree.sm_textPropName, "abc def");
             }
 
             for (int i=0; i<10; i++) {
-                Vertex a = dbTree.m_graph.addVertex(null);
+                Vertex a = mindDb.m_graph.addVertex(null);
                 a.setProperty(MindTree.sm_textPropName, "abcdef");
             }
         }
         */
 
-		createTree (dbTree, null, "", 0);
+		createTree (mindDb, null, "", 0);
         /*
-        for (Vertex v : dbTree.getVertices(MindTree.sm_textPropName, "def")) {
+        for (Vertex v : mindDb.getVertices(MindTree.sm_textPropName, "def")) {
             System.out.println("find :" + v + ": " + v.getProperty(MindTree.sm_textPropName));
         }
         */
-		dbTree = null;
+		mindDb = null;
 
 
         EventQueue.invokeLater(new Runnable() {
@@ -106,34 +89,34 @@ public class Mindmap {
 	}
 	
 	static private Vertex m_rootVertex;
-	static private void createTree (DBTree dbTree, Vertex parent, String parentText, int level)
+	static private void createTree (MindDB mindDb, Vertex parent, String parentText, int level)
 	{
 		if (level >= 3)
 		{
 			return;
 			
 		} else if (level == 0) {
-			Vertex root = dbTree.addRoot();
+			Vertex root = mindDb.addRoot();
 			root.setProperty(MindTree.sm_textPropName, "a");
 			m_rootVertex = root;
 			
-			createTree (dbTree, root, "a", 1);
+			createTree (mindDb, root, "a", 1);
 			
 		} else {
 			
-			EdgeVertex edgeVertex = dbTree.addChild(parent, 0);
+			EdgeVertex edgeVertex = mindDb.addChild(parent, 0);
 			edgeVertex.m_vertex.setProperty(MindTree.sm_textPropName, parentText + "a");
-			createTree (dbTree, edgeVertex.m_vertex, parentText + "a", level + 1);
+			createTree (mindDb, edgeVertex.m_vertex, parentText + "a", level + 1);
 			
-			edgeVertex = dbTree.addChild(parent, 1);
+			edgeVertex = mindDb.addChild(parent, 1);
 			edgeVertex.m_vertex.setProperty(MindTree.sm_textPropName, parentText + "b");
-			createTree (dbTree, edgeVertex.m_vertex, parentText + "b", level + 1);
+			createTree (mindDb, edgeVertex.m_vertex, parentText + "b", level + 1);
 			
-			edgeVertex = dbTree.addChild(parent, 2);
+			edgeVertex = mindDb.addChild(parent, 2);
 			edgeVertex.m_vertex.setProperty(MindTree.sm_textPropName, parentText + "c");
-			createTree (dbTree, edgeVertex.m_vertex, parentText + "c", level + 1);
+			createTree (mindDb, edgeVertex.m_vertex, parentText + "c", level + 1);
 			
-			dbTree.addRefEdge(parent, m_rootVertex, 3);
+			mindDb.addRefEdge(parent, m_rootVertex, 3);
 		}
 	}
 
