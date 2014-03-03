@@ -20,6 +20,12 @@ import prefuse.controls.PanControl;
 import prefuse.controls.WheelZoomControl;
 import prefuse.controls.ZoomControl;
 import prefuse.controls.ZoomToFitControl;
+import prefuse.data.Edge;
+import prefuse.data.Graph;
+import prefuse.data.Node;
+import prefuse.data.Tree;
+import prefuse.util.PrefuseLib;
+import prefuse.visual.EdgeItem;
 import prefuse.visual.NodeItem;
 import prefuse.visual.sort.TreeDepthItemSorter;
 
@@ -33,11 +39,14 @@ import statemap.State;
  */
 public class MindView extends Display {
 
-    Logger m_logger = Logger.getLogger(this.getClass().getName());
+    final Logger m_logger = Logger.getLogger(this.getClass().getName());
+    final String m_treeGroupName = "tree";
 
-    final MindTree m_mindTree;
-	final MindTreeController m_mindTreeController;
-    UndoManager m_undoManager = new UndoManager();
+    final private MindModel m_mindModel;
+    MindUndoManager m_undoManager;
+
+    TreeCursor m_cursor;
+    Node m_savedCursor = null;
 
 	MindTreeRenderEngine m_renderEngine;
 
@@ -54,7 +63,6 @@ public class MindView extends Display {
             State newState = (State) event.getNewValue();
 
             m_logger.info( "FSM: " + "  event: " + propertyName + ": " + "[" + previousState  + " -> " + newState + "]");
-
         }
     };
 
@@ -82,21 +90,19 @@ public class MindView extends Display {
         }
     };
 
-	public MindView(String path, Object rootId) {
+	public MindView(MindModel mindModel, MindUndoManager undoManager, Object rootId) {
 		super(new Visualization());
 		setSize(700, 600);
 		setHighQuality(true);
 
-        String treeGroup = "tree";
-        m_mindTree = new MindTree(path, rootId);
-        m_vis.add(treeGroup, m_mindTree.m_displayTree);
-		m_mindTreeController = new MindTreeController(m_mindTree, m_vis, treeGroup);
+        m_mindModel = mindModel;
+        m_undoManager = undoManager;
+
+        Tree tree = mindModel.findOrPutTree(rootId, 3);
+        m_vis.add(m_treeGroupName, tree);
 
         setItemSorter(new TreeDepthItemSorter());
-        m_renderEngine = new MindTreeRenderEngine(this, treeGroup);
-
-        m_prompter = new MindPrompter(this, m_mindTree.m_mindDb);
-        m_prompter.addMouseListener(m_prompterMouseListener);
+        m_renderEngine = new MindTreeRenderEngine(this, m_treeGroupName);
 
         getTextEditor().addKeyListener(m_editorKeyListener);
 		setMouseControlListener();
@@ -105,7 +111,41 @@ public class MindView extends Display {
         m_fsm = new MindViewFSM(this, MindViewFSM.MindViewStateMap.Normal);
         m_fsm.addStateChangeListener(m_fsmStateChangeListener);
         m_fsm.enterStartState();
+
+        m_prompter = new MindPrompter(this, m_mindModel.m_mindDb);
+        m_prompter.addMouseListener(m_prompterMouseListener);
+
 	}
+
+    public NodeItem toVisual (Node node)
+    {
+        if (node instanceof NodeItem) {
+            return  (NodeItem) node;
+        } else {
+            String treeNodesGroupName = PrefuseLib.getGroupName(m_treeGroupName, Graph.NODES);
+            return (NodeItem) m_vis.getVisualItem(treeNodesGroupName, node);
+        }
+    }
+
+    public EdgeItem toVisual (Edge edge)
+    {
+        if (edge instanceof EdgeItem) {
+            return (EdgeItem) edge;
+        } else {
+            String treeEdgesGroupName = PrefuseLib.getGroupName(m_treeGroupName, Graph.EDGES);
+            return (EdgeItem) m_vis.getVisualItem(treeEdgesGroupName, edge);
+        }
+    }
+
+    public Node toSource (NodeItem nodeItem)
+    {
+        return (Node) m_vis.getSourceTuple (nodeItem);
+    }
+
+    public Edge toSource (EdgeItem edgeItem)
+    {
+        return (Edge) m_vis.getSourceTuple (edgeItem);
+    }
 
 	public void renderTree() {
 		m_renderEngine.run(null);
@@ -166,10 +206,11 @@ public class MindView extends Display {
 
         private boolean operatorEnabled(NodeItem sourceNode, NodeItem hittedNode, boolean ctrlDowned)
         {
+            sourceNode.getSourceData();
             if (ctrlDowned) {
-                return m_mindTreeController.canAddReference(m_mindTreeController.toSource(hittedNode));
+                return m_mindModel.canAddReference(toSource(hittedNode), toSource(sourceNode));
             } else {
-                return m_mindTreeController.canResetParent(m_mindTreeController.toSource(hittedNode));
+                return m_mindModel.canResetParent(toSource(sourceNode), toSource(hittedNode));
             }
         }
 
@@ -287,8 +328,11 @@ public class MindView extends Display {
     {
         if (confirm) {
             String text = getTextEditor().getText();
-            AbstractUndoableEdit undoer = m_mindTreeController.setCursorText(text);
-            m_undoManager.addEdit(undoer);
+            SettingProperty settingProperty= new SettingProperty(m_mindModel, m_cursor.getCursorNode(), m_mindModel.sm_propmptytext,
+                    text);
+
+            settingProperty.does();
+            m_undoManager.addEdit(settingProperty);
         }
 
         hideEditor();
@@ -299,7 +343,7 @@ public class MindView extends Display {
         if (getTextEditor().isVisible())
             return;
 
-        editText(m_mindTreeController.toVisual(m_mindTreeController.getCursorNode()), MindTree.sm_textPropName) ;
+        editText(toVisual(m_cursor.getCursorNode()), MindTree.sm_textPropName) ;
 
         if (withPrompter) {
             m_prompter.show(getTextEditor());

@@ -23,7 +23,7 @@ import java.util.logging.Logger;
  * @version 1.0
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
-public class MindView2 extends Display {
+public class MindView_old extends Display {
 
     Logger m_logger = Logger.getLogger(this.getClass().getName());
 
@@ -74,7 +74,7 @@ public class MindView2 extends Display {
         }
     };
 
-	public MindView2(String path, Object rootId) {
+	public MindView_old(String path, Object rootId) {
 		super(new Visualization());
 		setSize(700, 600);
 		setHighQuality(true);
@@ -119,7 +119,7 @@ public class MindView2 extends Display {
         public HittedPosition m_hittedPosition;
 
         MouseControl() {
-            super(MindView2.this);
+            super(MindView_old.this);
             m_hittedNode = null;
             m_hittedPosition = HittedPosition.OUTSIDE;
         }

@@ -63,7 +63,7 @@ public class MindModel {
 	}
 
 
-	public MindModel(String dbPath, Object rootId)
+	public MindModel(String dbPath)
 	{
         m_logger.setLevel(Level.WARNING);
 
@@ -382,10 +382,14 @@ public class MindModel {
         }
 	}
 
+    boolean canAddReference(Node refererNode, Node refereeNode)
+    {
+        assert (refererNode.getGraph() == refereeNode.getGraph());
+        return refererNode != refereeNode;
+    }
 
     public void addReference(Object refererDBId, int pos, Object refereeDBId) {
 
-        //TODO: move to MindTreeController: Vertex refererVertex = getDBVertex(referer);
         Vertex refererVertex = m_mindDb.getVertex(refererDBId);
         Vertex refereeVertex = m_mindDb.getVertex(refereeDBId);
         com.tinkerpop.blueprints.Edge refEdge = m_mindDb.addRefEdge(refererVertex, refereeVertex, pos);
@@ -393,12 +397,8 @@ public class MindModel {
         for (Tree tree : m_trees) {
             exposeRelation(tree, refererVertex, pos, refEdge, refereeVertex);
         }
-
-        /*TODO
-        //move to MindTreeController: Vertex refererVertex = getDBVertex(referer);
-            return tree.getChild(referer, pos);
-            */
     }
+
 
     public void removeReference(Object refererDBId, int pos) {
         Vertex refererVertex = m_mindDb.getVertex(refererDBId);
@@ -422,6 +422,16 @@ public class MindModel {
             });
         }
     }
+
+    public boolean canResetParent(Node node, Node newParent)
+    {
+        assert(node.getGraph() == newParent.getGraph());
+        assert(node.getParent() != null);
+        return (! sameDBNode(newParent, node))
+                && (! sameDBNode(node.getParent(), newParent))
+                && (!isInDBSubTree(newParent, node));
+    }
+
 
     public void moveChild(Object oldParentDBId, int oldPos, Object newParentDBId, int newPos)
 	{

@@ -31,7 +31,6 @@ public class MindTreeController {
     TreeCursor m_cursor;
     Node m_savedCursor = null;
 
-    private LinkedHashSet<Integer> m_foldedNodes = new LinkedHashSet<Integer>();
 
     public Stack<Integer> getNodePath(Node node)
     {
@@ -317,8 +316,8 @@ public class MindTreeController {
         Node refereeNode = getCursorNode();
         return refererNode != refereeNode;
         /*
-        return !m_mindTree.sameDBNode(refererNode, refereeNode)
-                && !m_mindTree.sameDBNode(refereeNode.getParent(), refererNode);
+        return !m_mindtree.samedbnode(referernode, refereenode)
+                && !m_mindtree.samedbnode(refereenode.getparent(), referernode);
                 */
     }
 
@@ -563,139 +562,6 @@ public class MindTreeController {
         }
     }
 
-    private void unfoldNode (VisualItem visualItem)
-    {
-        Node node = (Node)visualItem.getSourceTuple();
-
-        if (node.getChildCount() > 0) { // node is not a leaf node
-
-            if (visualItem.isExpanded()) {
-                return;
-            }
-
-            assert (m_foldedNodes.contains(node.getRow()));
-
-            m_foldedNodes.remove(node.getRow());
-
-            final Visualization vis = visualItem.getVisualization();
-            final Node unfoldTreeRoot = node;
-            final String group = visualItem.getGroup();
-
-            //unfold descendants deeply, to the folded descendants
-            m_mindTree.m_displayTree.deepTraverse(node,new Tree.Processor() {
-                public boolean run(Node node, int level) {
-
-                    if (node == unfoldTreeRoot) {
-                        return true;
-                    }
-
-                    TableNodeItem visualNode = (TableNodeItem)vis.getVisualItem(group, node);
-                    TableEdgeItem visualEdge = (TableEdgeItem)visualNode.getParentEdge();
-
-                    //m_logger.info ( "visiableNode " + m_mindTree.getText(node));
-                    PrefuseLib.updateVisible(visualNode, true);
-                    PrefuseLib.updateVisible(visualEdge, true);
-
-                    if (m_foldedNodes.contains(node.getRow())) {
-                        return false;
-                    } else {
-                        return true;
-                    }
-                }
-            }, 0);
-        }
-        else // node  is the leaf of prefuse Tree
-        {
-            m_mindTree.attachChildren(node);
-        }
-
-        visualItem.setExpanded(true);
-    }
-
-    private void foldNode (VisualItem visualItem)
-    {
-        final Visualization vis = visualItem.getVisualization();
-        Node node = (Node)visualItem.getSourceTuple();
-        final String group = visualItem.getGroup();
-
-        m_logger.info ( "foldNode " + m_mindTree.getText(node));
-        if (! visualItem.isExpanded())
-        {
-            return;
-        }
-
-        m_foldedNodes.add(node.getRow());
-
-        final Node foldTreeRoot = node;
-
-        //set descendants unvisible deeply, to the folded descendants
-        m_mindTree.m_displayTree.deepTraverse(node,new Tree.Processor() {
-            public boolean run(Node node, int level) {
-                if (node == foldTreeRoot)
-                {
-                    return true;
-                }
-
-                TableNodeItem visualNode = (TableNodeItem)vis.getVisualItem(group, node);
-                TableEdgeItem visualEdge = (TableEdgeItem)visualNode.getParentEdge();
-
-                PrefuseLib.updateVisible(visualNode, false);
-                PrefuseLib.updateVisible(visualEdge, false);
-
-                String text = m_mindTree.getText(node);
-
-                //m_logger.info ( "invisiableNode " + text);
-                if (m_foldedNodes.contains(node.getRow())) {
-                    m_logger.info ( "m_foldedNodes contain: " + node + " " + text);
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-        }, 0);
-
-        // detach the descendants of the earliest unfold node
-        /* TODO  now disable it
-        if (m_foldedNodes.size() > 5)
-        {
-            Node toRemovedNode = m_foldedNodes.iterator().next();
-            m_foldedNodes.remove(toRemovedNode.getRow());
-            detachChildern(toRemovedNode);
-        }
-        */
-
-        visualItem.setExpanded(false);
-    }
-
-    class TogglingFoldUndoer extends NodeOperatorUndoer{
-        TogglingFoldUndoer (Stack<Integer> nodePath, boolean foldIt)
-        {
-            super(nodePath);
-            m_foldIt = foldIt;
-        }
-
-        public void undo() {
-            setCursorByPath(m_nodePath);
-            Node cursorNode = getCursorNode();
-
-            if (m_foldIt)
-                unfoldNode(toVisual(cursorNode));
-            else
-                foldNode(toVisual(cursorNode));
-        }
-
-        public void redo () {
-            setCursorByPath(m_nodePath);
-            Node cursorNode = getCursorNode();
-
-            if (m_foldIt)
-                foldNode(toVisual(cursorNode));
-            else
-                unfoldNode(toVisual(cursorNode));
-        }
-
-        boolean m_foldIt;
-    }
 
     public AbstractUndoableEdit toggleFoldCursorUndoable()
     {

@@ -3,7 +3,6 @@ package excitedmind.operator;
 import excitedmind.MindModel;
 import excitedmind.MindOperator;
 import prefuse.data.Node;
-import prefuse.data.Tree;
 
 import java.util.Stack;
 
@@ -15,26 +14,27 @@ import java.util.Stack;
  * To change this template use File | Settings | File Templates.
  */
 public class AddingChild extends MindOperator{
-    int m_childPos;
+    int pos;
     String m_text;
-    Object m_childDbId
+    Object m_childDbId;
 
     AddingChild(MindModel mindModel, Node formerCursor, int pos, String text) {
         super(mindModel, formerCursor);
-        m_childPos = pos;
+        this.pos = pos;
         m_text = text;
+
     }
 
     public void doing() {
         Object parentDBId = getDBIdByPath(m_formerCursorPath);
-        m_childDbId = m_mindModel.addChild(parentDBId, m_childPos, m_text);
+        m_childDbId = m_mindModel.addChild(parentDBId, pos, m_text);
 
         m_laterCursorPath = (Stack<Integer>) m_formerCursorPath.clone();
-        m_laterCursorPath.add(m_childPos);
+        m_laterCursorPath.add(pos);
     }
 
     public void undo() {
-        m_mindModel.trashNode(getDBIdByPath(m_formerCursorPath), m_childPos);
+        m_mindModel.trashNode(getDBIdByPath(m_formerCursorPath), pos);
     }
 
     public void redo() {

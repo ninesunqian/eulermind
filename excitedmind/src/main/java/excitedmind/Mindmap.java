@@ -52,27 +52,7 @@ public class Mindmap {
 
         mindDb.createFullTextVertexKeyIndex(MindTree.sm_textPropName);
 
-
-        /*
-        {
-            for (int i=0; i<10; i++) {
-                Vertex a = mindDb.m_graph.addVertex(null);
-                a.setProperty(MindTree.sm_textPropName, "abc def");
-            }
-
-            for (int i=0; i<10; i++) {
-                Vertex a = mindDb.m_graph.addVertex(null);
-                a.setProperty(MindTree.sm_textPropName, "abcdef");
-            }
-        }
-        */
-
 		createTree (mindDb, null, "", 0);
-        /*
-        for (Vertex v : mindDb.getVertices(MindTree.sm_textPropName, "def")) {
-            System.out.println("find :" + v + ": " + v.getProperty(MindTree.sm_textPropName));
-        }
-        */
 		mindDb = null;
 
 
@@ -139,8 +119,10 @@ public class Mindmap {
 
             final String label = MindTree.sm_textPropName;
 
+            final MindModel mindModel = new MindModel(dbUrl);
+
             // create a new treemap
-            final MindView mindView = new MindView (dbUrl, rootId);
+            final MindView mindView = new MindView(mindModel, rootId);
             mindView.setBackground(BACKGROUND);
             mindView.setForeground(FOREGROUND);
 
