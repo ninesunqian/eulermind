@@ -339,7 +339,7 @@ public class MindView_old extends Display {
                 int selectedIndex = m_prompter.getSelectedIndex();
                 MindPrompter.PromptedNode selected = m_prompter.getPromptedNode(selectedIndex);
 
-                AbstractUndoableEdit undoer = m_mindTreeController.placeRefereeUndoable(selected.m_dbId);
+                AbstractUndoableEdit undoer = m_mindTreeController.placeReferentUndoable(selected.m_dbId);
                 m_undoManager.addEdit(undoer);
 
             } else {

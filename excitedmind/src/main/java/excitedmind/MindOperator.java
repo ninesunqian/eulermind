@@ -32,6 +32,11 @@ public class MindOperator extends AbstractUndoableEdit {
         return m_mindModel.getDBId(node);
     }
 
-
+    public void ascendRoot(Object oldRootDBId, Object newRootDBId, int pos)
+    {
+        m_rootDBId = newRootDBId;
+        m_formerCursorPath.insertElementAt(pos, 0);
+        m_laterCursorPath.insertElementAt(pos, 0);
+    }
 
 }

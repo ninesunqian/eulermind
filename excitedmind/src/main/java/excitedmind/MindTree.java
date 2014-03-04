@@ -195,7 +195,7 @@ public class MindTree {
 
 	public void attachChildren (Node parent)
 	{
-		ArrayList<EdgeVertex> edgeVertexArray = m_mindDb.getChildrenAndReferees(getDBVertex(parent));
+		ArrayList<EdgeVertex> edgeVertexArray = m_mindDb.getChildrenAndReferents(getDBVertex(parent));
 		
 		if (edgeVertexArray == null || edgeVertexArray.size() == 0)
 		{
@@ -343,7 +343,7 @@ public class MindTree {
 	public Object trashNode(Object parentDBId, int pos)
 	{
         Vertex parent = m_mindDb.getVertex(parentDBId);
-        final EdgeVertex edgeChild = m_mindDb.getChildOrReferee(parent, pos);
+        final EdgeVertex edgeChild = m_mindDb.getChildOrReferent(parent, pos);
         Object removedDBId = edgeChild.m_vertex.getId();
 
         final ArrayList<Object> inheritPathOfTrashedNode =
@@ -388,34 +388,34 @@ public class MindTree {
         exposeRelation(parentVertex, context.m_pos, edgeParent.m_edge, restoredVertex);
 
         for (final RefLinkInfo refLinkInfo : context.m_refLinkInfos) {
-            final Vertex refererVertex = m_mindDb.getVertex(refLinkInfo.m_referer);
-            final Vertex refereeVertex = m_mindDb.getVertex(refLinkInfo.m_referee);
-            final com.tinkerpop.blueprints.Edge refDBEdge = m_mindDb.getEdge (refererVertex, refLinkInfo.m_pos);
+            final Vertex referrerVertex = m_mindDb.getVertex(refLinkInfo.m_referrer);
+            final Vertex referentVertex = m_mindDb.getVertex(refLinkInfo.m_referent);
+            final com.tinkerpop.blueprints.Edge refDBEdge = m_mindDb.getEdge (referrerVertex, refLinkInfo.m_pos);
 
-            exposeRelation(refererVertex, refLinkInfo.m_pos, refDBEdge, refereeVertex);
+            exposeRelation(referrerVertex, refLinkInfo.m_pos, refDBEdge, referentVertex);
         }
 	}
 
 
-    public void addReference(Object refererDBId, int pos, Object refereeDBId) {
+    public void addReference(Object referrerDBId, int pos, Object referentDBId) {
 
-        //TODO: move to MindTreeController: Vertex refererVertex = getDBVertex(referer);
-        Vertex refererVertex = m_mindDb.getVertex(refererDBId);
-        Vertex refereeVertex = m_mindDb.getVertex(refereeDBId);
-        com.tinkerpop.blueprints.Edge refEdge = m_mindDb.addRefEdge(refererVertex, refereeVertex, pos);
+        //TODO: move to MindTreeController: Vertex referrerVertex = getDBVertex(referrer);
+        Vertex referrerVertex = m_mindDb.getVertex(referrerDBId);
+        Vertex referentVertex = m_mindDb.getVertex(referentDBId);
+        com.tinkerpop.blueprints.Edge refEdge = m_mindDb.addRefEdge(referrerVertex, referentVertex, pos);
 
-        exposeRelation(refererVertex, pos, refEdge, refereeVertex);
+        exposeRelation(referrerVertex, pos, refEdge, referentVertex);
 
         /*TODO
-        //move to MindTreeController: Vertex refererVertex = getDBVertex(referer);
-            return m_displayTree.getChild(referer, pos);
+        //move to MindTreeController: Vertex referrerVertex = getDBVertex(referrer);
+            return m_displayTree.getChild(referrer, pos);
             */
     }
 
-    public void removeReference(Object refererDBId, int pos) {
-        Vertex refererVertex = m_mindDb.getVertex(refererDBId);
-        m_mindDb.removeRefEdge(refererVertex, pos);
-        hideRelation(refererDBId, pos);
+    public void removeReference(Object referrerDBId, int pos) {
+        Vertex referrerVertex = m_mindDb.getVertex(referrerDBId);
+        m_mindDb.removeRefEdge(referrerVertex, pos);
+        hideRelation(referrerDBId, pos);
     }
 
     public void changeChildPos (final Object parentDBId, final int oldPos, final int newPos)

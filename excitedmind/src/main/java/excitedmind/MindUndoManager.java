@@ -35,16 +35,16 @@ public abstract class MindUndoManager extends UndoManager {
 
     abstract public void exposeMindView(MindView mindView);
 
-    public void ascendOneRoot(Object oldRootDBId, Object newRootDBId, int pos)
+    public void ascendRoot(Object oldRootDBId, Object newRootDBId, int pos)
     {
         MindView mindView = m_mindViews.get(oldRootDBId);
         m_mindViews.remove(oldRootDBId);
         m_mindViews.put(newRootDBId, mindView);
         for(UndoableEdit edit : edits) {
             MindOperator operator = (MindOperator)edit;
+
             if (operator.m_rootDBId.equals(oldRootDBId)) {
-                operator.m_rootDBId = newRootDBId;
-                operator.m_formerCursorPath.insertElementAt(pos, 0);
+                operator.ascendRoot(oldRootDBId, newRootDBId, pos);
             }
         }
     }

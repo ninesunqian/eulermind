@@ -1,33 +1,38 @@
 package excitedmind.operator;
 
-/**
- * Created with IntelliJ IDEA.
- * User: Administrator
- * Date: 14-3-3
- * Time: 下午9:25
- * To change this template use File | Settings | File Templates.
- */
-public class RemovingReference {
-    //node path is the referer node
-    RemovingReference(Stack<Integer> nodePath, Object refereeDBId, int pos)
+import excitedmind.MindModel;
+import excitedmind.MindOperator;
+import prefuse.data.Node;
+
+import java.util.Stack;
+
+public class RemovingReference extends MindOperator {
+    Object m_referrerDBId;
+    Object m_referentDBId ;
+    int m_pos;
+
+    RemovingReference(MindModel mindModel, Node formerCursor)
     {
-        super(nodePath);
-        m_refereeDBId = refereeDBId;
-        m_pos = pos;
+        super(mindModel, formerCursor);
+        m_referentDBId = mindModel.getDBId(formerCursor);
+        m_referrerDBId = mindModel.getDBId(formerCursor.getParent());
+        m_pos = formerCursor.getIndex();
     }
+
+    public void doing ()
+    {
+        m_mindModel.removeReference(m_referrerDBId, m_pos);
+        m_laterCursorPath = (Stack<Integer>)m_formerCursorPath.clone();
+        m_laterCursorPath.add(m_pos);
+    }
+
     public void undo()
     {
-        Node cursorNode = getCursorNode();
-        setCursorByPath(m_nodePath);
-        m_mindTree.addReference(m_mindTree.getDBId(cursorNode), m_pos, m_refereeDBId);
-
+        m_mindModel.addReference(m_referrerDBId, m_pos, m_referentDBId);
     }
+
     public void redo()
     {
-        setCursorByPath(m_nodePath);
-        m_mindTree.removeReference(m_refereeDBId, m_pos);
+        m_mindModel.removeReference(m_referrerDBId, m_pos);
     }
-
-    Object m_refereeDBId;
-    int m_pos;
 }

@@ -1,5 +1,9 @@
 package excitedmind.operator;
 
+import excitedmind.MindModel;
+import excitedmind.MindOperator;
+import prefuse.data.Node;
+
 /**
  * Created with IntelliJ IDEA.
  * User: Administrator
@@ -7,16 +11,24 @@ package excitedmind.operator;
  * Time: 下午9:27
  * To change this template use File | Settings | File Templates.
  */
-public class SettingProptery {
+public class SettingProptery extends MindOperator {
+    Object m_nodeDBId;
+    String m_property;
+    Object m_oldValue;
+    Object m_newValue;
+
+    public SettingProptery(MindModel mindModel, Node formerCursor, String property, Object newValue, Object oldValue) {
+        super(mindModel, formerCursor);
+        m_nodeDBId = m_mindModel.getDBId(formerCursor);
+        m_property = property;
+        m_newValue = newValue;
+        m_oldValue = m_mindModel.getNodeP
+    }
+
+    public void doing()
     {
-        SetPropertyUndoer (Stack<Integer> nodePath, String property, Object newValue, Object oldValue)
-        {
-            super(nodePath);
-            m_property = property;
-            m_oldValue = oldValue;
-            m_newValue = newValue;
-            m_logger.info("nodePath="+ nodePath + ",   newValue="+m_newValue + ",   oldValue="+m_oldValue);
-        }
+        m_mindModel.setProperty(m_nodeDBId, m_property, m_newValue);
+    }
 
     public void undo ()
     {

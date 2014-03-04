@@ -26,7 +26,7 @@ public class MindDB implements Graph {
 
 	private final static String SAVED_PARENT_ID_PROP_NAME = PrefuseLib.FIELD_PREFIX + "parent";
 	private final static String SAVED_POS_PROP_NAME = PrefuseLib.FIELD_PREFIX + "pos";
-	public final static String SAVED_REFERER_INFO_PROP_NAME = PrefuseLib.FIELD_PREFIX + "referers";
+	public final static String SAVED_REFERRER_INFO_PROP_NAME = PrefuseLib.FIELD_PREFIX + "referrers";
 
 	enum EdgeType { INCLUDE, REFERENCE};
 
@@ -289,10 +289,10 @@ public class MindDB implements Graph {
 	
 	//only addRefEdge and removeRefEdge is public
 	
-	public Edge addRefEdge (Vertex referer, Vertex referee, int pos)
+	public Edge addRefEdge (Vertex referrer, Vertex referent, int pos)
 	{
-		assert (referer.getId() != referee.getId());
-		return addEdge (referer, referee, pos, EdgeType.REFERENCE);
+		assert (referrer.getId() != referent.getId());
+		return addEdge (referrer, referent, pos, EdgeType.REFERENCE);
 	}
 
     private void removeEdge (Vertex source, int pos, EdgeType assert_type)
@@ -360,7 +360,7 @@ public class MindDB implements Graph {
 		return new EdgeVertex(edge, child);
 	}
 
-	public EdgeVertex getChildOrReferee(Vertex parent, int pos)
+	public EdgeVertex getChildOrReferent(Vertex parent, int pos)
 	{
 		Edge edge = getEdge(parent, pos);
 		if (edge == null)
@@ -374,7 +374,7 @@ public class MindDB implements Graph {
 		}
 	}
 	
-	public ArrayList<EdgeVertex> getChildrenAndReferees(Vertex parent)
+	public ArrayList<EdgeVertex> getChildrenAndReferents(Vertex parent)
 	{
 		ArrayList<Object> edgeIDsToChildren = getEdgeIDsToChildren(parent, false);
 		
@@ -419,7 +419,7 @@ public class MindDB implements Graph {
 
     public EdgeVertex moveChild (Vertex oldParent, int oldPos, Vertex newParent, int newPos)
     {
-        Vertex child = getChildOrReferee(oldParent, oldPos).m_vertex;
+        Vertex child = getChildOrReferent(oldParent, oldPos).m_vertex;
         removeEdge (oldParent, oldPos, EdgeType.INCLUDE);
         return new EdgeVertex(addEdge(newParent, child, newPos, EdgeType.INCLUDE), child);
     }
@@ -437,11 +437,11 @@ public class MindDB implements Graph {
 
 
 
-    public ArrayList<EdgeVertex> getReferers(Vertex referee)
+    public ArrayList<EdgeVertex> getReferrers(Vertex referent)
 	{
-		Iterator<Edge> edgeIterator = referee.getEdges(Direction.IN).iterator();
+		Iterator<Edge> edgeIterator = referent.getEdges(Direction.IN).iterator();
 		Edge refEdge;
-		ArrayList<EdgeVertex> refererArray = new ArrayList<EdgeVertex> ();
+		ArrayList<EdgeVertex> referrerArray = new ArrayList<EdgeVertex> ();
 		
 		
 		while (edgeIterator.hasNext())
@@ -450,12 +450,12 @@ public class MindDB implements Graph {
 			
 			if (getEdgeType(refEdge) == EdgeType.REFERENCE)
 			{
-				Vertex referer = getEdgeSource(refEdge);
-				refererArray.add(new EdgeVertex(refEdge, referer));
+				Vertex referrer = getEdgeSource(refEdge);
+				referrerArray.add(new EdgeVertex(refEdge, referrer));
 			}
 		}
 		
-		return refererArray.size() == 0 ? null : refererArray;
+		return referrerArray.size() == 0 ? null : referrerArray;
 	}
 	
 	private interface Processor 
@@ -468,7 +468,7 @@ public class MindDB implements Graph {
 	{
 		if (proc.run(vertex, level))
 		{
-			ArrayList<EdgeVertex> children = getChildrenAndReferees(vertex);
+			ArrayList<EdgeVertex> children = getChildrenAndReferents(vertex);
 			
 			if (children != null)
 			{
@@ -491,14 +491,14 @@ public class MindDB implements Graph {
 	
 	//remove vertex, the children append to 
 	public static class RefLinkInfo {
-		final Object m_referer;
-		final Object m_referee;
+		final Object m_referrer;
+		final Object m_referent;
 		final int m_pos;
 		
-		RefLinkInfo (Object referer, Object referee, int pos)
+		RefLinkInfo (Object referrer, Object referent, int pos)
 		{
-			m_referer = referer;
-			m_referee = referee;
+			m_referrer = referrer;
+			m_referent = referent;
 			m_pos = pos;
 		}
 	}
@@ -508,7 +508,7 @@ public class MindDB implements Graph {
 	{
 		assert (parent != getRoot());
 		
-		EdgeVertex edgeVertex = getChildOrReferee(parent, pos);
+		EdgeVertex edgeVertex = getChildOrReferent(parent, pos);
 		
 		assert (getEdgeType(edgeVertex.m_edge) == EdgeType.INCLUDE);
 		
@@ -519,18 +519,18 @@ public class MindDB implements Graph {
 		deepTraverse(removedVertex, new Processor() {
 			
 			public boolean run(Vertex vertex, int level) {
-				ArrayList<EdgeVertex> referers = getReferers(vertex);
+				ArrayList<EdgeVertex> referrers = getReferrers(vertex);
 				
-				if (referers != null)
+				if (referrers != null)
 				{
-					for (EdgeVertex referer : referers)
+					for (EdgeVertex referrer : referrers)
 					{
-						ArrayList<Object> edgeArray = getEdgeIDsToChildren(referer.m_vertex, false);
-						int edgeIndex = edgeArray.indexOf(referer.m_edge.getId());
+						ArrayList<Object> edgeArray = getEdgeIDsToChildren(referrer.m_vertex, false);
+						int edgeIndex = edgeArray.indexOf(referrer.m_edge.getId());
 
-						refLinkInfos.add(new RefLinkInfo(referer.m_vertex.getId(), vertex.getId(), edgeIndex));
+						refLinkInfos.add(new RefLinkInfo(referrer.m_vertex.getId(), vertex.getId(), edgeIndex));
 
-						removeRefEdge(referer.m_vertex, edgeIndex);
+						removeRefEdge(referrer.m_vertex, edgeIndex);
 					}
 				}
 				
@@ -540,7 +540,7 @@ public class MindDB implements Graph {
 		
 		removedVertex.setProperty(SAVED_PARENT_ID_PROP_NAME, parent.getId());
 		removedVertex.setProperty(SAVED_POS_PROP_NAME, pos);
-		removedVertex.setProperty(SAVED_REFERER_INFO_PROP_NAME, refLinkInfos);
+		removedVertex.setProperty(SAVED_REFERRER_INFO_PROP_NAME, refLinkInfos);
 
         removeEdge(parent, pos, EdgeType.INCLUDE);
 
@@ -568,7 +568,7 @@ public class MindDB implements Graph {
     {
         Object parentId = vertex.getProperty(SAVED_PARENT_ID_PROP_NAME);
         int pos = (Integer)vertex.getProperty(SAVED_POS_PROP_NAME);
-        ArrayList<Object> refLinkInfos = getContainerProperty (vertex, SAVED_REFERER_INFO_PROP_NAME, false);
+        ArrayList<Object> refLinkInfos = getContainerProperty (vertex, SAVED_REFERRER_INFO_PROP_NAME, false);
 
         assert (parentId != null);
 
@@ -593,7 +593,7 @@ public class MindDB implements Graph {
 	{
 		Object parentId = vertex.getProperty(SAVED_PARENT_ID_PROP_NAME);
 		int pos = (Integer)vertex.getProperty(SAVED_POS_PROP_NAME);
-		ArrayList<Object> refLinkInfos = getContainerProperty (vertex, SAVED_REFERER_INFO_PROP_NAME, false);
+		ArrayList<Object> refLinkInfos = getContainerProperty (vertex, SAVED_REFERRER_INFO_PROP_NAME, false);
 		
 		Vertex parent = getVertex(parentId);
 		Edge edge = addEdge(parent, vertex, pos, EdgeType.INCLUDE);
@@ -603,15 +603,15 @@ public class MindDB implements Graph {
 			for (Object obj : refLinkInfos)
 			{
 				RefLinkInfo refLinkInfo = (RefLinkInfo) obj;
-				addRefEdge(getVertex(refLinkInfo.m_referer), 
-						getVertex(refLinkInfo.m_referee), 
+				addRefEdge(getVertex(refLinkInfo.m_referrer),
+						getVertex(refLinkInfo.m_referent),
 						refLinkInfo.m_pos);
 			}
 		}
 		
 		vertex.removeProperty(SAVED_PARENT_ID_PROP_NAME);
 		vertex.removeProperty(SAVED_POS_PROP_NAME);
-		vertex.removeProperty(SAVED_REFERER_INFO_PROP_NAME);
+		vertex.removeProperty(SAVED_REFERRER_INFO_PROP_NAME);
 
         m_trashIndex.remove(TRASH_KEY_NAME, TRASH_KEY_NAME, vertex);
         commit ();

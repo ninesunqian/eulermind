@@ -185,7 +185,7 @@ public class MindModel {
 	public void attachChildren (Node parent)
 	{
         Tree tree = (Tree)parent.getGraph();
-		ArrayList<EdgeVertex> edgeVertexArray = m_mindDb.getChildrenAndReferees(getDBVertex(parent));
+		ArrayList<EdgeVertex> edgeVertexArray = m_mindDb.getChildrenAndReferents(getDBVertex(parent));
 		
 		if (edgeVertexArray == null || edgeVertexArray.size() == 0)
 		{
@@ -325,7 +325,7 @@ public class MindModel {
 	public Object trashNode(Object parentDBId, int pos)
 	{
         Vertex parent = m_mindDb.getVertex(parentDBId);
-        final EdgeVertex edgeChild = m_mindDb.getChildOrReferee(parent, pos);
+        final EdgeVertex edgeChild = m_mindDb.getChildOrReferent(parent, pos);
         Object removedDBId = edgeChild.m_vertex.getId();
 
         final ArrayList<Object> inheritPathOfTrashedNode =
@@ -373,39 +373,39 @@ public class MindModel {
             exposeRelation(tree, parentVertex, context.m_pos, edgeParent.m_edge, restoredVertex);
 
             for (final RefLinkInfo refLinkInfo : context.m_refLinkInfos) {
-                final Vertex refererVertex = m_mindDb.getVertex(refLinkInfo.m_referer);
-                final Vertex refereeVertex = m_mindDb.getVertex(refLinkInfo.m_referee);
-                final com.tinkerpop.blueprints.Edge refDBEdge = m_mindDb.getEdge (refererVertex, refLinkInfo.m_pos);
+                final Vertex referrerVertex = m_mindDb.getVertex(refLinkInfo.m_referrer);
+                final Vertex referentVertex = m_mindDb.getVertex(refLinkInfo.m_referent);
+                final com.tinkerpop.blueprints.Edge refDBEdge = m_mindDb.getEdge (referrerVertex, refLinkInfo.m_pos);
 
-                exposeRelation(tree, refererVertex, refLinkInfo.m_pos, refDBEdge, refereeVertex);
+                exposeRelation(tree, referrerVertex, refLinkInfo.m_pos, refDBEdge, referentVertex);
             }
         }
 	}
 
-    boolean canAddReference(Node refererNode, Node refereeNode)
+    boolean canAddReference(Node referrerNode, Node referentNode)
     {
-        assert (refererNode.getGraph() == refereeNode.getGraph());
-        return refererNode != refereeNode;
+        assert (referrerNode.getGraph() == referentNode.getGraph());
+        return referrerNode != referentNode;
     }
 
-    public void addReference(Object refererDBId, int pos, Object refereeDBId) {
+    public void addReference(Object referrerDBId, int pos, Object referentDBId) {
 
-        Vertex refererVertex = m_mindDb.getVertex(refererDBId);
-        Vertex refereeVertex = m_mindDb.getVertex(refereeDBId);
-        com.tinkerpop.blueprints.Edge refEdge = m_mindDb.addRefEdge(refererVertex, refereeVertex, pos);
+        Vertex referrerVertex = m_mindDb.getVertex(referrerDBId);
+        Vertex referentVertex = m_mindDb.getVertex(referentDBId);
+        com.tinkerpop.blueprints.Edge refEdge = m_mindDb.addRefEdge(referrerVertex, referentVertex, pos);
 
         for (Tree tree : m_trees) {
-            exposeRelation(tree, refererVertex, pos, refEdge, refereeVertex);
+            exposeRelation(tree, referrerVertex, pos, refEdge, referentVertex);
         }
     }
 
 
-    public void removeReference(Object refererDBId, int pos) {
-        Vertex refererVertex = m_mindDb.getVertex(refererDBId);
-        m_mindDb.removeRefEdge(refererVertex, pos);
+    public void removeReference(Object referrerDBId, int pos) {
+        Vertex referrerVertex = m_mindDb.getVertex(referrerDBId);
+        m_mindDb.removeRefEdge(referrerVertex, pos);
 
         for (Tree tree : m_trees) {
-            hideRelation(tree, refererDBId, pos);
+            hideRelation(tree, referrerDBId, pos);
         }
     }
 
@@ -454,7 +454,7 @@ public class MindModel {
         }
 	}
 
-	public void setNodeProperty (final Object dbId, final String key, final Object value)
+	public void setProperty(final Object dbId, final String key, final Object value)
 	{
 		Vertex dbNode = m_mindDb.getVertex(dbId);
 		dbNode.setProperty(key, value);
@@ -467,6 +467,12 @@ public class MindModel {
             });
         }
 	}
+
+    public Object getProperty (final Object dbId, final String key, final Object value)
+    {
+        Vertex dbNode = m_mindDb.getVertex(dbId);
+        return dbNode.getProperty(key);
+    }
 
 	public Object getDBId(final Tuple tuple)
 	{
@@ -512,7 +518,7 @@ public class MindModel {
 
     public void setText(Object dbId, String text)
     {
-        setNodeProperty (dbId, sm_textPropName, text);
+        setProperty(dbId, sm_textPropName, text);
     }
 
     public int getNodeColor (Node node)
@@ -522,7 +528,7 @@ public class MindModel {
 
     public void setNodeColor (Object dbId, int rgba)
     {
-        setNodeProperty (dbId, sm_nodeColorPropName, rgba);
+        setProperty(dbId, sm_nodeColorPropName, rgba);
     }
 
     public String getFontFamily (Node node)
@@ -532,7 +538,7 @@ public class MindModel {
 
     public void setFontFamily (Object dbId, String fontFamily)
     {
-        setNodeProperty (dbId, sm_fontFamilyPropName, fontFamily);
+        setProperty(dbId, sm_fontFamilyPropName, fontFamily);
     }
 
     public int getFontSize (Node node)
@@ -542,7 +548,7 @@ public class MindModel {
 
     public void setFontSize (Object dbId, int size)
     {
-        setNodeProperty (dbId, sm_fontSizePropName, size);
+        setProperty(dbId, sm_fontSizePropName, size);
     }
 
     public boolean isRefEdge (Edge edge)
