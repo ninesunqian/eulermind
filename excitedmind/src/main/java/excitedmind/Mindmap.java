@@ -133,6 +133,10 @@ public class Mindmap {
             mindView.setBackground(BACKGROUND);
             mindView.setForeground(FOREGROUND);
 
+            final MindView mindView1 = new MindView(mindModel, undoManager, rootId);
+            mindView1.setBackground(BACKGROUND);
+            mindView1.setForeground(FOREGROUND);
+
 
             Box box = new Box(BoxLayout.X_AXIS);
             box.add(Box.createHorizontalStrut(10));
@@ -143,7 +147,8 @@ public class Mindmap {
             JPanel panel = new JPanel(new BorderLayout());
             panel.setBackground(BACKGROUND);
             panel.setForeground(FOREGROUND);
-            panel.add(mindView, BorderLayout.CENTER);
+            panel.add(mindView, BorderLayout.EAST);
+            panel.add(mindView1, BorderLayout.WEST);
             panel.add(box, BorderLayout.SOUTH);
             add(panel);
         }

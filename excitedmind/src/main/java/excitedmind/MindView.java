@@ -362,8 +362,8 @@ public class MindView extends Display {
 
     private void execute(MindOperator operator)
     {
-        operator.does();
-        m_cursor.setCursorNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, operator.m_laterCursorPath)));
+//        operator.does();
+ //       m_cursor.setCursorNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, operator.m_laterCursorPath)));
         m_undoManager.addEdit(operator);
     }
 
@@ -409,8 +409,7 @@ public class MindView extends Display {
                         selected.m_dbId, getCursorSourceNode().getIndex());
             } else {
                 String text = getTextEditor().getText();
-                //TODO: cursorNode is placeholder not cursor
-                operator = new AddingChild(m_mindModel, getCursorSourceNode(), getCursorSourceNode().getIndex(), text);
+                operator = new AddingChild(m_mindModel, getCursorSourceNode().getParent(), getCursorSourceNode().getIndex(), text);
             }
 
             removePlaceholder();
@@ -656,7 +655,7 @@ public class MindView extends Display {
 
     private void unfoldNode(Node node)
     {
-        if (node.getChildCount() > 0) { // node is not a leaf node
+        if (node.getChildCount() == 0) { // node is not a leaf node
             m_mindModel.attachChildren(node);
         }
         m_folder.unfoldNode(toVisual(node));

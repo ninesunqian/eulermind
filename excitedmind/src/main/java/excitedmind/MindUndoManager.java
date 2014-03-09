@@ -49,6 +49,17 @@ public abstract class MindUndoManager extends UndoManager {
         }
     }
 
+    public synchronized boolean addEdit(UndoableEdit edit) {
+        MindOperator operator = (MindOperator)edit;
+        operator.does();
+
+        for ()
+        m_cursor.setCursorNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, operator.m_laterCursorPath)));
+        super.addEdit(edit);
+
+    }
+
+
     public synchronized void redo()
     {
         if (! canRedo())
