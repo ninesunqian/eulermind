@@ -11,7 +11,7 @@ public class RemovingReference extends MindOperator {
     Object m_referentDBId ;
     int m_pos;
 
-    RemovingReference(MindModel mindModel, Node formerCursor)
+    public RemovingReference(MindModel mindModel, Node formerCursor)
     {
         super(mindModel, formerCursor);
         m_referentDBId = mindModel.getDBId(formerCursor);
@@ -19,7 +19,7 @@ public class RemovingReference extends MindOperator {
         m_pos = formerCursor.getIndex();
     }
 
-    public void doing ()
+    public void does()
     {
         m_mindModel.removeReference(m_referrerDBId, m_pos);
         m_laterCursorPath = (Stack<Integer>)m_formerCursorPath.clone();

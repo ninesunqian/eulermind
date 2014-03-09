@@ -19,7 +19,7 @@ Exit
     }
 Entry
     {
-        mouse_control_set_enabled(true);
+        setMouseControlEnabled(true);
         renderTree();
         setCursor(null);
     }
@@ -39,42 +39,42 @@ Entry
     cursorTimeout(nodeItem: NodeItem)
         Normal
     {
-        m_mindTreeController.setCursorNode(ctxt.m_mindTreeController.toSource(nodeItem));
+        m_cursor.setCursorNodeItem(nodeItem);
     }
 
     cursorLeft
         Normal
     {
-        m_mindTreeController.moveCursorLeft();
+        m_cursor.moveLeft();
     }
 
     cursorRight
         Normal
     {
-        m_mindTreeController.moveCursorRight();
+        m_cursor.moveRight();
     }
 
     cursorUp
         Normal
     {
-        m_mindTreeController.moveCursorUp();
+        m_cursor.moveUp();
     }
     cursorDown
         Normal
     {
-        m_mindTreeController.moveCursorDown();
+        m_cursor.moveDown();
     }
 
     itemPressed(nodeItem: NodeItem)
         Normal
         {
-            m_mindTreeController.setCursorNode(ctxt.m_mindTreeController.toSource(nodeItem));
+            m_cursor.setCursorNodeItem(nodeItem);
         }
 
     itemClicked()
         Normal
         {
-            m_undoManager.addEdit(ctxt.m_mindTreeController.toggleFoldCursorUndoable());
+            toggleFoldNode(ctxt.getCursorSourceNode());
         }
 
     itemDragged(nodeItem: NodeItem)
@@ -86,7 +86,7 @@ Entry
         [ ctxt.canRemove() ]
         Normal
         {
-            m_undoManager.addEdit(ctxt.m_mindTreeController.removeCursorUndoable());
+            removeCursor();
         }
 
 
@@ -127,7 +127,7 @@ Entry
 Editing
 Entry
     {
-        mouse_control_set_enabled(false);
+        setMouseControlEnabled(false);
     }
 {
     ok
@@ -150,7 +150,7 @@ Entry
 Inserting
 Entry
     {
-        mouse_control_set_enabled(false);
+        setMouseControlEnabled(false);
     }
 {
     ok(fromPrompter: boolean)
@@ -176,14 +176,14 @@ Dragging
         [add_ctrl == true]
         Normal
         {
-            m_undoManager.addEdit(ctxt.m_mindTreeController.addReferenceUndoable(ctxt.m_mindTreeController.toSource(nodeItem)));
+            dragCursorToReferrer(ctxt.toSource(nodeItem));
         }
 
     itemDropped(nodeItem: NodeItem, add_ctrl: boolean)
         [add_ctrl == false]
         Normal
         {
-            m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(ctxt.m_mindTreeController.toSource(nodeItem)));
+            dragCursorToNewParent(ctxt.toSource(nodeItem));
         }
 
     cancel

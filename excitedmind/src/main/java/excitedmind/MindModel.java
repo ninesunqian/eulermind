@@ -317,8 +317,6 @@ public class MindModel {
         }
 
         return edgeVertex.m_vertex.getId();
-
-        //TODO add to MindTreeController return tree.getChild(parent, pos);
 	}
 
 	//return the DBid of node
@@ -468,13 +466,13 @@ public class MindModel {
         }
 	}
 
-    public Object getProperty (final Object dbId, final String key, final Object value)
+    public Object getProperty (final Object dbId, final String key)
     {
         Vertex dbNode = m_mindDb.getVertex(dbId);
         return dbNode.getProperty(key);
     }
 
-	public Object getDBId(final Tuple tuple)
+	public Object getDBId(Tuple tuple)
 	{
 		return tuple.get(sm_dbIdColumnName);
 	}

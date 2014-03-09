@@ -1,6 +1,5 @@
 package excitedmind;
 
-import prefuse.data.Node;
 import prefuse.data.Table;
 import prefuse.util.collections.IntIterator;
 import prefuse.visual.NodeItem;
@@ -34,15 +33,15 @@ public class TreeCursor {
 
     public TreeCursor(VisualTree tree) {
         m_tree = tree;
-        setCursorNode((NodeItem)tree.getRoot());
+        setCursorNodeItem((NodeItem) tree.getRoot());
     }
 
-    public NodeItem getCursorNode()
+    public NodeItem getCursorNodeItem()
     {
         return m_currentCursor;
     }
 
-    public void setCursorNode(NodeItem node)
+    public void setCursorNodeItem(NodeItem node)
     {
         m_originCursor = node;
         m_currentCursor = node;

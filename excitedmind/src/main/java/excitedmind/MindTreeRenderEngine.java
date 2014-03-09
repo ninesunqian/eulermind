@@ -178,14 +178,13 @@ public class MindTreeRenderEngine {
         }
 
         public int getColor(VisualItem item) {
-            MindTreeController mindTreeController = m_mindView.m_mindTreeController;
 
-            Node node = mindTreeController.toSource((NodeItem)item);
-            Node cursorNode = mindTreeController.getCursorNode();
+            Node node = m_mindView.toSource((NodeItem)item);
+            Node cursorNode = m_mindView.getCursorSourceNode();
 
             if (node == cursorNode)
                 return m_cursorBackColor;
-            else if (!mindTreeController.isPlaceholer(node) && mindTreeController.m_mindTree.sameDBNode(node,cursorNode))
+            else if (!m_mindView.isPlaceholer(node) && m_mindView.m_mindModel.sameDBNode(node,cursorNode))
                 return m_shadowBackColor;
             else
                 return m_normalBackColor;
@@ -231,11 +230,11 @@ public class MindTreeRenderEngine {
         }
 
         public BasicStroke getStroke(VisualItem item) {
-            if (m_mindView.m_mindTreeController.isPlaceholer(item)) {
+            if (m_mindView.isPlaceholer(item)) {
                 return StrokeLib.getStroke(1.0f);
             }
 
-            if (m_mindView.m_mindTreeController.m_mindTree.isRefEdge((EdgeItem) item)) {
+            if (m_mindView.m_mindModel.isRefEdge((EdgeItem) item)) {
                 float dash [] = {10f, 5f};
                 return StrokeLib.getStroke(1.0f, dash);
             } else {
@@ -266,10 +265,6 @@ public class MindTreeRenderEngine {
             //FIXME: add a color action
             item.setStrokeColor(ColorLib.rgb(150,150,150));
 
-            MindTreeController mindTreeController = m_mindView.m_mindTreeController;
-
-            int childCount = mindTreeController.m_mindTree.getChildCount((NodeItem)item);
-
             if (((NodeItem) item).getChildCount() != 0) {
                 if (item.isExpanded()) {
                     return RENDER_TYPE_FILL;
@@ -278,7 +273,11 @@ public class MindTreeRenderEngine {
                 }
 
             } else {
-                if (mindTreeController.m_mindTree.getChildCount((NodeItem)item) == 0) {
+                MindModel mindModel = m_mindView.m_mindModel;
+
+                int childCount = mindModel.getChildCount((NodeItem)item);
+
+                if (childCount == 0) {
                     return RENDER_TYPE_FILL;
                 } else {
                     return RENDER_TYPE_DRAW_AND_FILL;
@@ -289,7 +288,7 @@ public class MindTreeRenderEngine {
         public void render(Graphics2D g, VisualItem item) {
             super.render(g, item);
 
-            if (item != m_mindView.m_mindTreeController.toVisual(m_mindView.m_mindTreeController.getCursorNode())
+            if (item != m_mindView.toVisual(m_mindView.getCursorSourceNode())
                     && item == m_mindView.m_mouseControl.m_hittedNode) {
                 RectangularShape shape = (RectangularShape)getShape(item);
 

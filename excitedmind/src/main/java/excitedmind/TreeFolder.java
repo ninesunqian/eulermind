@@ -30,7 +30,7 @@ public class TreeFolder {
         m_tree = tree;
     }
 
-    public void unfoldNode (TableNodeItem node)
+    public void unfoldNode(NodeItem node)
     {
         if (node.getChildCount() == 0 || node.isExpanded()) {
             return;
@@ -70,7 +70,7 @@ public class TreeFolder {
         node.setExpanded(true);
     }
 
-    private void foldNode (TableNodeItem node)
+    public void foldNode(NodeItem node)
     {
         final Visualization vis = node.getVisualization();
         final String group = node.getGroup();
@@ -107,15 +107,6 @@ public class TreeFolder {
             }
         }, 0);
 
-        // detach the descendants of the earliest unfold node
-        /* TODO  now disable it
-        if (m_foldedNodes.size() > 5)
-        {
-            Node toRemovedNode = m_foldedNodes.iterator().next();
-            m_foldedNodes.remove(toRemovedNode.getRow());
-            detachChildern(toRemovedNode);
-        }
-        */
 
         node.setExpanded(false);
     }

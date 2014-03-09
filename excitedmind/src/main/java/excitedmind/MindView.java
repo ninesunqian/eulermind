@@ -6,12 +6,12 @@ import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Stack;
 import java.util.logging.Logger;
 
 import javax.swing.*;
-import javax.swing.undo.AbstractUndoableEdit;
-import javax.swing.undo.UndoManager;
 
+import excitedmind.operator.*;
 import prefuse.Display;
 import prefuse.Visualization;
 
@@ -20,13 +20,11 @@ import prefuse.controls.PanControl;
 import prefuse.controls.WheelZoomControl;
 import prefuse.controls.ZoomControl;
 import prefuse.controls.ZoomToFitControl;
-import prefuse.data.Edge;
-import prefuse.data.Graph;
-import prefuse.data.Node;
-import prefuse.data.Tree;
+import prefuse.data.*;
 import prefuse.util.PrefuseLib;
 import prefuse.visual.EdgeItem;
 import prefuse.visual.NodeItem;
+import prefuse.visual.VisualTree;
 import prefuse.visual.sort.TreeDepthItemSorter;
 
 import statemap.State;
@@ -42,12 +40,15 @@ public class MindView extends Display {
     final Logger m_logger = Logger.getLogger(this.getClass().getName());
     final String m_treeGroupName = "tree";
 
-    final private MindModel m_mindModel;
+    final public MindModel m_mindModel;
     MindUndoManager m_undoManager;
 
     TreeCursor m_cursor;
     Node m_savedCursor = null;
 
+    TreeFolder m_folder;
+
+    Tree m_tree;
 	MindTreeRenderEngine m_renderEngine;
 
     private MindViewFSM m_fsm;
@@ -56,7 +57,6 @@ public class MindView extends Display {
 
     private PropertyChangeListener m_fsmStateChangeListener =  new PropertyChangeListener ()
     {
-
         public void propertyChange(PropertyChangeEvent event) {
             String propertyName = event.getPropertyName();
             State previousState = (State) event.getOldValue();
@@ -98,8 +98,11 @@ public class MindView extends Display {
         m_mindModel = mindModel;
         m_undoManager = undoManager;
 
-        Tree tree = mindModel.findOrPutTree(rootId, 3);
-        m_vis.add(m_treeGroupName, tree);
+        m_tree = mindModel.findOrPutTree(rootId, 3);
+        VisualTree visualTree = (VisualTree)m_vis.add(m_treeGroupName, m_tree);
+
+        m_cursor = new TreeCursor(visualTree);
+        m_folder = new TreeFolder(visualTree);
 
         setItemSorter(new TreeDepthItemSorter());
         m_renderEngine = new MindTreeRenderEngine(this, m_treeGroupName);
@@ -114,6 +117,7 @@ public class MindView extends Display {
 
         m_prompter = new MindPrompter(this, m_mindModel.m_mindDb);
         m_prompter.addMouseListener(m_prompterMouseListener);
+
 
 	}
 
@@ -200,11 +204,11 @@ public class MindView extends Display {
             }
         }
 
-        private boolean notMoveToOtherNode(NodeItem sourceNode, NodeItem hittedNode) {
+        private boolean hittedOtherNode(NodeItem sourceNode, NodeItem hittedNode) {
             return hittedNode == null || hittedNode == sourceNode;
         }
 
-        private boolean operatorEnabled(NodeItem sourceNode, NodeItem hittedNode, boolean ctrlDowned)
+        private boolean canDrop(NodeItem sourceNode, NodeItem hittedNode, boolean ctrlDowned)
         {
             sourceNode.getSourceData();
             if (ctrlDowned) {
@@ -214,10 +218,10 @@ public class MindView extends Display {
             }
         }
 
-        private void setCursorByNode(NodeItem sourceNode, NodeItem hittedNode, boolean ctrlDowned)
+        private void setCursorShape(NodeItem sourceNode, NodeItem hittedNode, boolean ctrlDowned)
         {
-            boolean cursorEnabled = notMoveToOtherNode(sourceNode, hittedNode) ||
-                    operatorEnabled(sourceNode, hittedNode, ctrlDowned);
+            boolean cursorEnabled = (!hittedOtherNode(sourceNode, hittedNode)) ||
+                    canDrop(sourceNode, hittedNode, ctrlDowned);
 
             if (ctrlDowned) {
                 setCursor(cursorEnabled ? DragSource.DefaultLinkDrop : DragSource.DefaultLinkNoDrop);
@@ -233,7 +237,7 @@ public class MindView extends Display {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
                 m_hittedNode = hittedNode;
                 m_hittedPosition = hittedPosition;
-                setCursorByNode(item, hittedNode, ctrlDowned);
+                setCursorShape(item, hittedNode, ctrlDowned);
                 renderTree();
                 System.out.print((ArrayList)hittedNode.get(MindTree.sm_inheritPathPropName));
             }
@@ -248,7 +252,7 @@ public class MindView extends Display {
         @Override
         public void nodeItemMissed(NodeItem item, NodeItem dropNode, boolean ctrlDowned) {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
-                setCursorByNode(item, null, ctrlDowned);
+                setCursorShape(item, null, ctrlDowned);
                 renderTree();
             }
             clearHittedNode();
@@ -259,15 +263,15 @@ public class MindView extends Display {
             m_logger.info("nodeItemDropped");
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
 
-                if (notMoveToOtherNode(item, dropNode)) {
-                    m_fsm.cancel();
-                } else {
+                if (hittedOtherNode(item, dropNode)) {
                     m_logger.info(String.format("--- ctrlDown %s, release time %dms", ctrlDowned ?"true":"false", System.currentTimeMillis() - m_ctrlReleaseTime));
-                    if (operatorEnabled(item, dropNode, ctrlDowned)) {
+                    if (canDrop(item, dropNode, ctrlDowned)) {
                         m_fsm.itemDropped(dropNode, ctrlDowned);
                     } else {
                         m_fsm.cancel();
                     }
+                } else {
+                    m_fsm.cancel();
                 }
             }
 
@@ -279,7 +283,7 @@ public class MindView extends Display {
         {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
                 if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
-                    setCursorByNode(item, m_hittedNode, true);
+                    setCursorShape(item, m_hittedNode, true);
                 }
             }
         }
@@ -289,7 +293,7 @@ public class MindView extends Display {
         {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
                 if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
-                    setCursorByNode(item, m_hittedNode, false);
+                    setCursorShape(item, m_hittedNode, false);
                 }
             }
         }
@@ -310,7 +314,7 @@ public class MindView extends Display {
         addControlListener(m_mouseControl);
 	}
 
-    void mouse_control_set_enabled(boolean enabled)
+    void setMouseControlEnabled(boolean enabled)
     {
         m_zoomToFitContol.setEnabled(enabled);
         m_zoomControl.setEnabled(enabled);
@@ -328,8 +332,8 @@ public class MindView extends Display {
     {
         if (confirm) {
             String text = getTextEditor().getText();
-            SettingProperty settingProperty= new SettingProperty(m_mindModel, m_cursor.getCursorNode(), m_mindModel.sm_propmptytext,
-                    text);
+            SettingProperty settingProperty = new SettingProperty(m_mindModel,
+                    getCursorSourceNode(), MindModel.sm_textPropName, text);
 
             settingProperty.does();
             m_undoManager.addEdit(settingProperty);
@@ -343,7 +347,7 @@ public class MindView extends Display {
         if (getTextEditor().isVisible())
             return;
 
-        editText(toVisual(m_cursor.getCursorNode()), MindTree.sm_textPropName) ;
+        editText(toVisual(getCursorSourceNode()), MindTree.sm_textPropName) ;
 
         if (withPrompter) {
             m_prompter.show(getTextEditor());
@@ -356,20 +360,28 @@ public class MindView extends Display {
         m_prompter.hide();
     }
 
+    private void execute(MindOperator operator)
+    {
+        operator.does();
+        m_cursor.setCursorNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, operator.m_laterCursorPath)));
+        m_undoManager.addEdit(operator);
+    }
+
     void startInserting(boolean asChild)
     {
+        Node cursorNode = getCursorSourceNode();
         if (asChild) {
-            if (m_mindTreeController.cursorIsFolded()) {
-                m_undoManager.addEdit(m_mindTreeController.toggleFoldCursorUndoable());
+            if (isFolded(cursorNode)) {
+                unfoldNode(cursorNode);
             }
         } else {
-            if (m_mindTreeController.getCursorNode() == m_mindTreeController.getRoot()) {
+            if (cursorNode == m_tree.getRoot()) {
                 assert(false);
                 return;
             }
         }
 
-        m_mindTreeController.addPlaceholder(asChild);
+        addPlaceholder(asChild);
 
         renderTree(new Runnable() {
             @Override
@@ -387,23 +399,25 @@ public class MindView extends Display {
     void stopInserting(boolean confirm, boolean fromPrompter)
     {
         if (confirm) {
+            MindOperator operator;
+
             if (fromPrompter) {
                 int selectedIndex = m_prompter.getSelectedIndex();
                 MindPrompter.PromptedNode selected = m_prompter.getPromptedNode(selectedIndex);
 
-                AbstractUndoableEdit undoer = m_mindTreeController.placeReferentUndoable(selected.m_dbId);
-                m_undoManager.addEdit(undoer);
-
+                operator = new AddingReference(m_mindModel, getCursorSourceNode().getParent(),
+                        selected.m_dbId, getCursorSourceNode().getIndex());
             } else {
                 String text = getTextEditor().getText();
-                m_mindTreeController.setPlaceholderCursorText(text);
-
-                AbstractUndoableEdit undoer = m_mindTreeController.placeNewNodeUndoable();
-                m_undoManager.addEdit(undoer);
+                //TODO: cursorNode is placeholder not cursor
+                operator = new AddingChild(m_mindModel, getCursorSourceNode(), getCursorSourceNode().getIndex(), text);
             }
 
+            removePlaceholder();
+            execute(operator);
+
         } else {
-            m_mindTreeController.removePlaceholder();
+            removePlaceholder();
         }
 
         hideEditor();
@@ -475,7 +489,7 @@ public class MindView extends Display {
 
     boolean canRemove()
     {
-        if (m_mindTreeController.getCursorNode() == m_mindTreeController.getRoot()) {
+        if (getCursorSourceNode() == m_tree.getRoot()) {
             alert("can't remove the root");
             return false;
         } else {
@@ -514,7 +528,7 @@ public class MindView extends Display {
             return true;
 
         } else {
-            if (m_mindTreeController.getCursorNode() == m_mindTreeController.getRoot()) {
+            if (getCursorSourceNode() == m_tree.getRoot()) {
                 alert("you must open the root parent");
                 return false;
             } else {
@@ -588,4 +602,135 @@ public class MindView extends Display {
         inputMap.put(KeyStroke.getKeyStroke("UP"), sm_cursorUp);
         inputMap.put(KeyStroke.getKeyStroke("DOWN"), sm_cursorDown);
     }
+
+    public void addPlaceholder(boolean asChild)
+    {
+        Node cursorNode = getCursorSourceNode();
+        m_savedCursor = cursorNode;
+
+        Node newNode;
+
+        if (asChild) {
+            newNode = m_tree.addChild(cursorNode, cursorNode.getChildCount());
+        } else {
+            newNode = m_tree.addChild(cursorNode.getParent(), cursorNode.getIndex() + 1);
+        }
+
+        //NOTE: newNode.setString(MindModel.sm_textPropName, "") error
+
+        newNode.set(MindModel.sm_textPropName, "");
+
+        m_cursor.setCursorNodeItem(toVisual(newNode));
+    }
+
+    public void removePlaceholder()
+    {
+        Node placeholderNode = getCursorSourceNode();
+        assert(isPlaceholer(placeholderNode));
+        assert(placeholderNode != m_tree.getRoot());
+
+        m_tree.removeChild(placeholderNode);
+        m_cursor.setCursorNodeItem(toVisual(m_savedCursor));
+    }
+
+    //include node and edge, the edge is used rendering
+    public boolean isPlaceholer(Tuple tuple)
+    {
+        return (m_mindModel.getDBId(tuple) == null);
+    }
+
+    public Node getCursorSourceNode()
+    {
+        return toSource(m_cursor.getCursorNodeItem());
+    }
+
+    private boolean isFolded(Node node)
+    {
+        if (node.getChildCount() > 0) {
+            NodeItem item = toVisual(node);
+            return ! item.isExpanded();
+        } else {
+            return m_mindModel.getChildCount(node) > 0;
+        }
+    }
+
+    private void unfoldNode(Node node)
+    {
+        if (node.getChildCount() > 0) { // node is not a leaf node
+            m_mindModel.attachChildren(node);
+        }
+        m_folder.unfoldNode(toVisual(node));
+    }
+
+    private void foldNode(Node node)
+    {
+        m_folder.foldNode(toVisual(node));
+    }
+
+    public void toggleFoldNode(Node node)
+    {
+        if (isFolded(node)) {
+            unfoldNode(node);
+        }
+        else {
+            foldNode(node);
+        }
+    }
+
+    public void removeCursor()
+    {
+        Node cursorNode = getCursorSourceNode();
+
+        Node parent = cursorNode.getParent();
+        Edge edge = m_tree.getEdge(parent, cursorNode);
+
+        MindOperator operator;
+        if (m_mindModel.isRefEdge(edge)) {
+            Object referentDBId = m_mindModel.getDBId(cursorNode);
+            int pos = cursorNode.getIndex();
+            operator = new RemovingReference(m_mindModel, cursorNode);
+        }
+        else {
+            operator = new RemovingSubTree(m_mindModel, cursorNode);
+        }
+
+        execute(operator);
+    }
+
+    public void dragCursorToReferrer(Node referrer)
+    {
+        Node cursorNode = getCursorSourceNode();
+        assert(m_mindModel.canAddReference(cursorNode, referrer));
+
+        AddingReference operator = new AddingReference(m_mindModel, cursorNode, referrer, referrer.getChildCount());
+        execute(operator);
+    }
+
+    public void dragCursorToNewParent(Node newParent)
+    {
+        Node cursorNode = getCursorSourceNode();
+
+        assert(m_mindModel.canResetParent(cursorNode, newParent));
+
+        if (cursorNode == m_tree.getRoot()) {
+            return;
+        }
+
+        Node oldParent = cursorNode.getParent();
+
+        if (m_mindModel.sameDBNode(newParent, oldParent)) {
+            return;
+        }
+
+        MindDB.InheritDirection inheritDirection = m_mindModel.getInheritDirection(cursorNode, newParent);
+        if (inheritDirection == MindDB.InheritDirection.LINEAL_DESCENDANT) {
+            return;
+        }
+
+        int newPos = newParent.getChildCount();
+
+        MovingChild operator = new MovingChild(m_mindModel, cursorNode, newParent, newPos);
+        execute(operator);
+    }
+
 } // end of class TreeMap

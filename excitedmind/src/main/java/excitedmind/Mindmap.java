@@ -121,8 +121,15 @@ public class Mindmap {
 
             final MindModel mindModel = new MindModel(dbUrl);
 
+            final MindUndoManager undoManager = new MindUndoManager(mindModel) {
+                @Override
+                public void exposeMindView(MindView mindView) {
+                    //To change body of implemented methods use File | Settings | File Templates.
+                }
+            };
+
             // create a new treemap
-            final MindView mindView = new MindView(mindModel, rootId);
+            final MindView mindView = new MindView(mindModel, undoManager, rootId);
             mindView.setBackground(BACKGROUND);
             mindView.setForeground(FOREGROUND);
 

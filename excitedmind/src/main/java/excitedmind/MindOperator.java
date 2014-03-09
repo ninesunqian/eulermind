@@ -13,7 +13,7 @@ import java.util.Stack;
  * Time: 上午7:17
  * To change this template use File | Settings | File Templates.
  */
-public class MindOperator extends AbstractUndoableEdit {
+public abstract class MindOperator extends AbstractUndoableEdit {
     protected MindModel m_mindModel;
     protected Object m_rootDBId;
     protected Stack<Integer> m_formerCursorPath;
@@ -38,5 +38,7 @@ public class MindOperator extends AbstractUndoableEdit {
         m_formerCursorPath.insertElementAt(pos, 0);
         m_laterCursorPath.insertElementAt(pos, 0);
     }
+
+    abstract public void does();
 
 }

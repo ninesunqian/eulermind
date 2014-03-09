@@ -37,7 +37,7 @@ public class AddingReference extends MindOperator {
         m_referrerNodePath = m_mindModel.getNodePath(formerCursor);
     }
 
-    public void doing() {
+    public void does() {
         m_mindModel.addReference(m_referrerDBId, m_pos, m_referentDBId);
 
         m_laterCursorPath = (Stack<Integer>) m_referrerNodePath.clone();

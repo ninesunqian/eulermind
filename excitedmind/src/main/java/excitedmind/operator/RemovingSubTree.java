@@ -9,13 +9,13 @@ public class RemovingSubTree extends MindOperator {
     Object m_trashDBId;
     int m_pos;
 
-    RemovingSubTree(MindModel mindModel, Node formerCursor)
+    public RemovingSubTree(MindModel mindModel, Node formerCursor)
     {
         super(mindModel, formerCursor);
         m_pos = formerCursor.getIndex();
     }
 
-    public void doing()
+    public void does()
     {
         Tree tree = m_mindModel.findTree(m_rootDBId);
         Node node = tree.getRoot();
@@ -47,7 +47,7 @@ public class RemovingSubTree extends MindOperator {
 
     public void redo ()
     {
-        doing();
+        does();
     }
 
     private Node getFamiliarNode (Node node)

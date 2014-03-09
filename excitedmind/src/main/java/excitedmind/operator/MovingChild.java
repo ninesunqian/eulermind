@@ -21,7 +21,7 @@ public class MovingChild extends MindOperator{
     Stack<Integer> m_newParentPath;
     int m_newPos;
 
-    MovingChild(MindModel mindModel, Node formerCursor, Node newParent, int newPos)
+    public MovingChild(MindModel mindModel, Node formerCursor, Node newParent, int newPos)
     {
         super(mindModel, formerCursor);
 
@@ -31,7 +31,7 @@ public class MovingChild extends MindOperator{
         m_newPos = newPos;
     }
 
-    public void doing()
+    public void does()
     {
         moveChild(m_oldParentPath, m_oldPos, m_newParentPath, m_newPos);
 

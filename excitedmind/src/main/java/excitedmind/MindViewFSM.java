@@ -429,7 +429,7 @@ public class MindViewFSM
             {
                 MindView ctxt = context.getOwner();
 
-            ctxt.mouse_control_set_enabled(true);
+            ctxt.setMouseControlEnabled(true);
             ctxt.renderTree();
             ctxt.setCursor(null);
             return;
@@ -460,7 +460,7 @@ public class MindViewFSM
             context.clearState();
             try
             {
-                ctxt.m_mindTreeController.moveCursorDown();
+                ctxt.m_cursor.moveDown();
             }
             finally
             {
@@ -480,7 +480,7 @@ public class MindViewFSM
             context.clearState();
             try
             {
-                ctxt.m_mindTreeController.moveCursorLeft();
+                ctxt.m_cursor.moveLeft();
             }
             finally
             {
@@ -500,7 +500,7 @@ public class MindViewFSM
             context.clearState();
             try
             {
-                ctxt.m_mindTreeController.moveCursorRight();
+                ctxt.m_cursor.moveRight();
             }
             finally
             {
@@ -520,7 +520,7 @@ public class MindViewFSM
             context.clearState();
             try
             {
-                ctxt.m_mindTreeController.setCursorNode(ctxt.m_mindTreeController.toSource(nodeItem));
+                ctxt.m_cursor.setCursorNodeItem(nodeItem);
             }
             finally
             {
@@ -540,7 +540,7 @@ public class MindViewFSM
             context.clearState();
             try
             {
-                ctxt.m_mindTreeController.moveCursorUp();
+                ctxt.m_cursor.moveUp();
             }
             finally
             {
@@ -560,7 +560,7 @@ public class MindViewFSM
             context.clearState();
             try
             {
-                ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.toggleFoldCursorUndoable());
+                ctxt.toggleFoldNode(ctxt.getCursorSourceNode());
             }
             finally
             {
@@ -628,7 +628,7 @@ public class MindViewFSM
             context.clearState();
             try
             {
-                ctxt.m_mindTreeController.setCursorNode(ctxt.m_mindTreeController.toSource(nodeItem));
+                ctxt.m_cursor.setCursorNodeItem(nodeItem);
             }
             finally
             {
@@ -678,7 +678,7 @@ public class MindViewFSM
                 context.clearState();
                 try
                 {
-                    ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.removeCursorUndoable());
+                    ctxt.removeCursor();
                 }
                 finally
                 {
@@ -799,7 +799,7 @@ public class MindViewFSM
             {
                 MindView ctxt = context.getOwner();
 
-            ctxt.mouse_control_set_enabled(false);
+            ctxt.setMouseControlEnabled(false);
             return;
         }
 
@@ -878,7 +878,7 @@ public class MindViewFSM
             {
                 MindView ctxt = context.getOwner();
 
-            ctxt.mouse_control_set_enabled(false);
+            ctxt.setMouseControlEnabled(false);
             return;
         }
 
@@ -980,7 +980,7 @@ public class MindViewFSM
                 context.clearState();
                 try
                 {
-                    ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.addReferenceUndoable(ctxt.m_mindTreeController.toSource(nodeItem)));
+                    ctxt.dragCursorToReferrer(ctxt.toSource(nodeItem));
                 }
                 finally
                 {
@@ -995,7 +995,7 @@ public class MindViewFSM
                 context.clearState();
                 try
                 {
-                    ctxt.m_undoManager.addEdit(ctxt.m_mindTreeController.resetParentUndoable(ctxt.m_mindTreeController.toSource(nodeItem)));
+                    ctxt.dragCursorToNewParent(ctxt.toSource(nodeItem));
                 }
                 finally
                 {

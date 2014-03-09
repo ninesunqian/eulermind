@@ -18,14 +18,14 @@ public class AddingChild extends MindOperator{
     String m_text;
     Object m_childDbId;
 
-    AddingChild(MindModel mindModel, Node formerCursor, int pos, String text) {
+    public AddingChild(MindModel mindModel, Node formerCursor, int pos, String text) {
         super(mindModel, formerCursor);
         this.pos = pos;
         m_text = text;
 
     }
 
-    public void doing() {
+    public void does() {
         Object parentDBId = getDBIdByPath(m_formerCursorPath);
         m_childDbId = m_mindModel.addChild(parentDBId, pos, m_text);
 
