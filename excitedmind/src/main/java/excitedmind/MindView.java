@@ -41,7 +41,7 @@ public class MindView extends Display {
     final String m_treeGroupName = "tree";
 
     final public MindModel m_mindModel;
-    MindUndoManager m_undoManager;
+    MindController m_undoManager;
 
     TreeCursor m_cursor;
     Node m_savedCursor = null;
@@ -90,7 +90,7 @@ public class MindView extends Display {
         }
     };
 
-	public MindView(MindModel mindModel, MindUndoManager undoManager, Object rootId) {
+	public MindView(MindModel mindModel, MindController undoManager, Object rootId) {
 		super(new Visualization());
 		setSize(700, 600);
 		setHighQuality(true);
@@ -360,11 +360,9 @@ public class MindView extends Display {
         m_prompter.hide();
     }
 
-    private void execute(MindOperator operator)
+    public void setCursorNodeByPath(Stack<Integer> path)
     {
-//        operator.does();
- //       m_cursor.setCursorNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, operator.m_laterCursorPath)));
-        m_undoManager.addEdit(operator);
+        m_cursor.setCursorNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, path)));
     }
 
     void startInserting(boolean asChild)
@@ -413,7 +411,7 @@ public class MindView extends Display {
             }
 
             removePlaceholder();
-            execute(operator);
+            m_undoManager.addEdit(operator);
 
         } else {
             removePlaceholder();
@@ -693,7 +691,7 @@ public class MindView extends Display {
             operator = new RemovingSubTree(m_mindModel, cursorNode);
         }
 
-        execute(operator);
+        m_undoManager.addEdit(operator);
     }
 
     public void dragCursorToReferrer(Node referrer)
@@ -702,7 +700,7 @@ public class MindView extends Display {
         assert(m_mindModel.canAddReference(cursorNode, referrer));
 
         AddingReference operator = new AddingReference(m_mindModel, cursorNode, referrer, referrer.getChildCount());
-        execute(operator);
+        m_undoManager.addEdit(operator);
     }
 
     public void dragCursorToNewParent(Node newParent)
@@ -729,7 +727,7 @@ public class MindView extends Display {
         int newPos = newParent.getChildCount();
 
         MovingChild operator = new MovingChild(m_mindModel, cursorNode, newParent, newPos);
-        execute(operator);
+        m_undoManager.addEdit(operator);
     }
 
 } // end of class TreeMap

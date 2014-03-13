@@ -11,6 +11,10 @@ import javax.swing.*;
 
 import com.tinkerpop.blueprints.Vertex;
 
+import javax.swing.UIManager.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 /**
  * Demonstration of a node-link tree viewer
  * 
@@ -41,6 +45,19 @@ public class Mindmap {
     }
 	public static void main(String argv[]) {
 
+        try {
+            UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (InstantiationException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (UnsupportedLookAndFeelException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+
         String dbPath = "d://tmp/mind_db";
 
 		final String dbUrl = "local:" + dbPath.replace(File.separatorChar, '/');
@@ -69,6 +86,8 @@ public class Mindmap {
 	}
 	
 	static private Vertex m_rootVertex;
+    static private Vertex m_rootVertex1;
+
 	static private void createTree (MindDB mindDb, Vertex parent, String parentText, int level)
 	{
 		if (level >= 3)
@@ -83,11 +102,14 @@ public class Mindmap {
 			createTree (mindDb, root, "a", 1);
 			
 		} else {
-			
+
 			EdgeVertex edgeVertex = mindDb.addChild(parent, 0);
 			edgeVertex.m_vertex.setProperty(MindTree.sm_textPropName, parentText + "a");
 			createTree (mindDb, edgeVertex.m_vertex, parentText + "a", level + 1);
-			
+            if (level == 1) {
+                m_rootVertex1 = edgeVertex.m_vertex;
+            }
+
 			edgeVertex = mindDb.addChild(parent, 1);
 			edgeVertex.m_vertex.setProperty(MindTree.sm_textPropName, parentText + "b");
 			createTree (mindDb, edgeVertex.m_vertex, parentText + "b", level + 1);
@@ -121,21 +143,19 @@ public class Mindmap {
 
             final MindModel mindModel = new MindModel(dbUrl);
 
-            final MindUndoManager undoManager = new MindUndoManager(mindModel) {
-                @Override
-                public void exposeMindView(MindView mindView) {
-                    //To change body of implemented methods use File | Settings | File Templates.
+            final JTabbedPane tabbedPane = new JTabbedPane();
+            final MindController undoManager = new MindController(mindModel, tabbedPane);
+            undoManager.findOrAddMindView(m_rootVertex.getId());
+            undoManager.findOrAddMindView(m_rootVertex1.getId());
+            tabbedPane.addChangeListener(new ChangeListener()
+            {
+                public void stateChanged(ChangeEvent e)
+                {
+                    Component comp = tabbedPane.getSelectedComponent();
+                    comp.requestFocusInWindow();
                 }
-            };
+            });
 
-            // create a new treemap
-            final MindView mindView = new MindView(mindModel, undoManager, rootId);
-            mindView.setBackground(BACKGROUND);
-            mindView.setForeground(FOREGROUND);
-
-            final MindView mindView1 = new MindView(mindModel, undoManager, rootId);
-            mindView1.setBackground(BACKGROUND);
-            mindView1.setForeground(FOREGROUND);
 
 
             Box box = new Box(BoxLayout.X_AXIS);
@@ -147,8 +167,7 @@ public class Mindmap {
             JPanel panel = new JPanel(new BorderLayout());
             panel.setBackground(BACKGROUND);
             panel.setForeground(FOREGROUND);
-            panel.add(mindView, BorderLayout.EAST);
-            panel.add(mindView1, BorderLayout.WEST);
+            panel.add(tabbedPane, BorderLayout.EAST);
             panel.add(box, BorderLayout.SOUTH);
             add(panel);
         }

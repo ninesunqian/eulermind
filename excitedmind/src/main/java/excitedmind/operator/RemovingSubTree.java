@@ -6,8 +6,8 @@ import prefuse.data.Node;
 import prefuse.data.Tree;
 
 public class RemovingSubTree extends MindOperator {
-    Object m_trashDBId;
-    int m_pos;
+    public Object m_trashDBId;
+    public int m_pos;
 
     public RemovingSubTree(MindModel mindModel, Node formerCursor)
     {

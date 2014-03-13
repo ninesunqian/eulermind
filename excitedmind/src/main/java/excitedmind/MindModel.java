@@ -495,6 +495,13 @@ public class MindModel {
         return m_mindDb.getInheritDirection(fromInheritPath, toInheritPath);
     }
 
+    public MindDB.InheritDirection getInheritDirection(Object fromDBId, Object toDBId)
+    {
+        Vertex fromVertex = m_mindDb.getVertex(fromDBId);
+        Vertex toVertex = m_mindDb.getVertex(toDBId);
+        return m_mindDb.getInheritRelation (fromVertex, toVertex);
+    }
+
     public boolean sameDBNode(Node n1, Node n2)
     {
         return getDBId(n1) == getDBId(n2);
