@@ -14,8 +14,7 @@ public class MindToolBar extends JToolBar {
     FontCombobox m_fontFamilyCombobox;
     FontCombobox m_fontSizeCombobox;
     FontCombobox m_colorCombobox;
-    MindPrompter m_prompter;
-    JTextField m_editor;
+    MindCombobox m_comboxbox;
 
     MindToolBar(MindModel mindModel) {
         m_mindModel = mindModel;
@@ -32,14 +31,9 @@ public class MindToolBar extends JToolBar {
         add(m_fontSizeCombobox);
         add(m_colorCombobox);
 
-
-        m_editor = new JTextField();
-        m_prompter = new MindPrompter(this, m_mindModel.m_mindDb);
-        add(m_editor);
-        m_editor.setText("   ");
-        m_editor.setEditable(true);
-        m_editor.setVisible(true);
-        m_prompter.show(m_editor);
+        m_comboxbox = new MindCombobox(m_mindModel.m_mindDb);
+        m_comboxbox.setEditable(true);
+        add(m_comboxbox);
     }
 
     /*
