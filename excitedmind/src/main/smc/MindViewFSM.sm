@@ -89,19 +89,24 @@ Entry
             removeCursor();
         }
 
-
-    undo
-        [ ctxt.m_undoManager.canUndo() ]
+    setProperty(key: String, value: Object)
         Normal
         {
-            m_undoManager.undo();
+            setCursorPropertyImpl(key, value);
+        }
+
+    undo
+        [ ctxt.m_mindController.canUndo() ]
+        Normal
+        {
+            m_mindController.undo();
         }
 
     redo
-        [ ctxt.m_undoManager.canRedo()]
+        [ ctxt.m_mindController.canRedo()]
         Normal
         {
-            m_undoManager.redo();
+            m_mindController.redo();
         }
 
     startEditing

@@ -167,6 +167,14 @@ public class MindViewFSM
         return;
     }
 
+    public void setProperty(String key, Object value)
+    {
+        _transition = "setProperty";
+        getState().setProperty(this, key, value);
+        _transition = "";
+        return;
+    }
+
     public void startEditing()
     {
         _transition = "startEditing";
@@ -331,6 +339,11 @@ public class MindViewFSM
         }
 
         protected void remove(MindViewFSM context)
+        {
+            Default(context);
+        }
+
+        protected void setProperty(MindViewFSM context, String key, Object value)
         {
             Default(context);
         }
@@ -644,13 +657,13 @@ public class MindViewFSM
         {
             MindView ctxt = context.getOwner();
 
-            if ( ctxt.m_undoManager.canRedo())
+            if ( ctxt.m_mindController.canRedo())
             {
                 (context.getState()).exit(context);
                 context.clearState();
                 try
                 {
-                    ctxt.m_undoManager.redo();
+                    ctxt.m_mindController.redo();
                 }
                 finally
                 {
@@ -690,6 +703,26 @@ public class MindViewFSM
             else
             {
                 super.remove(context);
+            }
+
+            return;
+        }
+
+        @Override
+        protected void setProperty(MindViewFSM context, String key, Object value)
+        {
+            MindView ctxt = context.getOwner();
+
+            (context.getState()).exit(context);
+            context.clearState();
+            try
+            {
+                ctxt.setCursorPropertyImpl(key, value);
+            }
+            finally
+            {
+                context.setState(MindViewStateMap.Normal);
+                (context.getState()).entry(context);
             }
 
             return;
@@ -748,13 +781,13 @@ public class MindViewFSM
         {
             MindView ctxt = context.getOwner();
 
-            if ( ctxt.m_undoManager.canUndo() )
+            if ( ctxt.m_mindController.canUndo() )
             {
                 (context.getState()).exit(context);
                 context.clearState();
                 try
                 {
-                    ctxt.m_undoManager.undo();
+                    ctxt.m_mindController.undo();
                 }
                 finally
                 {

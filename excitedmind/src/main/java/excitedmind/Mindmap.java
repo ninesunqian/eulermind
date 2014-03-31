@@ -67,7 +67,7 @@ public class Mindmap {
 
 		MindDB mindDb = new MindDB(dbUrl);
 
-        mindDb.createFullTextVertexKeyIndex(MindTree.sm_textPropName);
+        mindDb.createFullTextVertexKeyIndex(MindModel.sm_textPropName);
 
 		createTree (mindDb, null, "", 0);
 		mindDb = null;
@@ -96,7 +96,7 @@ public class Mindmap {
 			
 		} else if (level == 0) {
 			Vertex root = mindDb.addRoot();
-			root.setProperty(MindTree.sm_textPropName, "a");
+			root.setProperty(MindModel.sm_textPropName, "a");
 			m_rootVertex = root;
 			
 			createTree (mindDb, root, "a", 1);
@@ -104,18 +104,18 @@ public class Mindmap {
 		} else {
 
 			EdgeVertex edgeVertex = mindDb.addChild(parent, 0);
-			edgeVertex.m_vertex.setProperty(MindTree.sm_textPropName, parentText + "a");
+			edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, parentText + "a");
 			createTree (mindDb, edgeVertex.m_vertex, parentText + "a", level + 1);
             if (level == 1) {
                 m_rootVertex1 = edgeVertex.m_vertex;
             }
 
 			edgeVertex = mindDb.addChild(parent, 1);
-			edgeVertex.m_vertex.setProperty(MindTree.sm_textPropName, parentText + "b");
+			edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, parentText + "b");
 			createTree (mindDb, edgeVertex.m_vertex, parentText + "b", level + 1);
 			
 			edgeVertex = mindDb.addChild(parent, 2);
-			edgeVertex.m_vertex.setProperty(MindTree.sm_textPropName, parentText + "c");
+			edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, parentText + "c");
 			createTree (mindDb, edgeVertex.m_vertex, parentText + "c", level + 1);
 			
 			mindDb.addRefEdge(parent, m_rootVertex, 3);
@@ -139,14 +139,14 @@ public class Mindmap {
             Color BACKGROUND = Color.WHITE;
             Color FOREGROUND = Color.BLACK;
 
-            final String label = MindTree.sm_textPropName;
+            final String label = MindModel.sm_textPropName;
 
             final MindModel mindModel = new MindModel(dbUrl);
 
             final JTabbedPane tabbedPane = new JTabbedPane();
-            final MindController undoManager = new MindController(mindModel, tabbedPane);
-            undoManager.findOrAddMindView(m_rootVertex.getId());
-            undoManager.findOrAddMindView(m_rootVertex1.getId());
+            final MindController mindController = new MindController(mindModel, tabbedPane);
+            mindController.findOrAddMindView(m_rootVertex.getId());
+            mindController.findOrAddMindView(m_rootVertex1.getId());
             tabbedPane.addChangeListener(new ChangeListener()
             {
                 public void stateChanged(ChangeEvent e)
@@ -155,8 +155,6 @@ public class Mindmap {
                     comp.requestFocusInWindow();
                 }
             });
-
-
 
             Box box = new Box(BoxLayout.X_AXIS);
             box.add(Box.createHorizontalStrut(10));
@@ -167,8 +165,12 @@ public class Mindmap {
             JPanel panel = new JPanel(new BorderLayout());
             panel.setBackground(BACKGROUND);
             panel.setForeground(FOREGROUND);
-            panel.add(tabbedPane, BorderLayout.EAST);
+            panel.add(tabbedPane, BorderLayout.CENTER);
             panel.add(box, BorderLayout.SOUTH);
+
+            MindIcons mindIcons = new MindIcons(mindController);
+           // panel.add(mindIcons.getToolbar(), BorderLayout.WEST);
+            panel.add(new MindToolBar(mindModel), BorderLayout.NORTH);
             add(panel);
         }
     }

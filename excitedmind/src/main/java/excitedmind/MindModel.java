@@ -20,6 +20,7 @@ public class MindModel {
     final static String sm_inheritPathPropName = MindDB.INHERIT_PATH_PROP_NAME;
 
 	final static String sm_textPropName = "text";
+    final static String sm_iconPropName = "icon";
 	final static String sm_fontFamilyPropName = "fontFamily";
 	final static String sm_fontSizePropName = "fontSize";
 	final static String sm_boldPropName = "bold";
@@ -32,6 +33,8 @@ public class MindModel {
             sm_textPropName,
             sm_outEdgeDBIdsPropName,
             sm_inheritPathPropName,
+
+            sm_iconPropName,
 
             sm_fontFamilyPropName,
             sm_fontSizePropName,
@@ -455,7 +458,11 @@ public class MindModel {
 	public void setProperty(final Object dbId, final String key, final Object value)
 	{
 		Vertex dbNode = m_mindDb.getVertex(dbId);
-		dbNode.setProperty(key, value);
+        if (value == null) {
+            dbNode.removeProperty(key);
+        } else {
+            dbNode.setProperty(key, value);
+        }
 
         for (Tree tree : m_trees) {
             visitNodeAvatares(tree, dbId, new Visitor() {

@@ -41,7 +41,7 @@ public class MindView extends Display {
     final String m_treeGroupName = "tree";
 
     final public MindModel m_mindModel;
-    MindController m_undoManager;
+    MindController m_mindController;
 
     TreeCursor m_cursor;
     Node m_savedCursor = null;
@@ -96,7 +96,7 @@ public class MindView extends Display {
 		setHighQuality(true);
 
         m_mindModel = mindModel;
-        m_undoManager = undoManager;
+        m_mindController = undoManager;
 
         m_tree = mindModel.findOrPutTree(rootId, 3);
         VisualTree visualTree = (VisualTree)m_vis.add(m_treeGroupName, m_tree);
@@ -239,7 +239,7 @@ public class MindView extends Display {
                 m_hittedPosition = hittedPosition;
                 setCursorShape(item, hittedNode, ctrlDowned);
                 renderTree();
-                System.out.print((ArrayList)hittedNode.get(MindTree.sm_inheritPathPropName));
+                System.out.print((ArrayList)hittedNode.get(MindModel.sm_inheritPathPropName));
             }
         }
 
@@ -336,7 +336,7 @@ public class MindView extends Display {
                     getCursorSourceNode(), MindModel.sm_textPropName, text);
 
             settingProperty.does();
-            m_undoManager.addEdit(settingProperty);
+            m_mindController.addEdit(settingProperty);
         }
 
         hideEditor();
@@ -347,7 +347,7 @@ public class MindView extends Display {
         if (getTextEditor().isVisible())
             return;
 
-        editText(toVisual(getCursorSourceNode()), MindTree.sm_textPropName) ;
+        editText(toVisual(getCursorSourceNode()), MindModel.sm_textPropName) ;
 
         if (withPrompter) {
             m_prompter.show(getTextEditor());
@@ -411,7 +411,7 @@ public class MindView extends Display {
             }
 
             removePlaceholder();
-            m_undoManager.addEdit(operator);
+            m_mindController.addEdit(operator);
 
         } else {
             removePlaceholder();
@@ -691,7 +691,7 @@ public class MindView extends Display {
             operator = new RemovingSubTree(m_mindModel, cursorNode);
         }
 
-        m_undoManager.addEdit(operator);
+        m_mindController.addEdit(operator);
     }
 
     public void dragCursorToReferrer(Node referrer)
@@ -700,7 +700,7 @@ public class MindView extends Display {
         assert(m_mindModel.canAddReference(cursorNode, referrer));
 
         AddingReference operator = new AddingReference(m_mindModel, cursorNode, referrer, referrer.getChildCount());
-        m_undoManager.addEdit(operator);
+        m_mindController.addEdit(operator);
     }
 
     public void dragCursorToNewParent(Node newParent)
@@ -727,7 +727,18 @@ public class MindView extends Display {
         int newPos = newParent.getChildCount();
 
         MovingChild operator = new MovingChild(m_mindModel, cursorNode, newParent, newPos);
-        m_undoManager.addEdit(operator);
+        m_mindController.addEdit(operator);
+    }
+
+    public void setCursorProperty(String key, Object value)
+    {
+        m_fsm.setProperty(key, value);
+    }
+
+    public void setCursorPropertyImpl(String key, Object value)
+    {
+        Node cursorNode = getCursorSourceNode();
+        m_mindModel.setProperty(m_mindModel.getDBId(cursorNode), key, value);
     }
 
 } // end of class TreeMap

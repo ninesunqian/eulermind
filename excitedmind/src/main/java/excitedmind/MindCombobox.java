@@ -1,29 +1,62 @@
 package excitedmind;
 
-import com.tinkerpop.blueprints.Vertex;
-
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.JTextComponent;
-import java.awt.event.MouseListener;
-import java.util.ArrayList;
-import java.util.List;
+import javax.swing.event.EventListenerList;
+import java.awt.*;
+import java.awt.event.ActionListener;
 import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
  * User: wangxuguang
- * Date: 13-12-25
- * Time: 上午7:10
+ * Date: 14-3-30
+ * Time: 下午2:04
  * To change this template use File | Settings | File Templates.
  */
-public class MindPrompter {
+public class MindCombobox extends JComboBox{
+
+    class MindComboBoxEditor implements ComboBoxEditor {
+        final protected JTextField m_editor;
+
+        public MindComboBoxEditor() {
+            m_editor = new JTextField();
+            //TODO m_editor->textchanged, call prompter
+        }
+
+        public Component getEditorComponent() {
+            return m_editor;
+        }
+
+        public Object getItem() {
+            return m_editor.getText();
+        }
+
+        public void addActionListener(ActionListener l) {
+            m_editor.addActionListener(l);
+        }
+
+        public void removeActionListener(ActionListener l) {
+            m_editor.removeActionListener(l);
+        }
+
+        public void selectAll() {
+        }
+
+        public void setItem(Object newValue) {
+        }
+    }
+
+    MindCombobox()
+    {
+        MindComboBoxEditor editor = new MindComboBoxEditor();
+        this.setEditor(editor);
+
+        editor.getEditorComponent().
+
+    }
+
 
     Logger m_logger = Logger.getLogger(this.getClass().getName());
-
-    private JList m_jList = new JList(new DefaultListModel());
-    private JScrollPane m_jScrollPane = new JScrollPane(m_jList);
 
     private JTextComponent m_followedEditor;
     private MindDB m_mindDb;
@@ -188,4 +221,4 @@ public class MindPrompter {
             }
         }
     };
-};
+}

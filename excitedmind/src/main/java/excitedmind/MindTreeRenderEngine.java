@@ -129,7 +129,7 @@ public class MindTreeRenderEngine {
     
     private DefaultRendererFactory makeItemRendererFactory ()
     {
-	    NodeRenderer nodeRenderer = new NodeRenderer(MindTree.sm_textPropName);
+	    NodeRenderer nodeRenderer = new NodeRenderer(MindModel.sm_textPropName, MindModel.sm_iconPropName);
     	nodeRenderer.setRenderType(AbstractShapeRenderer.RENDER_TYPE_FILL);
     	nodeRenderer.setHorizontalAlignment(Constants.LEFT);
     	nodeRenderer.setRoundedCorner(8, 8);
@@ -253,12 +253,16 @@ public class MindTreeRenderEngine {
         }
 
         protected String getText(VisualItem item) {
-            String s = item.getString(MindTree.sm_textPropName);
-            Object dbId = item.get(MindTree.sm_dbIdColumnName);
+            String s = item.getString(MindModel.sm_textPropName);
+            Object dbId = item.get(MindModel.sm_dbIdColumnName);
             if (dbId != null) {
                 s += dbId.toString();
             }
             return  (s==null || s.length() < 2 )? " " + s + " ": s;
+        }
+
+        protected String getImageLocation(VisualItem item) {
+            return MindIcons.getIconPath(item.getString(MindModel.sm_iconPropName));
         }
 
         public int getRenderType(VisualItem item) {
