@@ -145,6 +145,7 @@ public class MindCombobox extends JComboBox {
         protected Boolean doInBackground()
         {
             MindCombobox.this.removeAllItems();
+            MindCombobox.this.hidePopup();
 
             String inputed = m_followedEditor.getText();
 
@@ -166,7 +167,7 @@ public class MindCombobox extends JComboBox {
         @Override
         protected void process(List<PromptedNode> promptedNodes)
         {
-
+            MindCombobox.this.showPopup();
             for (PromptedNode promptedNode : promptedNodes) {
                 m_logger.info("get promptedNode " + promptedNode.m_dbId);
 
