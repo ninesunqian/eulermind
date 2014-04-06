@@ -4,6 +4,8 @@ import excitedmind.MindModel;
 import excitedmind.MindOperator;
 import prefuse.data.Node;
 
+import java.util.Stack;
+
 public class SettingProperty extends MindOperator {
     Object m_nodeDBId;
     String m_property;
@@ -16,6 +18,7 @@ public class SettingProperty extends MindOperator {
         m_property = property;
         m_newValue = newValue;
         m_oldValue = m_mindModel.getProperty(m_nodeDBId, m_property);
+        m_laterCursorPath = (Stack<Integer>) m_formerCursorPath.clone();
     }
 
     public void does()

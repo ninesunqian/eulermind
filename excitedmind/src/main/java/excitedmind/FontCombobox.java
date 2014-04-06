@@ -160,21 +160,6 @@ public class FontCombobox extends JComboBox{
 
             Font font = FontLib.getFont(family, size);
 
-            /*
-            if (m_listWhich == ListWhich.list_family) {
-                m_logger.info(String.format("listRenderer: font %s, size %d, %s, %s, %b",
-                        font.getFamily(), font.getSize(), text, font.getName(), font.canDisplay('a')));
-                m_logger.info(String.format("font getFamily %s, getPSName: %s, getName %s, getFontName %s, toString %s",
-                        font.getFamily(), font.getPSName(), font.getName(), font.getFontName(), font.toString()));
-                Map<TextAttribute,?> attributeMap = font.getAttributes();
-
-                m_logger.info(String.format("listRenderer: font %s, size %d, %s, %s, %b",
-                        font.getFamily(), font.getSize(), text, font.getName(), font.canDisplay('a')));
-
-                Font.decode()
-
-            }
-            */
             renderer.setFont(font);
             renderer.setText(text);
             renderer.setForeground(color);

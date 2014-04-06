@@ -10,6 +10,7 @@ import java.util.Stack;
 import java.util.logging.Logger;
 
 import javax.swing.*;
+import javax.swing.event.MouseInputAdapter;
 
 import excitedmind.operator.*;
 import prefuse.Display;
@@ -117,8 +118,6 @@ public class MindView extends Display {
 
         m_prompter = new MindPrompter(this, m_mindModel.m_mindDb);
         m_prompter.addMouseListener(m_prompterMouseListener);
-
-
 	}
 
     public NodeItem toVisual (Node node)

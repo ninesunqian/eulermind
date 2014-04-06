@@ -9,7 +9,7 @@ import java.util.Properties;
 public class MindIcons {
     private MindController m_mindController;
     private JToolBar m_iconToolBar;
-	private JScrollPane m_iconScrollPane;
+	private JAutoScrollBarPane m_iconScrollPane;
 
     private static String sm_iconDir = MindIcons.class.getClassLoader().getResource("icons/").getPath();
 
@@ -22,7 +22,7 @@ public class MindIcons {
     {
         m_mindController = mindController;
         m_iconToolBar = new JToolBar();
-		m_iconScrollPane = new JScrollPane(m_iconToolBar);
+		m_iconScrollPane = new JAutoScrollBarPane(m_iconToolBar);
 		m_iconToolBar.setOrientation(JToolBar.VERTICAL);
 		m_iconToolBar.setRollover(true);
 		m_iconScrollPane.getVerticalScrollBar().setUnitIncrement(100);

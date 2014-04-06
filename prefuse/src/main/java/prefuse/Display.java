@@ -1588,6 +1588,7 @@ public class Display extends JComponent {
         }
 
         public void mouseClicked(MouseEvent e) {
+            requestFocus();
             synchronized ( m_vis ) {
                 if ( activeItem != null ) {
                     if ( validityCheck() )
@@ -2136,6 +2137,7 @@ public class Display extends JComponent {
             m_editor.setForeground(null);
         }
         m_editing = false;
+        requestFocus();
     }
 
     public void stopEditing() {

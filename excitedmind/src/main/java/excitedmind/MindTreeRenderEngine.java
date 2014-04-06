@@ -198,7 +198,12 @@ public class MindTreeRenderEngine {
         }
 
         public int getColor(VisualItem item) {
-            return ColorLib.rgb(0, 0, 0);
+            Color color = (Color)item.get(MindModel.sm_textColorPropName);
+
+            if (color == null)
+                return ColorLib.rgb(0, 0, 0);
+            else
+                return ColorLib.rgb(color.getRed(), color.getGreen(), color.getBlue());
         }
 
     }
@@ -210,7 +215,18 @@ public class MindTreeRenderEngine {
         }
 
         public Font getFont(VisualItem item) {
-            return FontLib.getFont("SansSerif",Font.PLAIN, 16);
+            String family = (String)item.get(MindModel.sm_fontFamilyPropName);
+            Integer size = (Integer)item.get(MindModel.sm_fontSizePropName);
+
+            if (family == null) {
+                family = "SansSerif";
+            }
+
+            if (size == null) {
+                size = 16;
+            }
+            //String family = (family)item.get(MindModel.sm_fontFamilyPropName);
+            return FontLib.getFont(family, Font.PLAIN, size);
         }
     }
     
@@ -262,7 +278,9 @@ public class MindTreeRenderEngine {
         }
 
         protected String getImageLocation(VisualItem item) {
-            return MindIcons.getIconPath(item.getString(MindModel.sm_iconPropName));
+            //return MindIcons.getIconPath(item.getString(MindModel.sm_iconPropName));
+            //return MindIcons.getIconPath("icon");
+            return null;
         }
 
         public int getRenderType(VisualItem item) {

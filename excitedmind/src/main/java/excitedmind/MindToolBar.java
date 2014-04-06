@@ -1,6 +1,9 @@
 package excitedmind;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  * Created with IntelliJ IDEA.
@@ -10,14 +13,14 @@ import javax.swing.*;
  * To change this template use File | Settings | File Templates.
  */
 public class MindToolBar extends JToolBar {
-    MindModel m_mindModel;
+    MindController m_mindController;
     FontCombobox m_fontFamilyCombobox;
     FontCombobox m_fontSizeCombobox;
     FontCombobox m_colorCombobox;
     MindCombobox m_comboxbox;
 
-    MindToolBar(MindModel mindModel) {
-        m_mindModel = mindModel;
+    MindToolBar(MindController mindController) {
+        m_mindController = mindController;
 
         m_fontFamilyCombobox = new FontCombobox(FontCombobox.ListWhich.list_family);
         m_fontSizeCombobox = new FontCombobox(FontCombobox.ListWhich.list_size);
@@ -31,9 +34,40 @@ public class MindToolBar extends JToolBar {
         add(m_fontSizeCombobox);
         add(m_colorCombobox);
 
-        m_comboxbox = new MindCombobox(m_mindModel.m_mindDb);
+        m_comboxbox = new MindCombobox(m_mindController.m_mindModel.m_mindDb);
         m_comboxbox.setEditable(true);
         add(m_comboxbox);
+
+
+        m_fontFamilyCombobox.addActionListener(
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        String family = (String) m_fontFamilyCombobox.getSelectedItem();
+                        m_mindController.getCurrentView().setCursorProperty(
+                                MindModel.sm_fontFamilyPropName, family);
+                    }
+                }
+        );
+
+        m_fontSizeCombobox.addActionListener(
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        Integer size = (Integer) m_fontSizeCombobox.getSelectedItem();
+                        m_mindController.getCurrentView().setCursorProperty(
+                                MindModel.sm_fontSizePropName, size);
+                    }
+                }
+        );
+
+        m_colorCombobox.addActionListener(
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        Color color = (Color) m_colorCombobox.getSelectedItem();
+                        m_mindController.getCurrentView().setCursorProperty(
+                                MindModel.sm_textColorPropName, color);
+                    }
+                }
+        );
     }
 
     /*

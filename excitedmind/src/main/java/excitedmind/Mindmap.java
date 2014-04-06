@@ -1,9 +1,15 @@
 package excitedmind;
 
+import com.sun.jna.platform.FileUtils;
 import excitedmind.MindDB.EdgeVertex;
 
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.DirectoryNotEmptyException;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Paths;
 import java.util.logging.Logger;
 
 import javax.swing.*;
@@ -22,6 +28,7 @@ public class Mindmap {
     public static void deleteDir(String path)
     {
         File file = new File(path);
+        file.setWritable(true);
         if (file.exists())
         {
             if (file.isDirectory())
@@ -31,8 +38,22 @@ public class Mindmap {
                 {
                     if (subFile.isDirectory())
                         deleteDir(subFile.getPath());
-                    else
-                        subFile.delete();
+                    else {
+                        subFile.setWritable(true);
+      //                  boolean ret = subFile.delete();
+       //                 m_logger.info("delete file: " + ret);
+
+                        try {
+                            Files.delete(Paths.get(subFile.getPath()));
+                        } catch (NoSuchFileException x) {
+                            System.err.format("%s: no such" + " file or directory%n", path);
+                        } catch (DirectoryNotEmptyException x) {
+                            System.err.format("%s not empty%n", path);
+                        } catch (IOException x) {
+                            // File permission problems are caught here.
+                            System.err.println(x);
+                        }
+                    }
                 }
             }
             file.delete();
@@ -42,7 +63,9 @@ public class Mindmap {
 	public static void main(String argv[]) {
 
         try {
-            UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+            //UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         } catch (InstantiationException e) {
