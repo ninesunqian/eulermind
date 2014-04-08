@@ -1,9 +1,12 @@
 package excitedmind;
 
+import prefuse.visual.NodeItem;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 
 /**
  * Created with IntelliJ IDEA.
@@ -68,6 +71,15 @@ public class MindToolBar extends JToolBar {
                     }
                 }
         );
+
+        /*FIXME
+        m_mindController.addExternalMouseController(new RobustNodeItemController() {
+            @Override
+            public void nodeItemEntered(NodeItem item, MouseEvent e) {
+                super.nodeItemEntered(item, e);    //To change body of overridden methods use File | Settings | File Templates.
+            }
+        });
+        */
     }
 
     /*
