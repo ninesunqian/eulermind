@@ -74,6 +74,40 @@ public class MindModel {
         m_mindDb.createFullTextVertexKeyIndex(sm_textPropName);
 	}
 
+
+    /*
+    private Vertex createTree (MindDB mindDb, Vertex parent, String parentText, int level)
+    {
+        if (level >= 3)
+        {
+            return;
+
+        } else if (level == 0) {
+            Vertex root = mindDb.getVertex(mindDb.getRootId());
+            root.setProperty(MindModel.sm_textPropName, "a");
+            m_rootVertex = root;
+
+            createTree (mindDb, root, "a", 1);
+
+        } else {
+
+            EdgeVertex edgeVertex = mindDb.addChild(parent, 0);
+            edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, parentText + "a");
+            createTree (mindDb, edgeVertex.m_vertex, parentText + "a", level + 1);
+
+            edgeVertex = mindDb.addChild(parent, 1);
+            edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, parentText + "b");
+            createTree (mindDb, edgeVertex.m_vertex, parentText + "b", level + 1);
+
+            edgeVertex = mindDb.addChild(parent, 2);
+            edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, parentText + "c");
+            createTree (mindDb, edgeVertex.m_vertex, parentText + "c", level + 1);
+
+            mindDb.addRefEdge(parent, m_rootVertex, 3);
+        }
+    }
+    */
+
     public Tree findTree(Object rootId)
     {
         for (Tree tree : m_trees) {

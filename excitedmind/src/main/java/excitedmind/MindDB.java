@@ -22,13 +22,16 @@ public class MindDB implements Graph {
 	private final static String ROOT_KEY_NAME = PrefuseLib.FIELD_PREFIX + "root";
 
 	private final static String TRASH_INDEX_NAME = PrefuseLib.FIELD_PREFIX + "trashIndex";
-	private final static String TRASH_KEY_NAME = PrefuseLib.FIELD_PREFIX + "vertex";
+	private final static String TRASH_KEY_NAME = PrefuseLib.FIELD_PREFIX + "trash";
+
+    private final static String PIN_INDEX_NAME = PrefuseLib.FIELD_PREFIX + "pinIndex";
+    private final static String PIN_KEY_NAME = PrefuseLib.FIELD_PREFIX + "pin";
 
 	private final static String SAVED_PARENT_ID_PROP_NAME = PrefuseLib.FIELD_PREFIX + "parent";
 	private final static String SAVED_POS_PROP_NAME = PrefuseLib.FIELD_PREFIX + "pos";
 	public final static String SAVED_REFERRER_INFO_PROP_NAME = PrefuseLib.FIELD_PREFIX + "referrers";
 
-	enum EdgeType { INCLUDE, REFERENCE};
+	enum EdgeType {INCLUDE, REFERENCE};
 
     enum InheritDirection {SELF, LINEAL_SIBLING,  COLLATERAL_SIBLING,
                           LINEAL_ANCESTOR, COLLATERAL_ANCESTOR,
@@ -40,6 +43,9 @@ public class MindDB implements Graph {
 
 	private Index<Vertex> m_rootIndex;
 	private Index<Vertex> m_trashIndex;
+    private Index<Vertex> m_pinIndex;
+
+    Object m_rootId;
 
 	String m_path;
 
@@ -47,10 +53,39 @@ public class MindDB implements Graph {
 	{
 		m_graph = new OrientGraph (path);
 		m_path = path;
-		createIndices ();
+
+        m_rootIndex = getOrCreateIndex(ROOT_INDEX_NAME);
+        m_trashIndex = getOrCreateIndex(TRASH_INDEX_NAME);
+        m_pinIndex = getOrCreateIndex(PIN_INDEX_NAME);
+
+        Vertex root = null;
+        if (m_rootIndex.get(ROOT_KEY_NAME, ROOT_KEY_NAME).iterator().hasNext()) {
+            root = m_rootIndex.get(ROOT_KEY_NAME, ROOT_KEY_NAME).iterator().next();
+
+        } else {
+            root = addVertex(null);
+            m_rootIndex.put(ROOT_KEY_NAME, ROOT_KEY_NAME, root);
+            m_pinIndex.put(PIN_KEY_NAME, PIN_KEY_NAME, root);
+
+            //translate the root id from temporary to permanence
+            m_graph.commit();
+            ArrayList inheritPath = new ArrayList();
+            inheritPath.add(root.getId());
+            root.setProperty(INHERIT_PATH_PROP_NAME, inheritPath);
+            m_graph.commit();
+        }
+
+        m_rootId = root.getId();
 	}
 
-	@Override
+
+    @Override
+    protected void finalize() throws Throwable
+    {
+        m_graph.commit();
+    }
+
+    @Override
 	public Edge addEdge(Object arg0, Vertex arg1, Vertex arg2, String arg3) {
 		//disable the method, to preserve a tree structure
 		assert (false);
@@ -112,46 +147,20 @@ public class MindDB implements Graph {
 	public void commit() {
 		m_graph.commit();
 	}
-	
-	private void createIndices ()
+
+    public Index<Vertex> getOrCreateIndex(String indexName)
 	{
-		m_rootIndex = m_graph.getIndex (ROOT_INDEX_NAME, Vertex.class);
-		
-		if (m_rootIndex == null)
-		{
-			m_rootIndex = m_graph.createIndex(ROOT_INDEX_NAME, Vertex.class);
-		}
-		
-		m_trashIndex = m_graph.getIndex (TRASH_INDEX_NAME, Vertex.class);
-		
-		if (m_trashIndex == null)
-		{
-			m_trashIndex = m_graph.createIndex(TRASH_INDEX_NAME, Vertex.class);
-		}
+        Index<Vertex> index = m_graph.getIndex(indexName, Vertex.class);
+        if (index == null) {
+            index = m_graph.createIndex(indexName, Vertex.class);
+        }
+
+        return index;
 	}
 	
-	public Vertex addRoot ()
+	public Object getRootId ()
 	{
-		Vertex root = addVertex(null);
-		m_rootIndex.put(ROOT_KEY_NAME, ROOT_KEY_NAME, root);
-
-        ArrayList inheritPath = new ArrayList();
-        inheritPath.add(root.getId());
-        root.setProperty(INHERIT_PATH_PROP_NAME, inheritPath);
-        //TODO: simplify it!
-
-		Object rootId = root.getId();
-		Object oldId = rootId;
-		m_logger.info(root.getId().toString());
-		root = m_graph.getVertex(rootId);
-		rootId = root.getId();
-		m_logger.info(root.getId().toString());
-		return root;
-	}
-
-	public Vertex getRoot ()
-	{
-		return m_rootIndex.get(ROOT_KEY_NAME, ROOT_KEY_NAME).iterator().next();
+		return m_rootId;
 	}
 	
 	public Vertex getEdgeSource (Edge edge)
@@ -506,8 +515,6 @@ public class MindDB implements Graph {
 	//return the removed vertex
 	public Vertex trashSubTree(Vertex parent, int pos)
 	{
-		assert (parent != getRoot());
-		
 		EdgeVertex edgeVertex = getChildOrReferent(parent, pos);
 		
 		assert (getEdgeType(edgeVertex.m_edge) == EdgeType.INCLUDE);
@@ -617,11 +624,25 @@ public class MindDB implements Graph {
         commit ();
 		return new EdgeVertex(edge, parent);
 	}
-	
+
+    private void removeSubTree(Vertex root)
+    {
+        for (EdgeVertex edgeVertex : getChildrenAndReferents(root)) {
+            if (getEdgeType(edgeVertex.m_edge) == EdgeType.INCLUDE) {
+                removeSubTree(edgeVertex.m_vertex);
+            }
+        }
+
+        m_graph.removeVertex(root);
+    }
+
 	private void cleanTrash ()
 	{
-        //TODO
-		
+        //FIXME:  b->c and a->b->c  and
+        //need to remove from PinIndex
+        for (Vertex vertex: m_trashIndex.get(TRASH_KEY_NAME, TRASH_KEY_NAME)) {
+            removeSubTree(vertex);
+        }
 	}
 	
 	
