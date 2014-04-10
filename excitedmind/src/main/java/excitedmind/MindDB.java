@@ -24,9 +24,6 @@ public class MindDB implements Graph {
 	private final static String TRASH_INDEX_NAME = PrefuseLib.FIELD_PREFIX + "trashIndex";
 	private final static String TRASH_KEY_NAME = PrefuseLib.FIELD_PREFIX + "trash";
 
-    private final static String PIN_INDEX_NAME = PrefuseLib.FIELD_PREFIX + "pinIndex";
-    private final static String PIN_KEY_NAME = PrefuseLib.FIELD_PREFIX + "pin";
-
 	private final static String SAVED_PARENT_ID_PROP_NAME = PrefuseLib.FIELD_PREFIX + "parent";
 	private final static String SAVED_POS_PROP_NAME = PrefuseLib.FIELD_PREFIX + "pos";
 	public final static String SAVED_REFERRER_INFO_PROP_NAME = PrefuseLib.FIELD_PREFIX + "referrers";
@@ -43,7 +40,6 @@ public class MindDB implements Graph {
 
 	private Index<Vertex> m_rootIndex;
 	private Index<Vertex> m_trashIndex;
-    private Index<Vertex> m_pinIndex;
 
     Object m_rootId;
 
@@ -56,7 +52,6 @@ public class MindDB implements Graph {
 
         m_rootIndex = getOrCreateIndex(ROOT_INDEX_NAME);
         m_trashIndex = getOrCreateIndex(TRASH_INDEX_NAME);
-        m_pinIndex = getOrCreateIndex(PIN_INDEX_NAME);
 
         Vertex root = null;
         if (m_rootIndex.get(ROOT_KEY_NAME, ROOT_KEY_NAME).iterator().hasNext()) {
@@ -65,7 +60,6 @@ public class MindDB implements Graph {
         } else {
             root = addVertex(null);
             m_rootIndex.put(ROOT_KEY_NAME, ROOT_KEY_NAME, root);
-            m_pinIndex.put(PIN_KEY_NAME, PIN_KEY_NAME, root);
 
             //translate the root id from temporary to permanence
             m_graph.commit();

@@ -99,7 +99,7 @@ public class MindView extends Display {
         m_mindModel = mindModel;
         m_mindController = undoManager;
 
-        m_tree = mindModel.findOrPutTree(rootId, 3);
+        m_tree = mindModel.findOrPutTree(rootId, 1);
         VisualTree visualTree = (VisualTree)m_vis.add(m_treeGroupName, m_tree);
 
         m_cursor = new TreeCursor(visualTree);
@@ -682,8 +682,6 @@ public class MindView extends Display {
 
         MindOperator operator;
         if (m_mindModel.isRefEdge(edge)) {
-            Object referentDBId = m_mindModel.getDBId(cursorNode);
-            int pos = cursorNode.getIndex();
             operator = new RemovingReference(m_mindModel, cursorNode);
         }
         else {

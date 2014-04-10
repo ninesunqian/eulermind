@@ -1,5 +1,6 @@
 package excitedmind;
 
+import com.tinkerpop.blueprints.Index;
 import com.tinkerpop.blueprints.Vertex;
 import excitedmind.MindDB.EdgeVertex;
 import excitedmind.MindDB.RefLinkInfo;
@@ -28,6 +29,12 @@ public class MindModel {
 	final static String sm_underlinedPropName = "underlined";
 	final static String sm_nodeColorPropName = "nodeColor";
 	final static String sm_textColorPropName = "textColor";
+
+    private final static String PIN_INDEX_NAME = "pinIndex";
+    private final static String PIN_KEY_NAME = "pin";
+
+
+    private Index<Vertex> m_pinIndex;
 
     public final static String sm_nodePropNames [] = {
             sm_textPropName,
@@ -72,41 +79,21 @@ public class MindModel {
 
 		m_mindDb = new MindDB(dbPath);
         m_mindDb.createFullTextVertexKeyIndex(sm_textPropName);
-	}
+        m_pinIndex = m_mindDb.getOrCreateIndex(PIN_INDEX_NAME);
 
+        Vertex root = m_mindDb.getVertex(m_mindDb.getRootId());
+        if (m_mindDb.getChildOrReferent(root, 0) == null) {
+            root.setProperty(sm_textPropName, "root");
 
-    /*
-    private Vertex createTree (MindDB mindDb, Vertex parent, String parentText, int level)
-    {
-        if (level >= 3)
-        {
-            return;
+            EdgeVertex edgeVertex = m_mindDb.addChild(root, 0);
+            edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, "child_1");
 
-        } else if (level == 0) {
-            Vertex root = mindDb.getVertex(mindDb.getRootId());
-            root.setProperty(MindModel.sm_textPropName, "a");
-            m_rootVertex = root;
+            edgeVertex = m_mindDb.addChild(root, 1);
+            edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, "child_2");
 
-            createTree (mindDb, root, "a", 1);
-
-        } else {
-
-            EdgeVertex edgeVertex = mindDb.addChild(parent, 0);
-            edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, parentText + "a");
-            createTree (mindDb, edgeVertex.m_vertex, parentText + "a", level + 1);
-
-            edgeVertex = mindDb.addChild(parent, 1);
-            edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, parentText + "b");
-            createTree (mindDb, edgeVertex.m_vertex, parentText + "b", level + 1);
-
-            edgeVertex = mindDb.addChild(parent, 2);
-            edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, parentText + "c");
-            createTree (mindDb, edgeVertex.m_vertex, parentText + "c", level + 1);
-
-            mindDb.addRefEdge(parent, m_rootVertex, 3);
+            m_mindDb.addRefEdge(root, root, 2);
         }
-    }
-    */
+	}
 
     public Tree findTree(Object rootId)
     {

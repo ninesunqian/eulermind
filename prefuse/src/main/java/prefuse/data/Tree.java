@@ -718,7 +718,7 @@ public class Tree extends Graph {
 
     public void deepTraverse (Node node, Processor proc)
     {
-        deepTraverse(node, proc, 0);
+        deepTraverse(node, proc, 1);
     }
 
     // ------------------------------------------------------------------------
