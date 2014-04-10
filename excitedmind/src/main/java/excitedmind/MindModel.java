@@ -549,6 +549,15 @@ public class MindModel {
         return node.getString(sm_textPropName);
     }
 
+    public String getContextText(Object dbId)
+    {
+        Vertex vertex = m_mindDb.getVertex(dbId);
+        String text = vertex.getProperty(sm_textPropName);
+        Vertex parent = m_mindDb.getParent(vertex).m_vertex;
+        String parentText = parent.getProperty(sm_textPropName);
+        return parentText + " -> " + text;
+    }
+
     public void setText(Object dbId, String text)
     {
         setProperty(dbId, sm_textPropName, text);
@@ -632,4 +641,12 @@ public class MindModel {
         return node;
     }
 
+    public ArrayList<Object> getPinVertexDbIds()
+    {
+        ArrayList list = new ArrayList();
+        for (Vertex vertex : m_pinIndex.get(PIN_KEY_NAME, PIN_KEY_NAME))  {
+            list.add(vertex.getId());
+        }
+        return list;
+    }
 }

@@ -9,6 +9,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 public class MainFrame extends JFrame {
+    MindModel m_mindModel;
+    MindController m_mindController;
     public MainFrame(String dbUrl)
     {
 
@@ -23,13 +25,13 @@ public class MainFrame extends JFrame {
         //panel.setForeground(FOREGROUND);
 
 
-        final MindModel mindModel = new MindModel(dbUrl);
+        m_mindModel = new MindModel(dbUrl);
         final JTabbedPane tabbedPane = new JTabbedPane();
-        final MindController mindController = new MindController(mindModel, tabbedPane);
+        m_mindController = new MindController(m_mindModel, tabbedPane);
 
-        add(new MindToolBar(mindController), BorderLayout.NORTH);
+        add(new MindToolBar(m_mindController), BorderLayout.NORTH);
 
-        mindController.findOrAddMindView(mindModel.m_mindDb.getRootId());
+        m_mindController.findOrAddMindView(m_mindModel.m_mindDb.getRootId());
         tabbedPane.add("aaaa", new TextArea());
         //mindController.findOrAddMindView(Mindmap.m_rootVertex1.getId());
 
@@ -55,7 +57,7 @@ public class MainFrame extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                mindModel.m_mindDb.shutdown();
+                m_mindModel.m_mindDb.shutdown();
                 //mindModel.m_mindDb.
                 MainFrame.this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             }
@@ -75,5 +77,11 @@ public class MainFrame extends JFrame {
 
         setJMenuBar(menuBar);
 
+    }
+
+    void addPinMenu(JMenuBar menuBar)
+    {
+        JMenu pinMenu = new JMenu("Pin");
+        //弹出菜单时再显示菜单
     }
 }
