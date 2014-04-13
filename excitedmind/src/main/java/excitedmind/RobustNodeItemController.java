@@ -160,17 +160,16 @@ public abstract class RobustNodeItemController extends ControlAdapter {
             clearHitNode();
         }
 
-        if (curHitNode != null && curHitNode != m_hitNode && curHitNode != fromNode) {
+        if (curHitNode != null && curHitNode != fromNode) {
             HitPosition hitPosition = getHitPosition(curHitNode, mousePoint.getX(), mousePoint.getY());
 
-            if (m_hitPosition != hitPosition) {
+            if (curHitNode != m_hitNode || hitPosition != m_hitPosition) {
                 m_hitNode = curHitNode;
                 m_hitPosition = hitPosition;
 
                 m_logger.info("itemHit : " + curHitNode.getString(MindModel.sm_textPropName));
                 nodeItemHit(fromNode, curHitNode, hitPosition, m_ctrlDowned);
             }
-
         }
     }
 
