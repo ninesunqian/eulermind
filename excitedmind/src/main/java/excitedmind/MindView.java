@@ -5,22 +5,17 @@ import java.awt.event.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
 import java.util.Stack;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.*;
-import javax.swing.event.MouseInputAdapter;
 
 import excitedmind.operator.*;
 import prefuse.Display;
 import prefuse.Visualization;
 
-import prefuse.controls.ControlAdapter;
-import prefuse.controls.PanControl;
-import prefuse.controls.WheelZoomControl;
-import prefuse.controls.ZoomControl;
-import prefuse.controls.ZoomToFitControl;
+import prefuse.controls.*;
 import prefuse.data.*;
 import prefuse.util.PrefuseLib;
 import prefuse.visual.EdgeItem;
@@ -93,6 +88,8 @@ public class MindView extends Display {
 
 	public MindView(MindModel mindModel, MindController undoManager, Object rootId) {
 		super(new Visualization());
+
+        m_logger.setLevel(Level.OFF);
 		setSize(700, 600);
 		setHighQuality(true);
 
@@ -166,13 +163,8 @@ public class MindView extends Display {
 
     class MouseControl extends RobustNodeItemController {
 
-        public NodeItem m_hittedNode;
-        public HittedPosition m_hittedPosition;
-
         MouseControl() {
             super(MindView.this);
-            m_hittedNode = null;
-            m_hittedPosition = HittedPosition.OUTSIDE;
         }
 
         @Override
@@ -187,12 +179,12 @@ public class MindView extends Display {
 
         @Override
         public void nodeItemPressed(NodeItem item, MouseEvent e) {
-            m_fsm.itemPressed(item);
+            m_fsm.itemPressed(item, e);
         }
 
         @Override
         public void nodeItemClicked(NodeItem item, MouseEvent e) {
-            m_fsm.itemClicked();
+            m_fsm.itemClicked(item, e);
         }
 
         @Override
@@ -203,24 +195,19 @@ public class MindView extends Display {
             }
         }
 
-        private boolean hittedOtherNode(NodeItem sourceNode, NodeItem hittedNode) {
-            return hittedNode == null || hittedNode == sourceNode;
-        }
-
-        private boolean canDrop(NodeItem sourceNode, NodeItem hittedNode, boolean ctrlDowned)
+        private boolean canDrop(NodeItem sourceNode, NodeItem hitNode, boolean ctrlDowned)
         {
             sourceNode.getSourceData();
             if (ctrlDowned) {
-                return m_mindModel.canAddReference(toSource(hittedNode), toSource(sourceNode));
+                return m_mindModel.canAddReference(toSource(hitNode), toSource(sourceNode));
             } else {
-                return m_mindModel.canResetParent(toSource(sourceNode), toSource(hittedNode));
+                return m_mindModel.canResetParent(toSource(sourceNode), toSource(hitNode));
             }
         }
 
-        private void setCursorShape(NodeItem sourceNode, NodeItem hittedNode, boolean ctrlDowned)
+        private void setCursorShape(NodeItem sourceNode, NodeItem hitNode, boolean ctrlDowned)
         {
-            boolean cursorEnabled = (!hittedOtherNode(sourceNode, hittedNode)) ||
-                    canDrop(sourceNode, hittedNode, ctrlDowned);
+            boolean cursorEnabled = (hitNode == null) || canDrop(sourceNode, hitNode, ctrlDowned);
 
             if (ctrlDowned) {
                 setCursor(cursorEnabled ? DragSource.DefaultLinkDrop : DragSource.DefaultLinkNoDrop);
@@ -231,21 +218,12 @@ public class MindView extends Display {
 
         //if dropNode or dropPostion changed, give the event
         @Override
-        public void nodeItemHitted(NodeItem item, NodeItem hittedNode,
-                                   RobustNodeItemController.HittedPosition hittedPosition, boolean ctrlDowned) {
+        public void nodeItemHit(NodeItem item, NodeItem hitNode,
+                                   RobustNodeItemController.HitPosition hitPosition, boolean ctrlDowned) {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
-                m_hittedNode = hittedNode;
-                m_hittedPosition = hittedPosition;
-                setCursorShape(item, hittedNode, ctrlDowned);
+                setCursorShape(item, hitNode, ctrlDowned);
                 renderTree();
-                System.out.print((ArrayList)hittedNode.get(MindModel.sm_inheritPathPropName));
             }
-        }
-
-        private void clearHittedNode()
-        {
-            m_hittedNode = null;
-            m_hittedPosition = HittedPosition.OUTSIDE;
         }
 
         @Override
@@ -254,15 +232,14 @@ public class MindView extends Display {
                 setCursorShape(item, null, ctrlDowned);
                 renderTree();
             }
-            clearHittedNode();
         }
 
         @Override
-        public void nodeItemDropped(NodeItem item, NodeItem dropNode, RobustNodeItemController.HittedPosition hittedPosition, boolean ctrlDowned) {
+        public void nodeItemDropped(NodeItem item, NodeItem dropNode, RobustNodeItemController.HitPosition hitPosition, boolean ctrlDowned) {
             m_logger.info("nodeItemDropped");
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
 
-                if (hittedOtherNode(item, dropNode)) {
+                if (dropNode != null) {
                     m_logger.info(String.format("--- ctrlDown %s, release time %dms", ctrlDowned ?"true":"false", System.currentTimeMillis() - m_ctrlReleaseTime));
                     if (canDrop(item, dropNode, ctrlDowned)) {
                         m_fsm.itemDropped(dropNode, ctrlDowned);
@@ -273,8 +250,6 @@ public class MindView extends Display {
                     m_fsm.cancel();
                 }
             }
-
-            clearHittedNode();
         }
 
         @Override
@@ -282,7 +257,7 @@ public class MindView extends Display {
         {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
                 if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
-                    setCursorShape(item, m_hittedNode, true);
+                    setCursorShape(item, m_hitNode, true);
                 }
             }
         }
@@ -292,14 +267,20 @@ public class MindView extends Display {
         {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
                 if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
-                    setCursorShape(item, m_hittedNode, false);
+                    setCursorShape(item, m_hitNode, false);
                 }
             }
         }
     };
 
+    public NodeItem getDragHitNode()
+    {
+        return m_mouseControl.m_hitNode;
+    }
+
+
 	private void setMouseControlListener() {
-		m_zoomToFitContol = new ZoomToFitControl();
+		m_zoomToFitContol = new ZoomToFitControl(Control.MIDDLE_MOUSE_BUTTON);
 		m_zoomControl = new ZoomControl();
 		m_wheelZoomControl = new WheelZoomControl();
 		m_panControl = new PanControl();

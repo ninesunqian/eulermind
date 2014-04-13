@@ -1,14 +1,14 @@
 package excitedmind;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import javax.swing.event.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
+import java.util.logging.Logger;
 
 public class MainFrame extends JFrame {
+    static Logger m_logger = Logger.getLogger(Mindmap.class.getName());
+
     MindModel m_mindModel;
     MindController m_mindController;
     public MainFrame(String dbUrl)
@@ -32,7 +32,7 @@ public class MainFrame extends JFrame {
         add(new MindToolBar(m_mindController), BorderLayout.NORTH);
 
         m_mindController.findOrAddMindView(m_mindModel.m_mindDb.getRootId());
-        tabbedPane.add("aaaa", new TextArea());
+        //tabbedPane.add("aaaa", new TextArea());
         //mindController.findOrAddMindView(Mindmap.m_rootVertex1.getId());
 
         tabbedPane.addChangeListener(new ChangeListener() {
@@ -75,13 +75,77 @@ public class MainFrame extends JFrame {
         JMenuItem openMenuItem = new JMenuItem("open", KeyEvent.VK_O);
         fileMenu.add(openMenuItem);
 
-        setJMenuBar(menuBar);
+        addPinMenu(menuBar);
 
+        setJMenuBar(menuBar);
     }
+
+    JMenu m_favoriteMenu;
 
     void addPinMenu(JMenuBar menuBar)
     {
-        JMenu pinMenu = new JMenu("Pin");
+        m_favoriteMenu = new JMenu("Favorite");
+        m_favoriteMenu.setMnemonic('a');
+
+        m_favoriteMenu.addMenuListener(new MenuListener() {
+            @Override
+            public void menuSelected(MenuEvent menuEvent)
+            {
+                final Object currentVertexId = m_mindController.getCurrentVertexId();
+                JMenuItem addingMenuItem = new JMenuItem("add to favorite");
+                addingMenuItem.setEnabled(currentVertexId != null && ! m_mindModel.isInFavorite(currentVertexId));
+                addingMenuItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent actionEvent)
+                    {
+                        m_mindModel.addToFavorite(currentVertexId);
+                    }
+                });
+                m_favoriteMenu.add(addingMenuItem);
+
+                JMenuItem removingMenuItem = new JMenuItem("remove from favorite");
+                removingMenuItem.setEnabled(currentVertexId != null && m_mindModel.isInFavorite(currentVertexId));
+                removingMenuItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent actionEvent)
+                    {
+                        m_mindModel.removeFromFavorite(currentVertexId);
+                    }
+                });
+                m_favoriteMenu.add(removingMenuItem);
+
+                m_favoriteMenu.addSeparator();
+
+                for (final MindModel.FavoriteInfo favoriteInfo : m_mindModel.m_favoriteInfoes) {
+                    JMenuItem menuItem = new JMenuItem(favoriteInfo.m_contextText);
+                    menuItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent actionEvent)
+                        {
+                            m_mindController.findOrAddMindView(favoriteInfo.m_dbId);
+                        }
+                    });
+
+                    m_favoriteMenu.add(menuItem);
+                }
+            }
+
+            @Override
+            public void menuDeselected(MenuEvent menuEvent)
+            {
+                m_favoriteMenu.removeAll();
+            }
+
+            @Override
+            public void menuCanceled(MenuEvent menuEvent)
+            {
+                m_favoriteMenu.removeAll();
+            }
+        }
+
+        );
+
+        menuBar.add(m_favoriteMenu);
         //弹出菜单时再显示菜单
     }
 }

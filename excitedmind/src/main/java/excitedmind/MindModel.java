@@ -7,15 +7,17 @@ import excitedmind.MindDB.RefLinkInfo;
 import prefuse.data.*;
 import prefuse.util.collections.IntIterator;
 
+import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 
 public class MindModel {
     Logger m_logger = Logger.getLogger(this.getClass().getName());
 
-	final static String sm_dbIdColumnName = "dbElement";
+	final static String sm_dbIdColumnName = "dbElementId";
 
     final static String sm_outEdgeDBIdsPropName = MindDB.CHILD_EDGES_PROP_NAME;
     final static String sm_inheritPathPropName = MindDB.INHERIT_PATH_PROP_NAME;
@@ -30,11 +32,24 @@ public class MindModel {
 	final static String sm_nodeColorPropName = "nodeColor";
 	final static String sm_textColorPropName = "textColor";
 
-    private final static String PIN_INDEX_NAME = "pinIndex";
-    private final static String PIN_KEY_NAME = "pin";
+    private final static String FAVORITE_INDEX_NAME = "favoriteIndex";
+    private final static String FAVORITE_KEY_NAME = "favorite";
 
 
-    private Index<Vertex> m_pinIndex;
+    private Index<Vertex> m_favoriteIndex;
+
+    class FavoriteInfo {
+        String m_contextText;
+        Object m_dbId;
+        ArrayList<Object> m_inheritPath;
+        FavoriteInfo (Vertex vertex) {
+            m_dbId = vertex.getId();
+            m_inheritPath = m_mindDb.getInheritPath(vertex);
+            m_contextText = getContextText(m_dbId);
+        }
+    }
+
+    ArrayList<FavoriteInfo> m_favoriteInfoes = new ArrayList<FavoriteInfo>();
 
     public final static String sm_nodePropNames [] = {
             sm_textPropName,
@@ -72,6 +87,7 @@ public class MindModel {
 		}
 	}
 
+    boolean m_isDebuging;
 
 	public MindModel(String dbPath)
 	{
@@ -79,10 +95,11 @@ public class MindModel {
 
 		m_mindDb = new MindDB(dbPath);
         m_mindDb.createFullTextVertexKeyIndex(sm_textPropName);
-        m_pinIndex = m_mindDb.getOrCreateIndex(PIN_INDEX_NAME);
+        m_favoriteIndex = m_mindDb.getOrCreateIndex(FAVORITE_INDEX_NAME);
 
         Vertex root = m_mindDb.getVertex(m_mindDb.getRootId());
-        if (m_mindDb.getChildOrReferent(root, 0) == null) {
+
+        if (! m_favoriteIndex.get(FAVORITE_KEY_NAME, FAVORITE_KEY_NAME).iterator().hasNext()) {
             root.setProperty(sm_textPropName, "root");
 
             EdgeVertex edgeVertex = m_mindDb.addChild(root, 0);
@@ -92,6 +109,20 @@ public class MindModel {
             edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, "child_2");
 
             m_mindDb.addRefEdge(root, root, 2);
+
+            m_favoriteIndex.put(FAVORITE_KEY_NAME, FAVORITE_KEY_NAME, root);
+        }
+
+        for (Vertex vertex : m_favoriteIndex.get(FAVORITE_KEY_NAME, FAVORITE_KEY_NAME))  {
+            m_favoriteInfoes.add(new FavoriteInfo(vertex));
+        }
+
+        m_isDebuging = false;
+        Pattern debugPattern = Pattern.compile("-Xdebubg|jdwp");
+        for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
+            if (debugPattern.matcher(arg).find()) {
+                m_isDebuging = true;
+            }
         }
 	}
 
@@ -353,27 +384,29 @@ public class MindModel {
         final ArrayList<Object> inheritPathOfTrashedNode =
                 m_mindDb.getContainerProperty(edgeChild.m_vertex, sm_inheritPathPropName, true);
 
+        final Object trashedId = edgeChild.m_vertex.getId();
+
         for (final Tree tree : m_trees) {
             tree.deepTraverse(tree.getRoot(),  new Tree.Processor() {
-                                                   public boolean run(Node node, int level) {
+                public boolean run(Node node, int level) {
+                    m_logger.info ("remove traverse: " + node.getString(sm_textPropName));
 
-                        m_logger.info ("remove traverse: " + node.getString(sm_textPropName));
+                    ArrayList inheritPathOfTreeNode = (ArrayList) node.get(sm_inheritPathPropName);
 
-                        ArrayList inheritPathOfTreeNode = (ArrayList) node.get(sm_inheritPathPropName);
+                    MindDB.InheritDirection inheritDirection = m_mindDb.getInheritDirection(
+                            inheritPathOfTrashedNode, trashedId,
+                            inheritPathOfTreeNode, getDBId(node));
 
-                        MindDB.InheritDirection inheritDirection = m_mindDb.getInheritDirection(inheritPathOfTrashedNode,
-                                inheritPathOfTreeNode);
+                    System.out.println (edgeChild.m_vertex.getProperty(sm_textPropName) +"-->" + node.getString(sm_textPropName)
+                            + ": " + inheritDirection);
 
-                        System.out.println (edgeChild.m_vertex.getProperty(sm_textPropName) +"-->" + node.getString(sm_textPropName)
-                                + ": " + inheritDirection);
-
-                        if (node.get(sm_dbIdColumnName).equals(edgeChild.m_vertex.getId()) ||
-                                inheritDirection == MindDB.InheritDirection.LINEAL_DESCENDANT ) {
-                            tree.removeChild(node);
-                            return false;
-                        }
-                        return true;
-            }
+                    if (node.get(sm_dbIdColumnName).equals(edgeChild.m_vertex.getId()) ||
+                            inheritDirection == MindDB.InheritDirection.LINEAL_DESCENDANT ) {
+                        tree.removeChild(node);
+                        return false;
+                    }
+                    return true;
+                }
 
             });
         }
@@ -468,7 +501,7 @@ public class MindModel {
         Vertex oldParent = m_mindDb.getVertex(oldParentDBId);
         Vertex newParent = m_mindDb.getVertex(newParentDBId);
 
-        EdgeVertex edgeVertex = m_mindDb.moveChild(oldParent, oldPos, newParent, newPos);
+        EdgeVertex edgeVertex = m_mindDb.handoverChild(oldParent, oldPos, newParent, newPos);
 
         for (Tree tree : m_trees) {
             hideRelation(tree, oldParentDBId, oldPos);
@@ -520,7 +553,7 @@ public class MindModel {
     {
         ArrayList fromInheritPath = (ArrayList) from.get(sm_inheritPathPropName);
         ArrayList toInheritPath = (ArrayList) to.get(sm_inheritPathPropName);
-        return m_mindDb.getInheritDirection(fromInheritPath, toInheritPath);
+        return m_mindDb.getInheritDirection(fromInheritPath, getDBId(from), toInheritPath, getDBId(to));
     }
 
     public MindDB.InheritDirection getInheritDirection(Object fromDBId, Object toDBId)
@@ -543,19 +576,46 @@ public class MindModel {
 
     }
 
+    public String getNodeDebugInfo(Node node) {
+        int row = node.getRow();
+        String info = ((Integer)row).toString();
+        info += "  ";
+
+        Object dbId = getDBId(node);
+        if (dbId != null) {
+            ArrayList inheritPath = m_mindDb.getInheritPath(m_mindDb.getVertex(dbId));
+            info += inheritPath.toString();
+            info += " ";
+            info += dbId.toString();
+        } else {
+            info += "placeholder";
+        }
+        return info;
+    }
+
     //not use dbId for argument, becase the node saved the propperty
     public String getText(Node node)
     {
-        return node.getString(sm_textPropName);
+        String text = node.getString(sm_textPropName);
+        if (m_isDebuging) {
+            text += " D{" + getNodeDebugInfo(node) + "}";
+        }
+        return text;
     }
 
     public String getContextText(Object dbId)
     {
         Vertex vertex = m_mindDb.getVertex(dbId);
         String text = vertex.getProperty(sm_textPropName);
-        Vertex parent = m_mindDb.getParent(vertex).m_vertex;
-        String parentText = parent.getProperty(sm_textPropName);
-        return parentText + " -> " + text;
+        EdgeVertex toParent = m_mindDb.getParent(vertex);
+
+        if (toParent == null) {
+            return text;
+        } else {
+            Vertex parent = toParent.m_vertex;
+            String parentText = parent.getProperty(sm_textPropName);
+            return parentText + " -> " + text;
+        }
     }
 
     public void setText(Object dbId, String text)
@@ -641,12 +701,31 @@ public class MindModel {
         return node;
     }
 
-    public ArrayList<Object> getPinVertexDbIds()
-    {
-        ArrayList list = new ArrayList();
-        for (Vertex vertex : m_pinIndex.get(PIN_KEY_NAME, PIN_KEY_NAME))  {
-            list.add(vertex.getId());
+    public boolean isInFavorite(Object dbId) {
+        for (FavoriteInfo info: m_favoriteInfoes) {
+            if (info.m_dbId.equals(dbId)) {
+                return true;
+            }
         }
-        return list;
+        return false;
     }
+
+    public void addToFavorite(Object dbId) {
+        m_favoriteIndex.put(FAVORITE_KEY_NAME, FAVORITE_KEY_NAME, m_mindDb.getVertex(dbId));
+
+        assert(!isInFavorite(dbId));
+        m_favoriteInfoes.add(new FavoriteInfo(m_mindDb.getVertex(dbId)));
+    }
+
+    public void removeFromFavorite(Object dbId) {
+        m_favoriteIndex.remove(FAVORITE_KEY_NAME, FAVORITE_KEY_NAME, m_mindDb.getVertex(dbId));
+
+        for (FavoriteInfo info: m_favoriteInfoes) {
+            if (info.m_dbId.equals(dbId)) {
+                m_favoriteInfoes.remove(info);
+                break;
+            }
+        }
+    }
+
 }

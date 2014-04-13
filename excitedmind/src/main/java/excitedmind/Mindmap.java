@@ -82,15 +82,10 @@ public class Mindmap {
 		final String dbUrl = "local:" + dbPath.replace(File.separatorChar, '/');
         m_logger.info ("dbUrl = " + dbUrl);
 
-        //deleteDir(dbPath);
-
 		MindDB mindDb = new MindDB(dbUrl);
 
         mindDb.createFullTextVertexKeyIndex(MindModel.sm_textPropName);
-
-		//createTree (mindDb, null, "", 0);
 		mindDb = null;
-
 
         EventQueue.invokeLater(new Runnable() {
             @Override

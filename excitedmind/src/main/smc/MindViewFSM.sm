@@ -6,6 +6,9 @@
 %fsmclass MindViewFSM
 %import prefuse.visual.NodeItem
 %import java.awt.dnd.DragSource
+%import prefuse.util.ui.UILib
+%import prefuse.controls.Control
+%import java.awt.event.MouseEvent
 
 %start MindViewStateMap::Normal
 
@@ -65,13 +68,20 @@ Entry
         m_cursor.moveDown();
     }
 
-    itemPressed(nodeItem: NodeItem)
+    itemPressed(nodeItem: NodeItem, e: MouseEvent)
         Normal
         {
             m_cursor.setCursorNodeItem(nodeItem);
         }
 
-    itemClicked()
+    itemClicked(nodeItem: NodeItem, e: MouseEvent)
+        [ UILib.isButtonPressed(e, Control.MIDDLE_MOUSE_BUTTON) ]
+        Normal
+        {
+            toggleFoldNode(ctxt.getCursorSourceNode());
+        }
+
+    itemClicked(nodeItem: NodeItem, e: MouseEvent)
         Normal
         {
             toggleFoldNode(ctxt.getCursorSourceNode());

@@ -12,6 +12,9 @@ package excitedmind;
 
 import prefuse.visual.NodeItem;
 import java.awt.dnd.DragSource;
+import prefuse.util.ui.UILib;
+import prefuse.controls.Control;
+import java.awt.event.MouseEvent;
 
 public class MindViewFSM
     extends statemap.FSMContext
@@ -87,10 +90,10 @@ public class MindViewFSM
         return;
     }
 
-    public void itemClicked()
+    public void itemClicked(NodeItem nodeItem, MouseEvent e)
     {
         _transition = "itemClicked";
-        getState().itemClicked(this);
+        getState().itemClicked(this, nodeItem, e);
         _transition = "";
         return;
     }
@@ -127,10 +130,10 @@ public class MindViewFSM
         return;
     }
 
-    public void itemPressed(NodeItem nodeItem)
+    public void itemPressed(NodeItem nodeItem, MouseEvent e)
     {
         _transition = "itemPressed";
-        getState().itemPressed(this, nodeItem);
+        getState().itemPressed(this, nodeItem, e);
         _transition = "";
         return;
     }
@@ -293,7 +296,7 @@ public class MindViewFSM
             Default(context);
         }
 
-        protected void itemClicked(MindViewFSM context)
+        protected void itemClicked(MindViewFSM context, NodeItem nodeItem, MouseEvent e)
         {
             Default(context);
         }
@@ -318,7 +321,7 @@ public class MindViewFSM
             Default(context);
         }
 
-        protected void itemPressed(MindViewFSM context, NodeItem nodeItem)
+        protected void itemPressed(MindViewFSM context, NodeItem nodeItem, MouseEvent e)
         {
             Default(context);
         }
@@ -565,20 +568,39 @@ public class MindViewFSM
         }
 
         @Override
-        protected void itemClicked(MindViewFSM context)
+        protected void itemClicked(MindViewFSM context, NodeItem nodeItem, MouseEvent e)
         {
             MindView ctxt = context.getOwner();
 
-            (context.getState()).exit(context);
-            context.clearState();
-            try
+            if ( UILib.isButtonPressed(e, Control.MIDDLE_MOUSE_BUTTON) )
             {
-                ctxt.toggleFoldNode(ctxt.getCursorSourceNode());
+                (context.getState()).exit(context);
+                context.clearState();
+                try
+                {
+                    ctxt.toggleFoldNode(ctxt.getCursorSourceNode());
+                }
+                finally
+                {
+                    context.setState(MindViewStateMap.Normal);
+                    (context.getState()).entry(context);
+                }
+
             }
-            finally
+            else
             {
-                context.setState(MindViewStateMap.Normal);
-                (context.getState()).entry(context);
+                (context.getState()).exit(context);
+                context.clearState();
+                try
+                {
+                    ctxt.toggleFoldNode(ctxt.getCursorSourceNode());
+                }
+                finally
+                {
+                    context.setState(MindViewStateMap.Normal);
+                    (context.getState()).entry(context);
+                }
+
             }
 
             return;
@@ -633,7 +655,7 @@ public class MindViewFSM
         }
 
         @Override
-        protected void itemPressed(MindViewFSM context, NodeItem nodeItem)
+        protected void itemPressed(MindViewFSM context, NodeItem nodeItem, MouseEvent e)
         {
             MindView ctxt = context.getOwner();
 

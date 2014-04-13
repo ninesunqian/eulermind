@@ -66,6 +66,16 @@ public class MindController extends UndoManager {
         return (MindView)m_tabbedPane.getSelectedComponent();
     }
 
+    public Object getCurrentVertexId() {
+        MindView currentView = getCurrentView();
+        if (currentView == null) {
+            return null;
+        }
+
+        Node node = currentView.getCursorSourceNode();
+        return m_mindModel.getDBId(node);
+    }
+
     public void ascendRoot(Object oldRootDBId, Object newRootDBId, int pos)
     {
         MindView mindView = m_mindViews.get(oldRootDBId);
