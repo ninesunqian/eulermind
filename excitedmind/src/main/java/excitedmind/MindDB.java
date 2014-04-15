@@ -444,9 +444,13 @@ public class MindDB implements Graph {
         if (oldPos == newPos)
             return;
 
+        if (oldPos < newPos)
+            newPos--;
+
         ArrayList<Object> outEdgeArray = getEdgeIDsToChildren(parent, true);
         Object edgeId = outEdgeArray.remove(oldPos);
         outEdgeArray.add(newPos, edgeId);
+
         parent.setProperty(CHILD_EDGES_PROP_NAME, outEdgeArray);
     }
 

@@ -106,10 +106,10 @@ public class MindViewFSM
         return;
     }
 
-    public void itemDropped(NodeItem nodeItem, boolean add_ctrl)
+    public void itemDropped(NodeItem draggedNode, NodeItem droppedNode, RobustNodeItemController.HitPosition hitPosition, boolean add_ctrl)
     {
         _transition = "itemDropped";
-        getState().itemDropped(this, nodeItem, add_ctrl);
+        getState().itemDropped(this, draggedNode, droppedNode, hitPosition, add_ctrl);
         _transition = "";
         return;
     }
@@ -306,7 +306,7 @@ public class MindViewFSM
             Default(context);
         }
 
-        protected void itemDropped(MindViewFSM context, NodeItem nodeItem, boolean add_ctrl)
+        protected void itemDropped(MindViewFSM context, NodeItem draggedNode, NodeItem droppedNode, RobustNodeItemController.HitPosition hitPosition, boolean add_ctrl)
         {
             Default(context);
         }
@@ -1025,42 +1025,20 @@ public class MindViewFSM
         }
 
         @Override
-        protected void itemDropped(MindViewFSM context, NodeItem nodeItem, boolean add_ctrl)
+        protected void itemDropped(MindViewFSM context, NodeItem draggedNode, NodeItem droppedNode, RobustNodeItemController.HitPosition hitPosition, boolean add_ctrl)
         {
             MindView ctxt = context.getOwner();
 
-            if (add_ctrl == true)
+            (context.getState()).exit(context);
+            context.clearState();
+            try
             {
-                (context.getState()).exit(context);
-                context.clearState();
-                try
-                {
-                    ctxt.dragCursorToReferrer(ctxt.toSource(nodeItem));
-                }
-                finally
-                {
-                    context.setState(MindViewStateMap.Normal);
-                    (context.getState()).entry(context);
-                }
-
+                ctxt.dragNodeToReferrer(draggedNode, droppedNode, hitPosition, add_ctrl);
             }
-            else if (add_ctrl == false)
+            finally
             {
-                (context.getState()).exit(context);
-                context.clearState();
-                try
-                {
-                    ctxt.dragCursorToNewParent(ctxt.toSource(nodeItem));
-                }
-                finally
-                {
-                    context.setState(MindViewStateMap.Normal);
-                    (context.getState()).entry(context);
-                }
-
-            }            else
-            {
-                super.itemDropped(context, nodeItem, add_ctrl);
+                context.setState(MindViewStateMap.Normal);
+                (context.getState()).entry(context);
             }
 
             return;

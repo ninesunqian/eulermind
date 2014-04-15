@@ -187,18 +187,10 @@ Entry
 
 Dragging
 {
-    itemDropped(nodeItem: NodeItem, add_ctrl: boolean)
-        [add_ctrl == true]
+    itemDropped(draggedNode: NodeItem, droppedNode: NodeItem, hitPosition: RobustNodeItemController.HitPosition, add_ctrl: boolean)
         Normal
         {
-            dragCursorToReferrer(ctxt.toSource(nodeItem));
-        }
-
-    itemDropped(nodeItem: NodeItem, add_ctrl: boolean)
-        [add_ctrl == false]
-        Normal
-        {
-            dragCursorToNewParent(ctxt.toSource(nodeItem));
+            dragNodeToReferrer(draggedNode, droppedNode, hitPosition, add_ctrl);
         }
 
     cancel

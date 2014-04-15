@@ -8,6 +8,7 @@ import prefuse.visual.VisualItem;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.logging.Logger;
 
@@ -48,16 +49,20 @@ public abstract class RobustNodeItemController extends ControlAdapter {
         m_hitPosition = HitPosition.OUTSIDE;
     }
 
-    HitPosition getHitPosition(NodeItem node, double x, double y)
+    HitPosition getHitPosition(NodeItem node, Point point)
     {
+        Point absPoint = new Point();
+        m_display.getAbsoluteCoordinate(point, absPoint);
+
         Rectangle2D bounds = node.getBounds();
-        if (bounds.contains(x, y))
+
+        if (bounds.contains(absPoint.getX(), absPoint.getY()))
         {
-            if (x > bounds.getCenterX()) {
+            if (absPoint.getX() > bounds.getCenterX()) {
                 return HitPosition.RIGHT;
             }
 
-            if (y > bounds.getCenterY()) {
+            if (absPoint.getY() > bounds.getCenterY()) {
                 return HitPosition.BOTTOM;
 
             } else {
@@ -137,8 +142,6 @@ public abstract class RobustNodeItemController extends ControlAdapter {
             return;
         }
 
-        //m_logger.info("itemDragged : " + item.getString(MindModel.sm_textPropName));
-
         Point point = e.getPoint();
         if (point.distance(m_mousePressPoint) < 10) {
             return;
@@ -161,13 +164,14 @@ public abstract class RobustNodeItemController extends ControlAdapter {
         }
 
         if (curHitNode != null && curHitNode != fromNode) {
-            HitPosition hitPosition = getHitPosition(curHitNode, mousePoint.getX(), mousePoint.getY());
+
+            HitPosition hitPosition = getHitPosition(curHitNode, mousePoint);
 
             if (curHitNode != m_hitNode || hitPosition != m_hitPosition) {
                 m_hitNode = curHitNode;
                 m_hitPosition = hitPosition;
 
-                m_logger.info("itemHit : " + curHitNode.getString(MindModel.sm_textPropName));
+                m_logger.info("itemHit : " + curHitNode.getString(MindModel.sm_textPropName) + " - " + m_hitPosition.toString());
                 nodeItemHit(fromNode, curHitNode, hitPosition, m_ctrlDowned);
             }
         }
@@ -193,17 +197,18 @@ public abstract class RobustNodeItemController extends ControlAdapter {
         Point mousePoint = e.getPoint();
         NodeItem curHitNode = getHitNode(mousePoint);
 
-        if (curHitNode != null) {
-            HitPosition hitPosition = getHitPosition(curHitNode, mousePoint.getX(), mousePoint.getY());
-            nodeItemDropped(fromNode, curHitNode, hitPosition, releaseWithCtrl());
-            m_logger.info("itemDropped : " + curHitNode.getString(MindModel.sm_textPropName));
-        } else {
-            m_logger.info("itemDropped : null");
-            nodeItemDropped(fromNode, null, HitPosition.OUTSIDE, releaseWithCtrl());
+        if (curHitNode != fromNode) {
+            if (curHitNode != null) {
+                HitPosition hitPosition = getHitPosition(curHitNode, mousePoint);
+                nodeItemDropped(fromNode, curHitNode, hitPosition, releaseWithCtrl());
+                m_logger.info("itemDropped : " + curHitNode.getString(MindModel.sm_textPropName));
+            } else {
+                m_logger.info("itemDropped : null");
+                nodeItemDropped(fromNode, null, HitPosition.OUTSIDE, releaseWithCtrl());
+            }
         }
 
-        m_hitNode = null;
-        m_hitPosition = HitPosition.OUTSIDE;
+        clearHitNode();
     }
 
     //if hitNode == null, no dropped to a node

@@ -483,7 +483,6 @@ public class MindModel {
         assert(node.getGraph() == newParent.getGraph());
         assert(node.getParent() != null);
         return (! sameDBNode(newParent, node))
-                && (! sameDBNode(node.getParent(), newParent))
                 && (!isInDBSubTree(newParent, node));
     }
 
