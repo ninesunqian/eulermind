@@ -221,6 +221,8 @@ public abstract class RobustNodeItemController extends ControlAdapter {
             nodeItemKeyPressed((NodeItem)item, e);
         }
 
+        m_logger.info("ctrl pressed");
+
         if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
             m_ctrlDowned = true;
         }
@@ -234,6 +236,8 @@ public abstract class RobustNodeItemController extends ControlAdapter {
         if (item instanceof NodeItem) {
             nodeItemKeyReleased((NodeItem)item, e);
         }
+
+        m_logger.info("ctrl released");
 
         if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
             m_ctrlReleaseTime = System.currentTimeMillis();

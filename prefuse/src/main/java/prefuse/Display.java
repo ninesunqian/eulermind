@@ -1650,6 +1650,7 @@ public class Display extends JComponent {
 
         public void keyPressed(KeyEvent e) {
             synchronized ( m_vis ) {
+                s_logger.warning("key pressed :" + e.toString());
                 if ( activeItem != null ) {
                     if ( validityCheck() )
                         fireItemKeyPressed(activeItem, e);
