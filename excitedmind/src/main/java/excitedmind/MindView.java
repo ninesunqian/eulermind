@@ -1,5 +1,6 @@
 package excitedmind;
 
+import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragSource;
 import java.awt.event.*;
 
@@ -32,6 +33,7 @@ import statemap.State;
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
 public class MindView extends Display {
+    DragGestureListener
 
     final Logger m_logger = Logger.getLogger(this.getClass().getName());
     final String m_treeGroupName = "tree";

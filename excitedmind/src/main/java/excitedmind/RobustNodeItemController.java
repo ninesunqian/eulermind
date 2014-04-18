@@ -116,11 +116,11 @@ public abstract class RobustNodeItemController extends ControlAdapter {
 
     }
 
-    public void nodeItemHit(NodeItem item, NodeItem hitNode, HitPosition hitPosition, boolean m_ctrlDowned) {
+    public void nodeItemHit(NodeItem item, NodeItem hitNode, HitPosition hitPosition, boolean ctrlDowned) {
 
     }
 
-    public void nodeItemMissed(NodeItem item, NodeItem hitNode, boolean m_ctrlDowned) {
+    public void nodeItemMissed(NodeItem item, NodeItem hitNode, boolean ctrlDowned) {
 
     }
 

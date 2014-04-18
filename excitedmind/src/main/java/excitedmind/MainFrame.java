@@ -17,6 +17,7 @@ public class MainFrame extends JFrame {
         setLocationByPlatform(true);
         addMenu();
 
+        /*
         Color BACKGROUND = Color.WHITE;
         Color FOREGROUND = Color.BLACK;
 
@@ -26,7 +27,15 @@ public class MainFrame extends JFrame {
 
 
         m_mindModel = new MindModel(dbUrl);
+
+        InputMap map;
+        map = (InputMap) UIManager.get("TabbedPane.ancestorInputMap");
+        KeyStroke keyStrokeCtrlUp = KeyStroke.getKeyStroke(KeyEvent.VK_UP, InputEvent.CTRL_DOWN_MASK);
+        map.remove(keyStrokeCtrlUp);
+
         final JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.setFocusable(false);
+
         m_mindController = new MindController(m_mindModel, tabbedPane);
 
         add(new MindToolBar(m_mindController), BorderLayout.NORTH);
@@ -38,21 +47,65 @@ public class MainFrame extends JFrame {
         tabbedPane.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
                 Component comp = tabbedPane.getSelectedComponent();
-                comp.requestFocus();
+                comp.requestFocusInWindow();
             }
         });
 
-        tabbedPane.getComponentAt(0).requestFocus();
         //switch tab0 using ALT_1
         tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
 
         add(tabbedPane, BorderLayout.CENTER);
+
+        Component textArea = new TextArea();
+        textArea.addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent keyEvent)
+            {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void keyPressed(KeyEvent keyEvent)
+            {
+                m_logger.info("text area key " + keyEvent.toString());
+            }
+
+            @Override
+            public void keyReleased(KeyEvent keyEvent)
+            {
+                m_logger.info("text area key released " + keyEvent.toString());
+            }
+        });
+        tabbedPane.addTab("text", textArea);
+
+        Component comp = tabbedPane.getSelectedComponent();
+        comp.requestFocusInWindow();
 
         //panel.add(box, BorderLayout.SOUTH);
 
         //MindIcons mindIcons = new MindIcons(mindController);
         //add(mindIcons.getToolbar(), BorderLayout.WEST);
         //add(panel);
+        */
+        addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent keyEvent)
+            {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void keyPressed(KeyEvent keyEvent)
+            {
+                m_logger.info("MainFrame key : " + keyEvent.toString() + String.format("  %d", keyEvent.getModifiers()));
+            }
+
+            @Override
+            public void keyReleased(KeyEvent keyEvent)
+            {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+        });
 
         addWindowListener(new WindowAdapter() {
             @Override
