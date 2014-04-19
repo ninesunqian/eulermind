@@ -82,20 +82,15 @@ public class Mindmap {
 		final String dbUrl = "local:" + dbPath.replace(File.separatorChar, '/');
         m_logger.info ("dbUrl = " + dbUrl);
 
-        deleteDir(dbPath);
-
 		MindDB mindDb = new MindDB(dbUrl);
 
         mindDb.createFullTextVertexKeyIndex(MindModel.sm_textPropName);
-
-		createTree (mindDb, null, "", 0);
 		mindDb = null;
-
 
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                MainFrame frame = new MainFrame(dbUrl, m_rootVertex.getId());
+                MainFrame frame = new MainFrame(dbUrl);
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame.pack();
                 frame.setVisible(true);
@@ -105,7 +100,6 @@ public class Mindmap {
 	}
 	
 	static private Vertex m_rootVertex;
-    static private Vertex m_rootVertex1;
 
 	static private void createTree (MindDB mindDb, Vertex parent, String parentText, int level)
 	{
@@ -114,7 +108,7 @@ public class Mindmap {
 			return;
 			
 		} else if (level == 0) {
-			Vertex root = mindDb.addRoot();
+			Vertex root = mindDb.getVertex(mindDb.getRootId());
 			root.setProperty(MindModel.sm_textPropName, "a");
 			m_rootVertex = root;
 			
@@ -125,9 +119,6 @@ public class Mindmap {
 			EdgeVertex edgeVertex = mindDb.addChild(parent, 0);
 			edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, parentText + "a");
 			createTree (mindDb, edgeVertex.m_vertex, parentText + "a", level + 1);
-            if (level == 1) {
-                m_rootVertex1 = edgeVertex.m_vertex;
-            }
 
 			edgeVertex = mindDb.addChild(parent, 1);
 			edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, parentText + "b");

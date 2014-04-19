@@ -12,6 +12,9 @@ package excitedmind;
 
 import prefuse.visual.NodeItem;
 import java.awt.dnd.DragSource;
+import prefuse.util.ui.UILib;
+import prefuse.controls.Control;
+import java.awt.event.MouseEvent;
 
 public class MindViewFSM
     extends statemap.FSMContext
@@ -87,10 +90,10 @@ public class MindViewFSM
         return;
     }
 
-    public void itemClicked()
+    public void itemClicked(NodeItem nodeItem, MouseEvent e)
     {
         _transition = "itemClicked";
-        getState().itemClicked(this);
+        getState().itemClicked(this, nodeItem, e);
         _transition = "";
         return;
     }
@@ -103,10 +106,10 @@ public class MindViewFSM
         return;
     }
 
-    public void itemDropped(NodeItem nodeItem, boolean add_ctrl)
+    public void itemDropped(NodeItem draggedNode, NodeItem droppedNode, RobustNodeItemController.HitPosition hitPosition, boolean add_ctrl)
     {
         _transition = "itemDropped";
-        getState().itemDropped(this, nodeItem, add_ctrl);
+        getState().itemDropped(this, draggedNode, droppedNode, hitPosition, add_ctrl);
         _transition = "";
         return;
     }
@@ -127,10 +130,10 @@ public class MindViewFSM
         return;
     }
 
-    public void itemPressed(NodeItem nodeItem)
+    public void itemPressed(NodeItem nodeItem, MouseEvent e)
     {
         _transition = "itemPressed";
-        getState().itemPressed(this, nodeItem);
+        getState().itemPressed(this, nodeItem, e);
         _transition = "";
         return;
     }
@@ -293,7 +296,7 @@ public class MindViewFSM
             Default(context);
         }
 
-        protected void itemClicked(MindViewFSM context)
+        protected void itemClicked(MindViewFSM context, NodeItem nodeItem, MouseEvent e)
         {
             Default(context);
         }
@@ -303,7 +306,7 @@ public class MindViewFSM
             Default(context);
         }
 
-        protected void itemDropped(MindViewFSM context, NodeItem nodeItem, boolean add_ctrl)
+        protected void itemDropped(MindViewFSM context, NodeItem draggedNode, NodeItem droppedNode, RobustNodeItemController.HitPosition hitPosition, boolean add_ctrl)
         {
             Default(context);
         }
@@ -318,7 +321,7 @@ public class MindViewFSM
             Default(context);
         }
 
-        protected void itemPressed(MindViewFSM context, NodeItem nodeItem)
+        protected void itemPressed(MindViewFSM context, NodeItem nodeItem, MouseEvent e)
         {
             Default(context);
         }
@@ -565,20 +568,39 @@ public class MindViewFSM
         }
 
         @Override
-        protected void itemClicked(MindViewFSM context)
+        protected void itemClicked(MindViewFSM context, NodeItem nodeItem, MouseEvent e)
         {
             MindView ctxt = context.getOwner();
 
-            (context.getState()).exit(context);
-            context.clearState();
-            try
+            if ( UILib.isButtonPressed(e, Control.MIDDLE_MOUSE_BUTTON) )
             {
-                ctxt.toggleFoldNode(ctxt.getCursorSourceNode());
+                (context.getState()).exit(context);
+                context.clearState();
+                try
+                {
+                    ctxt.toggleFoldNode(ctxt.getCursorSourceNode());
+                }
+                finally
+                {
+                    context.setState(MindViewStateMap.Normal);
+                    (context.getState()).entry(context);
+                }
+
             }
-            finally
+            else
             {
-                context.setState(MindViewStateMap.Normal);
-                (context.getState()).entry(context);
+                (context.getState()).exit(context);
+                context.clearState();
+                try
+                {
+                    ctxt.toggleFoldNode(ctxt.getCursorSourceNode());
+                }
+                finally
+                {
+                    context.setState(MindViewStateMap.Normal);
+                    (context.getState()).entry(context);
+                }
+
             }
 
             return;
@@ -633,7 +655,7 @@ public class MindViewFSM
         }
 
         @Override
-        protected void itemPressed(MindViewFSM context, NodeItem nodeItem)
+        protected void itemPressed(MindViewFSM context, NodeItem nodeItem, MouseEvent e)
         {
             MindView ctxt = context.getOwner();
 
@@ -1003,42 +1025,20 @@ public class MindViewFSM
         }
 
         @Override
-        protected void itemDropped(MindViewFSM context, NodeItem nodeItem, boolean add_ctrl)
+        protected void itemDropped(MindViewFSM context, NodeItem draggedNode, NodeItem droppedNode, RobustNodeItemController.HitPosition hitPosition, boolean add_ctrl)
         {
             MindView ctxt = context.getOwner();
 
-            if (add_ctrl == true)
+            (context.getState()).exit(context);
+            context.clearState();
+            try
             {
-                (context.getState()).exit(context);
-                context.clearState();
-                try
-                {
-                    ctxt.dragCursorToReferrer(ctxt.toSource(nodeItem));
-                }
-                finally
-                {
-                    context.setState(MindViewStateMap.Normal);
-                    (context.getState()).entry(context);
-                }
-
+                ctxt.dragNodeToReferrer(draggedNode, droppedNode, hitPosition, add_ctrl);
             }
-            else if (add_ctrl == false)
+            finally
             {
-                (context.getState()).exit(context);
-                context.clearState();
-                try
-                {
-                    ctxt.dragCursorToNewParent(ctxt.toSource(nodeItem));
-                }
-                finally
-                {
-                    context.setState(MindViewStateMap.Normal);
-                    (context.getState()).entry(context);
-                }
-
-            }            else
-            {
-                super.itemDropped(context, nodeItem, add_ctrl);
+                context.setState(MindViewStateMap.Normal);
+                (context.getState()).entry(context);
             }
 
             return;

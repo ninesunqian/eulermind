@@ -1,26 +1,22 @@
 package excitedmind;
 
+import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragSource;
 import java.awt.event.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
 import java.util.Stack;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.*;
-import javax.swing.event.MouseInputAdapter;
 
 import excitedmind.operator.*;
 import prefuse.Display;
 import prefuse.Visualization;
 
-import prefuse.controls.ControlAdapter;
-import prefuse.controls.PanControl;
-import prefuse.controls.WheelZoomControl;
-import prefuse.controls.ZoomControl;
-import prefuse.controls.ZoomToFitControl;
+import prefuse.controls.*;
 import prefuse.data.*;
 import prefuse.util.PrefuseLib;
 import prefuse.visual.EdgeItem;
@@ -37,6 +33,7 @@ import statemap.State;
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
 public class MindView extends Display {
+    DragGestureListener
 
     final Logger m_logger = Logger.getLogger(this.getClass().getName());
     final String m_treeGroupName = "tree";
@@ -93,13 +90,15 @@ public class MindView extends Display {
 
 	public MindView(MindModel mindModel, MindController undoManager, Object rootId) {
 		super(new Visualization());
+
+        m_logger.setLevel(Level.OFF);
 		setSize(700, 600);
 		setHighQuality(true);
 
         m_mindModel = mindModel;
         m_mindController = undoManager;
 
-        m_tree = mindModel.findOrPutTree(rootId, 3);
+        m_tree = mindModel.findOrPutTree(rootId, 1);
         VisualTree visualTree = (VisualTree)m_vis.add(m_treeGroupName, m_tree);
 
         m_cursor = new TreeCursor(visualTree);
@@ -164,15 +163,43 @@ public class MindView extends Display {
     ControlAdapter m_panControl;
     MouseControl m_mouseControl;
 
-    class MouseControl extends RobustNodeItemController {
+    private Object[] getPossibleEdgeSource(Node droppedNode, RobustNodeItemController.HitPosition hitPosition)
+    {
+        Object ret[] = new Object[2];
 
-        public NodeItem m_hittedNode;
-        public HittedPosition m_hittedPosition;
+        if (droppedNode == m_tree.getRoot()) {
+            ret[0] = droppedNode;
+            ret[1] = droppedNode.getChildCount();
+            return ret;
+        }
+
+        switch (hitPosition) {
+            case TOP:
+                ret[0] = droppedNode.getParent();
+                ret[1] = droppedNode.getIndex();
+                break;
+            case BOTTOM:
+                ret[0] = droppedNode.getParent();
+                ret[1] = droppedNode.getIndex() + 1;
+                break;
+            case RIGHT:
+                ret[0] = droppedNode;
+                ret[1] = droppedNode.getChildCount();
+                break;
+            default:
+                ret[0] = null;
+                ret[1] = -1;
+                break;
+        }
+
+        return ret;
+    }
+
+
+    class MouseControl extends RobustNodeItemController {
 
         MouseControl() {
             super(MindView.this);
-            m_hittedNode = null;
-            m_hittedPosition = HittedPosition.OUTSIDE;
         }
 
         @Override
@@ -187,12 +214,12 @@ public class MindView extends Display {
 
         @Override
         public void nodeItemPressed(NodeItem item, MouseEvent e) {
-            m_fsm.itemPressed(item);
+            m_fsm.itemPressed(item, e);
         }
 
         @Override
         public void nodeItemClicked(NodeItem item, MouseEvent e) {
-            m_fsm.itemClicked();
+            m_fsm.itemClicked(item, e);
         }
 
         @Override
@@ -203,24 +230,26 @@ public class MindView extends Display {
             }
         }
 
-        private boolean hittedOtherNode(NodeItem sourceNode, NodeItem hittedNode) {
-            return hittedNode == null || hittedNode == sourceNode;
-        }
-
-        private boolean canDrop(NodeItem sourceNode, NodeItem hittedNode, boolean ctrlDowned)
+        private boolean canDrop(NodeItem fromNodeItem, NodeItem hitNodeItem, HitPosition hitPosition, boolean ctrlDowned)
         {
-            sourceNode.getSourceData();
+            Node fromNode = toSource(fromNodeItem);
+            Node hitNode = toSource(hitNodeItem);
+            Object possibleEdgeSource[] = getPossibleEdgeSource(hitNode, hitPosition);
+
+            if (possibleEdgeSource[0] == null) {
+                return false;
+            }
+
             if (ctrlDowned) {
-                return m_mindModel.canAddReference(toSource(hittedNode), toSource(sourceNode));
+                return m_mindModel.canAddReference((Node)possibleEdgeSource[0], fromNode);
             } else {
-                return m_mindModel.canResetParent(toSource(sourceNode), toSource(hittedNode));
+                return m_mindModel.canResetParent(fromNode, (Node)possibleEdgeSource[0]);
             }
         }
 
-        private void setCursorShape(NodeItem sourceNode, NodeItem hittedNode, boolean ctrlDowned)
+        private void setCursorShape(NodeItem sourceNode, NodeItem hitNode, HitPosition hitPosition, boolean ctrlDowned)
         {
-            boolean cursorEnabled = (!hittedOtherNode(sourceNode, hittedNode)) ||
-                    canDrop(sourceNode, hittedNode, ctrlDowned);
+            boolean cursorEnabled = (hitNode == null) || canDrop(sourceNode, hitNode, hitPosition, ctrlDowned);
 
             if (ctrlDowned) {
                 setCursor(cursorEnabled ? DragSource.DefaultLinkDrop : DragSource.DefaultLinkNoDrop);
@@ -231,41 +260,31 @@ public class MindView extends Display {
 
         //if dropNode or dropPostion changed, give the event
         @Override
-        public void nodeItemHitted(NodeItem item, NodeItem hittedNode,
-                                   RobustNodeItemController.HittedPosition hittedPosition, boolean ctrlDowned) {
+        public void nodeItemHit(NodeItem item, NodeItem hitNode,
+                                   RobustNodeItemController.HitPosition hitPosition, boolean ctrlDowned) {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
-                m_hittedNode = hittedNode;
-                m_hittedPosition = hittedPosition;
-                setCursorShape(item, hittedNode, ctrlDowned);
+                setCursorShape(item, hitNode, hitPosition, ctrlDowned);
                 renderTree();
-                System.out.print((ArrayList)hittedNode.get(MindModel.sm_inheritPathPropName));
             }
-        }
-
-        private void clearHittedNode()
-        {
-            m_hittedNode = null;
-            m_hittedPosition = HittedPosition.OUTSIDE;
         }
 
         @Override
         public void nodeItemMissed(NodeItem item, NodeItem dropNode, boolean ctrlDowned) {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
-                setCursorShape(item, null, ctrlDowned);
+                setCursorShape(item, null, HitPosition.OUTSIDE, ctrlDowned);
                 renderTree();
             }
-            clearHittedNode();
         }
 
         @Override
-        public void nodeItemDropped(NodeItem item, NodeItem dropNode, RobustNodeItemController.HittedPosition hittedPosition, boolean ctrlDowned) {
+        public void nodeItemDropped(NodeItem draggedNode, NodeItem droppedNode, RobustNodeItemController.HitPosition hitPosition, boolean ctrlDowned) {
             m_logger.info("nodeItemDropped");
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
 
-                if (hittedOtherNode(item, dropNode)) {
+                if (droppedNode != null) {
                     m_logger.info(String.format("--- ctrlDown %s, release time %dms", ctrlDowned ?"true":"false", System.currentTimeMillis() - m_ctrlReleaseTime));
-                    if (canDrop(item, dropNode, ctrlDowned)) {
-                        m_fsm.itemDropped(dropNode, ctrlDowned);
+                    if (canDrop(draggedNode, droppedNode, hitPosition, ctrlDowned)) {
+                        m_fsm.itemDropped(draggedNode, droppedNode, hitPosition, ctrlDowned);
                     } else {
                         m_fsm.cancel();
                     }
@@ -273,8 +292,6 @@ public class MindView extends Display {
                     m_fsm.cancel();
                 }
             }
-
-            clearHittedNode();
         }
 
         @Override
@@ -282,7 +299,7 @@ public class MindView extends Display {
         {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
                 if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
-                    setCursorShape(item, m_hittedNode, true);
+                    setCursorShape(item, m_hitNode, m_hitPosition, true);
                 }
             }
         }
@@ -292,14 +309,20 @@ public class MindView extends Display {
         {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
                 if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
-                    setCursorShape(item, m_hittedNode, false);
+                    setCursorShape(item, m_hitNode, m_hitPosition, false);
                 }
             }
         }
     };
 
+    public NodeItem getDragHitNode()
+    {
+        return m_mouseControl.m_hitNode;
+    }
+
+
 	private void setMouseControlListener() {
-		m_zoomToFitContol = new ZoomToFitControl();
+		m_zoomToFitContol = new ZoomToFitControl(Control.MIDDLE_MOUSE_BUTTON);
 		m_zoomControl = new ZoomControl();
 		m_wheelZoomControl = new WheelZoomControl();
 		m_panControl = new PanControl();
@@ -682,8 +705,6 @@ public class MindView extends Display {
 
         MindOperator operator;
         if (m_mindModel.isRefEdge(edge)) {
-            Object referentDBId = m_mindModel.getDBId(cursorNode);
-            int pos = cursorNode.getIndex();
             operator = new RemovingReference(m_mindModel, cursorNode);
         }
         else {
@@ -693,40 +714,46 @@ public class MindView extends Display {
         m_mindController.addEdit(operator);
     }
 
-    public void dragCursorToReferrer(Node referrer)
+
+    public void dragNodeToReferrer(Node draggedNode, Node droppedNode,
+                                   RobustNodeItemController.HitPosition hitPosition,
+                                   boolean isCtrlDown)
     {
-        Node cursorNode = getCursorSourceNode();
-        assert(m_mindModel.canAddReference(cursorNode, referrer));
+        Object possibleEdgeSource[] = getPossibleEdgeSource(droppedNode, hitPosition);
 
-        AddingReference operator = new AddingReference(m_mindModel, cursorNode, referrer, referrer.getChildCount());
-        m_mindController.addEdit(operator);
-    }
+        if (isCtrlDown) {
+            Node referrer = (Node)possibleEdgeSource[0];
+            int position = (Integer)possibleEdgeSource[1];
 
-    public void dragCursorToNewParent(Node newParent)
-    {
-        Node cursorNode = getCursorSourceNode();
+            assert(m_mindModel.canAddReference(referrer, draggedNode));
 
-        assert(m_mindModel.canResetParent(cursorNode, newParent));
+            AddingReference operator = new AddingReference(m_mindModel, draggedNode, referrer, position);
+            m_mindController.addEdit(operator);
+        } else {
+            Node newParent = (Node)possibleEdgeSource[0];
+            int position = (Integer)possibleEdgeSource[1];
 
-        if (cursorNode == m_tree.getRoot()) {
-            return;
+            assert(m_mindModel.canResetParent(draggedNode, newParent));
+
+            if (draggedNode == m_tree.getRoot()) {
+                return;
+            }
+
+            MindDB.InheritDirection inheritDirection = m_mindModel.getInheritDirection(draggedNode, newParent);
+            if (inheritDirection == MindDB.InheritDirection.LINEAL_DESCENDANT) {
+                return;
+            }
+
+            MovingChild operator = new MovingChild(m_mindModel, draggedNode, newParent, position);
+            m_mindController.addEdit(operator);
+
+            /*
+            Node oldParent = draggedNode.getParent();
+            if (m_mindModel.sameDBNode(newParent, oldParent)) {
+                return;
+            }
+            */
         }
-
-        Node oldParent = cursorNode.getParent();
-
-        if (m_mindModel.sameDBNode(newParent, oldParent)) {
-            return;
-        }
-
-        MindDB.InheritDirection inheritDirection = m_mindModel.getInheritDirection(cursorNode, newParent);
-        if (inheritDirection == MindDB.InheritDirection.LINEAL_DESCENDANT) {
-            return;
-        }
-
-        int newPos = newParent.getChildCount();
-
-        MovingChild operator = new MovingChild(m_mindModel, cursorNode, newParent, newPos);
-        m_mindController.addEdit(operator);
     }
 
     public void setCursorProperty(String key, Object value)

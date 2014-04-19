@@ -3,7 +3,10 @@ package excitedmind;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.RectangularShape;
+import java.lang.management.ManagementFactory;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import prefuse.Constants;
 import prefuse.Visualization;
@@ -50,7 +53,10 @@ public class MindTreeRenderEngine {
     private int m_shadowBackColor = ColorLib.rgb(240, 240, 240);
     private int m_normalBackColor = ColorLib.rgb(255, 255, 255);
 
+    boolean m_isDebuging;
+
 	public MindTreeRenderEngine(MindView mindView, String treeGroupName) {
+        m_logger.setLevel(Level.OFF);
 		m_mindView = mindView;
 		m_vis = m_mindView.getVisualization();
 		
@@ -76,6 +82,15 @@ public class MindTreeRenderEngine {
         m_vis.alwaysRunAfter(sm_layoutAction, "repaint");
         m_vis.alwaysRunAfter(sm_itemStyleActions, "repaint");
         m_vis.alwaysRunAfter(sm_itemPositionActions, "repaint");
+
+
+        m_isDebuging = false;
+        Pattern debugPattern = Pattern.compile("-Xdebubg|jdwp");
+        for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
+            if (debugPattern.matcher(arg).find()) {
+                m_isDebuging = true;
+            }
+        }
 	}
 	
 	public void run (final  Runnable runeAfterRePaint)
@@ -269,12 +284,11 @@ public class MindTreeRenderEngine {
         }
 
         protected String getText(VisualItem item) {
+            /*
             String s = item.getString(MindModel.sm_textPropName);
-            Object dbId = item.get(MindModel.sm_dbIdColumnName);
-            if (dbId != null) {
-                s += dbId.toString();
-            }
             return  (s==null || s.length() < 2 )? " " + s + " ": s;
+            */
+            return m_mindView.m_mindModel.getText((NodeItem)item);
         }
 
         protected String getImageLocation(VisualItem item) {
@@ -310,8 +324,7 @@ public class MindTreeRenderEngine {
         public void render(Graphics2D g, VisualItem item) {
             super.render(g, item);
 
-            if (item != m_mindView.toVisual(m_mindView.getCursorSourceNode())
-                    && item == m_mindView.m_mouseControl.m_hittedNode) {
+            if (item == m_mindView.getDragHitNode()) {
                 RectangularShape shape = (RectangularShape)getShape(item);
 
                 float x = (float)shape.getX();
@@ -324,7 +337,7 @@ public class MindTreeRenderEngine {
                 float colorEndX = x + width;
                 float colorEndY = y + width;
 
-                switch (m_mindView.m_mouseControl.m_hittedPosition){
+                switch (m_mindView.m_mouseControl.m_hitPosition){
                     case TOP:
                         m_logger.info("TOP gradient");
                         height /= 2;

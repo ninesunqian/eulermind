@@ -19,7 +19,7 @@ public class AddingReference extends MindOperator {
     int m_pos;
     Stack<Integer> m_referrerNodePath;
 
-    //formerCursor is referrer: using add referent node by edit prompter
+    //formerCursor is referent: using for drag referent node to referrer node by mouse
     public AddingReference(MindModel mindModel, Node formerCursor, Node referrerNode, int pos) {
         super(mindModel, formerCursor);
         m_referrerDBId = m_mindModel.getDBId(referrerNode);
@@ -28,7 +28,7 @@ public class AddingReference extends MindOperator {
         m_referrerNodePath = m_mindModel.getNodePath(referrerNode);
     }
 
-    //formerCursor is referrer: using for drag referent node to referrer node by mouse
+    //formerCursor is referrer: using add referent node by edit prompter
     public AddingReference(MindModel mindModel, Node formerCursor, Object referentDBId, int pos) {
         super(mindModel, formerCursor);
         m_referrerDBId = m_mindModel.getDBId(formerCursor);

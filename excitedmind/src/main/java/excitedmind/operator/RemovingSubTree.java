@@ -7,18 +7,19 @@ import prefuse.data.Tree;
 
 public class RemovingSubTree extends MindOperator {
     public Object m_trashDBId;
-    public int m_pos;
+    public int m_siblingPos;
 
     public RemovingSubTree(MindModel mindModel, Node formerCursor)
     {
         super(mindModel, formerCursor);
-        m_pos = formerCursor.getIndex();
+        m_siblingPos = formerCursor.getIndex();
+        m_trashDBId = mindModel.getDBId(formerCursor);
     }
 
     public void does()
     {
         Tree tree = m_mindModel.findTree(m_rootDBId);
-        Node node = tree.getRoot();
+        Node node = m_mindModel.getNodeByPath(tree, m_formerCursorPath);
 
         //TODO: move to mindview
         /*
@@ -35,7 +36,7 @@ public class RemovingSubTree extends MindOperator {
         assert(newCursor.isValid());
 
         //using node path, compute the removed node in highest level;
-        m_mindModel.trashNode(m_mindModel.getDBId(topParent), m_pos);
+        m_mindModel.trashNode(m_mindModel.getDBId(topParent), m_siblingPos);
 
         m_laterCursorPath = m_mindModel.getNodePath(newCursor);
     }
@@ -77,11 +78,12 @@ public class RemovingSubTree extends MindOperator {
         Node topNode = node;
         Node root = tree.getRoot();
 
-        for (Node n=node.getParent(); n!=root; n=n.getParent())
+        while (node != root)
         {
-            if (m_mindModel.sameDBNode(n, node)) {
-                topNode = n;
+            if (m_mindModel.sameDBNode(node, node)) {
+                topNode = node;
             }
+            node = node.getParent();
         }
 
         return topNode;
