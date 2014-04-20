@@ -73,7 +73,7 @@ public class MindToolBar extends JToolBar {
         );
 
         /*FIXME
-        m_mindController.addExternalMouseController(new RobustNodeItemController() {
+        m_mindController.addExternalMouseController(new NodeDndControl() {
             @Override
             public void nodeItemEntered(NodeItem item, MouseEvent e) {
                 super.nodeItemEntered(item, e);    //To change body of overridden methods use File | Settings | File Templates.

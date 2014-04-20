@@ -106,10 +106,10 @@ public class MindViewFSM
         return;
     }
 
-    public void itemDropped(NodeItem draggedNode, NodeItem droppedNode, RobustNodeItemController.HitPosition hitPosition, boolean add_ctrl)
+    public void itemDropped(NodeItem draggedNode, NodeItem droppedNode, NodeDndControl.HitPosition hitPosition, NodeDndControl.DragAction dragAction)
     {
         _transition = "itemDropped";
-        getState().itemDropped(this, draggedNode, droppedNode, hitPosition, add_ctrl);
+        getState().itemDropped(this, draggedNode, droppedNode, hitPosition, dragAction);
         _transition = "";
         return;
     }
@@ -306,7 +306,7 @@ public class MindViewFSM
             Default(context);
         }
 
-        protected void itemDropped(MindViewFSM context, NodeItem draggedNode, NodeItem droppedNode, RobustNodeItemController.HitPosition hitPosition, boolean add_ctrl)
+        protected void itemDropped(MindViewFSM context, NodeItem draggedNode, NodeItem droppedNode, NodeDndControl.HitPosition hitPosition, NodeDndControl.DragAction dragAction)
         {
             Default(context);
         }
@@ -1025,7 +1025,7 @@ public class MindViewFSM
         }
 
         @Override
-        protected void itemDropped(MindViewFSM context, NodeItem draggedNode, NodeItem droppedNode, RobustNodeItemController.HitPosition hitPosition, boolean add_ctrl)
+        protected void itemDropped(MindViewFSM context, NodeItem draggedNode, NodeItem droppedNode, NodeDndControl.HitPosition hitPosition, NodeDndControl.DragAction dragAction)
         {
             MindView ctxt = context.getOwner();
 
@@ -1033,7 +1033,7 @@ public class MindViewFSM
             context.clearState();
             try
             {
-                ctxt.dragNodeToReferrer(draggedNode, droppedNode, hitPosition, add_ctrl);
+                ctxt.dragAndDropNode(draggedNode, droppedNode, hitPosition, dragAction);
             }
             finally
             {

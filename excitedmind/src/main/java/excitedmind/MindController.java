@@ -8,7 +8,6 @@ import javax.swing.undo.UndoManager;
 import javax.swing.undo.UndoableEdit;
 import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.Stack;
 
 /**
  * Created with IntelliJ IDEA.
@@ -23,8 +22,8 @@ public class MindController extends UndoManager {
     MindModel m_mindModel;
     JTabbedPane m_tabbedPane;
 
-    ArrayList<RobustNodeItemController> m_externalMouseContollers =
-            new ArrayList<RobustNodeItemController>();
+    ArrayList<NodeDndControl> m_externalMouseContollers =
+            new ArrayList<NodeDndControl>();
 
     MindController(MindModel mindModel, JTabbedPane tabbedPane) {
         super();
@@ -32,7 +31,7 @@ public class MindController extends UndoManager {
         m_tabbedPane = tabbedPane;
     }
 
-    void addExternalMouseController(RobustNodeItemController robustNodeItemController)
+    void addExternalMouseController(NodeDndControl robustNodeItemController)
     {
         if (m_externalMouseContollers.contains(robustNodeItemController)) {
             return;
@@ -55,7 +54,7 @@ public class MindController extends UndoManager {
         Node root = mindView.m_tree.getRoot();
         m_tabbedPane.addTab(m_mindModel.getText(root), mindView);
 
-        for(RobustNodeItemController controller : m_externalMouseContollers) {
+        for(NodeDndControl controller : m_externalMouseContollers) {
             mindView.addControlListener(controller);
         }
 

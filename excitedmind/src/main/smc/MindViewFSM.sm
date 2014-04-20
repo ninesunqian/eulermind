@@ -187,10 +187,10 @@ Entry
 
 Dragging
 {
-    itemDropped(draggedNode: NodeItem, droppedNode: NodeItem, hitPosition: RobustNodeItemController.HitPosition, add_ctrl: boolean)
+    itemDropped(draggedNode: NodeItem, droppedNode: NodeItem, hitPosition: NodeDndControl.HitPosition, dragAction: NodeDndControl.DragAction)
         Normal
         {
-            dragNodeToReferrer(draggedNode, droppedNode, hitPosition, add_ctrl);
+            dragAndDropNode(draggedNode, droppedNode, hitPosition, dragAction);
         }
 
     cancel

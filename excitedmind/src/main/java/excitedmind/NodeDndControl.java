@@ -8,7 +8,6 @@ import prefuse.visual.VisualItem;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.logging.Logger;
 
@@ -19,7 +18,7 @@ import java.util.logging.Logger;
  * Time: 下午6:52
  * To change this template use File | Settings | File Templates.
  */
-public abstract class RobustNodeItemController extends ControlAdapter {
+public abstract class NodeDndControl extends ControlAdapter {
 
     Logger m_logger = Logger.getLogger(this.getClass().getName());
 
@@ -27,17 +26,20 @@ public abstract class RobustNodeItemController extends ControlAdapter {
 
     Display m_display;
 
-    boolean m_ctrlDowned;
-    long m_ctrlReleaseTime;
+    boolean m_dragging;
 
     NodeItem m_hitNode;
     HitPosition m_hitPosition;
 
     Point m_mousePressPoint;
 
-    RobustNodeItemController(Display display) {
-        m_ctrlReleaseTime = 0;
-        m_ctrlDowned = false;
+    enum DragAction {
+        MOVE,
+        LINK,
+    };
+    DragAction m_dragAction;
+
+    NodeDndControl(Display display) {
         m_display = display;
         m_hitNode = null;
         m_hitPosition = HitPosition.OUTSIDE;
@@ -116,15 +118,23 @@ public abstract class RobustNodeItemController extends ControlAdapter {
 
     }
 
-    public void nodeItemHit(NodeItem item, NodeItem hitNode, HitPosition hitPosition, boolean ctrlDowned) {
+    public void dragHit(NodeItem draggedNode, NodeItem hitNode, HitPosition hitPosition, DragAction dragAction) {
 
     }
 
-    public void nodeItemMissed(NodeItem item, NodeItem hitNode, boolean ctrlDowned) {
+    public void dragMiss(NodeItem draggedNode, NodeItem hitNode, DragAction dragAction) {
 
     }
 
-    public void nodeItemDragged(NodeItem item, MouseEvent e) {
+    public void dragStart(NodeItem draggedNode, DragAction dragAction) {
+    }
+
+    public void dragActionChanged(NodeItem draggedNode, NodeItem hitNode, HitPosition hitPosition, DragAction dragAction) {
+
+    }
+
+    public void dragEnd(NodeItem draggedNode, NodeItem hitNode, HitPosition hitPosition, DragAction dragAction) {
+
     }
 
     private NodeItem getHitNode(Point point) {
@@ -137,6 +147,13 @@ public abstract class RobustNodeItemController extends ControlAdapter {
             return null;
         }
     }
+
+    private DragAction getDragAction(MouseEvent e) {
+        return e.isControlDown() ? DragAction.LINK : DragAction.MOVE;
+    }
+
+
+
     public void itemDragged(VisualItem item, MouseEvent e) {
         if (!(item instanceof NodeItem)) {
             return;
@@ -147,23 +164,31 @@ public abstract class RobustNodeItemController extends ControlAdapter {
             return;
         }
 
-        NodeItem fromNode = (NodeItem)item;
-        nodeItemDragged(fromNode, e);
+        NodeItem draggedNode = (NodeItem)item;
+        DragAction dragAction = getDragAction(e);
 
         Point mousePoint = e.getPoint();
-
         NodeItem curHitNode = getHitNode(mousePoint);
 
-        if (curHitNode == null || curHitNode != m_hitNode || curHitNode == fromNode) {
-            assert (m_hitNode != fromNode);
-            if (m_hitNode != null) {
-                m_logger.info("itemMissed : " + m_hitNode.getString(MindModel.sm_textPropName));
-                nodeItemMissed(fromNode, m_hitNode, m_ctrlDowned);
-            }
-            clearHitNode();
+
+        if (! m_dragging) {
+            m_logger.info("dragStart");
+            dragStart(draggedNode, dragAction);
+            m_dragging = true;
+            m_dragAction = dragAction;
         }
 
-        if (curHitNode != null && curHitNode != fromNode) {
+        if (curHitNode == null || curHitNode != m_hitNode || curHitNode == draggedNode) {
+            assert (m_hitNode != draggedNode);
+            if (m_hitNode != null) {
+                m_logger.info("itemMissed : " + m_hitNode.getString(MindModel.sm_textPropName));
+                dragMiss(draggedNode, m_hitNode, dragAction);
+            }
+            clearHitNode();
+
+        }
+
+        if (curHitNode != null && curHitNode != draggedNode) {
 
             HitPosition hitPosition = getHitPosition(curHitNode, mousePoint);
 
@@ -172,17 +197,19 @@ public abstract class RobustNodeItemController extends ControlAdapter {
                 m_hitPosition = hitPosition;
 
                 m_logger.info("itemHit : " + curHitNode.getString(MindModel.sm_textPropName) + " - " + m_hitPosition.toString());
-                nodeItemHit(fromNode, curHitNode, hitPosition, m_ctrlDowned);
+                dragHit(draggedNode, curHitNode, hitPosition, dragAction);
             }
+        }
+
+        if (m_dragAction != dragAction) {
+            dragActionChanged(draggedNode, m_hitNode, m_hitPosition, dragAction);
+            m_dragAction = dragAction;
         }
     }
 
     public void nodeItemReleased(NodeItem item, MouseEvent e) {
     }
 
-    private boolean releaseWithCtrl() {
-        return m_ctrlDowned || System.currentTimeMillis() - m_ctrlReleaseTime < 500;
-    }
 
     public void itemReleased(VisualItem item, MouseEvent e) {
         if (!(item instanceof NodeItem)) {
@@ -191,40 +218,34 @@ public abstract class RobustNodeItemController extends ControlAdapter {
 
         m_logger.info("itemReleased : " + item.getString(MindModel.sm_textPropName));
 
-        NodeItem fromNode = (NodeItem)item;
-        nodeItemReleased(fromNode, e);
+        NodeItem draggedNode = (NodeItem)item;
+        nodeItemReleased(draggedNode, e);
+
+        m_dragging = false;
 
         Point mousePoint = e.getPoint();
         NodeItem curHitNode = getHitNode(mousePoint);
 
-        if (curHitNode != fromNode) {
+        DragAction dragAction = getDragAction(e);
+
+        if (curHitNode != draggedNode) {
             if (curHitNode != null) {
                 HitPosition hitPosition = getHitPosition(curHitNode, mousePoint);
-                nodeItemDropped(fromNode, curHitNode, hitPosition, releaseWithCtrl());
+                dragEnd(draggedNode, curHitNode, hitPosition, dragAction);
                 m_logger.info("itemDropped : " + curHitNode.getString(MindModel.sm_textPropName));
             } else {
                 m_logger.info("itemDropped : null");
-                nodeItemDropped(fromNode, null, HitPosition.OUTSIDE, releaseWithCtrl());
+                dragEnd(draggedNode, null, HitPosition.OUTSIDE, dragAction);
             }
         }
 
         clearHitNode();
     }
 
-    //if hitNode == null, no dropped to a node
-    public void nodeItemDropped(NodeItem item, NodeItem hitNode, HitPosition hitPosition, boolean m_ctrlDowned) {
-
-    }
 
     public void itemKeyPressed(VisualItem item, KeyEvent e) {
         if (item instanceof NodeItem) {
             nodeItemKeyPressed((NodeItem)item, e);
-        }
-
-        m_logger.info("ctrl pressed");
-
-        if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
-            m_ctrlDowned = true;
         }
     }
 
@@ -235,13 +256,6 @@ public abstract class RobustNodeItemController extends ControlAdapter {
     public void itemKeyReleased(VisualItem item, KeyEvent e) {
         if (item instanceof NodeItem) {
             nodeItemKeyReleased((NodeItem)item, e);
-        }
-
-        m_logger.info("ctrl released");
-
-        if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
-            m_ctrlReleaseTime = System.currentTimeMillis();
-            m_ctrlDowned = false;
         }
     }
 

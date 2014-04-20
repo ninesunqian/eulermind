@@ -17,7 +17,6 @@ public class MainFrame extends JFrame {
         setLocationByPlatform(true);
         addMenu();
 
-        /*
         Color BACKGROUND = Color.WHITE;
         Color FOREGROUND = Color.BLACK;
 
@@ -86,26 +85,6 @@ public class MainFrame extends JFrame {
         //MindIcons mindIcons = new MindIcons(mindController);
         //add(mindIcons.getToolbar(), BorderLayout.WEST);
         //add(panel);
-        */
-        addKeyListener(new KeyListener() {
-            @Override
-            public void keyTyped(KeyEvent keyEvent)
-            {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-
-            @Override
-            public void keyPressed(KeyEvent keyEvent)
-            {
-                m_logger.info("MainFrame key : " + keyEvent.toString() + String.format("  %d", keyEvent.getModifiers()));
-            }
-
-            @Override
-            public void keyReleased(KeyEvent keyEvent)
-            {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-        });
 
         addWindowListener(new WindowAdapter() {
             @Override
