@@ -317,7 +317,6 @@ public class MindView extends Display {
         return m_mouseControl.m_hitNode;
     }
 
-
 	private void setMouseControlListener()
     {
 		m_zoomToFitContol = new ZoomToFitControl(Control.MIDDLE_MOUSE_BUTTON);

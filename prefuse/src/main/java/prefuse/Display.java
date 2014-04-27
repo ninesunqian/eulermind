@@ -2068,10 +2068,16 @@ public class Display extends JComponent {
             r.x += 3; r.y += 1; r.width -= 5; r.height -= 2;
         }
         
-        Font f = getFont();
+        Font f = item.getFont();
         int size = (int)Math.round(f.getSize()*m_transform.getScaleX());
         Font nf = new Font(f.getFontName(), f.getStyle(), size);
+
+        s_logger.info("font can dislplay chinese: " + ((Boolean)(nf.canDisplay('中'))).toString());
         m_editor.setFont(nf);
+
+        if (r.getWidth() < 100) {
+            r.setSize(100, (int) r.getHeight());
+        }
         
         editText(item, attribute, r);
     }
@@ -2111,9 +2117,12 @@ public class Display extends JComponent {
         if ( m_editing ) { stopEditing(); }
         m_editing = true;
         m_editor.setBounds(r.x,r.y,r.width,r.height);
-        m_editor.setText(txt);
+        if (txt != null) {
+            m_editor.setText(txt);
+            m_editor.setCaretPosition(txt.length());
+        }
+
         m_editor.setVisible(true);
-        m_editor.setCaretPosition(txt.length());
         m_editor.requestFocus();
     }
     

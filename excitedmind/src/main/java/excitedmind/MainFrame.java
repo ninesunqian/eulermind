@@ -13,17 +13,8 @@ public class MainFrame extends JFrame {
     MindController m_mindController;
     public MainFrame(String dbUrl)
     {
-
         setLocationByPlatform(true);
         addMenu();
-
-        Color BACKGROUND = Color.WHITE;
-        Color FOREGROUND = Color.BLACK;
-
-        //JPanel panel = new JPanel(new BorderLayout());
-        //panel.setBackground(BACKGROUND);
-        //panel.setForeground(FOREGROUND);
-
 
         m_mindModel = new MindModel(dbUrl);
 
@@ -80,17 +71,14 @@ public class MainFrame extends JFrame {
         Component comp = tabbedPane.getSelectedComponent();
         comp.requestFocusInWindow();
 
-        //panel.add(box, BorderLayout.SOUTH);
 
-        //MindIcons mindIcons = new MindIcons(mindController);
-        //add(mindIcons.getToolbar(), BorderLayout.WEST);
-        //add(panel);
+        MindIcons mindIcons = new MindIcons(m_mindController);
+        add(mindIcons.getToolbar(), BorderLayout.WEST);
 
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 m_mindModel.m_mindDb.shutdown();
-                //mindModel.m_mindDb.
                 MainFrame.this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             }
         });
@@ -107,17 +95,18 @@ public class MainFrame extends JFrame {
         JMenuItem openMenuItem = new JMenuItem("open", KeyEvent.VK_O);
         fileMenu.add(openMenuItem);
 
-        addPinMenu(menuBar);
+        addFavoriteMenu(menuBar);
+        addAncestorsMenu(menuBar);
 
         setJMenuBar(menuBar);
     }
 
     JMenu m_favoriteMenu;
 
-    void addPinMenu(JMenuBar menuBar)
+    void addFavoriteMenu(JMenuBar menuBar)
     {
         m_favoriteMenu = new JMenu("Favorite");
-        m_favoriteMenu.setMnemonic('a');
+        m_favoriteMenu.setMnemonic('f');
 
         m_favoriteMenu.addMenuListener(new MenuListener() {
             @Override
@@ -148,13 +137,58 @@ public class MainFrame extends JFrame {
 
                 m_favoriteMenu.addSeparator();
 
-                for (final MindModel.FavoriteInfo favoriteInfo : m_mindModel.m_favoriteInfoes) {
-                    JMenuItem menuItem = new JMenuItem(favoriteInfo.m_contextText);
+                for (final MindModel.VertexBasicInfo vertexBasicInfo : m_mindModel.m_favoriteInfoes) {
+                    JMenuItem menuItem = new JMenuItem(vertexBasicInfo.m_contextText);
                     menuItem.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent actionEvent)
                         {
-                            m_mindController.findOrAddMindView(favoriteInfo.m_dbId);
+                            m_mindController.findOrAddMindView(vertexBasicInfo.m_dbId);
+                        }
+                    });
+
+                    m_favoriteMenu.add(menuItem);
+                }
+            }
+
+            @Override
+            public void menuDeselected(MenuEvent menuEvent)
+            {
+                m_favoriteMenu.removeAll();
+            }
+
+            @Override
+            public void menuCanceled(MenuEvent menuEvent)
+            {
+                m_favoriteMenu.removeAll();
+            }
+        }
+
+        );
+
+        menuBar.add(m_favoriteMenu);
+    }
+
+    void addAncestorsMenu(JMenuBar menuBar)
+    {
+        m_favoriteMenu = new JMenu("Ancestors");
+        m_favoriteMenu.setMnemonic('a');
+
+        m_favoriteMenu.addMenuListener(new MenuListener() {
+            @Override
+            public void menuSelected(MenuEvent menuEvent)
+            {
+                final Object currentVertexId = m_mindController.getCurrentVertexId();
+                MindModel.VertexBasicInfo vertexBasicInfo =  m_mindModel.getVertexBasicInfo(currentVertexId);
+
+                for (Object ancestor : vertexBasicInfo.m_inheritPath) {
+                    final MindModel.VertexBasicInfo ancestorBasicInfo = m_mindModel.getVertexBasicInfo(ancestor);
+                    JMenuItem menuItem = new JMenuItem(ancestorBasicInfo.m_contextText);
+                    menuItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent actionEvent)
+                        {
+                            m_mindController.findOrAddMindView(ancestorBasicInfo.m_dbId);
                         }
                     });
 

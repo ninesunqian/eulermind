@@ -38,18 +38,19 @@ public class MindModel {
 
     private Index<Vertex> m_favoriteIndex;
 
-    class FavoriteInfo {
+    class VertexBasicInfo {
         String m_contextText;
         Object m_dbId;
         ArrayList<Object> m_inheritPath;
-        FavoriteInfo (Vertex vertex) {
+
+        VertexBasicInfo(Vertex vertex) {
             m_dbId = vertex.getId();
             m_inheritPath = m_mindDb.getInheritPath(vertex);
             m_contextText = getContextText(m_dbId);
         }
     }
 
-    ArrayList<FavoriteInfo> m_favoriteInfoes = new ArrayList<FavoriteInfo>();
+    ArrayList<VertexBasicInfo> m_favoriteInfoes = new ArrayList<VertexBasicInfo>();
 
     public final static String sm_nodePropNames [] = {
             sm_textPropName,
@@ -114,16 +115,18 @@ public class MindModel {
         }
 
         for (Vertex vertex : m_favoriteIndex.get(FAVORITE_KEY_NAME, FAVORITE_KEY_NAME))  {
-            m_favoriteInfoes.add(new FavoriteInfo(vertex));
+            m_favoriteInfoes.add(new VertexBasicInfo(vertex));
         }
 
         m_isDebuging = false;
+        /*
         Pattern debugPattern = Pattern.compile("-Xdebubg|jdwp");
         for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
             if (debugPattern.matcher(arg).find()) {
                 m_isDebuging = true;
             }
         }
+        */
 	}
 
     public Tree findTree(Object rootId)
@@ -701,7 +704,7 @@ public class MindModel {
     }
 
     public boolean isInFavorite(Object dbId) {
-        for (FavoriteInfo info: m_favoriteInfoes) {
+        for (VertexBasicInfo info: m_favoriteInfoes) {
             if (info.m_dbId.equals(dbId)) {
                 return true;
             }
@@ -713,13 +716,13 @@ public class MindModel {
         m_favoriteIndex.put(FAVORITE_KEY_NAME, FAVORITE_KEY_NAME, m_mindDb.getVertex(dbId));
 
         assert(!isInFavorite(dbId));
-        m_favoriteInfoes.add(new FavoriteInfo(m_mindDb.getVertex(dbId)));
+        m_favoriteInfoes.add(new VertexBasicInfo(m_mindDb.getVertex(dbId)));
     }
 
     public void removeFromFavorite(Object dbId) {
         m_favoriteIndex.remove(FAVORITE_KEY_NAME, FAVORITE_KEY_NAME, m_mindDb.getVertex(dbId));
 
-        for (FavoriteInfo info: m_favoriteInfoes) {
+        for (VertexBasicInfo info: m_favoriteInfoes) {
             if (info.m_dbId.equals(dbId)) {
                 m_favoriteInfoes.remove(info);
                 break;
@@ -727,4 +730,7 @@ public class MindModel {
         }
     }
 
+    public VertexBasicInfo getVertexBasicInfo(Object dbId) {
+        return new VertexBasicInfo(m_mindDb.getVertex(dbId));
+    }
 }

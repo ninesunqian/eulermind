@@ -53,8 +53,6 @@ public class MindTreeRenderEngine {
     private int m_shadowBackColor = ColorLib.rgb(240, 240, 240);
     private int m_normalBackColor = ColorLib.rgb(255, 255, 255);
 
-    boolean m_isDebuging;
-
 	public MindTreeRenderEngine(MindView mindView, String treeGroupName) {
         m_logger.setLevel(Level.OFF);
 		m_mindView = mindView;
@@ -82,15 +80,6 @@ public class MindTreeRenderEngine {
         m_vis.alwaysRunAfter(sm_layoutAction, "repaint");
         m_vis.alwaysRunAfter(sm_itemStyleActions, "repaint");
         m_vis.alwaysRunAfter(sm_itemPositionActions, "repaint");
-
-
-        m_isDebuging = false;
-        Pattern debugPattern = Pattern.compile("-Xdebubg|jdwp");
-        for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
-            if (debugPattern.matcher(arg).find()) {
-                m_isDebuging = true;
-            }
-        }
 	}
 	
 	public void run (final  Runnable runeAfterRePaint)
@@ -284,17 +273,13 @@ public class MindTreeRenderEngine {
         }
 
         protected String getText(VisualItem item) {
-            /*
-            String s = item.getString(MindModel.sm_textPropName);
-            return  (s==null || s.length() < 2 )? " " + s + " ": s;
-            */
             return m_mindView.m_mindModel.getText((NodeItem)item);
         }
 
         protected String getImageLocation(VisualItem item) {
-            //return MindIcons.getIconPath(item.getString(MindModel.sm_iconPropName));
+            return MindIcons.getIconPath(item.getString(MindModel.sm_iconPropName));
             //return MindIcons.getIconPath("icon");
-            return null;
+            //return null;
         }
 
         public int getRenderType(VisualItem item) {
