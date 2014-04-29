@@ -46,6 +46,7 @@ public class MainFrame extends JFrame {
 
         add(tabbedPane, BorderLayout.CENTER);
 
+        /*
         Component textArea = new TextArea();
         textArea.addKeyListener(new KeyListener() {
             @Override
@@ -67,6 +68,7 @@ public class MainFrame extends JFrame {
             }
         });
         tabbedPane.addTab("text", textArea);
+        */
 
         Component comp = tabbedPane.getSelectedComponent();
         comp.requestFocusInWindow();

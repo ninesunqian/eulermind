@@ -5,6 +5,7 @@ import com.tinkerpop.blueprints.Vertex;
 import excitedmind.MindDB.EdgeVertex;
 import excitedmind.MindDB.RefLinkInfo;
 import prefuse.data.*;
+import prefuse.util.TypeLib;
 import prefuse.util.collections.IntIterator;
 
 import java.lang.management.ManagementFactory;
@@ -19,8 +20,8 @@ public class MindModel {
 
 	final static String sm_dbIdColumnName = "dbElementId";
 
-    final static String sm_outEdgeDBIdsPropName = MindDB.CHILD_EDGES_PROP_NAME;
-    final static String sm_inheritPathPropName = MindDB.INHERIT_PATH_PROP_NAME;
+    final static private String sm_outEdgeDBIdsPropName = MindDB.CHILD_EDGES_PROP_NAME;
+    final static private String sm_inheritPathPropName = MindDB.INHERIT_PATH_PROP_NAME;
 
 	final static String sm_textPropName = "text";
     final static String sm_iconPropName = "icon";
@@ -70,6 +71,8 @@ public class MindModel {
             sm_textColorPropName,
     };
 
+    static private HashMap<String, Class> sm_propertyClassMap = new HashMap<String, Class>();
+
 	public final static String sm_edgeTypePropName = MindDB.EDGE_TYPE_PROP_NAME;
 	public final static String sm_edgeColorPropName = "edgeColor";
     public final static String sm_edgePropNames [] = {sm_edgeTypePropName, sm_edgeColorPropName};
@@ -88,11 +91,33 @@ public class MindModel {
 		}
 	}
 
-    boolean m_isDebuging;
+    private static void fillPropertyClassMap()
+    {
+        if (sm_propertyClassMap.size() > 0) {
+            return;
+        }
+
+        sm_propertyClassMap.put(sm_textPropName, String.class);
+        sm_propertyClassMap.put(sm_textPropName, String.class);
+
+        sm_propertyClassMap.put(sm_iconPropName, String.class);
+
+        sm_propertyClassMap.put(sm_fontFamilyPropName, String.class);
+        sm_propertyClassMap.put(sm_fontSizePropName, Integer.class);
+
+        sm_propertyClassMap.put(sm_boldPropName, Boolean.class);
+        sm_propertyClassMap.put(sm_italicPropName, Boolean.class);
+        sm_propertyClassMap.put(sm_underlinedPropName, Boolean.class);
+
+        sm_propertyClassMap.put(sm_nodeColorPropName, Integer.class);
+        sm_propertyClassMap.put(sm_textColorPropName, Integer.class);
+    }
 
 	public MindModel(String dbPath)
 	{
         m_logger.setLevel(Level.WARNING);
+
+        fillPropertyClassMap();
 
 		m_mindDb = new MindDB(dbPath);
         m_mindDb.createFullTextVertexKeyIndex(sm_textPropName);
@@ -117,16 +142,6 @@ public class MindModel {
         for (Vertex vertex : m_favoriteIndex.get(FAVORITE_KEY_NAME, FAVORITE_KEY_NAME))  {
             m_favoriteInfoes.add(new VertexBasicInfo(vertex));
         }
-
-        m_isDebuging = false;
-        /*
-        Pattern debugPattern = Pattern.compile("-Xdebubg|jdwp");
-        for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
-            if (debugPattern.matcher(arg).find()) {
-                m_isDebuging = true;
-            }
-        }
-        */
 	}
 
     public Tree findTree(Object rootId)
@@ -517,6 +532,7 @@ public class MindModel {
         if (value == null) {
             dbNode.removeProperty(key);
         } else {
+            assert (TypeLib.typeCheck(sm_propertyClassMap.get(key), value));
             dbNode.setProperty(key, value);
         }
 
@@ -598,11 +614,7 @@ public class MindModel {
     //not use dbId for argument, becase the node saved the propperty
     public String getText(Node node)
     {
-        String text = node.getString(sm_textPropName);
-        if (m_isDebuging) {
-            text += " D{" + getNodeDebugInfo(node) + "}";
-        }
-        return text;
+        return node.getString(sm_textPropName);
     }
 
     public String getContextText(Object dbId)
@@ -618,41 +630,6 @@ public class MindModel {
             String parentText = parent.getProperty(sm_textPropName);
             return parentText + " -> " + text;
         }
-    }
-
-    public void setText(Object dbId, String text)
-    {
-        setProperty(dbId, sm_textPropName, text);
-    }
-
-    public int getNodeColor (Node node)
-    {
-        return node.getInt(sm_nodeColorPropName);
-    }
-
-    public void setNodeColor (Object dbId, int rgba)
-    {
-        setProperty(dbId, sm_nodeColorPropName, rgba);
-    }
-
-    public String getFontFamily (Node node)
-    {
-        return node.getString(sm_fontFamilyPropName);
-    }
-
-    public void setFontFamily (Object dbId, String fontFamily)
-    {
-        setProperty(dbId, sm_fontFamilyPropName, fontFamily);
-    }
-
-    public int getFontSize (Node node)
-    {
-        return node.getInt(sm_fontSizePropName);
-    }
-
-    public void setFontSize (Object dbId, int size)
-    {
-        setProperty(dbId, sm_fontSizePropName, size);
     }
 
     public boolean isRefEdge (Edge edge)

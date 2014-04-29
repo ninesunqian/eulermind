@@ -202,14 +202,13 @@ public class MindTreeRenderEngine {
         }
 
         public int getColor(VisualItem item) {
-            Color color = (Color)item.get(MindModel.sm_textColorPropName);
+            Integer color = (Integer)item.get(MindModel.sm_textColorPropName);
 
             if (color == null)
                 return ColorLib.rgb(0, 0, 0);
             else
-                return ColorLib.rgb(color.getRed(), color.getGreen(), color.getBlue());
+                return color;
         }
-
     }
     
     public class NodeFontAction extends FontAction {

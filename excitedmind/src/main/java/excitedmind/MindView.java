@@ -504,6 +504,13 @@ public class MindView extends Display {
         }
     };
 
+    AbstractAction m_saveAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            m_mindModel.m_mindDb.commit();
+        }
+    };
+
     boolean canRemove()
     {
         if (getCursorSourceNode() == m_tree.getRoot()) {
@@ -564,13 +571,12 @@ public class MindView extends Display {
     final static String sm_editActionName = "edit";
     final static String sm_undoActionName = "undo";
     final static String sm_redoActionName = "redo";
+    final static String sm_saveActionName = "save";
 
     final static String sm_addChildActionName = "addChild";
     final static String sm_addSiblingActionName = "addSibling";
     final static String sm_removeActionName = "remove";
 
-    final static String sm_startLinkActionName = "startLink";
-    final static String sm_startMoveActionName = "startMove";
 
     final static String sm_toNormalActionAction = "toNormal";
 
@@ -596,6 +602,7 @@ public class MindView extends Display {
 
         m_mindActionMap.put(sm_undoActionName, m_undoAction);
         m_mindActionMap.put(sm_redoActionName, m_redoAction);
+        m_mindActionMap.put(sm_saveActionName, m_saveAction);
 
         m_mindActionMap.put(sm_cursorLeft, m_cursorLeftAction);
         m_mindActionMap.put(sm_cursorRight, m_cursorRightAction);
@@ -610,8 +617,7 @@ public class MindView extends Display {
 
         inputMap.put(KeyStroke.getKeyStroke("ctrl Z"), sm_undoActionName);
         inputMap.put(KeyStroke.getKeyStroke("ctrl Y"), sm_redoActionName);
-        inputMap.put(KeyStroke.getKeyStroke("ctrl L"), sm_startLinkActionName);
-        inputMap.put(KeyStroke.getKeyStroke("ctrl M"), sm_startMoveActionName);
+        inputMap.put(KeyStroke.getKeyStroke("ctrl S"), sm_saveActionName);
         inputMap.put(KeyStroke.getKeyStroke("ESCAPE"), sm_toNormalActionAction);
 
         inputMap.put(KeyStroke.getKeyStroke("LEFT"), sm_cursorLeft);

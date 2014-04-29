@@ -67,7 +67,7 @@ public class MindToolBar extends JToolBar {
                     public void actionPerformed(ActionEvent actionEvent) {
                         Color color = (Color) m_colorCombobox.getSelectedItem();
                         m_mindController.getCurrentView().setCursorProperty(
-                                MindModel.sm_textColorPropName, color);
+                                MindModel.sm_textColorPropName, color.getRGB());
                     }
                 }
         );
