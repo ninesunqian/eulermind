@@ -56,6 +56,11 @@ public class MindTreeLayout extends TreeLayout {
         m_bspace = bspace;
 
     }
+
+    static public String getLayoutInfo(NodeItem n)
+    {
+        return (n.isExpanded() ? "expand " : "fold ") + "child:" + ((Integer)n.getChildCount()).toString();
+    }
     
     // ------------------------------------------------------------------------
     
