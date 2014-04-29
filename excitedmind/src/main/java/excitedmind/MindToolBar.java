@@ -41,7 +41,6 @@ public class MindToolBar extends JToolBar {
         m_comboxbox.setEditable(true);
         add(m_comboxbox);
 
-
         m_fontFamilyCombobox.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
@@ -71,15 +70,6 @@ public class MindToolBar extends JToolBar {
                     }
                 }
         );
-
-        /*FIXME
-        m_mindController.addExternalMouseController(new NodeDndControl() {
-            @Override
-            public void nodeItemEntered(NodeItem item, MouseEvent e) {
-                super.nodeItemEntered(item, e);    //To change body of overridden methods use File | Settings | File Templates.
-            }
-        });
-        */
     }
 
     /*

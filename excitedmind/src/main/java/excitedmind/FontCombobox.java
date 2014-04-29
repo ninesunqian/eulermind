@@ -26,10 +26,6 @@ public class FontCombobox extends JComboBox{
     static Integer sm_fontSizes[] = {10, 12, 14, 16, 18, 20, 24, 28};
     static Color sm_colors[] = {Color.black, Color.blue, Color.cyan, Color.darkGray};
 
-    static final int LIST_FAMILY = 0;
-    static final int LIST_SIZE = 0;
-    static final int LIST_COLOR = 0;
-
     enum ListWhich {
         list_family,
         list_size,
