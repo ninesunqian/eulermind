@@ -1,11 +1,16 @@
 package excitedmind;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import com.orientechnologies.orient.core.exception.OSerializationException;
+import com.orientechnologies.orient.core.id.ORecordId;
+import com.orientechnologies.orient.core.serialization.OSerializableStream;
 import com.tinkerpop.blueprints.*;
+import org.apache.commons.lang.ArrayUtils;
 import prefuse.util.PrefuseLib;
 
 import com.orientechnologies.orient.core.db.record.ORecordLazyList;
@@ -508,9 +513,9 @@ public class MindDB implements Graph {
 	{
 		deepTraverse (vertex, proc, 0);
 	}
-	
-	//remove vertex, the children append to 
-	public static class RefLinkInfo {
+
+	//remove vertex, the children append to
+	public static class RefLinkInfo implements OSerializableStream {
 		final Object m_referrer;
 		final Object m_referent;
 		final int m_pos;
@@ -521,7 +526,42 @@ public class MindDB implements Graph {
 			m_referent = referent;
 			m_pos = pos;
 		}
-	}
+
+        @Override
+        public byte[] toStream() throws OSerializationException
+        {
+            byte referrerBytes[] = ((ORecordId)m_referrer).toStream();
+            byte referentBytes[] = ((ORecordId)m_referent).toStream();
+
+            ByteBuffer byteBuffer = ByteBuffer.allocate(referrerBytes.length + referentBytes.length + 12);
+
+            byteBuffer.putInt(referrerBytes.length);
+            byteBuffer.putInt(referentBytes.length);
+            byteBuffer.putInt(m_pos);
+
+            byteBuffer.put(referrerBytes);
+            byteBuffer.put(referentBytes);
+
+
+            return byteBuffer.array();  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public RefLinkInfo fromStream(byte[] iStream) throws OSerializationException
+        {
+            ByteBuffer byteBuffer = ByteBuffer.wrap(iStream);
+            int referrerByteLength = byteBuffer.getInt();
+            int referentByteLength = byteBuffer.getInt();
+            int pos = byteBuffer.getInt();
+
+            byte referrerByte[] = new byte[referrerByteLength];
+            byte referentByte[] = new byte[referentByteLength];
+
+            ORecordId referrer = (new ORecordId()).fromStream(referrerByte);
+            ORecordId referent = (new ORecordId()).fromStream(referentByte);
+            return new RefLinkInfo(referrer, referent, pos);
+        }
+    }
 	
 	//return the removed vertex
 	public Vertex trashSubTree(Vertex parent, int pos)
