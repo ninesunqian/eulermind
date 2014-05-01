@@ -136,9 +136,9 @@ public class MindTreeRenderEngine {
 	    NodeRenderer nodeRenderer = new NodeRenderer(MindModel.sm_textPropName, MindModel.sm_iconPropName);
     	nodeRenderer.setRenderType(AbstractShapeRenderer.RENDER_TYPE_FILL);
     	nodeRenderer.setHorizontalAlignment(Constants.LEFT);
-    	nodeRenderer.setRoundedCorner(8, 8);
-    	nodeRenderer.setHorizontalAlignment(Constants.LEFT);
-        //nodeRenderer.setHorizontalPadding(10);
+    	nodeRenderer.setRoundedCorner(10, 10);
+        nodeRenderer.setHorizontalPadding(5);
+        nodeRenderer.setVerticalPadding(5);
 
 	    EdgeRenderer edgeRenderer = new EdgeRenderer(Constants.EDGE_TYPE_CURVE);
     	edgeRenderer.setHorizontalAlignment1(Constants.RIGHT);
