@@ -27,16 +27,17 @@ public class MovingChild extends MindOperator{
 
         m_oldParentPath = m_mindModel.getNodePath(formerCursor.getParent());
         m_oldPos = formerCursor.getIndex();
+
         m_newParentPath = m_mindModel.getNodePath(newParent);
         m_newPos = newPos;
+
+        m_laterCursorPath = (Stack<Integer>)m_newParentPath.clone();
+        m_laterCursorPath.add(m_newPos);
     }
 
     public void does()
     {
         moveChild(m_oldParentPath, m_oldPos, m_newParentPath, m_newPos);
-
-        m_laterCursorPath = (Stack<Integer>)m_newParentPath.clone();
-        m_laterCursorPath.add(m_newPos);
     }
 
     public void undo()

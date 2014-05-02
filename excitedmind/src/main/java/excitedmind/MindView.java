@@ -123,6 +123,9 @@ public class MindView extends Display {
             return  (NodeItem) node;
         } else {
             String treeNodesGroupName = PrefuseLib.getGroupName(m_treeGroupName, Graph.NODES);
+            if (node == null) {
+                int i=0;
+            }
             return (NodeItem) m_vis.getVisualItem(treeNodesGroupName, node);
         }
     }
@@ -513,13 +516,9 @@ public class MindView extends Display {
 
     boolean canRemove()
     {
-        if (getCursorSourceNode() == m_tree.getRoot()) {
-            alert("can't remove the root");
-            return false;
-        } else {
-            return true;
-        }
+        return Removing.canDo(m_mindModel, m_tree, getCursorSourceNode());
     }
+
     AbstractAction m_removeAction = new AbstractAction()  {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -708,12 +707,15 @@ public class MindView extends Display {
         Edge edge = m_tree.getEdge(parent, cursorNode);
 
         MindOperator operator;
+        operator = new Removing(m_mindModel, cursorNode);
+        /*
         if (m_mindModel.isRefEdge(edge)) {
-            operator = new RemovingReference(m_mindModel, cursorNode);
+            operator = new RemovingReference_bk(m_mindModel, cursorNode);
         }
         else {
-            operator = new RemovingSubTree(m_mindModel, cursorNode);
+            operator = new Removing(m_mindModel, cursorNode);
         }
+        */
 
         m_mindController.addEdit(operator);
     }

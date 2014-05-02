@@ -637,6 +637,14 @@ public class MindModel {
         return MindDB.EdgeType.values()[(Integer)edge.get(sm_edgeTypePropName)] == MindDB.EdgeType.REFERENCE;
     }
 
+    public boolean isRefNode(Node node)
+    {
+        Tree tree = (Tree)node.getGraph();
+        Node parent = node.getParent();
+        Edge edge = tree.getEdge(parent, node);
+        return isRefEdge(edge);
+    }
+
 
     public Stack<Integer> getNodePath(Node node)
     {

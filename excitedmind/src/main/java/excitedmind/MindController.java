@@ -1,6 +1,6 @@
 package excitedmind;
 
-import excitedmind.operator.RemovingSubTree;
+import excitedmind.operator.Removing;
 import prefuse.data.Node;
 
 import javax.swing.*;
@@ -111,9 +111,9 @@ public class MindController extends UndoManager {
     private void updateMindViews(MindOperator operator, boolean isUndo)
     {
         //remove no needed mindview
-        if (operator instanceof RemovingSubTree) {
-            RemovingSubTree removingSubTree = (RemovingSubTree)operator;
-            Object trashedDBId = removingSubTree.m_trashDBId;
+        if (operator instanceof Removing) {
+            Removing removing = (Removing)operator;
+            Object trashedDBId = removing.m_removedDBId;
 
             for (Object rootDBId : m_mindViews.keySet()) {
                 if (m_mindModel.getInheritDirection(trashedDBId, rootDBId) ==
@@ -121,6 +121,11 @@ public class MindController extends UndoManager {
                     removeMindView(rootDBId);
                 }
             }
+        }
+
+        if (operator == null) {
+            int i = 0;
+
         }
 
         MindView mindView = exposeMindView(operator.m_rootDBId);
