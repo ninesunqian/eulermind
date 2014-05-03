@@ -4,6 +4,7 @@ import excitedmind.MindModel;
 import excitedmind.MindOperator;
 import prefuse.data.Node;
 
+import java.util.ArrayList;
 import java.util.Stack;
 
 /**
@@ -23,7 +24,7 @@ public class AddingChild extends MindOperator{
         this.pos = pos;
         m_text = text;
 
-        m_laterCursorPath = (Stack<Integer>) m_formerCursorPath.clone();
+        m_laterCursorPath = (ArrayList<Integer>) m_formerCursorPath.clone();
         m_laterCursorPath.add(pos);
     }
 

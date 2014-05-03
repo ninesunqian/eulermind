@@ -4,6 +4,7 @@ import prefuse.data.Node;
 import prefuse.data.Tree;
 
 import javax.swing.undo.AbstractUndoableEdit;
+import java.util.ArrayList;
 import java.util.Stack;
 
 /**
@@ -16,8 +17,8 @@ import java.util.Stack;
 public abstract class MindOperator extends AbstractUndoableEdit {
     protected MindModel m_mindModel;
     protected Object m_rootDBId;
-    protected Stack<Integer> m_formerCursorPath;
-    protected Stack<Integer> m_laterCursorPath;
+    protected ArrayList<Integer> m_formerCursorPath;
+    protected ArrayList<Integer> m_laterCursorPath;
 
     public MindOperator(MindModel mindModel, Node formerCursor) {
         Tree tree = (Tree)formerCursor.getGraph();
@@ -26,7 +27,7 @@ public abstract class MindOperator extends AbstractUndoableEdit {
         m_formerCursorPath = m_mindModel.getNodePath(formerCursor);
     }
 
-    protected Object getDBIdByPath(Stack<Integer> path) {
+    protected Object getDBIdByPath(ArrayList<Integer> path) {
         Tree tree = m_mindModel.findTree(m_rootDBId);
         Node node = m_mindModel.getNodeByPath(tree, path);
         return m_mindModel.getDBId(node);
@@ -35,8 +36,8 @@ public abstract class MindOperator extends AbstractUndoableEdit {
     public void ascendRoot(Object oldRootDBId, Object newRootDBId, int pos)
     {
         m_rootDBId = newRootDBId;
-        m_formerCursorPath.insertElementAt(pos, 0);
-        m_laterCursorPath.insertElementAt(pos, 0);
+        m_formerCursorPath.add(0, pos);
+        m_laterCursorPath.add(0, pos);
     }
 
     abstract public void does();

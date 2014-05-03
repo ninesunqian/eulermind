@@ -711,6 +711,8 @@ public class MindViewFSM
             {
                 (context.getState()).exit(context);
                 context.clearState();
+                ctxt.removeCursor();
+
                 try
                 {
                     ctxt.removeCursor();

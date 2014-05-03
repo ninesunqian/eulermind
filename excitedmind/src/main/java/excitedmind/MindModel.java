@@ -646,10 +646,10 @@ public class MindModel {
     }
 
 
-    public Stack<Integer> getNodePath(Node node)
+    public ArrayList<Integer> getNodePath(Node node)
     {
         Tree tree = (Tree)node.getGraph();
-        Stack<Integer> path = new Stack<Integer>();
+        ArrayList<Integer> path = new ArrayList<Integer>();
 
         Node climber = node;
         Node root = tree.getRoot();
@@ -668,7 +668,7 @@ public class MindModel {
         return path;
     }
 
-    public Node getNodeByPath(Tree tree, Stack<Integer> path)
+    public Node getNodeByPath(Tree tree, ArrayList<Integer> path)
     {
         Node node = tree.getRoot();
 

@@ -4,6 +4,7 @@ import excitedmind.MindModel;
 import excitedmind.MindOperator;
 import prefuse.data.Node;
 
+import java.util.ArrayList;
 import java.util.Stack;
 
 /**
@@ -17,7 +18,7 @@ public class AddingReference extends MindOperator {
     Object m_referrerDBId;
     Object m_referentDBId;
     int m_pos;
-    Stack<Integer> m_referrerNodePath;
+    ArrayList<Integer> m_referrerNodePath;
 
     private void init(Node referrerNode, Object referrerDBId, Object referentDBId, int pos) {
         m_referrerDBId = referrerDBId;
@@ -26,7 +27,7 @@ public class AddingReference extends MindOperator {
 
         m_referrerNodePath = m_mindModel.getNodePath(referrerNode);
 
-        m_laterCursorPath = (Stack<Integer>) m_referrerNodePath.clone();
+        m_laterCursorPath = (ArrayList<Integer>) m_referrerNodePath.clone();
         m_laterCursorPath.add(m_pos);
     }
 

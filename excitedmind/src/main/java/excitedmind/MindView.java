@@ -5,7 +5,7 @@ import java.awt.event.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.Stack;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -382,7 +382,7 @@ public class MindView extends Display {
         m_prompter.hide();
     }
 
-    public void setCursorNodeByPath(Stack<Integer> path)
+    public void setCursorNodeByPath(ArrayList<Integer> path)
     {
         m_cursor.setCursorNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, path)));
     }

@@ -8,6 +8,7 @@ import javax.swing.undo.UndoManager;
 import javax.swing.undo.UndoableEdit;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -17,6 +18,8 @@ import java.util.Hashtable;
  * To change this template use File | Settings | File Templates.
  */
 public class MindController extends UndoManager {
+    Logger m_logger = Logger.getLogger(this.getClass().getName());
+
     Hashtable<Object, MindView> m_mindViews = new Hashtable<Object, MindView>();
 
     MindModel m_mindModel;
@@ -93,21 +96,6 @@ public class MindController extends UndoManager {
         return m_mindModel.getDBId(node);
     }
 
-    public void ascendRoot(Object oldRootDBId, Object newRootDBId, int pos)
-    {
-        MindView mindView = m_mindViews.get(oldRootDBId);
-        m_mindViews.remove(oldRootDBId);
-        m_mindViews.put(newRootDBId, mindView);
-        for(UndoableEdit edit : edits) {
-            MindOperator operator = (MindOperator)edit;
-
-            if (operator.m_rootDBId.equals(oldRootDBId)) {
-                operator.ascendRoot(oldRootDBId, newRootDBId, pos);
-                //TODO reset tab string
-            }
-        }
-    }
-
     private void updateMindViews(MindOperator operator, boolean isUndo)
     {
         //remove no needed mindview
@@ -125,7 +113,6 @@ public class MindController extends UndoManager {
 
         if (operator == null) {
             int i = 0;
-
         }
 
         MindView mindView = exposeMindView(operator.m_rootDBId);
@@ -138,17 +125,20 @@ public class MindController extends UndoManager {
         }
     }
 
-    public synchronized boolean addEdit(UndoableEdit edit) {
+    public boolean addEdit(UndoableEdit edit) {
         MindOperator operator = (MindOperator)edit;
         operator.does();
 
         updateMindViews(operator, false);
 
+        m_logger.info("m_formerCursorPath: " + operator.m_formerCursorPath.toString());
+        m_logger.info("m_laterCursorPath: " + operator.m_laterCursorPath.toString());
+
         return super.addEdit(edit);
     }
 
 
-    public synchronized void redo()
+    public void redo()
     {
         if (! canRedo())
             return;
@@ -159,7 +149,7 @@ public class MindController extends UndoManager {
         updateMindViews(operator, false);
     }
 
-    public synchronized void undo()
+    public void undo()
     {
         if (! canUndo())
             return;

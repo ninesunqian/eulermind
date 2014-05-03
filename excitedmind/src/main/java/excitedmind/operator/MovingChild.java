@@ -5,6 +5,7 @@ import excitedmind.MindOperator;
 import prefuse.data.Node;
 import prefuse.data.Tree;
 
+import java.util.ArrayList;
 import java.util.Stack;
 
 /**
@@ -16,9 +17,9 @@ import java.util.Stack;
  */
 public class MovingChild extends MindOperator{
 
-    Stack<Integer> m_oldParentPath;
+    ArrayList<Integer> m_oldParentPath;
     int m_oldPos;
-    Stack<Integer> m_newParentPath;
+    ArrayList<Integer> m_newParentPath;
     int m_newPos;
 
     public MovingChild(MindModel mindModel, Node formerCursor, Node newParent, int newPos)
@@ -31,7 +32,7 @@ public class MovingChild extends MindOperator{
         m_newParentPath = m_mindModel.getNodePath(newParent);
         m_newPos = newPos;
 
-        m_laterCursorPath = (Stack<Integer>)m_newParentPath.clone();
+        m_laterCursorPath = (ArrayList<Integer>)m_newParentPath.clone();
         m_laterCursorPath.add(m_newPos);
     }
 
@@ -50,7 +51,7 @@ public class MovingChild extends MindOperator{
         moveChild(m_oldParentPath, m_oldPos, m_newParentPath, m_newPos);
     }
 
-    private void moveChild(Stack<Integer> oldParentPath, int oldPos, Stack<Integer> newParentPath, int newPos)
+    private void moveChild(ArrayList<Integer> oldParentPath, int oldPos, ArrayList<Integer> newParentPath, int newPos)
     {
         Tree tree = m_mindModel.findTree(m_rootDBId);
         Node oldParentNode = m_mindModel.getNodeByPath(tree, oldParentPath);
