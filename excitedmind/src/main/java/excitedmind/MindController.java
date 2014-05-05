@@ -125,7 +125,7 @@ public class MindController extends UndoManager {
         }
     }
 
-    public boolean addEdit(UndoableEdit edit) {
+    public boolean does(UndoableEdit edit) {
         MindOperator operator = (MindOperator)edit;
         operator.does();
 

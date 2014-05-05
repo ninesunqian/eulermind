@@ -151,6 +151,10 @@ public class MindView extends Display {
     }
 
 	public void renderTree() {
+        //if current cursor node is deleted by other view, set cursor to root
+        if (!m_cursor.m_currentCursor.isValid()) {
+            m_cursor.setCursorNodeItem(toVisual(m_tree.getRoot()));
+        }
 		m_renderEngine.run(null);
 	}
 
@@ -358,7 +362,7 @@ public class MindView extends Display {
                     getCursorSourceNode(), MindModel.sm_textPropName, text);
 
             settingProperty.does();
-            m_mindController.addEdit(settingProperty);
+            m_mindController.does(settingProperty);
         }
 
         hideEditor();
@@ -433,7 +437,7 @@ public class MindView extends Display {
             }
 
             removePlaceholder();
-            m_mindController.addEdit(operator);
+            m_mindController.does(operator);
 
         } else {
             removePlaceholder();
@@ -708,16 +712,8 @@ public class MindView extends Display {
 
         MindOperator operator;
         operator = new Removing(m_mindModel, cursorNode);
-        /*
-        if (m_mindModel.isRefEdge(edge)) {
-            operator = new RemovingReference_bk(m_mindModel, cursorNode);
-        }
-        else {
-            operator = new Removing(m_mindModel, cursorNode);
-        }
-        */
 
-        m_mindController.addEdit(operator);
+        m_mindController.does(operator);
     }
 
 
@@ -734,7 +730,7 @@ public class MindView extends Display {
             assert(m_mindModel.canAddReference(referrer, draggedNode));
 
             AddingReference operator = new AddingReference(m_mindModel, draggedNode, referrer, position);
-            m_mindController.addEdit(operator);
+            m_mindController.does(operator);
         } else {
             Node newParent = (Node)possibleEdgeSource[0];
             int position = (Integer)possibleEdgeSource[1];
@@ -751,7 +747,7 @@ public class MindView extends Display {
             }
 
             MovingChild operator = new MovingChild(m_mindModel, draggedNode, newParent, position);
-            m_mindController.addEdit(operator);
+            m_mindController.does(operator);
 
             /*
             Node oldParent = draggedNode.getParent();
