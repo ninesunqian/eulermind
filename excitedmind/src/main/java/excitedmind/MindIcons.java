@@ -50,6 +50,7 @@ public class MindIcons {
         ImageIcon imageIcon = new ImageIcon(getIconPath(name));
         AbstractAction action = new AbstractAction(name, imageIcon) {
             public void actionPerformed(ActionEvent event) {
+                fdsafdsa
                 m_mindController.getCurrentView().setCursorProperty(
                         MindModel.sm_iconPropName, name == "remove" ? null : name);
             }

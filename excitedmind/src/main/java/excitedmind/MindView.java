@@ -209,21 +209,32 @@ public class MindView extends Display {
 
         @Override
         public void nodeItemEntered(NodeItem item, MouseEvent e) {
-            m_fsm.itemEntered(item);
+            if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Normal) {
+                startCursorTimer(item);
+            }
         }
 
         @Override
         public void nodeItemExited(NodeItem item, MouseEvent e) {
-            m_fsm.itemExited(item);
+            if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Normal) {
+                stopCursorTimer();
+            }
         }
 
         @Override
         public void nodeItemPressed(NodeItem item, MouseEvent e) {
-            m_fsm.itemPressed(item, e);
+            if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Normal) {
+                stopCursorTimer();
+                m_cursor.setCursorNodeItem(item);
+            }
         }
 
         @Override
         public void nodeItemClicked(NodeItem item, MouseEvent e) {
+            if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Normal) {
+                //TODO: move itemClick here
+
+            }
             m_fsm.itemClicked(item, e);
         }
 
@@ -446,13 +457,27 @@ public class MindView extends Display {
         hideEditor();
     }
 
+    abstract class NormalStateAction extends AbstractAction {
+        final public void actionPerformed(ActionEvent e) {
+            if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Normal) {
+                NormalStateActionPerformed(e);
+                assert(m_fsm.getState() == MindViewFSM.MindViewStateMap.Normal);
+                renderTree();
+                stopCursorTimer();
+            }
+        }
+
+        //this memthod must not change state
+        abstract public void NormalStateActionPerformed(ActionEvent e);
+    }
+
     private Timer m_cursorTimer;
 
     void startCursorTimer(final NodeItem nodeItem)
     {
-        m_cursorTimer = new Timer(500, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+        m_cursorTimer = new Timer(500, new NormalStateAction() {
+
+            public void NormalStateActionPerformed(ActionEvent e) {
                 m_fsm.cursorTimeout(nodeItem);
                 m_cursorTimer = null;
             }
@@ -469,51 +494,50 @@ public class MindView extends Display {
     }
 
 
-    AbstractAction m_cursorLeftAction = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
+    AbstractAction m_cursorLeftAction = new NormalStateAction() {
+        public void NormalStateActionPerformed(ActionEvent e) {
             m_fsm.cursorLeft();
         }
     };
 
-    AbstractAction m_cursorRightAction = new AbstractAction() {
+    NormalStateAction m_cursorRightAction = new NormalStateAction() {
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void NormalStateActionPerformed(ActionEvent e) {
             m_fsm.cursorRight();
         }
     };
 
-    AbstractAction m_cursorUpAction = new AbstractAction() {
+    NormalStateAction m_cursorUpAction = new NormalStateAction() {
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void NormalStateActionPerformed(ActionEvent e) {
             m_fsm.cursorUp();
         }
     };
 
-    AbstractAction m_cursorDownAction = new AbstractAction() {
+    NormalStateAction m_cursorDownAction = new NormalStateAction() {
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void NormalStateActionPerformed(ActionEvent e) {
             m_fsm.cursorDown();
         }
     };
 
-    AbstractAction m_undoAction = new AbstractAction() {
+    NormalStateAction m_undoAction = new NormalStateAction() {
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void NormalStateActionPerformed(ActionEvent e) {
             m_fsm.undo();
         }
     };
 
-    AbstractAction m_redoAction = new AbstractAction() {
+    NormalStateAction m_redoAction = new NormalStateAction() {
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void NormalStateActionPerformed(ActionEvent e) {
             m_fsm.redo();
         }
     };
 
-    AbstractAction m_saveAction = new AbstractAction() {
+    NormalStateAction m_saveAction = new NormalStateAction() {
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void NormalStateActionPerformed(ActionEvent e) {
             m_mindModel.m_mindDb.commit();
         }
     };
@@ -523,9 +547,9 @@ public class MindView extends Display {
         return Removing.canDo(m_mindModel, m_tree, getCursorSourceNode());
     }
 
-    AbstractAction m_removeAction = new AbstractAction()  {
+    NormalStateAction m_removeAction = new NormalStateAction()  {
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void NormalStateActionPerformed(ActionEvent e) {
             m_fsm.remove();
         }
     };
@@ -603,6 +627,7 @@ public class MindView extends Display {
         m_mindActionMap.put(sm_addChildActionName, m_addChildAction);
         m_mindActionMap.put(sm_addSiblingActionName, m_addSiblingAction);
 
+        //TODO: change to putNormalAction to fix bug
         m_mindActionMap.put(sm_undoActionName, m_undoAction);
         m_mindActionMap.put(sm_redoActionName, m_redoAction);
         m_mindActionMap.put(sm_saveActionName, m_saveAction);
@@ -767,6 +792,11 @@ public class MindView extends Display {
     {
         Node cursorNode = getCursorSourceNode();
         m_mindModel.setProperty(m_mindModel.getDBId(cursorNode), key, value);
+    }
+
+    public void execute(MindOperator operator)
+    {
+
     }
 
 } // end of class TreeMap
