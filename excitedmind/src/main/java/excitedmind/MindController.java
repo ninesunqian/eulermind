@@ -115,13 +115,21 @@ public class MindController extends UndoManager {
             int i = 0;
         }
 
-        MindView mindView = exposeMindView(operator.m_rootDBId);
-        mindView.setCursorNodeByPath(isUndo ? operator.m_formerCursorPath : operator.m_laterCursorPath);
+        MindView operatorBornView = exposeMindView(operator.m_rootDBId);
 
         //repaint remain mindviews
         for (Object rootDBId : m_mindViews.keySet()) {
-            //FIXME: current cursor node is removed ? how ?
-            m_mindViews.get(rootDBId).renderTree();
+
+            MindView mindView = m_mindViews.get(rootDBId);
+            if (mindView == operatorBornView) {
+                mindView.setCursorNodeByPath(isUndo ? operator.m_formerCursorPath : operator.m_laterCursorPath);
+            } else {
+                if (! mindView.getCursorSourceNode().isValid()) {
+                    ArrayList<Integer> rootPath = new ArrayList<Integer>();
+                    mindView.setCursorNodeByPath(rootPath);
+                }
+            }
+            mindView.renderTree();
         }
     }
 

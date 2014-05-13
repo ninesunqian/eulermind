@@ -44,7 +44,6 @@ public class MindToolBar extends JToolBar {
         m_fontFamilyCombobox.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
-                        fdafdaf
                         String family = (String) m_fontFamilyCombobox.getSelectedItem();
                         m_mindController.getCurrentView().setCursorProperty(
                                 MindModel.sm_fontFamilyPropName, family);

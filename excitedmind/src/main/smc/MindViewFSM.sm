@@ -27,96 +27,10 @@ Entry
         setCursor(null);
     }
 {
-    itemEntered(nodeItem: NodeItem)
-        nil
-    {
-        startCursorTimer(nodeItem);
-    }
-
-    itemExited(nodeItem: NodeItem)
-        nil
-    {
-        stopCursorTimer();
-    }
-
-    cursorTimeout(nodeItem: NodeItem)
-        Normal
-    {
-        m_cursor.setCursorNodeItem(nodeItem);
-    }
-
-    cursorLeft
-        Normal
-    {
-        m_cursor.moveLeft();
-    }
-
-    cursorRight
-        Normal
-    {
-        m_cursor.moveRight();
-    }
-
-    cursorUp
-        Normal
-    {
-        m_cursor.moveUp();
-    }
-    cursorDown
-        Normal
-    {
-        m_cursor.moveDown();
-    }
-
-    itemPressed(nodeItem: NodeItem, e: MouseEvent)
-        Normal
-        {
-            m_cursor.setCursorNodeItem(nodeItem);
-        }
-
-    itemClicked(nodeItem: NodeItem, e: MouseEvent)
-        [ UILib.isButtonPressed(e, Control.MIDDLE_MOUSE_BUTTON) ]
-        Normal
-        {
-            toggleFoldNode(ctxt.getCursorSourceNode());
-        }
-
-    itemClicked(nodeItem: NodeItem, e: MouseEvent)
-        Normal
-        {
-            toggleFoldNode(ctxt.getCursorSourceNode());
-        }
 
     itemDragged(nodeItem: NodeItem)
         Dragging
         {
-        }
-
-    remove
-        [ ctxt.canRemove() ]
-        Normal
-        {
-            removeCursor();
-        }
-
-    setProperty(key: String, value: Object)
-        Normal
-        {
-            setCursorPropertyImpl(key, value);
-        }
-
-    undo
-        [ ctxt.m_mindController.canUndo() ]
-        Normal
-        {
-            m_mindController.undo();
-        }
-
-    redo
-        [ ctxt.m_mindController.canRedo()]
-        Normal
-        {
-            m_mindController.redo();
         }
 
     startEditing

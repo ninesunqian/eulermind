@@ -50,54 +50,6 @@ public class MindViewFSM
         return;
     }
 
-    public void cursorDown()
-    {
-        _transition = "cursorDown";
-        getState().cursorDown(this);
-        _transition = "";
-        return;
-    }
-
-    public void cursorLeft()
-    {
-        _transition = "cursorLeft";
-        getState().cursorLeft(this);
-        _transition = "";
-        return;
-    }
-
-    public void cursorRight()
-    {
-        _transition = "cursorRight";
-        getState().cursorRight(this);
-        _transition = "";
-        return;
-    }
-
-    public void cursorTimeout(NodeItem nodeItem)
-    {
-        _transition = "cursorTimeout";
-        getState().cursorTimeout(this, nodeItem);
-        _transition = "";
-        return;
-    }
-
-    public void cursorUp()
-    {
-        _transition = "cursorUp";
-        getState().cursorUp(this);
-        _transition = "";
-        return;
-    }
-
-    public void itemClicked(NodeItem nodeItem, MouseEvent e)
-    {
-        _transition = "itemClicked";
-        getState().itemClicked(this, nodeItem, e);
-        _transition = "";
-        return;
-    }
-
     public void itemDragged(NodeItem nodeItem)
     {
         _transition = "itemDragged";
@@ -110,30 +62,6 @@ public class MindViewFSM
     {
         _transition = "itemDropped";
         getState().itemDropped(this, draggedNode, droppedNode, hitPosition, dragAction);
-        _transition = "";
-        return;
-    }
-
-    public void itemEntered(NodeItem nodeItem)
-    {
-        _transition = "itemEntered";
-        getState().itemEntered(this, nodeItem);
-        _transition = "";
-        return;
-    }
-
-    public void itemExited(NodeItem nodeItem)
-    {
-        _transition = "itemExited";
-        getState().itemExited(this, nodeItem);
-        _transition = "";
-        return;
-    }
-
-    public void itemPressed(NodeItem nodeItem, MouseEvent e)
-    {
-        _transition = "itemPressed";
-        getState().itemPressed(this, nodeItem, e);
         _transition = "";
         return;
     }
@@ -154,30 +82,6 @@ public class MindViewFSM
         return;
     }
 
-    public void redo()
-    {
-        _transition = "redo";
-        getState().redo(this);
-        _transition = "";
-        return;
-    }
-
-    public void remove()
-    {
-        _transition = "remove";
-        getState().remove(this);
-        _transition = "";
-        return;
-    }
-
-    public void setProperty(String key, Object value)
-    {
-        _transition = "setProperty";
-        getState().setProperty(this, key, value);
-        _transition = "";
-        return;
-    }
-
     public void startEditing()
     {
         _transition = "startEditing";
@@ -190,14 +94,6 @@ public class MindViewFSM
     {
         _transition = "startInserting";
         getState().startInserting(this, asChild);
-        _transition = "";
-        return;
-    }
-
-    public void undo()
-    {
-        _transition = "undo";
-        getState().undo(this);
         _transition = "";
         return;
     }
@@ -271,57 +167,12 @@ public class MindViewFSM
             Default(context);
         }
 
-        protected void cursorDown(MindViewFSM context)
-        {
-            Default(context);
-        }
-
-        protected void cursorLeft(MindViewFSM context)
-        {
-            Default(context);
-        }
-
-        protected void cursorRight(MindViewFSM context)
-        {
-            Default(context);
-        }
-
-        protected void cursorTimeout(MindViewFSM context, NodeItem nodeItem)
-        {
-            Default(context);
-        }
-
-        protected void cursorUp(MindViewFSM context)
-        {
-            Default(context);
-        }
-
-        protected void itemClicked(MindViewFSM context, NodeItem nodeItem, MouseEvent e)
-        {
-            Default(context);
-        }
-
         protected void itemDragged(MindViewFSM context, NodeItem nodeItem)
         {
             Default(context);
         }
 
         protected void itemDropped(MindViewFSM context, NodeItem draggedNode, NodeItem droppedNode, NodeDndControl.HitPosition hitPosition, NodeDndControl.DragAction dragAction)
-        {
-            Default(context);
-        }
-
-        protected void itemEntered(MindViewFSM context, NodeItem nodeItem)
-        {
-            Default(context);
-        }
-
-        protected void itemExited(MindViewFSM context, NodeItem nodeItem)
-        {
-            Default(context);
-        }
-
-        protected void itemPressed(MindViewFSM context, NodeItem nodeItem, MouseEvent e)
         {
             Default(context);
         }
@@ -336,32 +187,12 @@ public class MindViewFSM
             Default(context);
         }
 
-        protected void redo(MindViewFSM context)
-        {
-            Default(context);
-        }
-
-        protected void remove(MindViewFSM context)
-        {
-            Default(context);
-        }
-
-        protected void setProperty(MindViewFSM context, String key, Object value)
-        {
-            Default(context);
-        }
-
         protected void startEditing(MindViewFSM context)
         {
             Default(context);
         }
 
         protected void startInserting(MindViewFSM context, boolean asChild)
-        {
-            Default(context);
-        }
-
-        protected void undo(MindViewFSM context)
         {
             Default(context);
         }
@@ -468,285 +299,12 @@ public class MindViewFSM
         }
 
         @Override
-        protected void cursorDown(MindViewFSM context)
-        {
-            MindView ctxt = context.getOwner();
-
-            (context.getState()).exit(context);
-            context.clearState();
-            try
-            {
-                ctxt.m_cursor.moveDown();
-            }
-            finally
-            {
-                context.setState(MindViewStateMap.Normal);
-                (context.getState()).entry(context);
-            }
-
-            return;
-        }
-
-        @Override
-        protected void cursorLeft(MindViewFSM context)
-        {
-            MindView ctxt = context.getOwner();
-
-            (context.getState()).exit(context);
-            context.clearState();
-            try
-            {
-                ctxt.m_cursor.moveLeft();
-            }
-            finally
-            {
-                context.setState(MindViewStateMap.Normal);
-                (context.getState()).entry(context);
-            }
-
-            return;
-        }
-
-        @Override
-        protected void cursorRight(MindViewFSM context)
-        {
-            MindView ctxt = context.getOwner();
-
-            (context.getState()).exit(context);
-            context.clearState();
-            try
-            {
-                ctxt.m_cursor.moveRight();
-            }
-            finally
-            {
-                context.setState(MindViewStateMap.Normal);
-                (context.getState()).entry(context);
-            }
-
-            return;
-        }
-
-        @Override
-        protected void cursorTimeout(MindViewFSM context, NodeItem nodeItem)
-        {
-            MindView ctxt = context.getOwner();
-
-            (context.getState()).exit(context);
-            context.clearState();
-            try
-            {
-                ctxt.m_cursor.setCursorNodeItem(nodeItem);
-            }
-            finally
-            {
-                context.setState(MindViewStateMap.Normal);
-                (context.getState()).entry(context);
-            }
-
-            return;
-        }
-
-        @Override
-        protected void cursorUp(MindViewFSM context)
-        {
-            MindView ctxt = context.getOwner();
-
-            (context.getState()).exit(context);
-            context.clearState();
-            try
-            {
-                ctxt.m_cursor.moveUp();
-            }
-            finally
-            {
-                context.setState(MindViewStateMap.Normal);
-                (context.getState()).entry(context);
-            }
-
-            return;
-        }
-
-        @Override
-        protected void itemClicked(MindViewFSM context, NodeItem nodeItem, MouseEvent e)
-        {
-            MindView ctxt = context.getOwner();
-
-            if ( UILib.isButtonPressed(e, Control.MIDDLE_MOUSE_BUTTON) )
-            {
-                (context.getState()).exit(context);
-                context.clearState();
-                try
-                {
-                    ctxt.toggleFoldNode(ctxt.getCursorSourceNode());
-                }
-                finally
-                {
-                    context.setState(MindViewStateMap.Normal);
-                    (context.getState()).entry(context);
-                }
-
-            }
-            else
-            {
-                (context.getState()).exit(context);
-                context.clearState();
-                try
-                {
-                    ctxt.toggleFoldNode(ctxt.getCursorSourceNode());
-                }
-                finally
-                {
-                    context.setState(MindViewStateMap.Normal);
-                    (context.getState()).entry(context);
-                }
-
-            }
-
-            return;
-        }
-
-        @Override
         protected void itemDragged(MindViewFSM context, NodeItem nodeItem)
         {
 
             (context.getState()).exit(context);
             context.setState(MindViewStateMap.Dragging);
             (context.getState()).entry(context);
-            return;
-        }
-
-        @Override
-        protected void itemEntered(MindViewFSM context, NodeItem nodeItem)
-        {
-            MindView ctxt = context.getOwner();
-
-            MindViewState endState = context.getState();
-            context.clearState();
-            try
-            {
-                ctxt.startCursorTimer(nodeItem);
-            }
-            finally
-            {
-                context.setState(endState);
-            }
-
-            return;
-        }
-
-        @Override
-        protected void itemExited(MindViewFSM context, NodeItem nodeItem)
-        {
-            MindView ctxt = context.getOwner();
-
-            MindViewState endState = context.getState();
-            context.clearState();
-            try
-            {
-                ctxt.stopCursorTimer();
-            }
-            finally
-            {
-                context.setState(endState);
-            }
-
-            return;
-        }
-
-        @Override
-        protected void itemPressed(MindViewFSM context, NodeItem nodeItem, MouseEvent e)
-        {
-            MindView ctxt = context.getOwner();
-
-            (context.getState()).exit(context);
-            context.clearState();
-            try
-            {
-                ctxt.m_cursor.setCursorNodeItem(nodeItem);
-            }
-            finally
-            {
-                context.setState(MindViewStateMap.Normal);
-                (context.getState()).entry(context);
-            }
-
-            return;
-        }
-
-        @Override
-        protected void redo(MindViewFSM context)
-        {
-            MindView ctxt = context.getOwner();
-
-            if ( ctxt.m_mindController.canRedo())
-            {
-                (context.getState()).exit(context);
-                context.clearState();
-                try
-                {
-                    ctxt.m_mindController.redo();
-                }
-                finally
-                {
-                    context.setState(MindViewStateMap.Normal);
-                    (context.getState()).entry(context);
-                }
-
-            }
-            else
-            {
-                super.redo(context);
-            }
-
-            return;
-        }
-
-        @Override
-        protected void remove(MindViewFSM context)
-        {
-            MindView ctxt = context.getOwner();
-
-            if ( ctxt.canRemove() )
-            {
-                (context.getState()).exit(context);
-                context.clearState();
-                try
-                {
-                    ctxt.removeCursor();
-                }
-                finally
-                {
-                    context.setState(MindViewStateMap.Normal);
-                    (context.getState()).entry(context);
-                }
-
-            }
-            else
-            {
-                super.remove(context);
-            }
-
-            return;
-        }
-
-        @Override
-        protected void setProperty(MindViewFSM context, String key, Object value)
-        {
-            MindView ctxt = context.getOwner();
-
-            (context.getState()).exit(context);
-            context.clearState();
-            try
-            {
-                ctxt.setCursorPropertyImpl(key, value);
-            }
-            finally
-            {
-                context.setState(MindViewStateMap.Normal);
-                (context.getState()).entry(context);
-            }
-
             return;
         }
 
@@ -793,34 +351,6 @@ public class MindViewFSM
             else
             {
                 super.startInserting(context, asChild);
-            }
-
-            return;
-        }
-
-        @Override
-        protected void undo(MindViewFSM context)
-        {
-            MindView ctxt = context.getOwner();
-
-            if ( ctxt.m_mindController.canUndo() )
-            {
-                (context.getState()).exit(context);
-                context.clearState();
-                try
-                {
-                    ctxt.m_mindController.undo();
-                }
-                finally
-                {
-                    context.setState(MindViewStateMap.Normal);
-                    (context.getState()).entry(context);
-                }
-
-            }
-            else
-            {
-                super.undo(context);
             }
 
             return;

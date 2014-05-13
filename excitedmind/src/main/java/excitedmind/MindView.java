@@ -18,6 +18,7 @@ import prefuse.Visualization;
 import prefuse.controls.*;
 import prefuse.data.*;
 import prefuse.util.PrefuseLib;
+import prefuse.util.ui.UILib;
 import prefuse.visual.EdgeItem;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualTree;
@@ -73,12 +74,20 @@ public class MindView extends Display {
         @Override
         public void keyPressed(KeyEvent e)
         {
+            m_newOperator = null;
+
             if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                 if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Inserting) {
                     m_fsm.ok(false);
                 } else {
                     m_fsm.ok();
                 }
+
+                if (m_newOperator != null) {
+                    m_mindController.does(m_newOperator);
+                    m_newOperator = null;
+                }
+
             }
             else if (e.getKeyCode() == KeyEvent.VK_ESCAPE)  {
                 m_fsm.cancel();
@@ -232,10 +241,10 @@ public class MindView extends Display {
         @Override
         public void nodeItemClicked(NodeItem item, MouseEvent e) {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Normal) {
-                //TODO: move itemClick here
-
+                //if ( !UILib.isButtonPressed(e, Control.MIDDLE_MOUSE_BUTTON))_{
+                    toggleFoldNode(getCursorSourceNode());
+                //}
             }
-            m_fsm.itemClicked(item, e);
         }
 
         @Override
@@ -305,6 +314,8 @@ public class MindView extends Display {
         @Override
         public void dragEnd(NodeItem draggedNode, NodeItem droppedNode, HitPosition hitPosition, DragAction dragAction)
         {
+            m_newOperator = null;
+
             m_logger.info("nodeItemDropped");
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Dragging) {
 
@@ -318,6 +329,11 @@ public class MindView extends Display {
                 } else {
                     m_fsm.cancel();
                 }
+            }
+
+            if (m_newOperator != null) {
+                m_mindController.does(m_newOperator);
+                m_newOperator = null;
             }
         }
 
@@ -460,10 +476,11 @@ public class MindView extends Display {
     abstract class NormalStateAction extends AbstractAction {
         final public void actionPerformed(ActionEvent e) {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Normal) {
+                stopCursorTimer();
                 NormalStateActionPerformed(e);
                 assert(m_fsm.getState() == MindViewFSM.MindViewStateMap.Normal);
+                //if NormalStatActionPermaled call m_mindControl.does(operator), will renderTree()
                 renderTree();
-                stopCursorTimer();
             }
         }
 
@@ -478,8 +495,8 @@ public class MindView extends Display {
         m_cursorTimer = new Timer(500, new NormalStateAction() {
 
             public void NormalStateActionPerformed(ActionEvent e) {
-                m_fsm.cursorTimeout(nodeItem);
-                m_cursorTimer = null;
+                m_cursor.setCursorNodeItem(nodeItem);
+                stopCursorTimer();
             }
         });
         m_cursorTimer.start();
@@ -494,44 +511,48 @@ public class MindView extends Display {
     }
 
 
-    AbstractAction m_cursorLeftAction = new NormalStateAction() {
+    NormalStateAction m_cursorLeftAction = new NormalStateAction() {
         public void NormalStateActionPerformed(ActionEvent e) {
-            m_fsm.cursorLeft();
+            m_cursor.moveLeft();
         }
     };
 
     NormalStateAction m_cursorRightAction = new NormalStateAction() {
         @Override
         public void NormalStateActionPerformed(ActionEvent e) {
-            m_fsm.cursorRight();
+            m_cursor.moveRight();
         }
     };
 
     NormalStateAction m_cursorUpAction = new NormalStateAction() {
         @Override
         public void NormalStateActionPerformed(ActionEvent e) {
-            m_fsm.cursorUp();
+            m_cursor.moveUp();
         }
     };
 
     NormalStateAction m_cursorDownAction = new NormalStateAction() {
         @Override
         public void NormalStateActionPerformed(ActionEvent e) {
-            m_fsm.cursorDown();
+            m_cursor.moveDown();
         }
     };
 
     NormalStateAction m_undoAction = new NormalStateAction() {
         @Override
         public void NormalStateActionPerformed(ActionEvent e) {
-            m_fsm.undo();
+            if (m_mindController.canUndo()) {
+                m_mindController.undo();
+            }
         }
     };
 
     NormalStateAction m_redoAction = new NormalStateAction() {
         @Override
         public void NormalStateActionPerformed(ActionEvent e) {
-            m_fsm.redo();
+            if (m_mindController.canRedo()) {
+                m_mindController.redo();
+            }
         }
     };
 
@@ -547,10 +568,21 @@ public class MindView extends Display {
         return Removing.canDo(m_mindModel, m_tree, getCursorSourceNode());
     }
 
+    public void removeCursor()
+    {
+        Node cursorNode = getCursorSourceNode();
+        MindOperator operator = new Removing(m_mindModel, cursorNode);
+        m_mindController.does(operator);
+    }
+
     NormalStateAction m_removeAction = new NormalStateAction()  {
+
         @Override
         public void NormalStateActionPerformed(ActionEvent e) {
-            m_fsm.remove();
+            if (canRemove())
+            {
+                removeCursor();
+            }
         }
     };
 
@@ -605,7 +637,6 @@ public class MindView extends Display {
     final static String sm_removeActionName = "remove";
 
 
-    final static String sm_toNormalActionAction = "toNormal";
 
     final static String sm_cursorLeft = "cursorLeft";
     final static String sm_cursorRight = "cursorRight";
@@ -627,7 +658,6 @@ public class MindView extends Display {
         m_mindActionMap.put(sm_addChildActionName, m_addChildAction);
         m_mindActionMap.put(sm_addSiblingActionName, m_addSiblingAction);
 
-        //TODO: change to putNormalAction to fix bug
         m_mindActionMap.put(sm_undoActionName, m_undoAction);
         m_mindActionMap.put(sm_redoActionName, m_redoAction);
         m_mindActionMap.put(sm_saveActionName, m_saveAction);
@@ -646,7 +676,6 @@ public class MindView extends Display {
         inputMap.put(KeyStroke.getKeyStroke("ctrl Z"), sm_undoActionName);
         inputMap.put(KeyStroke.getKeyStroke("ctrl Y"), sm_redoActionName);
         inputMap.put(KeyStroke.getKeyStroke("ctrl S"), sm_saveActionName);
-        inputMap.put(KeyStroke.getKeyStroke("ESCAPE"), sm_toNormalActionAction);
 
         inputMap.put(KeyStroke.getKeyStroke("LEFT"), sm_cursorLeft);
         inputMap.put(KeyStroke.getKeyStroke("RIGHT"), sm_cursorRight);
@@ -654,7 +683,7 @@ public class MindView extends Display {
         inputMap.put(KeyStroke.getKeyStroke("DOWN"), sm_cursorDown);
     }
 
-    public void addPlaceholder(boolean asChild)
+    private void addPlaceholder(boolean asChild)
     {
         Node cursorNode = getCursorSourceNode();
         m_savedCursor = cursorNode;
@@ -674,7 +703,7 @@ public class MindView extends Display {
         m_cursor.setCursorNodeItem(toVisual(newNode));
     }
 
-    public void removePlaceholder()
+    private void removePlaceholder()
     {
         Node placeholderNode = getCursorSourceNode();
         assert(isPlaceholer(placeholderNode));
@@ -728,25 +757,12 @@ public class MindView extends Display {
         }
     }
 
-    public void removeCursor()
-    {
-        Node cursorNode = getCursorSourceNode();
-
-        Node parent = cursorNode.getParent();
-        Edge edge = m_tree.getEdge(parent, cursorNode);
-
-        MindOperator operator;
-        operator = new Removing(m_mindModel, cursorNode);
-
-        m_mindController.does(operator);
-    }
-
-
     public void dragAndDropNode(Node draggedNode, Node droppedNode,
                                    NodeDndControl.HitPosition hitPosition,
                                    NodeDndControl.DragAction dragAction)
     {
         Object possibleEdgeSource[] = getPossibleEdgeSource(droppedNode, hitPosition);
+        m_newOperator = null;
 
         if (dragAction == NodeDndControl.DragAction.LINK) {
             Node referrer = (Node)possibleEdgeSource[0];
@@ -754,8 +770,7 @@ public class MindView extends Display {
 
             assert(m_mindModel.canAddReference(referrer, draggedNode));
 
-            AddingReference operator = new AddingReference(m_mindModel, draggedNode, referrer, position);
-            m_mindController.does(operator);
+            m_newOperator = new AddingReference(m_mindModel, draggedNode, referrer, position);
         } else {
             Node newParent = (Node)possibleEdgeSource[0];
             int position = (Integer)possibleEdgeSource[1];
@@ -771,8 +786,6 @@ public class MindView extends Display {
                 return;
             }
 
-            MovingChild operator = new MovingChild(m_mindModel, draggedNode, newParent, position);
-            m_mindController.does(operator);
 
             /*
             Node oldParent = draggedNode.getParent();
@@ -785,18 +798,22 @@ public class MindView extends Display {
 
     public void setCursorProperty(String key, Object value)
     {
-        m_fsm.setProperty(key, value);
-    }
+        if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Normal) {
+            //called by toolbar controls' action listener,
+            stopCursorTimer();
 
-    public void setCursorPropertyImpl(String key, Object value)
-    {
-        Node cursorNode = getCursorSourceNode();
-        m_mindModel.setProperty(m_mindModel.getDBId(cursorNode), key, value);
+            Node cursorNode = getCursorSourceNode();
+            MindOperator operator = new SettingProperty(m_mindModel, cursorNode, key, value);
+
+            m_mindController.does(operator);
+        }
     }
 
     public void execute(MindOperator operator)
     {
 
     }
+
+    MindOperator m_newOperator;
 
 } // end of class TreeMap
