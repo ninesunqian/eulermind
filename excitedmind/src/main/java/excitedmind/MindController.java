@@ -2,12 +2,18 @@ package excitedmind;
 
 import excitedmind.operator.Removing;
 import prefuse.data.Node;
+import prefuse.data.Table;
+import prefuse.data.Tree;
+import prefuse.data.Tuple;
+import prefuse.data.tuple.TupleSet;
+import prefuse.util.collections.IntIterator;
 
 import javax.swing.*;
 import javax.swing.undo.UndoManager;
 import javax.swing.undo.UndoableEdit;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 /**
@@ -96,6 +102,31 @@ public class MindController extends UndoManager {
         return m_mindModel.getDBId(node);
     }
 
+    String getTreeNodeRows(Tree tree)
+    {
+        Table nodeTable = tree.getNodeTable();
+
+        IntIterator allRows = nodeTable.rows();
+
+        String str = "[";
+
+        while (allRows.hasNext()) {
+             str += ((Integer)allRows.nextInt()).toString() + ", ";
+        }
+
+        str += "],  ";
+
+        Table edgeTable = tree.getEdgeTable();
+        allRows = edgeTable.rows();
+
+        while (allRows.hasNext()) {
+            str += ((Integer)allRows.nextInt()).toString() + ", ";
+        }
+        str += "]";
+
+        return str;
+    }
+
     private void updateMindViews(MindOperator operator, boolean isUndo)
     {
         //remove no needed mindview
@@ -129,6 +160,11 @@ public class MindController extends UndoManager {
                     mindView.setCursorNodeByPath(rootPath);
                 }
             }
+            Tree dataTree = mindView.m_tree;
+            m_logger.info("Tree Node Rows: " + getTreeNodeRows(dataTree));
+            Tree visualTree = mindView.m_visualTree;
+            m_logger.info("Tree Item Rows: " + getTreeNodeRows(visualTree));
+
             mindView.renderTree();
         }
     }

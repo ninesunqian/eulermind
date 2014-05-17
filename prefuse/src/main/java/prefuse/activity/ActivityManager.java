@@ -1,6 +1,7 @@
 package prefuse.activity;
 
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 import prefuse.util.PrefuseConfig;
 
@@ -36,7 +37,8 @@ import prefuse.util.PrefuseConfig;
  * @see prefuse.action.Action
  */
 public class ActivityManager extends Thread {
-    
+    final Logger m_logger = Logger.getLogger(this.getClass().getName());
+
     private static ActivityManager s_instance;
     
     private ArrayList m_activities;
@@ -363,6 +365,8 @@ public class ActivityManager extends Thread {
                     // itself if it should perform any action or not
                     Activity a = (Activity)m_tmp.get(i);
                     long s = a.runActivity(currentTime);
+                    m_logger.info("runActivity: " + a.toString());
+
                     // compute minimum time for next activity cycle
                     t = (s<0 ? t : t<0 ? s : Math.min(t,s));
                 }
@@ -374,13 +378,19 @@ public class ActivityManager extends Thread {
                 
                 // determine the next time we should run
                 try {
-                    synchronized (this) { wait(t); }
+                    synchronized (this) {
+                        m_logger.info(String.format("has activity wait %d", t));
+                        wait(t);
+                    }
                 } catch (InterruptedException e) { }
                 
             } else {
                 // nothing to do, chill out until notified
                 try {
-                    synchronized (this) { wait(); }
+                    synchronized (this) {
+                        m_logger.info("not activity wait");
+                        wait();
+                    }
                 } catch (InterruptedException e) { }
             }
         }

@@ -87,9 +87,7 @@ public class TupleManager {
             }
         } else {
             // TODO: return null instead?
-            return null;
-            //wxg removed
-            //throw new IllegalArgumentException("Invalid row index: "+row);
+            throw new IllegalArgumentException("Invalid row index: "+row);
         }
     }
     

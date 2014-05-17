@@ -95,10 +95,12 @@ public class MindView extends Display {
         }
     };
 
+    VisualTree m_visualTree;
+
 	public MindView(MindModel mindModel, MindController undoManager, Object rootId) {
 		super(new Visualization());
 
-        m_logger.setLevel(Level.OFF);
+        //m_logger.setLevel(Level.OFF);
 		setSize(700, 600);
 		setHighQuality(true);
 
@@ -107,6 +109,8 @@ public class MindView extends Display {
 
         m_tree = mindModel.findOrPutTree(rootId, 1);
         VisualTree visualTree = (VisualTree)m_vis.add(m_treeGroupName, m_tree);
+
+        m_visualTree = visualTree;
 
         m_cursor = new TreeCursor(visualTree);
         m_folder = new TreeFolder(visualTree);
@@ -160,11 +164,13 @@ public class MindView extends Display {
     }
 
 	public void renderTree() {
+        m_logger.info("renderTree start");
         //if current cursor node is deleted by other view, set cursor to root
         if (!m_cursor.m_currentCursor.isValid()) {
             m_cursor.setCursorNodeItem(toVisual(m_tree.getRoot()));
         }
 		m_renderEngine.run(null);
+        m_logger.info("renderTree end");
 	}
 
     public void renderTree(Runnable runAfterRePaint) {
@@ -499,6 +505,8 @@ public class MindView extends Display {
                 stopCursorTimer();
             }
         });
+        m_cursorTimer.setRepeats(false);
+        m_cursorTimer.setCoalesce(true);
         m_cursorTimer.start();
     }
 

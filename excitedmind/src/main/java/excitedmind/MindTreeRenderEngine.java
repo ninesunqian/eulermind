@@ -94,10 +94,10 @@ public class MindTreeRenderEngine {
             });
         }
 
-		m_vis.run(sm_layoutAction);
-
         //add this line, to make the edge invalid, so prefuse will recompute the position,
         m_vis.invalidateAll();
+		m_vis.run(sm_layoutAction);
+
 	}
 	
     private Action makeItemStyleActions ()

@@ -2,6 +2,7 @@ package prefuse.data;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import prefuse.data.column.Column;
 import prefuse.data.event.ColumnListener;
@@ -78,6 +79,8 @@ import prefuse.util.collections.IntIterator;
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
 public class Graph extends CompositeTupleSet {
+
+    final Logger m_logger = Logger.getLogger(this.getClass().getName());
     // ------------------------------------------------------------------------
     // Graph Linkage Schema
     
@@ -659,6 +662,7 @@ public class Graph extends CompositeTupleSet {
                     removeEdge(links[i]);
             }
         }
+        m_logger.info(String.format("remove node %d", node));
         return nodeTable.removeRow(node);
     }
     
@@ -680,6 +684,7 @@ public class Graph extends CompositeTupleSet {
      * edge was not found or was not valid
      */
     public boolean removeEdge(int edge) {
+        m_logger.info(String.format("remove edge %d", edge));
         return getEdgeTable().removeRow(edge);
     }
     

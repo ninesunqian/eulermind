@@ -397,6 +397,9 @@ public class MindModel {
 	{
         Vertex parent = m_mindDb.getVertex(parentDBId);
         final EdgeVertex edgeChild = m_mindDb.getChildOrReferent(parent, pos);
+        if (edgeChild == null) {
+            int debug = 0;
+        }
         Object removedDBId = edgeChild.m_vertex.getId();
 
         final ArrayList<Object> inheritPathOfTrashedNode =
@@ -405,6 +408,8 @@ public class MindModel {
         final Object trashedId = edgeChild.m_vertex.getId();
 
         for (final Tree tree : m_trees) {
+            hideRelation(tree, parentDBId, pos);
+            /*
             tree.deepTraverse(tree.getRoot(),  new Tree.Processor() {
                 public boolean run(Node node, int level) {
                     m_logger.info ("remove traverse: " + node.getString(sm_textPropName));
@@ -427,6 +432,7 @@ public class MindModel {
                 }
 
             });
+            */
         }
 
         m_mindDb.trashSubTree(parent, pos);

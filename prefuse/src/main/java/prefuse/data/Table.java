@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import javax.swing.event.TableModelEvent;
 
@@ -86,7 +87,8 @@ import prefuse.util.collections.IntIterator;
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
 public class Table extends AbstractTupleSet implements ColumnListener {
-    
+    final Logger m_logger = Logger.getLogger(this.getClass().getName());
+
     /** Listeners for changes to this table */
     protected CopyOnWriteArrayList m_listeners;
     
@@ -365,6 +367,8 @@ public class Table extends AbstractTupleSet implements ColumnListener {
      * row was already invalid
      */
     public boolean removeRow(int row) {
+        m_logger.info(String.format("remove row %d", row));
+
         if ( m_rows.isValidRow(row) ) {
             // the order of operations here is extremely important
             // otherwise listeners may end up with corrupted state.
