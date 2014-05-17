@@ -1,9 +1,13 @@
 package prefuse.activity;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import prefuse.util.PrefuseConfig;
+
+import javax.swing.*;
 
 
 /**
@@ -51,7 +55,7 @@ public class ActivityManager extends Thread {
      * @return the ActivityManager
      */
     private synchronized static ActivityManager getInstance() {
-        if ( s_instance == null || !s_instance.isAlive() ) {
+        if ( s_instance == null ) {
             s_instance = new ActivityManager();
         }
         return s_instance;
@@ -65,7 +69,9 @@ public class ActivityManager extends Thread {
         m_activities = new ArrayList();
         m_tmp = new ArrayList();
         m_nextTime = Long.MAX_VALUE;
-        
+
+        runUsingTimer();
+        /*
         int priority = PrefuseConfig.getInt("activity.threadPriority");
         if ( priority >= Thread.MIN_PRIORITY && 
              priority <= Thread.MAX_PRIORITY )
@@ -74,6 +80,7 @@ public class ActivityManager extends Thread {
         }
         this.setDaemon(true);
         this.start();
+        */
     }
     
     /**
@@ -395,7 +402,70 @@ public class ActivityManager extends Thread {
             }
         }
     }
-    
+
+    Timer m_timer;
+
+    private ActionListener m_timerListener = new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent)
+        {
+            m_logger.info("ActivityManager timer");
+
+            if ( _activityCount() > 0 ) {
+                long currentTime = System.currentTimeMillis();
+                long t = -1;
+
+                // copy content of activities, as new activities might
+                // be added while we process the current ones
+                for ( int i=0; i<m_activities.size(); i++ ) {
+                    Activity a = (Activity)m_activities.get(i);
+                    m_tmp.add(a);
+
+                    // remove activities that won't be run again
+                    if ( currentTime >= a.getStopTime() )
+                    {
+                        m_activities.remove(i--);
+                        a.setScheduled(false);
+                    }
+                }
+                // if no activities left, reflect that in the next time
+                if ( m_activities.size() == 0 ) {
+                    m_nextTime = Long.MAX_VALUE;
+                }
+
+                for ( int i=0; i<m_tmp.size(); i++ ) {
+                    // run the activity - the activity will check for
+                    // itself if it should perform any action or not
+                    Activity a = (Activity)m_tmp.get(i);
+                    long s = a.runActivity(currentTime);
+                    m_logger.info("runActivity: " + a.toString());
+
+                    // compute minimum time for next activity cycle
+                    t = (s<0 ? t : t<0 ? s : Math.min(t,s));
+                }
+
+                // clear the temporary list
+                m_tmp.clear();
+
+                m_timer = new Timer((int)t, m_timerListener);
+                m_timer.setRepeats(false);
+                m_timer.start();
+
+            } else {
+                m_timer = new Timer(10, m_timerListener);
+                m_timer.setRepeats(false);
+                m_timer.start();
+            }
+        }
+    };
+
+    public void runUsingTimer() {
+        _setRunning(true);
+        m_timer = new Timer(10, m_timerListener);
+        m_timer.setRepeats(false);
+        m_timer.start();
+    }
+
     public class ScheduleAfterActivity extends ActivityAdapter {
         Activity after;
         boolean remove;
