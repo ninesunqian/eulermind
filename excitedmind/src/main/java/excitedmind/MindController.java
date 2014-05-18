@@ -160,10 +160,12 @@ public class MindController extends UndoManager {
                     mindView.setCursorNodeByPath(rootPath);
                 }
             }
+            /*
             Tree dataTree = mindView.m_tree;
             m_logger.info("Tree Node Rows: " + getTreeNodeRows(dataTree));
             Tree visualTree = mindView.m_visualTree;
             m_logger.info("Tree Item Rows: " + getTreeNodeRows(visualTree));
+            */
 
             mindView.renderTree();
         }

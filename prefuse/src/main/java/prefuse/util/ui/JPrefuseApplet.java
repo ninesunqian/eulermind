@@ -21,7 +21,7 @@ public class JPrefuseApplet extends JApplet {
      * @see java.applet.Applet#destroy()
      */
     public void destroy() {
-        ActivityManager.stopThread();
+        ActivityManager.stop();
     }
 
     /**
@@ -30,7 +30,7 @@ public class JPrefuseApplet extends JApplet {
      * @see java.applet.Applet#stop()
      */
     public void stop() {
-        ActivityManager.stopThread();
+        ActivityManager.stop();
     }
     
 } // end of class JPrefuseApplet

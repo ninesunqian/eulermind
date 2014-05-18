@@ -40,7 +40,7 @@ import javax.swing.*;
  * @see Activity
  * @see prefuse.action.Action
  */
-public class ActivityManager extends Thread {
+public class ActivityManager {
     final Logger m_logger = Logger.getLogger(this.getClass().getName());
 
     private static ActivityManager s_instance;
@@ -48,8 +48,7 @@ public class ActivityManager extends Thread {
     private ArrayList m_activities;
     private ArrayList m_tmp;
     private long      m_nextTime;
-    private boolean   m_run;
-    
+
     /**
      * Returns the active ActivityManager instance.
      * @return the ActivityManager
@@ -65,29 +64,20 @@ public class ActivityManager extends Thread {
      * Create a new ActivityManger.
      */
     private ActivityManager() {
-        super("prefuse_ActivityManager");
         m_activities = new ArrayList();
         m_tmp = new ArrayList();
         m_nextTime = Long.MAX_VALUE;
 
-        runUsingTimer();
-        /*
-        int priority = PrefuseConfig.getInt("activity.threadPriority");
-        if ( priority >= Thread.MIN_PRIORITY && 
-             priority <= Thread.MAX_PRIORITY )
-        {
-            this.setPriority(priority);
-        }
-        this.setDaemon(true);
-        this.start();
-        */
+        m_timer = new Timer(10, m_timerListener);
+        m_timer.setCoalesce(true);
+        m_timer.start();
     }
     
     /**
      * Stops the activity manager thread. All scheduled actvities are
      * canceled, and then the thread is then notified to stop running.
      */
-    public static void stopThread() {
+    public static void stop() {
         ActivityManager am;
         synchronized ( ActivityManager.class ) {
             am = s_instance;
@@ -95,7 +85,16 @@ public class ActivityManager extends Thread {
         if ( am != null )
             am._stop();
     }
-    
+
+    public static void start() {
+        ActivityManager am;
+        synchronized ( ActivityManager.class ) {
+            am = s_instance;
+        }
+        if ( am != null )
+            am._start();
+    }
+
     /**
      * Schedules an Activity with the manager.
      * @param a the Activity to schedule
@@ -186,28 +185,29 @@ public class ActivityManager extends Thread {
             Activity a = (Activity)m_activities.get(m_activities.size()-1);
             a.cancel();
         }
-        _setRunning(false);
-        notify();
+        m_timer.stop();
     }
-    
+
+    private void _start()
+    {
+        if (!m_timer.isRunning())
+            m_timer.start();
+    }
+
     /**
      * Schedules an Activity with the manager.
      * @param a the Activity to schedule
      */
     private void _schedule(Activity a, long startTime) {
-        if ( a.isScheduled() ) {
-        	try { notifyAll(); } catch ( Exception e ) {}
-            return; // already scheduled, do nothing
-        }
-        a.setStartTime(startTime);
-        synchronized ( this ) {
+        if ( ! a.isScheduled() )  {
+            a.setStartTime(startTime);
             m_activities.add(a);
             a.setScheduled(true);
-            if ( startTime < m_nextTime ) { 
-               m_nextTime = startTime;
-               notify();
+            if ( startTime < m_nextTime ) {
+                m_nextTime = startTime;
             }
         }
+        _start();
     }
     
     /**
@@ -321,95 +321,13 @@ public class ActivityManager extends Thread {
         return m_activities.size();
     }
     
-    /**
-     * Sets the running flag for the ActivityManager instance.
-     */
-    private synchronized void _setRunning(boolean b) {
-        m_run = b;
-    }
-    
-    /**
-     * Used by the activity loop to determine if the ActivityManager
-     * thread should keep running or exit.
-     */
-    private synchronized boolean _keepRunning() {
-        return m_run;
-    }
-    
-    /**
-     * Main scheduling thread loop. This is automatically started upon
-     * initialization of the ActivityManager.
-     */
-    public void run() {
-        _setRunning(true);
-        while ( _keepRunning() ) {
-            if ( _activityCount() > 0 ) {
-                long currentTime = System.currentTimeMillis();
-                long t = -1;
-                
-                synchronized (this) {
-                    // copy content of activities, as new activities might
-                    // be added while we process the current ones
-                    for ( int i=0; i<m_activities.size(); i++ ) {
-                        Activity a = (Activity)m_activities.get(i);
-                        m_tmp.add(a);
-                        
-                        // remove activities that won't be run again
-                        if ( currentTime >= a.getStopTime() )
-                        {
-                            m_activities.remove(i--);
-                            a.setScheduled(false);
-                        }
-                    }
-                    // if no activities left, reflect that in the next time
-                    if ( m_activities.size() == 0 ) {
-                        m_nextTime = Long.MAX_VALUE;
-                    }
-                }
-                
-                for ( int i=0; i<m_tmp.size(); i++ ) {
-                    // run the activity - the activity will check for
-                    // itself if it should perform any action or not
-                    Activity a = (Activity)m_tmp.get(i);
-                    long s = a.runActivity(currentTime);
-                    m_logger.info("runActivity: " + a.toString());
-
-                    // compute minimum time for next activity cycle
-                    t = (s<0 ? t : t<0 ? s : Math.min(t,s));
-                }
-
-                // clear the temporary list
-                m_tmp.clear();
-                
-                if ( t == -1 ) continue;
-                
-                // determine the next time we should run
-                try {
-                    synchronized (this) {
-                        m_logger.info(String.format("has activity wait %d", t));
-                        wait(t);
-                    }
-                } catch (InterruptedException e) { }
-                
-            } else {
-                // nothing to do, chill out until notified
-                try {
-                    synchronized (this) {
-                        m_logger.info("not activity wait");
-                        wait();
-                    }
-                } catch (InterruptedException e) { }
-            }
-        }
-    }
-
     Timer m_timer;
 
     private ActionListener m_timerListener = new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent actionEvent)
         {
-            m_logger.info("ActivityManager timer");
+            //m_logger.info("ActivityManager timer");
 
             if ( _activityCount() > 0 ) {
                 long currentTime = System.currentTimeMillis();
@@ -438,7 +356,7 @@ public class ActivityManager extends Thread {
                     // itself if it should perform any action or not
                     Activity a = (Activity)m_tmp.get(i);
                     long s = a.runActivity(currentTime);
-                    m_logger.info("runActivity: " + a.toString());
+                    //m_logger.info("runActivity: " + a.toString());
 
                     // compute minimum time for next activity cycle
                     t = (s<0 ? t : t<0 ? s : Math.min(t,s));
@@ -447,24 +365,22 @@ public class ActivityManager extends Thread {
                 // clear the temporary list
                 m_tmp.clear();
 
+                /*
                 m_timer = new Timer((int)t, m_timerListener);
                 m_timer.setRepeats(false);
                 m_timer.start();
+                */
 
             } else {
+                m_timer.stop();
+                /*
                 m_timer = new Timer(10, m_timerListener);
                 m_timer.setRepeats(false);
                 m_timer.start();
+                */
             }
         }
     };
-
-    public void runUsingTimer() {
-        _setRunning(true);
-        m_timer = new Timer(10, m_timerListener);
-        m_timer.setRepeats(false);
-        m_timer.start();
-    }
 
     public class ScheduleAfterActivity extends ActivityAdapter {
         Activity after;

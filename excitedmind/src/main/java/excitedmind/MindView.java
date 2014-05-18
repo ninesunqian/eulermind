@@ -164,13 +164,13 @@ public class MindView extends Display {
     }
 
 	public void renderTree() {
-        m_logger.info("renderTree start");
+        /*
         //if current cursor node is deleted by other view, set cursor to root
         if (!m_cursor.m_currentCursor.isValid()) {
             m_cursor.setCursorNodeItem(toVisual(m_tree.getRoot()));
         }
+        */
 		m_renderEngine.run(null);
-        m_logger.info("renderTree end");
 	}
 
     public void renderTree(Runnable runAfterRePaint) {
@@ -233,6 +233,7 @@ public class MindView extends Display {
         public void nodeItemExited(NodeItem item, MouseEvent e) {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Normal) {
                 stopCursorTimer();
+                renderTree();
             }
         }
 
@@ -241,6 +242,7 @@ public class MindView extends Display {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Normal) {
                 stopCursorTimer();
                 m_cursor.setCursorNodeItem(item);
+                renderTree();
             }
         }
 
@@ -250,6 +252,7 @@ public class MindView extends Display {
                 //if ( !UILib.isButtonPressed(e, Control.MIDDLE_MOUSE_BUTTON))_{
                     toggleFoldNode(getCursorSourceNode());
                 //}
+                renderTree();
             }
         }
 
@@ -501,8 +504,11 @@ public class MindView extends Display {
         m_cursorTimer = new Timer(500, new NormalStateAction() {
 
             public void NormalStateActionPerformed(ActionEvent e) {
-                m_cursor.setCursorNodeItem(nodeItem);
-                stopCursorTimer();
+                if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Normal) {
+                    m_cursor.setCursorNodeItem(nodeItem);
+                    stopCursorTimer();
+                    renderTree();
+                }
             }
         });
         m_cursorTimer.setRepeats(false);
@@ -781,26 +787,22 @@ public class MindView extends Display {
             m_newOperator = new AddingReference(m_mindModel, draggedNode, referrer, position);
         } else {
             Node newParent = (Node)possibleEdgeSource[0];
-            int position = (Integer)possibleEdgeSource[1];
+            int newPosition = (Integer)possibleEdgeSource[1];
 
             assert(m_mindModel.canResetParent(draggedNode, newParent));
 
             if (draggedNode == m_tree.getRoot()) {
+                m_logger.info("forbid drag prefuse root to other as child");
                 return;
             }
 
             MindDB.InheritDirection inheritDirection = m_mindModel.getInheritDirection(draggedNode, newParent);
             if (inheritDirection == MindDB.InheritDirection.LINEAL_DESCENDANT) {
+                m_logger.info("forbid drag a node to its descendant as child");
                 return;
             }
 
-
-            /*
-            Node oldParent = draggedNode.getParent();
-            if (m_mindModel.sameDBNode(newParent, oldParent)) {
-                return;
-            }
-            */
+            m_newOperator = new MovingChild(m_mindModel, draggedNode, newParent, newPosition);
         }
     }
 
@@ -815,11 +817,6 @@ public class MindView extends Display {
 
             m_mindController.does(operator);
         }
-    }
-
-    public void execute(MindOperator operator)
-    {
-
     }
 
     MindOperator m_newOperator;

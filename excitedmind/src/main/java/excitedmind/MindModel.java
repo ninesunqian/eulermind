@@ -488,15 +488,16 @@ public class MindModel {
         }
     }
 
-    public void changeChildPos (final Object parentDBId, final int oldPos, final int newPos)
+    public void changeChildPos(final Object parentDBId, final int oldPos, final int newPos)
     {
         Vertex parent = m_mindDb.getVertex(parentDBId);
         m_mindDb.changeChildPos(parent, oldPos, newPos);
 
         for (final Tree tree : m_trees) {
-            visitNodeAvatares(tree, parentDBId, new Visitor() {
-                                              public void visit(Node parent) {
-                    tree.changeChildIndex(parent, oldPos, newPos);
+            visitNodeAvatares(tree, parentDBId,
+                    new Visitor() {
+                        public void visit(Node parent) {
+                            tree.changeChildIndex(parent, oldPos, newPos);
             }
             });
         }
@@ -513,13 +514,7 @@ public class MindModel {
 
     public void moveChild(Object oldParentDBId, int oldPos, Object newParentDBId, int newPos)
 	{
-        if (oldParentDBId.equals(newParentDBId)) {
-            if (oldPos != newPos) {
-                changeChildPos(oldParentDBId, oldPos, newPos);
-            }
-
-            return;
-        }
+        assert (! oldParentDBId.equals(newParentDBId));
 
         Vertex oldParent = m_mindDb.getVertex(oldParentDBId);
         Vertex newParent = m_mindDb.getVertex(newParentDBId);
