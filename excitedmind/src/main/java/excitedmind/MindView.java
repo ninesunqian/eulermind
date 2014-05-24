@@ -108,12 +108,12 @@ public class MindView extends Display {
         m_mindController = undoManager;
 
         m_tree = mindModel.findOrPutTree(rootId, 1);
-        VisualTree visualTree = (VisualTree)m_vis.add(m_treeGroupName, m_tree);
+        m_visualTree = (VisualTree)m_vis.add(m_treeGroupName, m_tree);
+        MindModel.addNodeMirrorXYColumn(m_tree, m_visualTree);
 
-        m_visualTree = visualTree;
 
-        m_cursor = new TreeCursor(visualTree);
-        m_folder = new TreeFolder(visualTree);
+        m_cursor = new TreeCursor(m_visualTree);
+        m_folder = new TreeFolder(m_visualTree);
 
         setItemSorter(new TreeDepthItemSorter());
         m_renderEngine = new MindTreeRenderEngine(this, m_treeGroupName);

@@ -5,11 +5,20 @@ import com.tinkerpop.blueprints.Vertex;
 import excitedmind.MindDB.EdgeVertex;
 import excitedmind.MindDB.RefLinkInfo;
 import prefuse.data.*;
+import prefuse.data.event.EventConstants;
+import prefuse.data.event.TableListener;
+import prefuse.data.event.TupleSetListener;
+import prefuse.data.tuple.TupleSet;
 import prefuse.util.TypeLib;
 import prefuse.util.collections.IntIterator;
 import prefuse.visual.NodeItem;
+import prefuse.visual.VisualItem;
+import prefuse.visual.VisualTable;
 import prefuse.visual.VisualTree;
 
+import java.awt.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -414,30 +423,6 @@ public class MindModel {
 
         for (final Tree tree : m_trees) {
             hideRelation(tree, parentDBId, pos);
-            /*
-            tree.deepTraverse(tree.getRoot(),  new Tree.Processor() {
-                public boolean run(Node node, int level) {
-                    s_logger.info ("remove traverse: " + node.getString(sm_textPropName));
-
-                    ArrayList inheritPathOfTreeNode = (ArrayList) node.get(sm_inheritPathPropName);
-
-                    MindDB.InheritDirection inheritDirection = m_mindDb.getInheritDirection(
-                            inheritPathOfTrashedNode, trashedId,
-                            inheritPathOfTreeNode, getDBId(node));
-
-                    System.out.println (edgeChild.m_vertex.getProperty(sm_textPropName) +"-->" + node.getString(sm_textPropName)
-                            + ": " + inheritDirection);
-
-                    if (node.get(sm_dbIdColumnName).equals(edgeChild.m_vertex.getId()) ||
-                            inheritDirection == MindDB.InheritDirection.LINEAL_DESCENDANT ) {
-                        tree.removeChild(node);
-                        return false;
-                    }
-                    return true;
-                }
-
-            });
-            */
         }
 
         m_mindDb.trashSubTree(parent, pos);
@@ -517,21 +502,6 @@ public class MindModel {
                 && (!isInDBSubTree(newParent, node));
     }
 
-
-    public void moveChild(Object oldParentDBId, int oldPos, Object newParentDBId, int newPos)
-	{
-        assert (! oldParentDBId.equals(newParentDBId));
-
-        Vertex oldParent = m_mindDb.getVertex(oldParentDBId);
-        Vertex newParent = m_mindDb.getVertex(newParentDBId);
-
-        EdgeVertex edgeVertex = m_mindDb.handoverChild(oldParent, oldPos, newParent, newPos);
-
-        for (Tree tree : m_trees) {
-            hideRelation(tree, oldParentDBId, oldPos);
-            exposeRelation(tree, newParentDBId, newPos, edgeVertex.m_edge, edgeVertex.m_vertex);
-        }
-	}
 
 	public void setProperty(final Object dbId, final String key, final Object value)
 	{
@@ -727,28 +697,53 @@ public class MindModel {
         return new VertexBasicInfo(m_mindDb.getVertex(dbId));
     }
 
-    class NodeDistance {
-        int m_node1;
-        int m_node2;
-        double m_distance;
-        NodeDistance(VisualTree visualTree, int node1, int node2)
-        {
-            NodeItem nodeItem1 = (NodeItem)visualTree.getNode(node1);
-            NodeItem nodeItem2 = (NodeItem)visualTree.getNode(node2);
-            double x1 = nodeItem1.getX();
-            double y1 = nodeItem1.getY();
-            double x2 = nodeItem2.getX();
-            double y2 = nodeItem2.getY();
+    static final String MIRROR_X = "mirrorX";
+    static final String MIRROR_Y = "mirrorY";
 
-            m_distance = (x1 - x2) * (x1 - x2)  + (y1 - y2) * (y1 - y2) ;
-        }
-    };
+    static public void addNodeMirrorXYColumn(Tree tree, VisualTree visualTree)
+    {
+        final Table nodeTable = tree.getNodeTable();
+        final VisualTable nodeItemTable = (VisualTable)visualTree.getNodeTable();
 
-    public static Object[] getNearPairNode(VisualTree visualTree, Object dbId1, Object dbId2,
+        nodeTable.addColumn(MIRROR_X, Double.class, 0);
+        nodeTable.addColumn(MIRROR_Y, Double.class, 0);
+
+        nodeItemTable.addTableListener(new TableListener() {
+            @Override
+            public void tableChanged(Table t, int start, int end, int col, int type)
+            {
+                if (type == EventConstants.UPDATE) {
+                    if (col == nodeItemTable.getColumnNumber(VisualItem.X)) {
+                        for (int row = start; row <= end; row++) {
+                            nodeTable.setDouble(row, "mirrorX", nodeItemTable.getX(row));
+                        }
+
+                    } else if (col == nodeItemTable.getColumnNumber(VisualItem.Y))){
+                        for (int row = start; row <= end; row++) {
+                            nodeTable.setDouble(row, "mirrorY", nodeItemTable.getX(row));
+                        }
+
+                    }
+                }
+            }
+        });
+    }
+
+    private static double getNodeDistanceSquare(Node node1, Node node2)
+    {
+        double x1 = node1.getDouble(MIRROR_X);
+        double y1 = node1.getDouble(MIRROR_Y);
+        double x2 = node2.getDouble(MIRROR_X);
+        double y2 = node2.getDouble(MIRROR_Y);
+
+        return (x1 - x2) * (x1 - x2)  + (y1 - y2) * (y1 - y2) ;
+    }
+
+    private static Object[] getNearPairNode(Tree tree, Object dbId1, Object dbId2,
                                              int enforceNode1, int enforceNode2)
     {
-        final ArrayList<Integer> nodeAvatars1 = getNodeAvatars(visualTree, dbId1);
-        final ArrayList<Integer> nodeAvatars2 = getNodeAvatars(visualTree, dbId2);
+        final ArrayList<Integer> nodeAvatars1 = getNodeAvatars(tree, dbId1);
+        final ArrayList<Integer> nodeAvatars2 = getNodeAvatars(tree, dbId2);
         final HashMap<Integer, Integer> pairs = new HashMap<Integer, Integer>();
 
         if (enforceNode1 >= 0) {
@@ -756,35 +751,54 @@ public class MindModel {
             assert (nodeAvatars2.contains(enforceNode2));
         }
 
-
-        NodeDistance insert_fun = new NodeDistance();
+        class InsertFun {
+            void does(int node1, int node2)
+            {
+                pairs.put(node1, node2);
+                nodeAvatars1.remove(node1);
+                nodeAvatars2.remove(node2);
+            }
+        };
+        InsertFun insert_fun = new InsertFun();
 
         insert_fun.does(enforceNode1, enforceNode2);
 
         //sort by x,y
         while (nodeAvatars1.size() > 0) {
             int node1 = nodeAvatars1.get(0);
-            while (nodeAvatars2.size() > 0) {
-                int node2 = nodeAvatars2.get(0);
+            int nearestNode = -1;
+            Double minDistanceSquare = Double.MAX_VALUE;
 
-
+            for (int node2 : nodeAvatars2) {
+                double distanceSquare = getNodeDistanceSquare(tree.getNode(node1), tree.getNode(node2));
+                if (distanceSquare < minDistanceSquare) {
+                    minDistanceSquare = distanceSquare;
+                    nearestNode = node2;
+                }
             }
+
+            insert_fun.does(node1, nearestNode);
         }
-        for (int node1 : nodeAvatars1) {
-            for (int node2 : nodeAvatars2);
-        }
 
-        pairs.put(enforceNode1, enforceNode2);
-        nodeAvatars1.remove(enforceNode1);
-        nodeAvatars2.remove(enforceNode2);
-
-
-
-
-
-
-
-        return null;
+        Object ret[] = new Object[3];
+        ret[0] = pairs;
+        ret[1] = nodeAvatars1;
+        ret[2] = nodeAvatars2;
+        return ret;
     }
 
+    public void moveChild(Object oldParentDBId, int oldPos, Object newParentDBId, int newPos)
+    {
+        assert (! oldParentDBId.equals(newParentDBId));
+
+        Vertex oldParent = m_mindDb.getVertex(oldParentDBId);
+        Vertex newParent = m_mindDb.getVertex(newParentDBId);
+
+        EdgeVertex edgeVertex = m_mindDb.handoverChild(oldParent, oldPos, newParent, newPos);
+
+        for (Tree tree : m_trees) {
+            hideRelation(tree, oldParentDBId, oldPos);
+            exposeRelation(tree, newParentDBId, newPos, edgeVertex.m_edge, edgeVertex.m_vertex);
+        }
+    }
 }
