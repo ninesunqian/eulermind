@@ -7,16 +7,16 @@ import excitedmind.MindDB.RefLinkInfo;
 import prefuse.data.*;
 import prefuse.util.TypeLib;
 import prefuse.util.collections.IntIterator;
+import prefuse.visual.NodeItem;
+import prefuse.visual.VisualTree;
 
-import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 
 public class MindModel {
-    Logger m_logger = Logger.getLogger(this.getClass().getName());
+    static Logger s_logger = Logger.getLogger("MindModel");
 
 	final static String sm_dbIdColumnName = "dbElementId";
 
@@ -115,7 +115,7 @@ public class MindModel {
 
 	public MindModel(String dbPath)
 	{
-        m_logger.setLevel(Level.WARNING);
+        s_logger.setLevel(Level.WARNING);
 
         fillPropertyClassMap();
 
@@ -270,7 +270,7 @@ public class MindModel {
 			Node child = tree.addChild(parent);
 			Edge edge = tree.getEdge(parent, child);
 
-			m_logger.info (getDBVertex(parent)+ "->" + edgeVertex.m_vertex+ "   :  " + edgeVertex.m_edge);
+			s_logger.info(getDBVertex(parent) + "->" + edgeVertex.m_vertex + "   :  " + edgeVertex.m_edge);
 			loadNodeProperties(edgeVertex.m_vertex, child);
 			loadEdgeProperties(edgeVertex.m_edge, edge);
 		}
@@ -304,33 +304,36 @@ public class MindModel {
 	interface Visitor {
 	 	abstract public void visit(Node node);
 	}
+
+    static ArrayList<Integer> getNodeAvatars(Tree tree, Object dbId)
+    {
+        Table nodeTable = tree.getNodeTable();
+        IntIterator allRows = nodeTable.rows();
+
+        ArrayList<Integer> aimRows = new ArrayList<Integer> ();
+
+        //collect the node with the same parentDBId to aimRows
+        while (allRows.hasNext()) {
+            int curRow = allRows.nextInt();
+
+            if (nodeTable.get(curRow, sm_dbIdColumnName).equals(dbId)) {
+                aimRows.add(curRow);
+            }
+        }
+
+        return aimRows;
+    }
 	
-	void visitNodeAvatares(Tree tree, Object dbId, Visitor visitor)
+	void visitNodeAvatars(Tree tree, Object dbId, Visitor visitor)
 	{
         assert(dbId != null);
 
         Table nodeTable = tree.getNodeTable();
 
-		IntIterator allRows = nodeTable.rows();
-
-		ArrayList<Integer> aimRows = new ArrayList<Integer> ();
-		m_logger.info ("need node's dbId is" + dbId);
-
-		//collect the node with the same parentDBId to aimRows
-		while (allRows.hasNext()) {
-			int curRow = allRows.nextInt();
-
-			if (nodeTable.get(curRow, sm_dbIdColumnName).equals(dbId)) {
-				aimRows.add(curRow);
-			}
-		}
-
-		Iterator<Integer> aimRowIter = aimRows.iterator();
+        ArrayList<Integer> aimRows = getNodeAvatars(tree, dbId);
 
 		//attach blueprints node, to each node in aimRows
-		while (aimRowIter.hasNext()) {
-			int row = aimRowIter.next();
-			
+        for (Integer row : aimRows) {
 			if (nodeTable.isValidRow(row))
 			{
 				Node node = tree.getNode(row);
@@ -346,8 +349,9 @@ public class MindModel {
 	{
         final Vertex sourceVertex = m_mindDb.getVertex(sourceId);
 
-		visitNodeAvatares(tree, sourceId, new Visitor() {
-            public void visit(Node sourceNode) {
+		visitNodeAvatars(tree, sourceId, new Visitor() {
+            public void visit(Node sourceNode)
+            {
 
                 //if children not attached, skip
                 if (sourceNode.getChildCount() == 0 && getChildCount(sourceNode) > 0) {
@@ -365,8 +369,9 @@ public class MindModel {
 
     private void hideRelation(final Tree tree, final Object sourceId, final int edgePosInSourceNode)
     {
-        visitNodeAvatares(tree, sourceId, new Visitor() {
-            public void visit(Node sourceNode) {
+        visitNodeAvatars(tree, sourceId, new Visitor() {
+            public void visit(Node sourceNode)
+            {
                 //its child is not displayed
                 if (sourceNode.getChildCount() == 0)
                     return;
@@ -412,7 +417,7 @@ public class MindModel {
             /*
             tree.deepTraverse(tree.getRoot(),  new Tree.Processor() {
                 public boolean run(Node node, int level) {
-                    m_logger.info ("remove traverse: " + node.getString(sm_textPropName));
+                    s_logger.info ("remove traverse: " + node.getString(sm_textPropName));
 
                     ArrayList inheritPathOfTreeNode = (ArrayList) node.get(sm_inheritPathPropName);
 
@@ -494,12 +499,13 @@ public class MindModel {
         m_mindDb.changeChildPos(parent, oldPos, newPos);
 
         for (final Tree tree : m_trees) {
-            visitNodeAvatares(tree, parentDBId,
+            visitNodeAvatars(tree, parentDBId,
                     new Visitor() {
-                        public void visit(Node parent) {
+                        public void visit(Node parent)
+                        {
                             tree.changeChildIndex(parent, oldPos, newPos);
-            }
-            });
+                        }
+                    });
         }
     }
 
@@ -538,8 +544,9 @@ public class MindModel {
         }
 
         for (Tree tree : m_trees) {
-            visitNodeAvatares(tree, dbId, new Visitor() {
-                public void visit(Node node) {
+            visitNodeAvatars(tree, dbId, new Visitor() {
+                public void visit(Node node)
+                {
                     node.set(key, value);
                 }
             });
@@ -563,7 +570,7 @@ public class MindModel {
             return node.getChildCount();
         } else {
             ArrayList childEdgesDBIds = (ArrayList)node.get(sm_outEdgeDBIdsPropName);
-            m_logger.info ("getChildCount = " + childEdgesDBIds);
+            s_logger.info("getChildCount = " + childEdgesDBIds);
             return childEdgesDBIds==null ? 0: childEdgesDBIds.size();
         }
     }
@@ -662,7 +669,7 @@ public class MindModel {
             path.add(0, tree.getIndexInSiblings(climber));
             climber = climber.getParent();
             if (climber.getRow()==root.getRow() && climber != root) {
-                m_logger.info("aaaaaaaaaaaa");
+                s_logger.info("aaaaaaaaaaaa");
             }
         }
 
@@ -719,4 +726,65 @@ public class MindModel {
     public VertexBasicInfo getVertexBasicInfo(Object dbId) {
         return new VertexBasicInfo(m_mindDb.getVertex(dbId));
     }
+
+    class NodeDistance {
+        int m_node1;
+        int m_node2;
+        double m_distance;
+        NodeDistance(VisualTree visualTree, int node1, int node2)
+        {
+            NodeItem nodeItem1 = (NodeItem)visualTree.getNode(node1);
+            NodeItem nodeItem2 = (NodeItem)visualTree.getNode(node2);
+            double x1 = nodeItem1.getX();
+            double y1 = nodeItem1.getY();
+            double x2 = nodeItem2.getX();
+            double y2 = nodeItem2.getY();
+
+            m_distance = (x1 - x2) * (x1 - x2)  + (y1 - y2) * (y1 - y2) ;
+        }
+    };
+
+    public static Object[] getNearPairNode(VisualTree visualTree, Object dbId1, Object dbId2,
+                                             int enforceNode1, int enforceNode2)
+    {
+        final ArrayList<Integer> nodeAvatars1 = getNodeAvatars(visualTree, dbId1);
+        final ArrayList<Integer> nodeAvatars2 = getNodeAvatars(visualTree, dbId2);
+        final HashMap<Integer, Integer> pairs = new HashMap<Integer, Integer>();
+
+        if (enforceNode1 >= 0) {
+            assert (nodeAvatars1.contains(enforceNode1));
+            assert (nodeAvatars2.contains(enforceNode2));
+        }
+
+
+        NodeDistance insert_fun = new NodeDistance();
+
+        insert_fun.does(enforceNode1, enforceNode2);
+
+        //sort by x,y
+        while (nodeAvatars1.size() > 0) {
+            int node1 = nodeAvatars1.get(0);
+            while (nodeAvatars2.size() > 0) {
+                int node2 = nodeAvatars2.get(0);
+
+
+            }
+        }
+        for (int node1 : nodeAvatars1) {
+            for (int node2 : nodeAvatars2);
+        }
+
+        pairs.put(enforceNode1, enforceNode2);
+        nodeAvatars1.remove(enforceNode1);
+        nodeAvatars2.remove(enforceNode2);
+
+
+
+
+
+
+
+        return null;
+    }
+
 }

@@ -58,13 +58,13 @@ public class MainFrame extends JFrame {
             @Override
             public void keyPressed(KeyEvent keyEvent)
             {
-                m_logger.info("text area key " + keyEvent.toString());
+                s_logger.info("text area key " + keyEvent.toString());
             }
 
             @Override
             public void keyReleased(KeyEvent keyEvent)
             {
-                m_logger.info("text area key released " + keyEvent.toString());
+                s_logger.info("text area key released " + keyEvent.toString());
             }
         });
         tabbedPane.addTab("text", textArea);

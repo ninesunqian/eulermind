@@ -24,14 +24,14 @@ public class AddingChild extends MindOperator{
         this.pos = pos;
         m_text = text;
 
-        m_laterCursorPath = (ArrayList<Integer>) m_formerCursorPath.clone();
-        m_laterCursorPath.add(pos);
     }
 
     public void does() {
         Object parentDBId = getDBIdByPath(m_formerCursorPath);
         m_childDbId = m_mindModel.addChild(parentDBId, pos, m_text);
 
+        m_laterCursorPath = (ArrayList<Integer>) m_formerCursorPath.clone();
+        m_laterCursorPath.add(pos);
     }
 
     public void undo() {

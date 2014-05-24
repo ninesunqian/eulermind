@@ -55,7 +55,7 @@ public class TreeFolder {
                 TableNodeItem visualNode = (TableNodeItem)vis.getVisualItem(group, node);
                 TableEdgeItem visualEdge = (TableEdgeItem)visualNode.getParentEdge();
 
-                //m_logger.info ( "visiableNode " + m_mindTree.getText(node));
+                //s_logger.info ( "visiableNode " + m_mindTree.getText(node));
                 PrefuseLib.updateVisible(visualNode, true);
                 PrefuseLib.updateVisible(visualEdge, true);
 
@@ -98,7 +98,7 @@ public class TreeFolder {
                 PrefuseLib.updateVisible(visualNode, false);
                 PrefuseLib.updateVisible(visualEdge, false);
 
-                //m_logger.info ( "invisiableNode " + text);
+                //s_logger.info ( "invisiableNode " + text);
                 if (m_foldedNodes.contains(node.getRow())) {
                     return false;
                 } else {

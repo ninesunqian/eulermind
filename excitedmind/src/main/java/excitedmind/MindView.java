@@ -100,7 +100,7 @@ public class MindView extends Display {
 	public MindView(MindModel mindModel, MindController undoManager, Object rootId) {
 		super(new Visualization());
 
-        //m_logger.setLevel(Level.OFF);
+        //s_logger.setLevel(Level.OFF);
 		setSize(700, 600);
 		setHighQuality(true);
 

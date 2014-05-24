@@ -41,7 +41,7 @@ public class Mindmap {
                     else {
                         subFile.setWritable(true);
       //                  boolean ret = subFile.delete();
-       //                 m_logger.info("delete file: " + ret);
+       //                 s_logger.info("delete file: " + ret);
 
                         try {
                             Files.delete(Paths.get(subFile.getPath()));

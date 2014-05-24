@@ -27,8 +27,6 @@ public class AddingReference extends MindOperator {
 
         m_referrerNodePath = m_mindModel.getNodePath(referrerNode);
 
-        m_laterCursorPath = (ArrayList<Integer>) m_referrerNodePath.clone();
-        m_laterCursorPath.add(m_pos);
     }
 
     //formerCursor is referent: using for drag referent node to referrer node by mouse
@@ -45,6 +43,9 @@ public class AddingReference extends MindOperator {
 
     public void does() {
         m_mindModel.addReference(m_referrerDBId, m_pos, m_referentDBId);
+
+        m_laterCursorPath = (ArrayList<Integer>) m_referrerNodePath.clone();
+        m_laterCursorPath.add(m_pos);
     }
 
     public void undo() {
