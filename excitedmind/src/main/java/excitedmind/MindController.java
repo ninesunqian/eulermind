@@ -155,8 +155,6 @@ public class MindController extends UndoManager {
             if (mindView == operatorBornView) {
                 mindView.setCursorNodeByPath(isUndo ? operator.m_formerCursorPath : operator.m_laterCursorPath);
             } else {
-                mindView.getCursorSourceNode()
-
                 //not using mindView.getCursorSourceNode(), because if nodeItem is not valid,
                 //the source node is can't be got
                 if (! mindView.m_cursor.m_currentCursor.isValid()) {
@@ -164,12 +162,6 @@ public class MindController extends UndoManager {
                     mindView.setCursorNodeByPath(rootPath);
                 }
             }
-            /*
-            Tree dataTree = mindView.m_tree;
-            s_logger.info("Tree Node Rows: " + getTreeNodeRows(dataTree));
-            Tree visualTree = mindView.m_visualTree;
-            s_logger.info("Tree Item Rows: " + getTreeNodeRows(visualTree));
-            */
 
             mindView.renderTree();
         }

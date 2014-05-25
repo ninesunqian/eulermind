@@ -80,7 +80,7 @@ public class MindModel {
             sm_textColorPropName,
     };
 
-    static private HashMap<String, Class> sm_propertyClassMap = new HashMap<String, Class>();
+    static private Hashtable<String, Class> sm_propertyClassMap = new Hashtable<String, Class>();
 
 	public final static String sm_edgeTypePropName = MindDB.EDGE_TYPE_PROP_NAME;
 	public final static String sm_edgeColorPropName = "edgeColor";
@@ -324,6 +324,8 @@ public class MindModel {
         //collect the node with the same parentDBId to aimRows
         while (allRows.hasNext()) {
             int curRow = allRows.nextInt();
+
+            assert (curRow >= 0);
 
             if (nodeTable.get(curRow, sm_dbIdColumnName).equals(dbId)) {
                 aimRows.add(curRow);
@@ -705,8 +707,8 @@ public class MindModel {
         final Table nodeTable = tree.getNodeTable();
         final VisualTable nodeItemTable = (VisualTable)visualTree.getNodeTable();
 
-        nodeTable.addColumn(MIRROR_X, Double.class, 0);
-        nodeTable.addColumn(MIRROR_Y, Double.class, 0);
+        nodeTable.addColumn(MIRROR_X, double.class, 0.0);
+        nodeTable.addColumn(MIRROR_Y, double.class, 0.0);
 
         nodeItemTable.addTableListener(new TableListener() {
             @Override
@@ -718,7 +720,7 @@ public class MindModel {
                             nodeTable.setDouble(row, "mirrorX", nodeItemTable.getX(row));
                         }
 
-                    } else if (col == nodeItemTable.getColumnNumber(VisualItem.Y))){
+                    } else if (col == nodeItemTable.getColumnNumber(VisualItem.Y)) {
                         for (int row = start; row <= end; row++) {
                             nodeTable.setDouble(row, "mirrorY", nodeItemTable.getX(row));
                         }
@@ -739,7 +741,14 @@ public class MindModel {
         return (x1 - x2) * (x1 - x2)  + (y1 - y2) * (y1 - y2) ;
     }
 
-    private static Object[] getNearPairNode(Tree tree, Object dbId1, Object dbId2,
+    private static class NodeAvatarsPairingInfo {
+        HashMap<Integer, Integer> m_nodeAvatarPairs;
+        ArrayList<Integer> m_nodeAvatars1Alone;
+        ArrayList<Integer> m_nodeAvatars2Alone;
+
+    }
+
+    private static NodeAvatarsPairingInfo pairNodeAvatars(Tree tree, Object dbId1, Object dbId2,
                                              int enforceNode1, int enforceNode2)
     {
         final ArrayList<Integer> nodeAvatars1 = getNodeAvatars(tree, dbId1);
@@ -755,16 +764,18 @@ public class MindModel {
             void does(int node1, int node2)
             {
                 pairs.put(node1, node2);
-                nodeAvatars1.remove(node1);
-                nodeAvatars2.remove(node2);
+                nodeAvatars1.remove((Integer)node1);
+                nodeAvatars2.remove((Integer)node2);
             }
         };
         InsertFun insert_fun = new InsertFun();
 
-        insert_fun.does(enforceNode1, enforceNode2);
+        if (enforceNode1 >= 0 && enforceNode2 >= 0) {
+            insert_fun.does(enforceNode1, enforceNode2);
+        }
 
         //sort by x,y
-        while (nodeAvatars1.size() > 0) {
+        while (nodeAvatars1.size() > 0 && nodeAvatars2.size() > 0) {
             int node1 = nodeAvatars1.get(0);
             int nearestNode = -1;
             Double minDistanceSquare = Double.MAX_VALUE;
@@ -780,25 +791,72 @@ public class MindModel {
             insert_fun.does(node1, nearestNode);
         }
 
-        Object ret[] = new Object[3];
-        ret[0] = pairs;
-        ret[1] = nodeAvatars1;
-        ret[2] = nodeAvatars2;
-        return ret;
+        NodeAvatarsPairingInfo pairingInfo = new NodeAvatarsPairingInfo();
+        pairingInfo.m_nodeAvatarPairs = pairs;
+        pairingInfo.m_nodeAvatars1Alone = nodeAvatars1;
+        pairingInfo.m_nodeAvatars2Alone = nodeAvatars2;
+
+        return pairingInfo;
     }
 
-    public void moveChild(Object oldParentDBId, int oldPos, Object newParentDBId, int newPos)
+    private void rebuildChildEdge(Tree tree, NodeAvatarsPairingInfo oldNewParentPairingInfo,
+                                  int oldChildPos, int newChildPos,
+                                  EdgeVertex childEdgeVertex)
     {
+        HashMap<Integer, Integer> pairs = oldNewParentPairingInfo.m_nodeAvatarPairs;
+        for (int node1 : pairs.keySet())
+        {
+            int node2 = pairs.get(node1);
+            Node oldParent = tree.getNode(node1);
+            Node newParent = tree.getNode(node2);
+            Node child = oldParent.getChild(oldChildPos);
+
+            tree.removeEdge(tree.getEdge(oldParent, child));
+            tree.addChildEdge(newParent, child, newChildPos);
+        }
+
+        for (int node1 : oldNewParentPairingInfo.m_nodeAvatars1Alone) {
+            Node oldParent = tree.getNode(node1);
+            tree.removeChild(oldParent.getChild(oldChildPos));
+        }
+
+        for (int node2 : oldNewParentPairingInfo.m_nodeAvatars2Alone) {
+            Node newParent = tree.getNode(node2);
+            Node child = tree.addNode();
+            Edge edge = tree.addChildEdge(newParent, child, oldChildPos);
+
+            loadNodeProperties(childEdgeVertex.m_vertex, child);
+            loadEdgeProperties(childEdgeVertex.m_edge, edge);
+        }
+    }
+
+
+
+    public void moveChild(Node oldParent, int oldPos, Node newParent, int newPos)
+    {
+        assert (oldParent.getGraph() == newParent.getGraph());
+
+        Object oldParentDBId = getDBId(oldParent);
+        Object newParentDBId = getDBId(newParent);
         assert (! oldParentDBId.equals(newParentDBId));
 
-        Vertex oldParent = m_mindDb.getVertex(oldParentDBId);
-        Vertex newParent = m_mindDb.getVertex(newParentDBId);
-
-        EdgeVertex edgeVertex = m_mindDb.handoverChild(oldParent, oldPos, newParent, newPos);
+        Vertex oldParentVertex = m_mindDb.getVertex(oldParentDBId);
+        Vertex newParentVertex = m_mindDb.getVertex(newParentDBId);
+        EdgeVertex edgeVertex = m_mindDb.handoverChild(oldParentVertex, oldPos, newParentVertex, newPos);
 
         for (Tree tree : m_trees) {
-            hideRelation(tree, oldParentDBId, oldPos);
-            exposeRelation(tree, newParentDBId, newPos, edgeVertex.m_edge, edgeVertex.m_vertex);
+            NodeAvatarsPairingInfo oldNewParentPairingInfo;
+            if(oldParent.getGraph() == tree)
+            {
+                 oldNewParentPairingInfo =  pairNodeAvatars(tree, oldParentDBId, newParentDBId,
+                        oldParent.getRow(), newParent.getRow());
+            } else {
+                oldNewParentPairingInfo =  pairNodeAvatars(tree, oldParentDBId, newParentDBId,
+                        -1, -1);
+            }
+
+            rebuildChildEdge(tree, oldNewParentPairingInfo, oldPos, newPos, edgeVertex);
         }
+
     }
 }

@@ -57,9 +57,6 @@ public class MovingChild extends MindOperator{
         Node oldParentNode = m_mindModel.getNodeByPath(tree, oldParentPath);
         Node newParentNode = m_mindModel.getNodeByPath(tree, newParentPath);
 
-        Object oldParentDBId = m_mindModel.getDBId(oldParentNode);
-        Object newParentDBId = m_mindModel.getDBId(newParentNode);
-
-        m_mindModel.moveChild(oldParentDBId, oldPos, newParentDBId, newPos);
+        m_mindModel.moveChild(oldParentNode, oldPos, newParentNode, newPos);
     }
 }
