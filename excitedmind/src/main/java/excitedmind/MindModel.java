@@ -372,6 +372,10 @@ public class MindModel {
                 Node child = tree.addNode();
                 Edge edge = tree.addChildEdge(sourceNode, child, edgePosInSourceNode);
 
+                //FIXME: need to loadNodeProperties(sourceNode, sourceNodeVertex) ?
+                ArrayList<Object> childrenEdges = (ArrayList<Object>)sourceNode.get(sm_outEdgeDBIdsPropName);
+                childrenEdges.add(edgePosInSourceNode, dbEdge.getId());
+
                 loadNodeProperties(target, child);
                 loadEdgeProperties(dbEdge, edge);
             }
@@ -386,6 +390,10 @@ public class MindModel {
                 //its child is not displayed
                 if (sourceNode.getChildCount() == 0)
                     return;
+
+                //FIXME: need to loadNodeProperties(sourceNode, sourceNodeVertex) ?
+                ArrayList<Object> childrenEdges = (ArrayList<Object>)sourceNode.get(sm_outEdgeDBIdsPropName);
+                childrenEdges.remove(edgePosInSourceNode);
 
                 Node child = tree.getChild(sourceNode, edgePosInSourceNode);
                 tree.removeChild(child);
@@ -490,6 +498,14 @@ public class MindModel {
                     new Visitor() {
                         public void visit(Node parent)
                         {
+                            ArrayList<Object> outEdgeDBIds = (ArrayList<Object>)parent.get(sm_outEdgeDBIdsPropName);
+                            Object edgeId = outEdgeDBIds.remove(oldPos);
+                            if (oldPos < newPos) {
+                                outEdgeDBIds.add(newPos - 1, edgeId);
+                            } else {
+                                outEdgeDBIds.add(newPos, edgeId);
+                            }
+
                             tree.changeChildIndex(parent, oldPos, newPos);
                         }
                     });
@@ -811,13 +827,26 @@ public class MindModel {
             Node newParent = tree.getNode(node2);
             Node child = oldParent.getChild(oldChildPos);
 
+            if (oldParent == null || newParent == null || child == null) {
+                int i=0;
+            }
+
             tree.removeEdge(tree.getEdge(oldParent, child));
             tree.addChildEdge(newParent, child, newChildPos);
+
+            ArrayList<Object> outEdgeDBIds = (ArrayList<Object>)oldParent.get(sm_outEdgeDBIdsPropName);
+            outEdgeDBIds.remove(oldChildPos);
+
+            outEdgeDBIds = (ArrayList<Object>)newParent.get(sm_outEdgeDBIdsPropName);
+            outEdgeDBIds.add(newChildPos, childEdgeVertex.m_edge.getId());
         }
 
         for (int node1 : oldNewParentPairingInfo.m_nodeAvatars1Alone) {
             Node oldParent = tree.getNode(node1);
             tree.removeChild(oldParent.getChild(oldChildPos));
+
+            ArrayList<Object> outEdgeDBIds = (ArrayList<Object>)oldParent.get(sm_outEdgeDBIdsPropName);
+            outEdgeDBIds.remove(oldChildPos);
         }
 
         for (int node2 : oldNewParentPairingInfo.m_nodeAvatars2Alone) {
@@ -827,6 +856,9 @@ public class MindModel {
 
             loadNodeProperties(childEdgeVertex.m_vertex, child);
             loadEdgeProperties(childEdgeVertex.m_edge, edge);
+
+            ArrayList<Object> outEdgeDBIds = (ArrayList<Object>)newParent.get(sm_outEdgeDBIdsPropName);
+            outEdgeDBIds.add(newChildPos, childEdgeVertex.m_edge.getId());
         }
     }
 
