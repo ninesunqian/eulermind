@@ -198,7 +198,7 @@ public class MindDB implements Graph {
         return new ArrayList((ArrayList<Object>)container);
 	}
 	
-	private ArrayList<Object> getEdgeIDsToChildren (Vertex source, boolean ifNullCreate)
+	public ArrayList<Object> getEdgeIDsToChildren (Vertex source, boolean ifNullCreate)
 	{
 		return getContainerProperty (source, CHILD_EDGES_PROP_NAME, ifNullCreate);
 	}
@@ -208,7 +208,7 @@ public class MindDB implements Graph {
         return getContainerProperty (source, INHERIT_PATH_PROP_NAME, true);
     }
 
-    public InheritDirection getInheritDirection(ArrayList fromInheritPath, Object fromVetexDBId,
+    static public InheritDirection getInheritDirection(ArrayList fromInheritPath, Object fromVetexDBId,
                                                 ArrayList toInheritPath, Object toVetexDBId)
     {
         fromInheritPath = (ArrayList)fromInheritPath.clone();
@@ -306,7 +306,11 @@ public class MindDB implements Graph {
 	public Edge addRefEdge (Vertex referrer, Vertex referent, int pos)
 	{
 		assert (referrer.getId() != referent.getId());
-		return addEdge (referrer, referent, pos, EdgeType.REFERENCE);
+		Edge edge = addEdge (referrer, referent, pos, EdgeType.REFERENCE);
+
+        verifyVertex(referrer);
+        verifyVertex(referent);
+        return edge;
 	}
 
     private void removeEdge (Vertex source, int pos, EdgeType assert_type)
@@ -328,7 +332,11 @@ public class MindDB implements Graph {
 
 	public void removeRefEdge (Vertex source, int pos)
 	{
+        EdgeVertex referent = getChildOrReferent(source, pos);
         removeEdge(source, pos, EdgeType.REFERENCE);
+
+        verifyVertex(source);
+        verifyVertex(referent.m_vertex);
 	}
 
     public Edge getEdge (Vertex source, int pos)
@@ -374,6 +382,10 @@ public class MindDB implements Graph {
 	{
 		Vertex child = addVertex(null);
 		Edge edge =  buildParentage(parent, child, pos);
+
+        verifyVertex(parent);
+        verifyVertex(child);
+
         return new EdgeVertex(edge, child);
 	}
 
@@ -441,6 +453,11 @@ public class MindDB implements Graph {
         Vertex child = getChildOrReferent(fromParent, fromPos).m_vertex;
         removeEdge (fromParent, fromPos, EdgeType.INCLUDE);
         Edge edge = buildParentage(toParent, child, toPos);
+
+        verifyVertex(fromParent);
+        verifyVertex(toParent);
+        verifyVertex(child);
+
         return new EdgeVertex(edge, child);
     }
 
@@ -460,6 +477,8 @@ public class MindDB implements Graph {
         }
 
         parent.setProperty(CHILD_EDGES_PROP_NAME, outEdgeArray);
+
+        verifyVertex(parent);
     }
 
     public ArrayList<EdgeVertex> getReferrers(Vertex referent)
@@ -603,6 +622,8 @@ public class MindDB implements Graph {
         removeEdge(parent, pos, EdgeType.INCLUDE);
 
 		m_trashIndex.put(TRASH_KEY_NAME, TRASH_KEY_NAME, removedVertex);
+
+        verifyTrashedTree(removedVertex);
 		
 		commit ();
 		
@@ -626,16 +647,16 @@ public class MindDB implements Graph {
     {
         Object parentId = vertex.getProperty(SAVED_PARENT_ID_PROP_NAME);
         int pos = (Integer)vertex.getProperty(SAVED_POS_PROP_NAME);
-        ArrayList<Object> refLinkInfos = getContainerProperty (vertex, SAVED_REFERRER_INFO_PROP_NAME, false);
+        ArrayList<Object> refLinkInfoes = getContainerProperty (vertex, SAVED_REFERRER_INFO_PROP_NAME, false);
 
         assert (parentId != null);
 
-        if (refLinkInfos == null) {
+        if (refLinkInfoes == null) {
             return new TrashedTreeContext (parentId, pos, null);
 
         } else {
             ArrayList<RefLinkInfo> new_array = new ArrayList<RefLinkInfo>();
-            for (Object obj : refLinkInfos)
+            for (Object obj : refLinkInfoes)
             {
                 RefLinkInfo refLinkInfo = (RefLinkInfo) obj;
                 new_array.add(refLinkInfo);
@@ -651,14 +672,14 @@ public class MindDB implements Graph {
 	{
 		Object parentId = vertex.getProperty(SAVED_PARENT_ID_PROP_NAME);
 		int pos = (Integer)vertex.getProperty(SAVED_POS_PROP_NAME);
-		ArrayList<Object> refLinkInfos = getContainerProperty (vertex, SAVED_REFERRER_INFO_PROP_NAME, false);
+		ArrayList<Object> refLinkInfoes = getContainerProperty (vertex, SAVED_REFERRER_INFO_PROP_NAME, false);
 		
 		Vertex parent = getVertex(parentId);
 		Edge edge = addEdge(parent, vertex, pos, EdgeType.INCLUDE);
 		
-		if (refLinkInfos != null)
+		if (refLinkInfoes != null)
 		{
-			for (Object obj : refLinkInfos)
+			for (Object obj : refLinkInfoes)
 			{
 				RefLinkInfo refLinkInfo = (RefLinkInfo) obj;
 				addRefEdge(getVertex(refLinkInfo.m_referrer),
@@ -727,5 +748,151 @@ public class MindDB implements Graph {
     public Iterable<Vertex> getVertices(String key, String value)
     {
         return m_graph.getVertices(key, value);
+    }
+
+    static boolean arrayEqual(ArrayList<Object> array1, ArrayList<Object> array2)
+    {
+        if (array1.size() != array2.size()) {
+            return false;
+        }
+
+        for (int i = 0; i<array1.size(); i++) {
+            if (! array1.get(i).equals(array2.get(i))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+   static boolean isParentChildRelation(ArrayList<Object> parentInheritPath, Object parentDBId,
+                                                 ArrayList<Object> childInheritPath)
+    {
+        ArrayList<Object> parentInheritPathClone = (ArrayList<Object>)parentInheritPath.clone();
+        parentInheritPathClone.add(parentDBId);
+
+        return arrayEqual(parentInheritPathClone, childInheritPath);
+    }
+
+    boolean isParentChildRelation(Vertex parent, Vertex child)
+    {
+        return isParentChildRelation(getInheritPath(parent), parent.getId(), getInheritPath(child));
+    }
+
+    private void verifyOutEdges(Vertex vertex)
+    {
+        ArrayList<Object> outEdgeArray = getEdgeIDsToChildren(vertex, true);
+        int edgeNumber = 0;
+        for (Edge outEdge : vertex.getEdges(Direction.OUT)) {
+            edgeNumber++;
+            assert (outEdgeArray.contains(outEdge.getId()));
+
+            if (getEdgeType(outEdge) == EdgeType.INCLUDE) {
+                Vertex childVertex = getEdgeTarget(outEdge);
+                assert (isParentChildRelation(vertex, childVertex));
+
+            } else {
+                assert(getEdgeType(outEdge) == EdgeType.REFERENCE);
+            }
+        }
+
+        assert (edgeNumber == outEdgeArray.size());
+    }
+
+    private void verifyInEdges(Vertex vertex)
+    {
+        boolean metParent = false;
+
+        for (Edge inEdge : vertex.getEdges(Direction.IN)) {
+            Vertex parentOrReferrerVertex = getEdgeSource(inEdge);
+
+            ArrayList<Object> parentOrReferrerOutEdgeArray = getEdgeIDsToChildren(parentOrReferrerVertex, true);
+            assert parentOrReferrerOutEdgeArray.contains(inEdge.getId());
+
+            if (getEdgeType(inEdge) == EdgeType.INCLUDE) {
+                assert metParent == false;
+                assert isParentChildRelation(parentOrReferrerVertex, vertex);
+                metParent = true;
+            } else {
+                assert(getEdgeType(inEdge) == EdgeType.REFERENCE);
+            }
+        }
+        assert(metParent == true);
+    }
+
+    public void verifyVertex(Vertex vertex)
+    {
+        verifyInEdges(vertex);
+        verifyOutEdges(vertex);
+    }
+
+    public boolean isVertexTrashed(Vertex vertex)
+    {
+        for (Vertex trashedRoot : m_trashIndex.get(TRASH_KEY_NAME, TRASH_KEY_NAME)) {
+            if (vertex.getId().equals(trashedRoot.getId()) ||
+                    getInheritRelation(trashedRoot, vertex) == InheritDirection.LINEAL_DESCENDANT)
+                return true;
+        }
+        return  false;
+    }
+
+    public void verifyTrashedTree(final Vertex root)
+    {
+        boolean trashIndexContained = false;
+        for (Vertex trashedRoot : m_trashIndex.get(TRASH_KEY_NAME, TRASH_KEY_NAME)) {
+            if (root.getId().equals(trashedRoot.getId())) {
+                trashIndexContained = true;
+            }
+        }
+        assert trashIndexContained == true;
+
+        Iterable<Edge> inEdges = root.getEdges(Direction.IN);
+        assert inEdges.iterator().hasNext() == false;
+
+        Object parentId = root.getProperty(SAVED_PARENT_ID_PROP_NAME);
+        Integer pos = root.getProperty(SAVED_POS_PROP_NAME);
+        ArrayList<RefLinkInfo> refLinkInfoes = (ArrayList<RefLinkInfo>)root.getProperty(SAVED_REFERRER_INFO_PROP_NAME);
+
+        assert parentId != null;
+        assert pos != null;
+        assert refLinkInfoes != null;
+
+        assert isParentChildRelation(getVertex(parentId), root);
+
+        for (RefLinkInfo refLinkInfo : refLinkInfoes) {
+            assert root.getId().equals(refLinkInfo.m_referent) ||
+                    getInheritRelation(root, getVertex(refLinkInfo.m_referent)) == InheritDirection.LINEAL_DESCENDANT;
+        }
+
+        verifyOutEdges(root);
+
+        deepTraverse(root, new Processor() {
+
+            public boolean run(Vertex vertex, int level) {
+                if (vertex == root) {
+                    return true;
+                }
+
+                verifyVertex(vertex);
+
+                //only has one inEdge
+                Iterable<Edge> inEdges = root.getEdges(Direction.IN);
+
+                int edgeNum = 0;
+                for (Edge edge : inEdges) {
+                    edgeNum++;
+
+                }
+                assert edgeNum == 1;
+                /*
+                Iterator iterator = inEdges.iterator();
+                assert iterator.hasNext() == true;
+                iterator.next();
+                assert iterator.hasNext() == false;
+                */
+
+                return true;
+            }
+        });
     }
 }

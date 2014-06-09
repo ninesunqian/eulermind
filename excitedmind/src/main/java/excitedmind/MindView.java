@@ -6,7 +6,6 @@ import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.*;
@@ -18,7 +17,6 @@ import prefuse.Visualization;
 import prefuse.controls.*;
 import prefuse.data.*;
 import prefuse.util.PrefuseLib;
-import prefuse.util.ui.UILib;
 import prefuse.visual.EdgeItem;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualTree;
@@ -744,7 +742,7 @@ public class MindView extends Display {
             NodeItem item = toVisual(node);
             return ! item.isExpanded();
         } else {
-            return m_mindModel.getChildCount(node) > 0;
+            return m_mindModel.getDBChildCount(node) > 0;
         }
     }
 

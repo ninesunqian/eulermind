@@ -27,10 +27,10 @@ public abstract class MindOperator extends AbstractUndoableEdit {
         m_formerCursorPath = m_mindModel.getNodePath(formerCursor);
     }
 
-    protected Object getDBIdByPath(ArrayList<Integer> path) {
+    protected Node getNodeByPath(ArrayList<Integer> path) {
         Tree tree = m_mindModel.findTree(m_rootDBId);
         Node node = m_mindModel.getNodeByPath(tree, path);
-        return m_mindModel.getDBId(node);
+        return node;
     }
 
     abstract public void does();

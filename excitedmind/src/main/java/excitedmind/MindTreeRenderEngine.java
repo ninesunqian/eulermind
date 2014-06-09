@@ -3,10 +3,8 @@ package excitedmind;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.RectangularShape;
-import java.lang.management.ManagementFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import prefuse.Constants;
 import prefuse.Visualization;
@@ -296,7 +294,7 @@ public class MindTreeRenderEngine {
             } else {
                 MindModel mindModel = m_mindView.m_mindModel;
 
-                int childCount = mindModel.getChildCount((NodeItem)item);
+                int childCount = mindModel.getDBChildCount((NodeItem) item);
 
                 if (childCount == 0) {
                     return RENDER_TYPE_FILL;

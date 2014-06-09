@@ -10,6 +10,7 @@ import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import javax.swing.*;
@@ -60,7 +61,22 @@ public class Mindmap {
         }
     }
 
+    static void testJava()
+    {
+        ArrayList<Integer> list = new ArrayList<Integer>();
+        list.add(100);
+        Integer i = 98;
+        i++;
+        i++;
+        if (list.contains(i)) {
+            m_logger.info("YYYYYYYYYYYYYYYYYYYY\n");
+        } else {
+            m_logger.info("NNNNNNNNNNNNNNNNNNNNN\n");
+        }
+    }
+
 	public static void main(String argv[]) {
+        testJava();
 
         try {
             //UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");

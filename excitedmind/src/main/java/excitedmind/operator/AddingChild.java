@@ -27,18 +27,18 @@ public class AddingChild extends MindOperator{
     }
 
     public void does() {
-        Object parentDBId = getDBIdByPath(m_formerCursorPath);
-        m_childDbId = m_mindModel.addChild(parentDBId, pos, m_text);
+        Node parent = getNodeByPath(m_formerCursorPath);
+        m_childDbId = m_mindModel.addChild(parent, pos, m_text);
 
         m_laterCursorPath = (ArrayList<Integer>) m_formerCursorPath.clone();
         m_laterCursorPath.add(pos);
     }
 
     public void undo() {
-        m_mindModel.trashNode(getDBIdByPath(m_formerCursorPath), pos);
+        m_mindModel.trashNode(getNodeByPath(m_formerCursorPath), pos);
     }
 
     public void redo() {
-        m_mindModel.restoreNodeFromTrash(m_childDbId);
+        m_mindModel.restoreNodeFromTrash(getNodeByPath(m_formerCursorPath), m_childDbId);
     }
 }
