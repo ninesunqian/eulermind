@@ -305,7 +305,6 @@ public class MindDB implements Graph {
 	
 	public Edge addRefEdge (Vertex referrer, Vertex referent, int pos)
 	{
-		assert (referrer.getId() != referent.getId());
 		Edge edge = addEdge (referrer, referent, pos, EdgeType.REFERENCE);
 
         verifyVertex(referrer);
@@ -789,6 +788,9 @@ public class MindDB implements Graph {
 
             if (getEdgeType(outEdge) == EdgeType.INCLUDE) {
                 Vertex childVertex = getEdgeTarget(outEdge);
+                if (!isParentChildRelation(vertex, childVertex)) {
+                    isParentChildRelation(vertex, childVertex);
+                }
                 assert (isParentChildRelation(vertex, childVertex));
 
             } else {
@@ -817,7 +819,10 @@ public class MindDB implements Graph {
                 assert(getEdgeType(inEdge) == EdgeType.REFERENCE);
             }
         }
-        assert(metParent == true);
+
+        if (!vertex.getId().equals(m_rootId)) {
+            assert(metParent == true);
+        }
     }
 
     public void verifyVertex(Vertex vertex)
@@ -876,20 +881,12 @@ public class MindDB implements Graph {
                 verifyVertex(vertex);
 
                 //only has one inEdge
-                Iterable<Edge> inEdges = root.getEdges(Direction.IN);
+                Iterable<Edge> inEdges = vertex.getEdges(Direction.IN);
 
-                int edgeNum = 0;
-                for (Edge edge : inEdges) {
-                    edgeNum++;
-
-                }
-                assert edgeNum == 1;
-                /*
                 Iterator iterator = inEdges.iterator();
                 assert iterator.hasNext() == true;
                 iterator.next();
                 assert iterator.hasNext() == false;
-                */
 
                 return true;
             }

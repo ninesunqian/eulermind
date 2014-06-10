@@ -197,7 +197,7 @@ public class MindTreeLayout extends TreeLayout {
         Params rp = getParams(root);
 
         //FIXME: is it needed?
-		g.getSpanningTree(root);
+		//g.getSpanningTree(root);
 
         //对于新建节点，父节点的影子节点也添加了新节点，
         //但是父节点的影子如果是闭合的，就不能显示其子节点

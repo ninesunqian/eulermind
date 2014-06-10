@@ -200,12 +200,10 @@ public class MindModel {
             Object value;
             if (key == sm_inheritPathPropName || key == sm_outEdgeDBIdsPropName) {
                 value = m_mindDb.getContainerProperty((Vertex)dbElement, key, true);
-                assert(((ArrayList)value).size() != 0);
             } else {
                 value = dbElement.getProperty(key);
             }
             tuple.set(key, value);
-
 		}
 	}
 
@@ -227,15 +225,11 @@ public class MindModel {
         }
     }
 
-    private static boolean verifyElementProperties(com.tinkerpop.blueprints.Element dbElement,
+    private static void verifyElementProperties(com.tinkerpop.blueprints.Element dbElement,
                                                    Tuple tuple, String keys[])
     {
 
-        if (! dbElement.getId().equals(tuple.get(sm_dbIdColumnName))) {
-            s_logger.severe(String.format("tuple - element is not match in dbId,  tuple: %s, element: %s",
-                    dbElement.getId(), tuple.get(sm_dbIdColumnName).toString()));
-            return false;
-        }
+        assert dbElement.getId().equals(tuple.get(sm_dbIdColumnName));
 
         for (String key : keys)
         {
@@ -243,23 +237,11 @@ public class MindModel {
             Object dbElementValue = dbElement.getProperty(key);
 
             if (key == sm_inheritPathPropName || key == sm_outEdgeDBIdsPropName) {
-                if (! arrayEqual((ArrayList)tupleValue, (ArrayList)dbElementValue)) {
-                    s_logger.severe(String.format("tuple - element is not match in %s,  tuple: %s, element: %s",
-                            key, tupleValue.toString(), dbElement.toString()));
-                    return false;
-                }
+                assert tupleValue == dbElementValue || arrayEqual((ArrayList)tupleValue, (ArrayList)dbElementValue);
             } else {
-                if (! tupleValue.equals(dbElementValue)) {
-                    /*
-                    s_logger.severe(String.format("tuple - element is not match in %s,  tuple: %s, element: %s",
-                            key, tupleValue.toString(), dbElement.toString());
-                            */
-                    return false;
-                }
+                assert tupleValue == dbElementValue || tupleValue.equals(dbElementValue);
             }
         }
-
-        return true;
     }
 
 	private void loadNodeProperties (Vertex vertex, Node node)
@@ -1045,7 +1027,7 @@ public class MindModel {
 
         m_mindDb.verifyVertex(vertex);
 
-        assert verifyElementProperties(vertex, node, sm_nodePropNames);
+        verifyElementProperties(vertex, node, sm_nodePropNames);
 
         ArrayList<Object> outEdgeDBIds = (ArrayList<Object>)node.get(sm_outEdgeDBIdsPropName);
         if (outEdgeDBIds.size() > 0 && forceChildAttached) {
@@ -1057,7 +1039,7 @@ public class MindModel {
             Edge outEdge = (node.getGraph()).getEdge(node, childOrReferenceNode);
 
             assert(getDBId(outEdge).equals(outEdgeDBIds.get(i)));
-            assert verifyElementProperties(getDBEdge(outEdge), outEdge, sm_edgePropNames);
+            verifyElementProperties(getDBEdge(outEdge), outEdge, sm_edgePropNames);
 
             Integer outEdgeType = (Integer)outEdge.get(sm_edgeTypePropName);
             if (MindDB.EdgeType.values()[outEdgeType] == MindDB.EdgeType.INCLUDE) {
@@ -1069,7 +1051,7 @@ public class MindModel {
 
         Edge inEdge = node.getParentEdge();
         if (inEdge != null) {
-            assert verifyElementProperties(getDBEdge(inEdge), inEdge, sm_edgePropNames);
+            verifyElementProperties(getDBEdge(inEdge), inEdge, sm_edgePropNames);
 
             Integer inEdgeType = (Integer)inEdge.get(sm_edgeTypePropName);
             Node parentOrReferrerNode = inEdge.getSourceNode();
