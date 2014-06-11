@@ -39,11 +39,15 @@ public class Removing extends MindOperator {
 
     public void undo()
     {
-        Node formerCursor = getNodeByPath(m_formerCursorPath);
+
+        ArrayList parentPath = (ArrayList)m_formerCursorPath.clone();
+        parentPath.remove(parentPath.size() - 1);
+
+        Node parentNode = getNodeByPath(parentPath);
         if (m_isRefRelation) {
-            m_mindModel.addReference(formerCursor, m_siblingPos, m_removedDBId);
+            m_mindModel.addReference(parentNode, m_siblingPos, m_removedDBId);
         } else {
-            m_mindModel.restoreNodeFromTrash(formerCursor, m_siblingPos);
+            m_mindModel.restoreNodeFromTrash(parentNode, m_removedDBId);
         }
     }
 

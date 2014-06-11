@@ -415,6 +415,7 @@ public class MindModel {
 
                 //if children not attached, skip
                 if (sourceNode.getChildCount() == 0 && outEdgeDBIdsInNode.size() > 0) {
+                    outEdgeDBIdsInNode.add(edgePosInSourceNode, dbEdge.getId());
                     verfyNode(sourceNode, false);
                     return;
                 }
@@ -438,8 +439,10 @@ public class MindModel {
                     verfyNode(sourceNode, false);
                     return;
                 }
+
                 //its child is not displayed
                 if (sourceNode.getChildCount() == 0) {
+                    outEdgeDBIdsInNode.remove(edgePosInSourceNode);
                     verfyNode(sourceNode, false);
                     return;
                 }

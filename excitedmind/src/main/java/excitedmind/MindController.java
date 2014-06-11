@@ -196,7 +196,7 @@ public class MindController extends UndoManager {
         if (! canUndo())
             return;
 
-        MindOperator operator = (MindOperator)editToBeRedone();
+        MindOperator operator = (MindOperator)editToBeUndone();
         super.undo();
 
         updateMindViews(operator, true);
