@@ -4,7 +4,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.orientechnologies.orient.core.exception.OSerializationException;
 import com.orientechnologies.orient.core.id.ORecordId;
@@ -17,7 +18,7 @@ import com.orientechnologies.orient.core.db.record.ORecordLazyList;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 
 public class MindDB implements Graph {
-    Logger m_logger = Logger.getLogger(this.getClass().getName());
+    Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
 	public final static String EDGE_TYPE_PROP_NAME = PrefuseLib.FIELD_PREFIX + "edgeType";
 	public final static String CHILD_EDGES_PROP_NAME = PrefuseLib.FIELD_PREFIX + "childEdges";
@@ -35,7 +36,7 @@ public class MindDB implements Graph {
 
 	enum EdgeType {INCLUDE, REFERENCE};
 
-    enum InheritDirection {SELF, LINEAL_SIBLING,  COLLATERAL_SIBLING,
+    public enum InheritDirection {SELF, LINEAL_SIBLING,  COLLATERAL_SIBLING,
                           LINEAL_ANCESTOR, COLLATERAL_ANCESTOR,
                           LINEAL_DESCENDANT, COLLATERAL_DESCENDANT};
 

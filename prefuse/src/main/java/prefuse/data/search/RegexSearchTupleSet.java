@@ -2,7 +2,7 @@ package prefuse.data.search;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 import java.util.regex.Pattern;
 
 import prefuse.data.Tuple;
@@ -66,8 +66,8 @@ public class RegexSearchTupleSet extends SearchTupleSet {
         try {
             pattern = Pattern.compile(query);
         } catch ( Exception e ) {
-            Logger logger = Logger.getLogger(this.getClass().getName());
-            logger.warning("Pattern compile failed."
+            Logger logger = LoggerFactory.getLogger(this.getClass());
+            logger.warn("Pattern compile failed."
                     + "\n" + StringLib.getStackTrace(e));
             return;
         }

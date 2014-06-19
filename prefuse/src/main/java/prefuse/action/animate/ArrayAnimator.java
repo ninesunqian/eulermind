@@ -1,6 +1,6 @@
 package prefuse.action.animate;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.action.ItemAction;
 import prefuse.util.PrefuseLib;
@@ -15,7 +15,7 @@ import prefuse.visual.VisualItem;
 public class ArrayAnimator extends ItemAction {
 
     private static final Logger s_logger
-        = Logger.getLogger(ArrayAnimator.class.getName());
+        = LoggerFactory.getLogger(ArrayAnimator.class.getName());
     
     private String m_field; // the field
     private String m_start; // the start field
@@ -63,7 +63,7 @@ public class ArrayAnimator extends ItemAction {
             }
             item.setValidated(false);
         } else {
-            s_logger.warning("Encountered non-double/non-float array type: "
+            s_logger.warn("Encountered non-double/non-float array type: "
                     + (o==null ? "null" : o.getClass().getName()));
         }
     }

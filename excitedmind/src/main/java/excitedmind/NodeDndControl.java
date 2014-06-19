@@ -9,7 +9,8 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -20,7 +21,7 @@ import java.util.logging.Logger;
  */
 public abstract class NodeDndControl extends ControlAdapter {
 
-    Logger m_logger = Logger.getLogger(this.getClass().getName());
+    Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
     enum HitPosition {OUTSIDE, TOP, BOTTOM, RIGHT};
 

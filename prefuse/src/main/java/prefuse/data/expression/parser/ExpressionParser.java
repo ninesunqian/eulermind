@@ -2,7 +2,7 @@
 package prefuse.data.expression.parser;
 
 import java.io.StringReader;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.data.expression.AndPredicate;
 import prefuse.data.expression.ArithmeticExpression;
@@ -467,7 +467,7 @@ import prefuse.util.StringLib;
 public class ExpressionParser implements ExpressionParserConstants {
 
         private static final Logger s_logger
-            = Logger.getLogger(ExpressionParser.class.getName());
+            = LoggerFactory.getLogger(ExpressionParser.class.getName());
 
     private static boolean s_init = false;
     private static Throwable s_error;
@@ -501,7 +501,7 @@ public class ExpressionParser implements ExpressionParserConstants {
             if ( throwsException ) {
                 throw t;
             } else {
-                s_logger.warning("Expression Parse Error: " + t.getMessage()
+                s_logger.warn("Expression Parse Error: " + t.getMessage()
                         + "\n" + StringLib.getStackTrace(t));
                 return null;
             }

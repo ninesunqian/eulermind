@@ -1,6 +1,6 @@
 package prefuse.action;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.Visualization;
 import prefuse.activity.Activity;
@@ -20,7 +20,7 @@ import prefuse.util.StringLib;
 public class ActionList extends CompositeAction {
 
     private static final Logger s_logger = 
-        Logger.getLogger(ActionList.class.getName());
+        LoggerFactory.getLogger(ActionList.class.getName());
     
     /**
      * Creates a new run-once ActionList.
@@ -78,7 +78,7 @@ public class ActionList extends CompositeAction {
             try {
                 if ( a.isEnabled() ) a.run(frac);
             } catch ( Exception e ) {
-                s_logger.warning(e.getMessage() + '\n'
+                s_logger.warn(e.getMessage() + '\n'
                         + StringLib.getStackTrace(e));
             }
         }

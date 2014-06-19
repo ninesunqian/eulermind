@@ -26,7 +26,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.OutputStream;
 import java.util.Iterator;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
@@ -105,7 +105,7 @@ import prefuse.visual.sort.ItemSorter;
 public class Display extends JComponent {
 
     private static final Logger s_logger 
-        = Logger.getLogger(Display.class.getName());
+        = LoggerFactory.getLogger(Display.class.getName());
     
     // visual item source
     protected Visualization m_vis;
@@ -1405,7 +1405,7 @@ public class Display extends JComponent {
                 try {
                     ((PaintListener)lstnrs[i]).prePaint(this, g);
                 } catch ( Exception e ) {
-                    s_logger.warning(
+                    s_logger.warn(
                         "Exception thrown by PaintListener: " + e + "\n" +
                         StringLib.getStackTrace(e));
                 }
@@ -1424,7 +1424,7 @@ public class Display extends JComponent {
                 try {
                     ((PaintListener)lstnrs[i]).postPaint(this, g);
                 } catch ( Exception e ) {
-                    s_logger.warning(
+                    s_logger.warn(
                         "Exception thrown by PaintListener: " + e + "\n" +
                         StringLib.getStackTrace(e));
                 }
@@ -1470,7 +1470,7 @@ public class Display extends JComponent {
                 try {
                     ((ItemBoundsListener)lstnrs[i]).itemBoundsChanged(this);
                 } catch ( Exception e ) {
-                    s_logger.warning(
+                    s_logger.warn(
                         "Exception thrown by ItemBoundsListener: " + e + "\n" +
                         StringLib.getStackTrace(e));
                 }
@@ -1697,7 +1697,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.itemDragged(item, e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1712,7 +1712,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.itemMoved(item, e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1727,7 +1727,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.itemWheelMoved(item, e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1742,7 +1742,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.itemClicked(item, e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1757,7 +1757,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.itemPressed(item, e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1772,7 +1772,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.itemReleased(item, e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1788,7 +1788,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.itemEntered(item, e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1804,7 +1804,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.itemExited(item, e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1821,7 +1821,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.itemKeyPressed(item, e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1836,7 +1836,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.itemKeyReleased(item, e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1851,7 +1851,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.itemKeyTyped(item, e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1866,7 +1866,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.mouseEntered(e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1881,7 +1881,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.mouseExited(e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1896,7 +1896,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.mousePressed(e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1911,7 +1911,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.mouseReleased(e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1926,7 +1926,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.mouseClicked(e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1941,7 +1941,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.mouseDragged(e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1956,7 +1956,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.mouseMoved(e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1971,7 +1971,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.mouseWheelMoved(e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -1986,7 +1986,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.keyPressed(e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -2001,7 +2001,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.keyReleased(e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }
@@ -2016,7 +2016,7 @@ public class Display extends JComponent {
                     try {
                         ctrl.keyTyped(e);
                     } catch ( Exception ex ) {
-                        s_logger.warning(
+                        s_logger.warn(
                             "Exception thrown by Control: " + ex + "\n" +
                             StringLib.getStackTrace(ex));
                     }

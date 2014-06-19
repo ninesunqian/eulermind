@@ -1,7 +1,7 @@
 package prefuse.data.search;
 
 import java.io.IOException;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 /*
 import org.apache.lucene.document.Document;
@@ -32,7 +32,7 @@ import prefuse.util.collections.IntObjectHashMap;
 public class KeywordSearchTupleSet extends SearchTupleSet {
     
     private static final Logger s_logger 
-        = Logger.getLogger(KeywordSearchTupleSet.class.getName());
+        = LoggerFactory.getLogger(KeywordSearchTupleSet.class.getName());
     
     protected IntObjectHashMap m_map = new IntObjectHashMap();
     protected String m_query = "";
@@ -102,10 +102,10 @@ public class KeywordSearchTupleSet extends SearchTupleSet {
             Tuple[] add = getTupleCount() > 0 ? toArray() : null;
             fireTupleEvent(add, rem);
         } catch (ParseException e) {
-            s_logger.warning("Lucene query parse exception.\n"+
+            s_logger.warn("Lucene query parse exception.\n"+
                     StringLib.getStackTrace(e));
         } catch (IOException e) {
-            s_logger.warning("Lucene IO exception.\n"+
+            s_logger.warn("Lucene IO exception.\n"+
                     StringLib.getStackTrace(e));
         }
         */

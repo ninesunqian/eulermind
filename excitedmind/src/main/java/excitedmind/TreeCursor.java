@@ -11,7 +11,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TreeCursor {
     VisualTree m_tree;
@@ -29,7 +30,7 @@ public class TreeCursor {
     int m_currentXIndex;
     int m_currentYIndex;
 
-    final Logger m_logger = Logger.getLogger(this.getClass().getName());
+    final Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
     public TreeCursor(VisualTree tree) {
         m_tree = tree;
@@ -99,7 +100,7 @@ public class TreeCursor {
             upDowner = (NodeItem) m_tree.getNode(row);
             if (overlayInXAxis(upDowner, m_originCursor) || upDowner.isExpanded() == false) {
                 if (overlayInXAxis(upDowner, m_originCursor)) {
-                    m_logger.fine(m_originCursor.getString("text") + ": overlay upDowner: " + upDowner.getString("text"));
+                    m_logger.debug(m_originCursor.getString("text") + ": overlay upDowner: " + upDowner.getString("text"));
                 }
                 m_yAxis.add(upDowner);
             }

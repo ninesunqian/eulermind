@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 import java.util.logging.SimpleFormatter;
 
 import prefuse.util.io.IOLib;
@@ -52,7 +52,7 @@ import prefuse.util.io.IOLib;
 public class PrefuseConfig extends Properties {
 
     private static final Logger s_logger 
-        = Logger.getLogger(PrefuseConfig.class.getName());
+        = LoggerFactory.getLogger(PrefuseConfig.class.getName());
     
     private static final PrefuseConfig s_config = new PrefuseConfig();
     
@@ -89,11 +89,11 @@ public class PrefuseConfig extends Properties {
         String logfile = getProperty("util.logfile");
         if ( logdir != null ) {
             try {
-                Logger logger = Logger.getLogger("prefuse");
-                logger.setUseParentHandlers(false);
+                Logger logger = LoggerFactory.getLogger("prefuse");
+                //FIXME: logger.setUseParentHandlers(false);
                 Handler fileHandler = new FileHandler(logdir+"/"+logfile);
                 fileHandler.setFormatter(new SimpleFormatter());
-                logger.addHandler(fileHandler);
+                //FIXME: logger.addHandler(fileHandler);
             } catch ( IOException e ) {
                 e.printStackTrace();
             }

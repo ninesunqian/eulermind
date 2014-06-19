@@ -2,7 +2,8 @@ package prefuse.data;
 
 import java.util.Iterator;
 import java.util.Stack;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import prefuse.data.event.TreeRootChangeListener;
 import prefuse.util.PrefuseConfig;
@@ -40,7 +41,7 @@ import prefuse.util.collections.IntIterator;
 public class Tree extends Graph {
 
     private static final Logger s_logger
-        = Logger.getLogger(Tree.class.getName());
+        = LoggerFactory.getLogger(Tree.class);
     
     /** Default data field used to denote the source node in an edge table */
     public static final String DEFAULT_SOURCE_KEY 
@@ -735,7 +736,7 @@ public class Tree extends Graph {
         
         // first make sure there are n nodes and n-1 edges
         if ( nnodes != nedges+1 ) {
-            s_logger.warning("Node/edge counts incorrect.");
+            s_logger.warn("Node/edge counts incorrect.");
             return false;
         }
         
@@ -747,10 +748,10 @@ public class Tree extends Graph {
             int n = nodes.nextInt();
             int id = getInDegree(n);
             if ( n==root && id > 0 ) {
-                s_logger.warning("Root node has a parent.");
+                s_logger.warn("Root node has a parent.");
                 return false;
             } else if ( id > 1 ) {
-                s_logger.warning("Node "+n+" has multiple parents.");
+                s_logger.warn("Node "+n+" has multiple parents.");
                 return false;
             }
         }
@@ -759,11 +760,11 @@ public class Tree extends Graph {
         int[] counts = new int[] { 0, nedges };
         isValidHelper(getRootRow(), counts);
         if ( counts[0] > nedges ) {
-            s_logger.warning("The tree has non-tree edges in it.");
+            s_logger.warn("The tree has non-tree edges in it.");
             return false;
         }
         if ( counts[0] < nedges ) {
-            s_logger.warning("Not all of the tree was visited. " +
+            s_logger.warn("Not all of the tree was visited. " +
                 "Only "+counts[0]+"/"+nedges+" edges encountered");
             return false;
         }

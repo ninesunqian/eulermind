@@ -7,7 +7,9 @@ import java.awt.*;
 import java.awt.font.TextAttribute;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -18,7 +20,7 @@ import java.util.logging.Logger;
  */
 public class FontCombobox extends JComboBox{
 
-    final Logger m_logger = Logger.getLogger(this.getClass().getName());
+    final Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
     static boolean sm_constantLoaded = false;
     static String sm_fontFamilies[];

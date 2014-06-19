@@ -1,7 +1,7 @@
 package prefuse.data.tuple;
 
 import java.util.Iterator;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.data.Graph;
 import prefuse.data.Table;
@@ -102,8 +102,7 @@ public class TupleManager {
             t.init(m_table, m_graph, row);
             return t;
         } catch ( Exception e ) {
-            Logger.getLogger(getClass().getName()).warning(
-                e.getMessage()+"\n"+StringLib.getStackTrace(e));
+            LoggerFactory.getLogger(getClass()).warn(e.getMessage()+"\n"+StringLib.getStackTrace(e));
             return null;
         }
     }

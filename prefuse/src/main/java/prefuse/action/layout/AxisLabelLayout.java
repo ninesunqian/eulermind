@@ -3,7 +3,7 @@ package prefuse.action.layout;
 import java.awt.geom.Rectangle2D;
 import java.text.NumberFormat;
 import java.util.Iterator;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.Constants;
 import prefuse.data.Schema;
@@ -215,8 +215,8 @@ public class AxisLabelLayout extends Layout {
             m_model = m_layout.getRangeModel();
         
         if ( m_model == null ) {
-            Logger.getLogger(this.getClass().getName())
-                .warning("Axis labels missing a range model.");
+            LoggerFactory.getLogger(this.getClass().getName())
+                .warn("Axis labels missing a range model.");
             return;
         }
         

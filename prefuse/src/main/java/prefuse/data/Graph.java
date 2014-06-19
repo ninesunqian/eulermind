@@ -2,7 +2,7 @@ package prefuse.data;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.data.column.Column;
 import prefuse.data.event.ColumnListener;
@@ -80,7 +80,7 @@ import prefuse.util.collections.IntIterator;
  */
 public class Graph extends CompositeTupleSet {
 
-    final Logger m_logger = Logger.getLogger(this.getClass().getName());
+    final Logger m_logger = LoggerFactory.getLogger(this.getClass());
     // ------------------------------------------------------------------------
     // Graph Linkage Schema
     

@@ -1,6 +1,6 @@
 package prefuse.action;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.Visualization;
 import prefuse.activity.Activity;
@@ -36,7 +36,7 @@ import prefuse.activity.Activity;
 public abstract class Action extends Activity {
     
     private final static Logger s_logger 
-        = Logger.getLogger(Action.class.getName());
+        = LoggerFactory.getLogger(Action.class.getName());
     
     /** A reference to the visualization processed by this Action. */
     protected Visualization m_vis;

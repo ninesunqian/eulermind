@@ -1,6 +1,6 @@
 package prefuse.action.assignment;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.Constants;
 import prefuse.data.tuple.TupleSet;
@@ -310,7 +310,7 @@ public class DataSizeAction extends SizeAction {
             } else {
                 // check for non-binned quantile scale error
                 if ( m_scale == Constants.QUANTILE_SCALE ) {
-                    Logger.getLogger(getClass().getName()).warning(
+                    LoggerFactory.getLogger(getClass().getName()).warn(
                             "Can't use quantile scale with no binning. " +
                             "Defaulting to linear scale. Set the bin value " +
                             "greater than zero to use a quantile scale.");

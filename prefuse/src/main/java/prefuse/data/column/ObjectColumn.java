@@ -2,7 +2,7 @@ package prefuse.data.column;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.data.DataReadOnlyException;
 import prefuse.data.DataTypeException;
@@ -75,7 +75,7 @@ public class ObjectColumn extends AbstractColumn {
             }
         } catch ( Exception e ) {
             if ( defaultValue != null ) {
-                Logger.getLogger(getClass().getName()).fine(
+                LoggerFactory.getLogger(getClass().getName()).debug(
                     "Default value of type \"" + 
                     defaultValue.getClass().getName() + "\" is not " +
                     "cloneable. Using Object reference directly.");

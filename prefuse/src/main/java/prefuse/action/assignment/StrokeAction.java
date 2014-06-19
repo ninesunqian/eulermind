@@ -2,7 +2,7 @@ package prefuse.action.assignment;
 
 import java.awt.BasicStroke;
 import java.awt.Stroke;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.action.EncoderAction;
 import prefuse.data.expression.Predicate;
@@ -155,8 +155,8 @@ public class StrokeAction extends EncoderAction {
             } else if ( o instanceof Stroke ) {
                 return (BasicStroke)o;
             } else {
-                Logger.getLogger(this.getClass().getName())
-                    .warning("Unrecognized Object from predicate chain.");
+                LoggerFactory.getLogger(this.getClass().getName())
+                    .warn("Unrecognized Object from predicate chain.");
             }
         }
         return defaultStroke;   

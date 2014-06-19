@@ -11,7 +11,9 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 
@@ -24,7 +26,7 @@ import com.tinkerpop.blueprints.Vertex;
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
 public class Mindmap {
-    static Logger m_logger = Logger.getLogger(Mindmap.class.getName());
+    static Logger m_logger = LoggerFactory.getLogger(Mindmap.class);
 
     public static void deleteDir(String path)
     {

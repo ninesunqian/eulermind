@@ -3,7 +3,8 @@ package excitedmind;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Iterator;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import prefuse.Constants;
 import prefuse.Display;
@@ -16,7 +17,7 @@ import prefuse.visual.EdgeItem;
 import prefuse.visual.NodeItem;
 
 public class MindTreeLayout extends TreeLayout {
-    Logger m_logger = Logger.getLogger(this.getClass().getName());
+    Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
     private int    m_orientation;  // the orientation of the tree
     private double m_bspace = 20;   // the spacing between sibling nodes

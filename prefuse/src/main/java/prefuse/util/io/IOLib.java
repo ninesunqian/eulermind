@@ -6,7 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 import java.util.zip.GZIPInputStream;
 
 import javax.swing.JFileChooser;
@@ -289,7 +289,7 @@ public class IOLib {
         try {
             return tr.readTable(streamFromString(f.getAbsolutePath()));
         } catch ( Exception e ) {
-            Logger.getLogger(IOLib.class.getName()).warning(
+            LoggerFactory.getLogger(IOLib.class.getName()).warn(
                 e.getMessage() + "\n" + StringLib.getStackTrace(e));
             return null;
         }
@@ -338,7 +338,7 @@ public class IOLib {
         try {
             return gr.readGraph(streamFromString(f.getAbsolutePath()));
         } catch ( Exception e ) {
-            Logger.getLogger(IOLib.class.getName()).warning(
+            LoggerFactory.getLogger(IOLib.class.getName()).warn(
                 e.getMessage() + "\n" + StringLib.getStackTrace(e));
             return null;
         }

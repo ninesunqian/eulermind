@@ -6,7 +6,8 @@ import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 
@@ -32,7 +33,7 @@ import statemap.State;
  */
 public class MindView extends Display {
 
-    final Logger m_logger = Logger.getLogger(this.getClass().getName());
+    final Logger m_logger = LoggerFactory.getLogger(this.getClass());
     final String m_treeGroupName = "tree";
 
     final public MindModel m_mindModel;

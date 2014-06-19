@@ -1,7 +1,7 @@
 package prefuse.action.assignment;
 
 import java.awt.Font;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.action.EncoderAction;
 import prefuse.data.expression.Predicate;
@@ -156,8 +156,8 @@ public class FontAction extends EncoderAction {
             } else if ( o instanceof Font ) {
                 return (Font)o;
             } else {
-                Logger.getLogger(this.getClass().getName())
-                    .warning("Unrecognized Object from predicate chain.");
+                LoggerFactory.getLogger(this.getClass().getName())
+                    .warn("Unrecognized Object from predicate chain.");
             }
         }
         return defaultFont;   

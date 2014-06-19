@@ -10,7 +10,8 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -92,7 +93,7 @@ public class MindCombobox extends JComboBox {
     }
 
 
-    Logger m_logger = Logger.getLogger(this.getClass().getName());
+    Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
     private JTextField m_followedEditor;
     private MindDB m_mindDb;

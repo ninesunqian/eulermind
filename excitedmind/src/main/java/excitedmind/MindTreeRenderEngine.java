@@ -4,7 +4,8 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.RectangularShape;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import prefuse.Constants;
 import prefuse.Visualization;
@@ -28,7 +29,7 @@ import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
 
 public class MindTreeRenderEngine {
-    Logger m_logger = Logger.getLogger(this.getClass().getName());
+    Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
 	private final MindView m_mindView;
 	private final Visualization m_vis;
@@ -52,7 +53,7 @@ public class MindTreeRenderEngine {
     private int m_normalBackColor = ColorLib.rgb(255, 255, 255);
 
 	public MindTreeRenderEngine(MindView mindView, String treeGroupName) {
-        m_logger.setLevel(Level.OFF);
+        //m_logger.setLevel(Level.OFF);
 		m_mindView = mindView;
 		m_vis = m_mindView.getVisualization();
 		

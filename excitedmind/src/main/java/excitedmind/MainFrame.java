@@ -4,10 +4,11 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MainFrame extends JFrame {
-    static Logger m_logger = Logger.getLogger(Mindmap.class.getName());
+    static Logger m_logger = LoggerFactory.getLogger(Mindmap.class);
 
     MindModel m_mindModel;
     MindController m_mindController;

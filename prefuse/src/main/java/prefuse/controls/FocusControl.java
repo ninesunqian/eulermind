@@ -2,7 +2,7 @@ package prefuse.controls;
 
 import java.awt.Cursor;
 import java.awt.event.MouseEvent;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.Display;
 import prefuse.Visualization;
@@ -140,7 +140,7 @@ public class FocusControl extends ControlAdapter {
         try {
             return filter.getBoolean(item);
         } catch ( Exception e ) {
-            Logger.getLogger(getClass().getName()).warning(
+            LoggerFactory.getLogger(getClass().getName()).warn(
                 e.getMessage() + "\n" + StringLib.getStackTrace(e));
             return false;
         }

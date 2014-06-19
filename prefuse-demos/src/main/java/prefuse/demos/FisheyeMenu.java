@@ -11,7 +11,8 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.util.Iterator;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -144,7 +145,7 @@ public class FisheyeMenu extends Display {
      */
     public static final void main(String[] argv) {
         // only log warnings
-        Logger.getLogger("prefuse").setLevel(Level.WARNING);
+        LoggerFactory.getLogger("prefuse").setLevel(Level.WARNING);
 
         FisheyeMenu fm = demo();
         

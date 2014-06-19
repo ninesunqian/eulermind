@@ -11,7 +11,7 @@ import java.awt.font.GlyphVector;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -24,7 +24,7 @@ import javax.swing.JFrame;
 public class RenderingBenchmarks extends JComponent {
 
     private static final Logger s_logger 
-        = Logger.getLogger(RenderingBenchmarks.class.getName());
+        = LoggerFactory.getLogger(RenderingBenchmarks.class.getName());
     
     private StringBuffer sbuf = new StringBuffer();
     private String testSuite;

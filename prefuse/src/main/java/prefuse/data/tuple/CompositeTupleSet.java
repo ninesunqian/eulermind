@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.data.Table;
 import prefuse.data.Tuple;
@@ -30,7 +30,7 @@ import prefuse.util.collections.CompositeIterator;
 public class CompositeTupleSet extends AbstractTupleSet {
 
     private static final Logger s_logger
-        = Logger.getLogger(CompositeTupleSet.class.getName());
+        = LoggerFactory.getLogger(CompositeTupleSet.class.getName());
     
     private Map m_map;   // map names to tuple sets
     private Set m_sets;  // support quick reverse lookup
@@ -277,7 +277,7 @@ public class CompositeTupleSet extends AbstractTupleSet {
                     // already exists
                 }
             } else {
-                s_logger.fine("Skipped addColumn for "+entry.getKey());
+                s_logger.trace("Skipped addColumn for "+entry.getKey());
             }
         }
     }
@@ -299,7 +299,7 @@ public class CompositeTupleSet extends AbstractTupleSet {
                     // already exists
                 }
             } else {
-                s_logger.fine("Skipped addColumn for "+entry.getKey());
+                s_logger.debug("Skipped addColumn for "+entry.getKey());
             }
         }
     }
@@ -321,7 +321,7 @@ public class CompositeTupleSet extends AbstractTupleSet {
                     // already exists
                 }
             } else {
-                s_logger.fine("Skipped addColumn for "+entry.getKey());
+                s_logger.trace("Skipped addColumn for "+entry.getKey());
             }
         }
     }

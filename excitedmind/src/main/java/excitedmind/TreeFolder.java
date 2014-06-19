@@ -11,7 +11,8 @@ import prefuse.visual.VisualTree;
 import prefuse.visual.tuple.TableEdgeItem;
 import prefuse.visual.tuple.TableNodeItem;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.

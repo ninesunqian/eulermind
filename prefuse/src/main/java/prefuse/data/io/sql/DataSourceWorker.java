@@ -1,6 +1,6 @@
 package prefuse.data.io.sql;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.data.Table;
 import prefuse.data.io.DataIOException;
@@ -20,7 +20,7 @@ import prefuse.util.collections.CopyOnWriteArrayList;
 public class DataSourceWorker extends Thread {
 
     private static Logger s_logger
-        = Logger.getLogger(DataSourceWorker.class.getName());
+        = LoggerFactory.getLogger(DataSourceWorker.class.getName());
     
     // TODO: in future, may want to expand this to a thread pool
     private static DataSourceWorker s_instance;
@@ -84,7 +84,7 @@ public class DataSourceWorker extends Thread {
                     e.ds.getData(e.table, e.query, e.keyField, e.lock);
                     if ( e.listener != null ) e.listener.postQuery(e);
                 } catch ( DataIOException dre ) {
-                    s_logger.warning(dre.getMessage() + "\n" 
+                    s_logger.warn(dre.getMessage() + "\n"
                         + StringLib.getStackTrace(dre));
                 }
             } else {

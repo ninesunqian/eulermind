@@ -1,6 +1,6 @@
 package test.prefuse.data.io.sql;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import javax.swing.JFrame;
 
@@ -15,7 +15,7 @@ public class MySQLConnectionTest extends TestCase {
 
     // logger
     private static final Logger s_logger 
-        = Logger.getLogger(MySQLConnectionTest.class.getName());
+        = LoggerFactory.getLogger(MySQLConnectionTest.class.getName());
     
     private Table m_table;
     

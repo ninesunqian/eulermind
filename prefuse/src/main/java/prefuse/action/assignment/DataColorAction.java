@@ -2,7 +2,7 @@ package prefuse.action.assignment;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.Constants;
 import prefuse.data.tuple.TupleSet;
@@ -243,7 +243,7 @@ public class DataColorAction extends ColorAction {
         // switch up scale if necessary
         m_tempScale = m_scale;
         if ( m_scale == Constants.QUANTILE_SCALE && m_bins <= 0 ) {
-            Logger.getLogger(getClass().getName()).warning(
+            LoggerFactory.getLogger(getClass().getName()).warn(
                     "Can't use quantile scale with no binning. " +
                     "Defaulting to linear scale. Set the bin value " +
                     "greater than zero to use a quantile scale.");
@@ -329,8 +329,8 @@ public class DataColorAction extends ColorAction {
             } else if ( o instanceof Integer ) {
                 return ((Integer)o).intValue();
             } else {
-                Logger.getLogger(this.getClass().getName())
-                    .warning("Unrecognized Object from predicate chain.");
+                LoggerFactory.getLogger(this.getClass().getName())
+                    .warn("Unrecognized Object from predicate chain.");
             }
         }
         

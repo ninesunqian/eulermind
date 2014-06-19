@@ -1,6 +1,6 @@
 package prefuse.visual.expression;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.data.Tuple;
 import prefuse.data.expression.AbstractExpression;
@@ -20,7 +20,7 @@ public abstract class GroupExpression extends AbstractExpression
     implements Function
 {
     private static final Logger s_logger
-        = Logger.getLogger(GroupExpression.class.getName());
+        = LoggerFactory.getLogger(GroupExpression.class.getName());
 
     protected Expression m_group;
     
@@ -47,7 +47,7 @@ public abstract class GroupExpression extends AbstractExpression
     protected String getGroup(Tuple t) {
         String group = (String)m_group.get(t);
         if ( group == null ) {
-            s_logger.warning("Null group lookup");
+            s_logger.warn("Null group lookup");
         }
         return group;
     }

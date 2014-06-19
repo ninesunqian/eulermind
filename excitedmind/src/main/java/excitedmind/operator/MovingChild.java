@@ -1,5 +1,6 @@
 package excitedmind.operator;
 
+import excitedmind.MindDB;
 import excitedmind.MindModel;
 import excitedmind.MindOperator;
 import prefuse.data.Node;
@@ -56,6 +57,13 @@ public class MovingChild extends MindOperator{
         Tree tree = m_mindModel.findTree(m_rootDBId);
         Node oldParentNode = m_mindModel.getNodeByPath(tree, oldParentPath);
         Node newParentNode = m_mindModel.getNodeByPath(tree, newParentPath);
+
+        Node child = oldParentNode.getChild(oldPos);
+        MindDB.InheritDirection inheritDirectionToNewParent =
+                m_mindModel.getInheritDirection(child, newParentNode);
+
+        assert inheritDirectionToNewParent != MindDB.InheritDirection.SELF
+                && inheritDirectionToNewParent != MindDB.InheritDirection.LINEAL_DESCENDANT;
 
         if (oldParentPath == newParentPath) {
             m_mindModel.changeChildPos(m_mindModel.getDBId(oldParentNode), oldPos, newPos);

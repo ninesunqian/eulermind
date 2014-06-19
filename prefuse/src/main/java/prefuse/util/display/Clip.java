@@ -2,7 +2,7 @@ package prefuse.util.display;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 /**
  * Represents a clipping rectangle in a prefuse <code>Display</code>.
@@ -173,7 +173,7 @@ public class Clip {
         
         if ( Double.isNaN(minx) || Double.isNaN(miny) ||
              Double.isNaN(maxx) || Double.isNaN(maxy) ) {
-            Logger.getLogger(getClass().getName()).warning(
+            LoggerFactory.getLogger(getClass().getName()).warn(
                 "Union with invalid clip region: "+r);
             return;
         }

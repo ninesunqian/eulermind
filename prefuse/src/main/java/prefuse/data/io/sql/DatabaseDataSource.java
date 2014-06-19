@@ -5,7 +5,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.data.Schema;
 import prefuse.data.Table;
@@ -24,7 +24,7 @@ public class DatabaseDataSource {
 
     // logger
     private static final Logger s_logger 
-        = Logger.getLogger(DatabaseDataSource.class.getName());
+        = LoggerFactory.getLogger(DatabaseDataSource.class.getName());
     
     protected Connection       m_conn;
     protected Statement        m_stmt;
@@ -265,7 +265,7 @@ public class DatabaseDataSource {
                         t.index(key);
                         s_logger.info("Indexed field: "+key);
                     } catch ( Exception e ) {
-                        s_logger.warning("Error indexing field: "+key);
+                        s_logger.warn("Error indexing field: "+key);
                     }
                 }
             }

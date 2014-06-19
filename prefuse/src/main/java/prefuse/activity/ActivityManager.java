@@ -3,7 +3,7 @@ package prefuse.activity;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import prefuse.util.PrefuseConfig;
 
@@ -41,7 +41,7 @@ import javax.swing.*;
  * @see prefuse.action.Action
  */
 public class ActivityManager {
-    final Logger m_logger = Logger.getLogger(this.getClass().getName());
+    final Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
     private static ActivityManager s_instance;
     

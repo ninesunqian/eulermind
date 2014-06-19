@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.logging.Logger;
+import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import javax.swing.event.TableModelEvent;
 
@@ -87,7 +87,7 @@ import prefuse.util.collections.IntIterator;
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
 public class Table extends AbstractTupleSet implements ColumnListener {
-    final Logger m_logger = Logger.getLogger(this.getClass().getName());
+    final Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
     /** Listeners for changes to this table */
     protected CopyOnWriteArrayList m_listeners;
