@@ -6,6 +6,8 @@ import prefuse.data.Tree;
 import javax.swing.undo.AbstractUndoableEdit;
 import java.util.ArrayList;
 import java.util.Stack;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -20,7 +22,11 @@ public abstract class MindOperator extends AbstractUndoableEdit {
     protected ArrayList<Integer> m_formerCursorPath;
     protected ArrayList<Integer> m_laterCursorPath;
 
+    protected Logger m_logger;
+
     public MindOperator(MindModel mindModel, Node formerCursor) {
+        m_logger = LoggerFactory.getLogger(this.getClass());
+
         Tree tree = (Tree)formerCursor.getGraph();
         m_mindModel = mindModel;
         m_rootDBId = m_mindModel.getDBId(tree.getRoot());

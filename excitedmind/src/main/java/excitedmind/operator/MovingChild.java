@@ -27,6 +27,12 @@ public class MovingChild extends MindOperator{
     {
         super(mindModel, formerCursor);
 
+        m_logger.info("arg: {}: {}", "mindModel", mindModel);
+        m_logger.info("arg: {}: {}", "formerCursor", formerCursor);
+        m_logger.info("arg: {}: {}", "newParent", newParent);
+        m_logger.info("arg: {}: {}", "newPos", newPos);
+
+
         m_oldParentPath = m_mindModel.getNodePath(formerCursor.getParent());
         m_oldPos = formerCursor.getIndex();
 
@@ -35,25 +41,37 @@ public class MovingChild extends MindOperator{
 
         m_laterCursorPath = (ArrayList<Integer>)m_newParentPath.clone();
         m_laterCursorPath.add(m_newPos);
+        m_logger.info("ret:");
     }
 
     public void does()
     {
+        m_logger.info("arg:");
         moveChild(m_oldParentPath, m_oldPos, m_newParentPath, m_newPos);
+        m_logger.info("ret:");
     }
 
     public void undo()
     {
+        m_logger.info("arg:");
         moveChild(m_newParentPath, m_newPos, m_oldParentPath, m_oldPos);
+        m_logger.info("ret:");
     }
 
     public void redo()
     {
+        m_logger.info("arg: ");
         moveChild(m_oldParentPath, m_oldPos, m_newParentPath, m_newPos);
+        m_logger.info("ret: ");
     }
 
     private void moveChild(ArrayList<Integer> oldParentPath, int oldPos, ArrayList<Integer> newParentPath, int newPos)
     {
+        m_logger.info("arg: {}:{}", "oldParentPath", oldParentPath);
+        m_logger.info("arg: {}:{}", "oldPos", oldPos);
+        m_logger.info("arg: {}:{}", "newParentPath", newParentPath);
+        m_logger.info("arg: {}:{}", "newPos", newPos);
+
         Tree tree = m_mindModel.findTree(m_rootDBId);
         Node oldParentNode = m_mindModel.getNodeByPath(tree, oldParentPath);
         Node newParentNode = m_mindModel.getNodeByPath(tree, newParentPath);
@@ -70,5 +88,7 @@ public class MovingChild extends MindOperator{
         } else {
             m_mindModel.moveChild(oldParentNode, oldPos, newParentNode, newPos);
         }
+
+        m_logger.info("ret:");
     }
 }

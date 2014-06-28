@@ -62,6 +62,7 @@ public class MindController extends UndoManager {
 
         m_mindViews.put(rootDBId, mindView);
         Node root = mindView.m_tree.getRoot();
+
         m_tabbedPane.addTab(m_mindModel.getText(root), mindView);
 
         for(NodeDndControl controller : m_externalMouseContollers) {

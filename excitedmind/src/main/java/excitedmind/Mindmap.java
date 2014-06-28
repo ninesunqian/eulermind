@@ -11,6 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Stack;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,16 +67,24 @@ public class Mindmap {
 
     static void testJava()
     {
-        ArrayList<Integer> list = new ArrayList<Integer>();
-        list.add(100);
-        Integer i = 98;
-        i++;
-        i++;
-        if (list.contains(i)) {
-            m_logger.info("YYYYYYYYYYYYYYYYYYYY\n");
-        } else {
-            m_logger.info("NNNNNNNNNNNNNNNNNNNNN\n");
+        LinkedList<Integer> stack = new LinkedList<Integer>();
+        LinkedList<Integer> stack2 = new LinkedList<Integer>();
+        stack.addFirst(4);
+        stack.addFirst(3);
+        for (int i : stack) {
+            System.out.println(i);
         }
+        stack2.push(2);
+        stack2.push(1);
+        for (int i : stack2) {
+            System.out.println(i);
+        }
+
+        stack.addAll(0, stack2);
+        for (int i : stack) {
+            System.out.println(i);
+        }
+
     }
 
 	public static void main(String argv[]) {

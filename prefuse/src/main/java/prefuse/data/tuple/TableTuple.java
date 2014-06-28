@@ -525,6 +525,11 @@ public class TableTuple implements Tuple {
      * @see java.lang.Object#toString()
      */
     public String toString() {
+
+        if (m_table.getTupleToStringHandler() != null) {
+            return m_table.getTupleToStringHandler().tupleToString(m_table, this);
+        }
+
         StringBuffer sb = new StringBuffer();
         sb.append("Tuple[");
         for ( int i=0; i<getColumnCount(); ++i ) {

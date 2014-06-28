@@ -116,7 +116,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     
     /** A cached schema instance, loaded lazily */
     protected Schema m_schema;
-    
+
     // ------------------------------------------------------------------------
     // Constructors
     
@@ -1952,5 +1952,19 @@ public class Table extends AbstractTupleSet implements ColumnListener {
         }
 
     } // end of inner class ColumnEntry
-    
+
+    public static interface TupleToStringHandler {
+        abstract public String tupleToString(Table table, Tuple tuple);
+    }
+
+    protected TupleToStringHandler m_tupleToStringHandler;
+
+    public void setTupleToStringHandler(TupleToStringHandler tupleToStringHandler) {
+        m_tupleToStringHandler = tupleToStringHandler;
+    }
+
+    public TupleToStringHandler getTupleToStringHandler() {
+        return m_tupleToStringHandler;
+    }
+
 } // end of class Table
