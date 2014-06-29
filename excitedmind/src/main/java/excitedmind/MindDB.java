@@ -32,9 +32,9 @@ public class MindDB implements Graph {
 	private final static String SAVED_POS_PROP_NAME = PrefuseLib.FIELD_PREFIX + "pos";
 	public final static String SAVED_REFERRER_INFO_PROP_NAME = PrefuseLib.FIELD_PREFIX + "referrers";
 
-    public final static String TRASHED_PROP_NAME = PrefuseLib.FIELD_PREFIX + "trashed";
+    public final static String IS_TRASHED_PROP_NAME = PrefuseLib.FIELD_PREFIX + "isTrashed";
 
-    public final static int MAX_OUT_EDGES = Byte.MIN_VALUE - Byte.MAX_VALUE + 1;
+    public final static int MAX_OUT_EDGES = Short.MAX_VALUE + 1;
 
 	enum EdgeType {INCLUDE, REFERENCE};
 
@@ -103,7 +103,6 @@ public class MindDB implements Graph {
 	@Override
 	public Vertex addVertex(Object arg0) {
 		Vertex vertex = m_graph.addVertex(arg0);
-        m_graph.commit();
         return m_graph.getVertex(vertex.getId());
 	}
 	@Override
@@ -208,14 +207,43 @@ public class MindDB implements Graph {
         return new ArrayList((ArrayList<Object>)container);
 	}
 	
-	public ArrayList<Byte> getOutEdgeInnerIds(Vertex source, boolean ifNullCreate)
+	public ArrayList<Short> getOutEdgeInnerIds(Vertex source, boolean ifNullCreate)
 	{
 		return getContainerProperty (source, OUT_EDGES_PROP_NAME, ifNullCreate);
 	}
 
+    public Short getOutEdgeInnerId(Edge edge)
+    {
+        return edge.getProperty(OUT_EDGE_INNER_ID);
+    }
+
+    private EdgeVertex getParentSkipCache(Vertex vertex)
+    {
+        Iterator<Edge> edgeIterator = vertex.getEdges(Direction.IN).iterator();
+        Edge parentToVertex = null;
+
+        while (edgeIterator.hasNext())
+        {
+            Edge edge = edgeIterator.next();
+
+            if (getEdgeType(edge) == EdgeType.INCLUDE) {
+                parentToVertex = edge;
+                break;
+            }
+        }
+
+        if (parentToVertex == null) {
+            return null;
+
+        } else {
+            Vertex parent = getEdgeSource(parentToVertex);
+            return new EdgeVertex(parentToVertex, parent);
+        }
+    }
+
     public List getInheritPath(Object dbId)
     {
-        assert ((Vertex)(dbId)) == null;
+        assert !(dbId instanceof Vertex);
         LinkedList inheritPath = new LinkedList();
 
         List cachedInheritPath = m_inheritPathCache.get(dbId);
@@ -228,7 +256,7 @@ public class MindDB implements Graph {
             if (isVertexTrashed(getVertex(dbId))) {
                 parent = getVertex(getVertex(dbId).getProperty(SAVED_PARENT_ID_PROP_NAME));
             } else {
-                EdgeVertex parentEdge = getParent(getVertex(dbId));
+                EdgeVertex parentEdge = getParentSkipCache(getVertex(dbId));
                 if (parentEdge == null) {
                     parent = null;
                 } else {
@@ -313,41 +341,40 @@ public class MindDB implements Graph {
         return getInheritDirection(fromInheritPath, from.getId(), toInheritPath, to.getId());
     }
 	
-	public EdgeType getEdgeType (Edge edge)
+	public EdgeType getEdgeType(Edge edge)
 	{
         int edgeTypeValue = (Integer)edge.getProperty(EDGE_TYPE_PROP_NAME);
 		return EdgeType.values()[edgeTypeValue];
 	}
 
-    private Byte allocateOutEdgeInnerId(Vertex vertex, int pos)
+    private Short allocateOutEdgeInnerId(Vertex vertex, int pos)
     {
-        byte outEdgeInnerId = 0;
-        ArrayList<Byte> outEdgeInnerIds = getOutEdgeInnerIds(vertex, false);
+        Short newEdgeInnerId = -1;
+        ArrayList<Short> outEdgeInnerIds = getOutEdgeInnerIds(vertex, false);
 
         if (outEdgeInnerIds == null) {
             assert pos == ADDING_EDGE_END || pos == 0;
 
-            outEdgeInnerIds = new ArrayList<Byte>();
-            outEdgeInnerId = Byte.MIN_VALUE;
+            outEdgeInnerIds = new ArrayList<Short>();
+            newEdgeInnerId = 0;
 
         } else {
             assert pos == ADDING_EDGE_END || (0 <= pos && pos <= outEdgeInnerIds.size());
 
-            for (byte i = Byte.MIN_VALUE; i <= Byte.MAX_VALUE; i++) {
+            assert outEdgeInnerIds.size() < MAX_OUT_EDGES;
+
+            for (Short i = 0; i < MAX_OUT_EDGES; i++) {
                 if (! outEdgeInnerIds.contains(i)) {
-                    outEdgeInnerId = i;
+                    newEdgeInnerId = i;
                     break;
                 }
             }
-
-            throw Exception exce();
-            //TODO
         }
 
         if (pos == ADDING_EDGE_END) {
-            outEdgeInnerIds.add(outEdgeInnerId);
+            outEdgeInnerIds.add(newEdgeInnerId);
         } else {
-            outEdgeInnerIds.add(pos, outEdgeInnerId);
+            outEdgeInnerIds.add(pos, newEdgeInnerId);
         }
 
         //NOTICE: the container property must be reset to Vertex.
@@ -355,7 +382,7 @@ public class MindDB implements Graph {
         //it is the bug of blueprints or orientdb
         vertex.setProperty(OUT_EDGES_PROP_NAME, outEdgeInnerIds);
 
-        return outEdgeInnerId;
+        return newEdgeInnerId;
     }
 	
 	private Edge addEdge(Vertex source, Vertex target, int pos, EdgeType edgeType)
@@ -363,7 +390,7 @@ public class MindDB implements Graph {
 		//the label should not be null or "", 
 		//it is related to the implement of blueprints
 		Edge edge = m_graph.addEdge(null, source, target, "a");
-        byte outEdgeInnerId = allocateOutEdgeInnerId(source, pos);
+        Short outEdgeInnerId = allocateOutEdgeInnerId(source, pos);
 
 		edge.setProperty(EDGE_TYPE_PROP_NAME, edgeType.ordinal());
         edge.setProperty(OUT_EDGE_INNER_ID, outEdgeInnerId);
@@ -375,7 +402,6 @@ public class MindDB implements Graph {
 
             updateInheritPath(target.getId(), childInheritPath);
         }
-		commit ();
 		return edge;
 	}
 	
@@ -383,7 +409,7 @@ public class MindDB implements Graph {
 	
 	public Edge addRefEdge (Vertex referrer, Vertex referent, int pos)
 	{
-		Edge edge = addEdge (referrer, referent, pos, EdgeType.REFERENCE);
+		Edge edge = addEdge(referrer, referent, pos, EdgeType.REFERENCE);
 
         verifyVertex(referrer);
         verifyVertex(referent);
@@ -392,26 +418,16 @@ public class MindDB implements Graph {
 
     private void removeEdge (Vertex source, int pos, EdgeType assert_type)
     {
-        ArrayList<Byte> outEdgeInnerIds = getOutEdgeInnerIds(source, false);
-        Byte outEdgeInnerId = outEdgeInnerIds.get(pos);
+        ArrayList<Short> outEdgeInnerIds = getOutEdgeInnerIds(source, false);
+        short outEdgeInnerId = outEdgeInnerIds.get(pos);
 
-        Edge edgeBeingRemoved = null;
-        Iterator<Edge> outEdgeIterator = source.getEdges(Direction.OUT).iterator();
-
-        while (outEdgeIterator.hasNext())
-        {
-            Edge outEdge = outEdgeIterator.next();
-            //TODO == or equals
-            if (outEdge.getProperty(OUT_EDGE_INNER_ID) == outEdgeInnerId) {
-                edgeBeingRemoved = outEdge;
-                break;
-            }
-        }
-
+        Edge edgeBeingRemoved = getEdge(source, pos);
+        assert edgeBeingRemoved != null;
         assert getEdgeType(edgeBeingRemoved) == assert_type;
-        m_graph.removeEdge(edgeBeingRemoved);
-        outEdgeInnerIds.remove(pos);
 
+        m_graph.removeEdge(edgeBeingRemoved);
+
+        outEdgeInnerIds.remove(pos);
         source.setProperty(OUT_EDGES_PROP_NAME, outEdgeInnerIds.isEmpty() ? null : outEdgeInnerIds);
     }
 
@@ -424,18 +440,26 @@ public class MindDB implements Graph {
         verifyVertex(referent.m_vertex);
 	}
 
-    public Edge getEdge (Vertex source, int pos)
+    public Edge getEdge(Vertex source, int pos)
 	{
-		ArrayList<Object> childEdgeArray = getOutEdgeInnerIds(source, false);
-		
-		if (childEdgeArray == null)
-		{
-			return null;
-		}
-		else
-		{
-			return getEdge(childEdgeArray.get(pos));
-		}
+		ArrayList<Short> outEdgeInnerIds = getOutEdgeInnerIds(source, false);
+
+        if (outEdgeInnerIds == null) {
+            assert source.getEdges(Direction.OUT).iterator().hasNext() == false;
+            return null;
+        }
+
+        Short outEdgeInnerId = outEdgeInnerIds.get(pos);
+        Iterator<Edge> outEdgeIterator = source.getEdges(Direction.OUT).iterator();
+        while (outEdgeIterator.hasNext())
+        {
+            Edge outEdge = outEdgeIterator.next();
+            if (outEdge.getProperty(OUT_EDGE_INNER_ID).equals(outEdgeInnerId)) {
+                return outEdge;
+            }
+        }
+
+        return null;
 	}
 
 	public class EdgeVertex {
@@ -481,49 +505,40 @@ public class MindDB implements Graph {
 	
 	public ArrayList<EdgeVertex> getChildrenAndReferents(Vertex parent)
 	{
-		ArrayList<Object> edgeIDsToChildren = getOutEdgeInnerIds(parent, false);
-		
-		if (edgeIDsToChildren == null)
+		ArrayList<Short> outEdgeInnerIds = getOutEdgeInnerIds(parent, false);
+
+		if (outEdgeInnerIds == null)
 			return null;
 		
 		ArrayList<EdgeVertex> children = new ArrayList<EdgeVertex>();
 
-		children.ensureCapacity(edgeIDsToChildren.size());
+		children.ensureCapacity(outEdgeInnerIds.size());
 
-		for (Object edgeId : edgeIDsToChildren)
+		for (int i=0; i<outEdgeInnerIds.size(); i++)
 		{
-			Edge edgeToChild = getEdge(edgeId);
+			Edge edgeToChild = getEdge(parent, i);
 			Vertex child = getEdgeTarget(edgeToChild);
 			children.add(new EdgeVertex(edgeToChild, child));
 		}
-
 		return children;
 	}
 	
-	public EdgeVertex getParent(Vertex vertex)
-	{
-        //TODO get from cache
-		Iterator<Edge> edgeIterator = vertex.getEdges(Direction.IN).iterator();
-		Edge parentToVertex = null;
-		
-		while (edgeIterator.hasNext())
-		{
-            Edge edge = edgeIterator.next();
+    public Object getParentDBId(Object dbId)
+    {
+        List inheritPath = getInheritPath(dbId);
 
-			if (getEdgeType(edge) == EdgeType.INCLUDE) {
-                parentToVertex = edge;
-				break;
-            }
-		}
+        if (inheritPath.isEmpty()) {
+            return null;
+        } else {
+            return inheritPath.get(inheritPath.size()-1);
+        }
+    }
 
-		if (parentToVertex == null) {
-			return null;
-			
-		} else {
-			Vertex parent = getEdgeSource(parentToVertex);
-			return new EdgeVertex(parentToVertex, parent);
-		}
-	}
+    public Vertex getParent(Vertex vertex)
+    {
+        Object parentDBId = getParentDBId(vertex.getId());
+        return parentDBId == null ? null : getVertex(parentDBId);
+    }
 
     public EdgeVertex handoverChild(Vertex fromParent, int fromPos, Vertex toParent, int toPos)
     {
@@ -545,17 +560,17 @@ public class MindDB implements Graph {
 
         parent.query();
 
-        ArrayList<Object> outEdgeArray = getOutEdgeInnerIds(parent, true);
-        Object edgeId = outEdgeArray.remove(oldPos);
+        ArrayList<Short> outEdgeInnerIds = getOutEdgeInnerIds(parent, true);
+
+        Short edgeInnerId = outEdgeInnerIds.remove(oldPos);
 
         if (oldPos < newPos) {
-            outEdgeArray.add(newPos-1, edgeId);
+            outEdgeInnerIds.add(newPos - 1, edgeInnerId);
         } else {
-            outEdgeArray.add(newPos, edgeId);
+            outEdgeInnerIds.add(newPos, edgeInnerId);
         }
 
-        parent.setProperty(OUT_EDGES_PROP_NAME, outEdgeArray);
-        m_graph.commit();
+        parent.setProperty(OUT_EDGES_PROP_NAME, outEdgeInnerIds);
 
         parent = m_graph.getVertex(parent.getId());
         verifyVertex(parent);
@@ -632,29 +647,28 @@ public class MindDB implements Graph {
             byte referrerBytes[] = ((ORecordId)m_referrer).toStream();
             byte referentBytes[] = ((ORecordId)m_referent).toStream();
 
-            ByteBuffer byteBuffer = ByteBuffer.allocate(referrerBytes.length + referentBytes.length + 12);
+            ByteBuffer byteBuffer = ByteBuffer.allocate(12 + referrerBytes.length + referentBytes.length);
 
+            byteBuffer.putInt(m_pos);
             byteBuffer.putInt(referrerBytes.length);
             byteBuffer.putInt(referentBytes.length);
-            byteBuffer.putInt(m_pos);
 
             byteBuffer.put(referrerBytes);
             byteBuffer.put(referentBytes);
 
-
-            return byteBuffer.array();  //To change body of implemented methods use File | Settings | File Templates.
+            return byteBuffer.array();
         }
 
         @Override
         public RefLinkInfo fromStream(byte[] iStream) throws OSerializationException
         {
             ByteBuffer byteBuffer = ByteBuffer.wrap(iStream);
+            int pos = byteBuffer.getInt();
             int referrerByteLength = byteBuffer.getInt();
             int referentByteLength = byteBuffer.getInt();
-            int pos = byteBuffer.getInt();
 
-            byte referrerByte[] = new byte[referrerByteLength];
-            byte referentByte[] = new byte[referentByteLength];
+            byte referrerByte[] = Arrays.copyOfRange(iStream, 12, 12 + referrerByteLength);
+            byte referentByte[] = Arrays.copyOfRange(iStream, 12 + referrerByteLength, iStream.length);
 
             ORecordId referrer = (new ORecordId()).fromStream(referrerByte);
             ORecordId referent = (new ORecordId()).fromStream(referentByte);
@@ -671,8 +685,9 @@ public class MindDB implements Graph {
 		
 		Vertex removedVertex = edgeVertex.m_vertex;
 
-        //collect the nodes and edges which refer the removed treee
+        //collect the refer info, to help update display tree
         final ArrayList<RefLinkInfo> refLinkInfos = new ArrayList<RefLinkInfo> ();
+
 		deepTraverse(removedVertex, new Processor() {
 			
 			public boolean run(Vertex vertex, int level) {
@@ -682,30 +697,28 @@ public class MindDB implements Graph {
 				{
 					for (EdgeVertex referrer : referrers)
 					{
-						ArrayList<Object> edgeArray = getOutEdgeInnerIds(referrer.m_vertex, false);
-						int edgeIndex = edgeArray.indexOf(referrer.m_edge.getId());
+						ArrayList<Short> outEdgeInnerIds = getOutEdgeInnerIds(referrer.m_vertex, false);
+						int edgeIndex = outEdgeInnerIds.indexOf(getOutEdgeInnerId(referrer.m_edge));
 
-						refLinkInfos.add(new RefLinkInfo(referrer.m_vertex.getId(), vertex.getId(), edgeIndex));
-
+                        refLinkInfos.add(new RefLinkInfo(referrer.m_vertex.getId(), vertex.getId(), edgeIndex));
 						removeRefEdge(referrer.m_vertex, edgeIndex);
 					}
 				}
-				
+
+                vertex.setProperty(IS_TRASHED_PROP_NAME, true);
+
 				return true;
 			}
 		});
 		
 		removedVertex.setProperty(SAVED_PARENT_ID_PROP_NAME, parent.getId());
 		removedVertex.setProperty(SAVED_POS_PROP_NAME, pos);
-		removedVertex.setProperty(SAVED_REFERRER_INFO_PROP_NAME, refLinkInfos);
 
         removeEdge(parent, pos, EdgeType.INCLUDE);
 
 		m_trashIndex.put(TRASH_KEY_NAME, TRASH_KEY_NAME, removedVertex);
 
         verifyTrashedTree(removedVertex);
-		
-		commit ();
 		
 		return removedVertex;
 	}
@@ -767,13 +780,19 @@ public class MindDB implements Graph {
 						refLinkInfo.m_pos);
 			}
 		}
-		
+
+        deepTraverse(vertex, new Processor() {
+            public boolean run(Vertex vertex, int level) {
+                vertex.removeProperty(IS_TRASHED_PROP_NAME);
+                return true;
+            }
+        });
+
 		vertex.removeProperty(SAVED_PARENT_ID_PROP_NAME);
 		vertex.removeProperty(SAVED_POS_PROP_NAME);
 		vertex.removeProperty(SAVED_REFERRER_INFO_PROP_NAME);
 
         m_trashIndex.remove(TRASH_KEY_NAME, TRASH_KEY_NAME, vertex);
-        commit();
 		return new EdgeVertex(edge, parent);
 	}
 
@@ -855,11 +874,12 @@ public class MindDB implements Graph {
 
     private void verifyOutEdges(Vertex vertex)
     {
-        ArrayList<Object> outEdgeArray = getOutEdgeInnerIds(vertex, true);
+        ArrayList<Short> outEdgeInnerIds = getOutEdgeInnerIds(vertex, true);
+        //TODO
         int edgeNumber = 0;
         for (Edge outEdge : vertex.getEdges(Direction.OUT)) {
             edgeNumber++;
-            assert outEdgeArray.contains(outEdge.getId());
+            assert outEdgeInnerIds.contains(getOutEdgeInnerId(outEdge));
 
             if (getEdgeType(outEdge) == EdgeType.INCLUDE) {
                 Vertex childVertex = getEdgeTarget(outEdge);
@@ -870,7 +890,7 @@ public class MindDB implements Graph {
             }
         }
 
-        assert (edgeNumber == outEdgeArray.size());
+        assert (edgeNumber == outEdgeInnerIds.size());
     }
 
     private void verifyInEdges(Vertex vertex)
@@ -880,8 +900,9 @@ public class MindDB implements Graph {
         for (Edge inEdge : vertex.getEdges(Direction.IN)) {
             Vertex parentOrReferrerVertex = getEdgeSource(inEdge);
 
-            ArrayList<Object> parentOrReferrerOutEdgeArray = getOutEdgeInnerIds(parentOrReferrerVertex, true);
-            assert parentOrReferrerOutEdgeArray.contains(inEdge.getId());
+            ArrayList<Short> parentOrReferrerOutEdgeInnerIds = getOutEdgeInnerIds(parentOrReferrerVertex, true);
+            //TODO
+            assert parentOrReferrerOutEdgeInnerIds.contains(getOutEdgeInnerId(inEdge));
 
             if (getEdgeType(inEdge) == EdgeType.INCLUDE) {
                 assert metParent == false;
@@ -908,15 +929,15 @@ public class MindDB implements Graph {
 
     public boolean isVertexTrashed(Vertex vertex)
     {
-        return vertex.getProperty(TRASHED_PROP_NAME) != null;
+        return vertex.getProperty(IS_TRASHED_PROP_NAME) != null;
     }
 
     public void setVertexTrashed(Vertex vertex, boolean trashed)
     {
         if (trashed == true)
-            vertex.setProperty(TRASHED_PROP_NAME, true);
+            vertex.setProperty(IS_TRASHED_PROP_NAME, true);
         else
-            vertex.removeProperty(TRASHED_PROP_NAME);
+            vertex.removeProperty(IS_TRASHED_PROP_NAME);
     }
 
     public void verifyTrashedTree(final Vertex root)

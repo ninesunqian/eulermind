@@ -138,13 +138,13 @@ public class MindPrompter {
             m_dbId = vertex.getId();
             m_text = vertex.getProperty(MindModel.sm_textPropName);
 
-            MindDB.EdgeVertex edgeVertex = m_mindDb.getParent(vertex);
-            if (edgeVertex == null) {
+            Vertex parent = m_mindDb.getParent(vertex);
+            if (parent == null) {
                 m_parentDBId = null;
                 m_parentText = null;
             } else {
-                m_parentDBId = edgeVertex.m_vertex.getId();
-                m_parentText = edgeVertex.m_vertex.getProperty(MindModel.sm_textPropName);
+                m_parentDBId = parent.getId();
+                m_parentText = parent.getProperty(MindModel.sm_textPropName);
             }
         }
     }
@@ -161,6 +161,11 @@ public class MindPrompter {
             m_logger.info("query vertex: " + inputed);
 
             for (Vertex vertex : m_mindDb.getVertices(MindModel.sm_textPropName, inputed)) {
+
+                if (m_mindDb.isVertexTrashed(vertex)) {
+                    continue;
+                }
+
                 PromptedNode promptedNode = new PromptedNode(vertex);
                 publish(promptedNode);
                 m_promptedNodes.add(promptedNode);
