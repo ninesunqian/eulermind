@@ -571,11 +571,7 @@ public class MindModel {
 
                         s_logger.info("before change: outEdgeInnerIds:{}", outEdgeInnerIds);
                         Short edgeInnerId = outEdgeInnerIds.remove(oldPos);
-                        if (oldPos < newPos) {
-                            outEdgeInnerIds.add(newPos - 1, edgeInnerId);
-                        } else {
-                            outEdgeInnerIds.add(newPos, edgeInnerId);
-                        }
+                        outEdgeInnerIds.add(newPos, edgeInnerId);
 
                         s_logger.info("after change: outEdgeInnerIds:{}", outEdgeInnerIds);
                         tree.changeChildIndex(parent, oldPos, newPos);
@@ -1029,7 +1025,7 @@ public class MindModel {
 
     private  boolean isParentChildRelation(Node parent, Node child)
     {
-        return m_mindDb.checkCachedInheritPathValid(getDBId(parent), getDBId(child));
+        return m_mindDb.isParentChildRelation(getDBId(parent), getDBId(child));
     }
 
     void verifyNode(Node node, boolean forceChildAttached)

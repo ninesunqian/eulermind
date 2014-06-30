@@ -83,7 +83,10 @@ public class MovingChild extends MindOperator{
         assert inheritDirectionToNewParent != MindDB.InheritDirection.SELF
                 && inheritDirectionToNewParent != MindDB.InheritDirection.LINEAL_DESCENDANT;
 
-        if (oldParentPath == newParentPath) {
+        if (oldParentPath.equals(newParentPath)) {
+            if (oldPos < newPos) {
+                newPos--;
+            }
             m_mindModel.changeChildPos(m_mindModel.getDBId(oldParentNode), oldPos, newPos);
         } else {
             m_mindModel.moveChild(oldParentNode, oldPos, newParentNode, newPos);

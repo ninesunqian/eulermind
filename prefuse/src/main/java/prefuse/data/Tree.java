@@ -471,7 +471,7 @@ public class Tree extends Graph {
         else if (oldIndex < newIndex)
         {
             int tmp = outlinks [oldIndex];
-            System.arraycopy(outlinks, oldIndex, outlinks, oldIndex-1, newIndex-oldIndex);
+            System.arraycopy(outlinks, oldIndex+1, outlinks, oldIndex, newIndex-oldIndex);
             outlinks[newIndex] = tmp;
         }
 

@@ -395,26 +395,28 @@ public class MindDB implements Graph {
 		edge.setProperty(EDGE_TYPE_PROP_NAME, edgeType.ordinal());
         edge.setProperty(OUT_EDGE_INNER_ID, outEdgeInnerId);
 		
-        if (edgeType == EdgeType.INCLUDE) {
-            List parentInheritPath = getInheritPath(source.getId());
-            LinkedList childInheritPath = (LinkedList)(((LinkedList)parentInheritPath).clone());
-            childInheritPath.addLast(source.getId());
-
-            updateInheritPath(target.getId(), childInheritPath);
-        }
 		return edge;
 	}
 	
 	//only addRefEdge and removeRefEdge is public
 	
-	public Edge addRefEdge (Vertex referrer, Vertex referent, int pos)
+	public Edge addRefEdgeImpl(Vertex referrer, Vertex referent, int pos)
 	{
 		Edge edge = addEdge(referrer, referent, pos, EdgeType.REFERENCE);
 
         verifyVertex(referrer);
         verifyVertex(referent);
+
+        commit();
         return edge;
 	}
+
+    public Edge addRefEdge(Vertex referrer, Vertex referent, int pos)
+    {
+        Edge edge = addRefEdgeImpl(referrer, referent, pos);
+        commit();
+        return edge;
+    }
 
     private void removeEdge (Vertex source, int pos, EdgeType assert_type)
     {
@@ -428,16 +430,27 @@ public class MindDB implements Graph {
         m_graph.removeEdge(edgeBeingRemoved);
 
         outEdgeInnerIds.remove(pos);
-        source.setProperty(OUT_EDGES_PROP_NAME, outEdgeInnerIds.isEmpty() ? null : outEdgeInnerIds);
+
+        if (outEdgeInnerIds.isEmpty()) {
+            source.removeProperty(OUT_EDGES_PROP_NAME);
+        } else {
+            source.setProperty(OUT_EDGES_PROP_NAME, outEdgeInnerIds);
+        }
     }
 
-	public void removeRefEdge (Vertex source, int pos)
-	{
+    public void removeRefEdgeImpl(Vertex source, int pos)
+    {
         EdgeVertex referent = getChildOrReferent(source, pos);
         removeEdge(source, pos, EdgeType.REFERENCE);
 
         verifyVertex(source);
         verifyVertex(referent.m_vertex);
+    }
+
+	public void removeRefEdge (Vertex source, int pos)
+	{
+        removeRefEdgeImpl(source, pos);
+        commit();
 	}
 
     public Edge getEdge(Vertex source, int pos)
@@ -477,11 +490,26 @@ public class MindDB implements Graph {
         Edge edge = addEdge(parent, child, pos, EdgeType.INCLUDE);
         return edge;
     }
+
+    private void addInheritPathToCache(Object parentId, Object childId)
+    {
+        List parentInheritPath = getInheritPath(parentId);
+        LinkedList childInheritPath = (LinkedList)(((LinkedList)parentInheritPath).clone());
+        childInheritPath.addLast(parentId);
+        updateInheritPath(childId, childInheritPath);
+    }
 	
 	public EdgeVertex addChild (Vertex parent, int pos)
 	{
 		Vertex child = addVertex(null);
 		Edge edge =  buildParentage(parent, child, pos);
+
+        commit();
+
+        child = getVertex(child.getId());
+        edge = getEdge(edge.getId());
+
+        addInheritPathToCache(parent.getId(), child.getId());
 
         verifyVertex(parent);
         verifyVertex(child);
@@ -546,6 +574,10 @@ public class MindDB implements Graph {
         removeEdge (fromParent, fromPos, EdgeType.INCLUDE);
         Edge edge = buildParentage(toParent, child, toPos);
 
+        commit();
+
+        addInheritPathToCache(toParent.getId(), child.getId());
+
         verifyVertex(fromParent);
         verifyVertex(toParent);
         verifyVertex(child);
@@ -558,17 +590,10 @@ public class MindDB implements Graph {
         if (oldPos == newPos)
             return;
 
-        parent.query();
-
         ArrayList<Short> outEdgeInnerIds = getOutEdgeInnerIds(parent, true);
 
         Short edgeInnerId = outEdgeInnerIds.remove(oldPos);
-
-        if (oldPos < newPos) {
-            outEdgeInnerIds.add(newPos - 1, edgeInnerId);
-        } else {
-            outEdgeInnerIds.add(newPos, edgeInnerId);
-        }
+        outEdgeInnerIds.add(newPos, edgeInnerId);
 
         parent.setProperty(OUT_EDGES_PROP_NAME, outEdgeInnerIds);
 
@@ -701,7 +726,7 @@ public class MindDB implements Graph {
 						int edgeIndex = outEdgeInnerIds.indexOf(getOutEdgeInnerId(referrer.m_edge));
 
                         refLinkInfos.add(new RefLinkInfo(referrer.m_vertex.getId(), vertex.getId(), edgeIndex));
-						removeRefEdge(referrer.m_vertex, edgeIndex);
+						removeRefEdgeImpl(referrer.m_vertex, edgeIndex);
 					}
 				}
 
@@ -718,8 +743,10 @@ public class MindDB implements Graph {
 
 		m_trashIndex.put(TRASH_KEY_NAME, TRASH_KEY_NAME, removedVertex);
 
+        commit();
+
         verifyTrashedTree(removedVertex);
-		
+
 		return removedVertex;
 	}
 
@@ -775,9 +802,9 @@ public class MindDB implements Graph {
 			for (Object obj : refLinkInfoes)
 			{
 				RefLinkInfo refLinkInfo = (RefLinkInfo) obj;
-				addRefEdge(getVertex(refLinkInfo.m_referrer),
-						getVertex(refLinkInfo.m_referent),
-						refLinkInfo.m_pos);
+				addRefEdgeImpl(getVertex(refLinkInfo.m_referrer),
+                        getVertex(refLinkInfo.m_referent),
+                        refLinkInfo.m_pos);
 			}
 		}
 
@@ -793,6 +820,10 @@ public class MindDB implements Graph {
 		vertex.removeProperty(SAVED_REFERRER_INFO_PROP_NAME);
 
         m_trashIndex.remove(TRASH_KEY_NAME, TRASH_KEY_NAME, vertex);
+
+        commit();
+
+        addInheritPathToCache(parentId, vertex.getId());
 		return new EdgeVertex(edge, parent);
 	}
 
@@ -849,45 +880,52 @@ public class MindDB implements Graph {
         return m_graph.getVertices(key, value);
     }
 
-    static boolean listEqual(List list1, List list2)
+    private void verifyCachedInheritPathValid(Object parentDBId, Object childDBId)
     {
-        if (list1.size() != list2.size()) {
-            return false;
-        }
-
-        for (int i = 0; i<list1.size(); i++) {
-            if (! list1.get(i).equals(list2.get(i))) {
-                return false;
-            }
-        }
-
-        return true;
+        List childInheritPath = getInheritPath(childDBId);
+        List parentInheritPath = getInheritPath(parentDBId);
+        assert childInheritPath.get(childInheritPath.size()-1).equals(parentDBId) &&
+                childInheritPath.subList(0, childInheritPath.size()-1).equals(parentInheritPath);
     }
 
-    boolean checkCachedInheritPathValid(Object parentDBId, Object childDBId)
+    public boolean isParentChildRelation(Object parentDBId, Object childDBId)
     {
         List childInheritPath = getInheritPath(childDBId);
         List parentInheritPath = getInheritPath(parentDBId);
         return childInheritPath.get(childInheritPath.size()-1).equals(parentDBId) &&
-                listEqual(childInheritPath.subList(0, childInheritPath.size()-1), parentInheritPath);
+                childInheritPath.subList(0, childInheritPath.size()-1).equals(parentInheritPath);
     }
 
     private void verifyOutEdges(Vertex vertex)
     {
         ArrayList<Short> outEdgeInnerIds = getOutEdgeInnerIds(vertex, true);
-        //TODO
+        Map<Short, Integer> innerIdExists = new HashMap<Short, Integer>();
+
+        for(Short innerId : outEdgeInnerIds) {
+            innerIdExists.put(innerId, 0);
+        }
+
         int edgeNumber = 0;
         for (Edge outEdge : vertex.getEdges(Direction.OUT)) {
             edgeNumber++;
-            assert outEdgeInnerIds.contains(getOutEdgeInnerId(outEdge));
+
+            Short innerId = getOutEdgeInnerId(outEdge);
+            assert outEdgeInnerIds.contains(innerId);
+            innerIdExists.put(innerId, innerIdExists.get(innerId) + 1);
 
             if (getEdgeType(outEdge) == EdgeType.INCLUDE) {
                 Vertex childVertex = getEdgeTarget(outEdge);
-                assert checkCachedInheritPathValid(vertex.getId(), childVertex.getId());
+                verifyCachedInheritPathValid(vertex.getId(), childVertex.getId());
 
             } else {
                 assert getEdgeType(outEdge) == EdgeType.REFERENCE;
             }
+        }
+
+        Iterator iter = innerIdExists.entrySet().iterator();
+        while (iter.hasNext()) {
+            Map.Entry<Short, Integer> entry = (Map.Entry) iter.next();
+            assert entry.getValue() == 1;
         }
 
         assert (edgeNumber == outEdgeInnerIds.size());
@@ -906,7 +944,7 @@ public class MindDB implements Graph {
 
             if (getEdgeType(inEdge) == EdgeType.INCLUDE) {
                 assert metParent == false;
-                assert checkCachedInheritPathValid(parentOrReferrerVertex.getId(), vertex.getId());
+                verifyCachedInheritPathValid(parentOrReferrerVertex.getId(), vertex.getId());
                 metParent = true;
             } else {
                 assert(getEdgeType(inEdge) == EdgeType.REFERENCE);
@@ -932,7 +970,7 @@ public class MindDB implements Graph {
         return vertex.getProperty(IS_TRASHED_PROP_NAME) != null;
     }
 
-    public void setVertexTrashed(Vertex vertex, boolean trashed)
+    private void setVertexTrashed(Vertex vertex, boolean trashed)
     {
         if (trashed == true)
             vertex.setProperty(IS_TRASHED_PROP_NAME, true);
@@ -961,7 +999,7 @@ public class MindDB implements Graph {
         assert pos != null;
         assert refLinkInfoes != null;
 
-        assert checkCachedInheritPathValid(parentId, root.getId());
+        verifyCachedInheritPathValid(parentId, root.getId());
 
         for (RefLinkInfo refLinkInfo : refLinkInfoes) {
             assert root.getId().equals(refLinkInfo.m_referent) ||
