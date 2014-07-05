@@ -106,6 +106,8 @@ public class Mindmap {
 
 
         String dbPath = System.getProperty("user.home") + "/.excitedmind/mind_db";
+        //TODO: for debug
+        deleteDir(dbPath);
 
 		final String dbUrl = "local:" + dbPath.replace(File.separatorChar, '/');
         m_logger.info ("dbUrl = " + dbUrl);

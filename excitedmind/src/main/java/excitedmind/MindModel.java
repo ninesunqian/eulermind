@@ -244,7 +244,7 @@ public class MindModel {
             Object dbElementValue = dbElement.getProperty(key);
 
             if (key == sm_outEdgeInnerIdsPropName) {
-                assert tupleValue == dbElementValue || listEqual((List) tupleValue, (List) dbElementValue);
+                assert tupleValue == dbElementValue || tupleValue.equals(dbElementValue);
             } else {
                 assert tupleValue == dbElementValue || tupleValue.equals(dbElementValue);
             }
@@ -370,7 +370,7 @@ public class MindModel {
         ArrayList<Short> outEdgeInnerIdsInVertex = m_mindDb.getOutEdgeInnerIds(getDBVertex(sourceNode), true);
 
         //if this node is updated, skip
-        if (listEqual(outEdgeInnerIdsInNode, outEdgeInnerIdsInVertex)) {
+        if (outEdgeInnerIdsInNode.equals(outEdgeInnerIdsInVertex)) {
             verifyNode(sourceNode, false);
             return;
         }
@@ -404,7 +404,7 @@ public class MindModel {
         ArrayList<Short> outEdgeInnerIdsInVertex = m_mindDb.getOutEdgeInnerIds(getDBVertex(sourceNode), true);
 
         //if this node is updated, skip
-        if (listEqual(outEdgeInnerIdsInNode, outEdgeInnerIdsInVertex)) {
+        if (outEdgeInnerIdsInNode.equals(outEdgeInnerIdsInVertex)) {
             verifyNode(sourceNode, false);
             return;
         }
@@ -560,7 +560,7 @@ public class MindModel {
         s_logger.info("arg: newPos:{}", newPos);
 
         Vertex parent = m_mindDb.getVertex(parentDBId);
-        m_mindDb.changeChildPos(parent, oldPos, newPos);
+        m_mindDb.changeChildOrReferrentPos(parent, oldPos, newPos);
 
         for (final Tree tree : m_trees) {
             visitNodeAvatars(tree, parentDBId,
@@ -968,7 +968,28 @@ public class MindModel {
         }
     }
 
-    public void moveChild(Node oldParent, int oldPos, Node newParent, int newPos)
+    private void handoverNode(Node oldParent, int oldPos, Node newParent, int newPos,
+                              EdgeVertex newEdgeVertex)
+    {
+        Object oldParentDBId = getDBId(oldParent);
+        Object newParentDBId = getDBId(newParent);
+
+        for (Tree tree : m_trees) {
+            NodeAvatarsPairingInfo oldNewParentPairingInfo;
+            if(tree == oldParent.getGraph())
+            {
+                oldNewParentPairingInfo =  pairNodeAvatars(tree, oldParentDBId, newParentDBId,
+                        oldParent.getRow(), newParent.getRow());
+            } else {
+                oldNewParentPairingInfo =  pairNodeAvatars(tree, oldParentDBId, newParentDBId,
+                        -1, -1);
+            }
+
+            rebuildChildEdge(tree, oldNewParentPairingInfo, oldPos, newPos, newEdgeVertex);
+        }
+    }
+
+    public void handoverChild(Node oldParent, int oldPos, Node newParent, int newPos)
     {
         s_logger.info("arg: oldParent:{}", oldParent);
         s_logger.info("arg: oldPos:{}", oldPos);
@@ -990,37 +1011,37 @@ public class MindModel {
 
         EdgeVertex edgeVertex = m_mindDb.handoverChild(oldParentVertex, oldPos, newParentVertex, newPos);
 
-        for (Tree tree : m_trees) {
-            NodeAvatarsPairingInfo oldNewParentPairingInfo;
-            if(oldParent.getGraph() == tree)
-            {
-                 oldNewParentPairingInfo =  pairNodeAvatars(tree, oldParentDBId, newParentDBId,
-                        oldParent.getRow(), newParent.getRow());
-            } else {
-                oldNewParentPairingInfo =  pairNodeAvatars(tree, oldParentDBId, newParentDBId,
-                        -1, -1);
-            }
+        handoverNode(oldParent, oldPos, newParent, newPos, edgeVertex);
 
-            rebuildChildEdge(tree, oldNewParentPairingInfo, oldPos, newPos, edgeVertex);
-        }
         s_logger.info("ret:");
 
     }
 
-
-    private static boolean listEqual(List list1, List list2)
+    public void handoverReferent(Node oldReferrer, int oldPos, Node newReferrer, int newPos)
     {
-        if (list1.size() != list2.size()) {
-            return false;
+        s_logger.info("arg: oldReferrer:{}", oldReferrer);
+        s_logger.info("arg: oldPos:{}", oldPos);
+        s_logger.info("arg: newReferrer:{}", newReferrer);
+        s_logger.info("arg: newPos:{}", newPos);
+
+        assert (oldReferrer.getGraph() == newReferrer.getGraph());
+
+        if (! childrenAttached(newReferrer)) {
+            attachChildren(newReferrer);
         }
 
-        for (int i = 0; i< list1.size(); i++) {
-            if (! list1.get(i).equals(list2.get(i))) {
-                return false;
-            }
-        }
+        Object oldReferrerDBId = getDBId(oldReferrer);
+        Object newReferrerDBId = getDBId(newReferrer);
+        assert (! oldReferrerDBId.equals(newReferrerDBId));
 
-        return true;
+        Vertex oldReferrerVertex = m_mindDb.getVertex(oldReferrerDBId);
+        Vertex newReferrerVertex = m_mindDb.getVertex(newReferrerDBId);
+
+        EdgeVertex edgeVertex = m_mindDb.handoverReferent(oldReferrerVertex, oldPos, newReferrerVertex, newPos);
+        handoverNode(oldReferrer, oldPos, newReferrer, newPos, edgeVertex);
+
+        s_logger.info("ret:");
+
     }
 
     private  boolean isParentChildRelation(Node parent, Node child)

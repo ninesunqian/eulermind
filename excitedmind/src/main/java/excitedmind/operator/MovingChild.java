@@ -7,7 +7,6 @@ import prefuse.data.Node;
 import prefuse.data.Tree;
 
 import java.util.ArrayList;
-import java.util.Stack;
 
 /**
  * Created with IntelliJ IDEA.
@@ -89,7 +88,11 @@ public class MovingChild extends MindOperator{
             }
             m_mindModel.changeChildPos(m_mindModel.getDBId(oldParentNode), oldPos, newPos);
         } else {
-            m_mindModel.moveChild(oldParentNode, oldPos, newParentNode, newPos);
+            if (m_mindModel.isRefNode(child)) {
+                m_mindModel.handoverReferent(oldParentNode, oldPos, newParentNode, newPos);
+            } else {
+                m_mindModel.handoverChild(oldParentNode, oldPos, newParentNode, newPos);
+            }
         }
 
         m_logger.info("ret:");
