@@ -24,7 +24,7 @@ public class MindModel {
 	final static String sm_dbIdColumnName = "dbElementId";
 
     final static private String sm_outEdgeInnerIdsPropName = MindDB.OUT_EDGES_PROP_NAME;
-    final static private String sm_outEdgeInnerIdPropName = MindDB.OUT_EDGE_INNER_ID;
+    final static private String sm_outEdgeInnerIdPropName = MindDB.OUT_EDGE_INNER_ID_PROP_NAME;
 
 	final static String sm_textPropName = "text";
     final static String sm_iconPropName = "icon";
@@ -458,7 +458,7 @@ public class MindModel {
         }
     }
 
-    //opNode: user opreated node
+    //opNode: user operated node
     protected void exposeModelRelation(Node opNode, int pos, com.tinkerpop.blueprints.Edge dbEdge, Vertex vertex)
     {
         for (Tree tree : m_trees) {
@@ -525,12 +525,6 @@ public class MindModel {
             }
         }
 	}
-
-    boolean canAddReference(Node referrerNode, Node referentNode)
-    {
-        assert (referrerNode.getGraph() == referentNode.getGraph());
-        return referrerNode != referentNode;
-    }
 
     public void addReference(Node referrerNode, int pos, Object referentDBId) {
         if (! childrenAttached(referrerNode)) {
@@ -864,6 +858,7 @@ public class MindModel {
 
         final ArrayList<Integer> nodeAvatars1 = getNodeAvatars(tree, dbId1);
         final ArrayList<Integer> nodeAvatars2 = getNodeAvatars(tree, dbId2);
+
         final HashMap<Integer, Integer> pairs = new HashMap<Integer, Integer>();
 
         if (enforceNode1 >= 0) {
@@ -871,29 +866,23 @@ public class MindModel {
             assert (nodeAvatars2.contains(enforceNode2));
         }
 
-        class InsertFun {
-            void does(int node1, int node2)
-            {
-                pairs.put(node1, node2);
-                nodeAvatars1.remove((Integer)node1);
-                nodeAvatars2.remove((Integer)node2);
-            }
-        };
-        InsertFun insert_fun = new InsertFun();
-
         if (enforceNode1 >= 0 && enforceNode2 >= 0) {
-            insert_fun.does(enforceNode1, enforceNode2);
+            pairs.put(enforceNode1, enforceNode2);
+            nodeAvatars1.remove((Integer)enforceNode1);
+            nodeAvatars2.remove((Integer)enforceNode2);
         }
 
         //sort by x,y
-        while (nodeAvatars1.size() > 0 && nodeAvatars2.size() > 0) {
-            int node1 = nodeAvatars1.get(0);
-            int nearestNode = -1;
-            Double minDistanceSquare = Double.MAX_VALUE;
+        Iterator<Integer> iterator1 = nodeAvatars1.iterator();
+        while (iterator1.hasNext() && nodeAvatars2.size() > 0) {
+            int node1 = iterator1.next();
 
             if (! childrenAttached(tree.getNode(node1))) {
                 continue;
             }
+
+            int nearestNode2 = -1;
+            Double minDistanceSquare = Double.MAX_VALUE;
 
             for (int node2 : nodeAvatars2) {
 
@@ -904,11 +893,13 @@ public class MindModel {
                 double distanceSquare = getNodeDistanceSquare(tree.getNode(node1), tree.getNode(node2));
                 if (distanceSquare < minDistanceSquare) {
                     minDistanceSquare = distanceSquare;
-                    nearestNode = node2;
+                    nearestNode2 = node2;
                 }
             }
 
-            insert_fun.does(node1, nearestNode);
+            pairs.put(node1, nearestNode2);
+            iterator1.remove();
+            nodeAvatars2.remove((Integer)nearestNode2);
         }
 
         s_logger.info("QQQQQQQQQQQQQQQQQQQQQQQqq");

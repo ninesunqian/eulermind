@@ -269,15 +269,23 @@ public class MindView extends Display {
             Node hitNode = toSource(hitNodeItem);
             Object possibleEdgeSource[] = getPossibleEdgeSource(hitNode, hitPosition);
 
+            Node parentNode = fromNode.getParent();
+            Node newParentNode = (Node)possibleEdgeSource[0];
+
             if (possibleEdgeSource[0] == null) {
                 return false;
             }
 
             switch (dragAction) {
                 case LINK:
-                    return m_mindModel.canAddReference((Node)possibleEdgeSource[0], fromNode);
+                    return true;
                 case MOVE:
-                    return m_mindModel.canResetParent(fromNode, (Node)possibleEdgeSource[0]);
+                    if (!MindModel.getDBId(parentNode).equals(MindModel.getDBId(newParentNode))) {
+                        if (! m_mindModel.isRefNode(fromNode)) {
+                            return m_mindModel.canResetParent(fromNode, (Node)possibleEdgeSource[0]);
+                        }
+                    }
+                    return true;
                 default:
                     return false;
             }
@@ -784,8 +792,6 @@ public class MindView extends Display {
             Node referrer = (Node)possibleEdgeSource[0];
             int position = (Integer)possibleEdgeSource[1];
 
-            assert(m_mindModel.canAddReference(referrer, draggedNode));
-
             m_newOperator = new AddingReference(m_mindModel, draggedNode, referrer, position);
         } else {
             Node newParent = (Node)possibleEdgeSource[0];
@@ -798,13 +804,27 @@ public class MindView extends Display {
                 return;
             }
 
-            MindDB.InheritDirection inheritDirection = m_mindModel.getInheritDirection(draggedNode, newParent);
-            if (inheritDirection == MindDB.InheritDirection.LINEAL_DESCENDANT) {
-                m_logger.info("forbid drag a node to its descendant as child");
-                return;
-            }
+            Node parent = draggedNode.getParent();
 
-            m_newOperator = new MovingChild(m_mindModel, draggedNode, newParent, newPosition);
+            if (MindModel.getDBId(newParent).equals(MindModel.getDBId(parent))) {
+                int oldPosition = draggedNode.getIndex();
+                if (oldPosition < newPosition) {
+                    newPosition--;
+                }
+
+                m_newOperator = new ChangingPosition(m_mindModel, draggedNode, newPosition);
+
+            } else {
+                if (m_mindModel.isRefNode(draggedNode)) {
+                    m_newOperator = new HandoveringReference(m_mindModel, draggedNode, newParent, newPosition);
+                } else {
+
+                    MindDB.InheritDirection inheritDirection = m_mindModel.getInheritDirection(draggedNode, newParent);
+                    assert inheritDirection != MindDB.InheritDirection.LINEAL_DESCENDANT;
+
+                    m_newOperator = new HandoveringChild(m_mindModel, draggedNode, newParent, newPosition);
+                }
+            }
         }
     }
 
