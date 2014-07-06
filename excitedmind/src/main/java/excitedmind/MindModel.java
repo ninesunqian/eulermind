@@ -943,18 +943,16 @@ public class MindModel {
         for (int node1 : oldNewParentPairingInfo.m_nodeAvatars1Alone) {
             if (tree.getNodeTable().isValidRow(node1)) {
                 Node oldParent = tree.getNode(node1);
-                if (childrenAttached(oldParent)) {
-                    hideNodeRelation(oldParent, oldChildPos);
-                }
+                hideNodeRelation(oldParent, oldChildPos);
+                verifyNode(oldParent, false);
             }
         }
 
         for (int node2 : oldNewParentPairingInfo.m_nodeAvatars2Alone) {
             if (tree.getNodeTable().isValidRow(node2)) {
                 Node newParent = tree.getNode(node2);
-                if (childrenAttached(newParent)) {
-                    exposeNodeRelation(newParent, newChildPos, childEdgeVertex.m_edge, childEdgeVertex.m_vertex);
-                }
+                exposeNodeRelation(newParent, newChildPos, childEdgeVertex.m_edge, childEdgeVertex.m_vertex);
+                verifyNode(newParent, false);
             }
         }
     }

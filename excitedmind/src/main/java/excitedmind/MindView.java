@@ -188,7 +188,7 @@ public class MindView extends Display {
 
         if (droppedNode == m_tree.getRoot()) {
             ret[0] = droppedNode;
-            ret[1] = droppedNode.getChildCount();
+            ret[1] = MindModel.getDBChildCount(droppedNode);
             return ret;
         }
 
@@ -203,7 +203,7 @@ public class MindView extends Display {
                 break;
             case RIGHT:
                 ret[0] = droppedNode;
-                ret[1] = droppedNode.getChildCount();
+                ret[1] = MindModel.getDBChildCount(droppedNode);
                 break;
             default:
                 ret[0] = null;
