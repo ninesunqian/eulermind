@@ -126,6 +126,8 @@ public class Removing extends MindOperator {
         parent = topSameDBNode(tree, parent);
         formerCursor = parent.getChild(m_siblingPos);
 
+        m_formerCursorPath = m_mindModel.getNodePath(formerCursor);
+
         if (m_isRefRelation) {
             if (parent.getChildCount()  == 1) {
                 m_laterCursorPath = m_mindModel.getNodePath(parent);

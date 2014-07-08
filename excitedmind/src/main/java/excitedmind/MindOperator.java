@@ -39,6 +39,14 @@ public abstract class MindOperator extends AbstractUndoableEdit {
         return node;
     }
 
+    public boolean canRedo() {
+        return true;
+    }
+
+    public boolean canUndo() {
+        return true;
+    }
+
     abstract public void does();
 
 }
