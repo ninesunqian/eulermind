@@ -3,6 +3,9 @@ package mindworld;
 import java.nio.ByteBuffer;
 import java.util.*;
 
+import com.orientechnologies.orient.core.metadata.schema.OType;
+import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
+import com.tinkerpop.blueprints.impls.orient.OrientVertexType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +36,8 @@ public class MindDB implements Graph {
 	public final static String SAVED_REFERRER_INFO_PROP_NAME = PrefuseLib.FIELD_PREFIX + "referrers";
 
     public final static String IS_TRASHED_PROP_NAME = PrefuseLib.FIELD_PREFIX + "isTrashed";
+
+    public final static String VERTEX_CLASS = "mind_node";
 
     public final static int MAX_OUT_EDGES = Short.MAX_VALUE + 1;
 
@@ -65,11 +70,13 @@ public class MindDB implements Graph {
 
     MindDB(String path)
 	{
-		m_graph = new OrientGraph (path);
+		m_graph = new OrientGraph (path, false);
 		m_path = path;
 
         m_rootIndex = getOrCreateIndex(ROOT_INDEX_NAME);
         m_trashIndex = getOrCreateIndex(TRASH_INDEX_NAME);
+
+        createFullTextVertexKeyIndex(MindModel.sm_textPropName);
 
         Vertex root = null;
         if (m_rootIndex.get(ROOT_KEY_NAME, ROOT_KEY_NAME).iterator().hasNext()) {
@@ -102,7 +109,7 @@ public class MindDB implements Graph {
 	
 	@Override
 	public Vertex addVertex(Object arg0) {
-		Vertex vertex = m_graph.addVertex(arg0);
+        Vertex vertex =  m_graph.addVertex(null, MindModel.sm_textPropName, "a");
         return m_graph.getVertex(vertex.getId());
 	}
 	@Override
@@ -404,9 +411,7 @@ public class MindDB implements Graph {
 	
 	private Edge addEdge(Vertex source, Vertex target, int pos, EdgeType edgeType)
 	{
-		//the label should not be null or "", 
-		//it is related to the implement of blueprints
-		Edge edge = m_graph.addEdge(null, source, target, "a");
+		Edge edge = m_graph.addEdge(null, source, target, "E");
         Short outEdgeInnerId = allocateOutEdgeInnerId(source, pos);
 
 		edge.setProperty(EDGE_TYPE_PROP_NAME, edgeType.ordinal());
@@ -503,6 +508,7 @@ public class MindDB implements Graph {
 	public EdgeVertex addChild (Vertex parent, int pos)
 	{
 		Vertex child = addVertex(null);
+        parent = getVertex(parent.getId());
         Edge edge = addEdge(parent, child, pos, EdgeType.INCLUDE);
 
         commit();
@@ -883,6 +889,7 @@ public class MindDB implements Graph {
 
     public void createFullTextVertexKeyIndex(String key)
     {
+        //FIXME:
         Set<String> indexedKeys = m_graph.getIndexedKeys(Vertex.class);
 
         for (String indexedKey : indexedKeys) {
@@ -891,12 +898,19 @@ public class MindDB implements Graph {
             }
         }
 
-        m_graph.createKeyIndex(key, Vertex.class, new Parameter("type", "FULLTEXT_HASH_INDEX"));
+        OrientVertexType type = m_graph.getVertexBaseType();
+        type.createProperty(key, OType.STRING);
+
+        type.createIndex("V."+key, "FULLTEXT", null, null, "LUCENE", new String[]{key});
     }
 
     public Iterable<Vertex> getVertices(String key, String value)
     {
         return m_graph.getVertices(key, value);
+    }
+
+    public Iterable<Vertex> getVertices(final String label, final String[] iKey, Object[] iValue) {
+        return m_graph.getVertices(label, iKey, iValue);
     }
 
     private void verifyCachedInheritPathValid(Object parentDBId, Object childDBId)

@@ -160,7 +160,8 @@ public class MindPrompter {
 
             m_logger.info("query vertex: " + inputed);
 
-            for (Vertex vertex : m_mindDb.getVertices(MindModel.sm_textPropName, inputed)) {
+            for (Vertex vertex : m_mindDb.getVertices("V", new String[]{MindModel.sm_textPropName},
+                    new String[]{inputed}))  {
 
                 if (m_mindDb.isVertexTrashed(vertex)) {
                     continue;

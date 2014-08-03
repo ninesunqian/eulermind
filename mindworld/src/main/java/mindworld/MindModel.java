@@ -123,7 +123,6 @@ public class MindModel {
         fillPropertyClassMap();
 
 		m_mindDb = new MindDB(dbPath);
-        m_mindDb.createFullTextVertexKeyIndex(sm_textPropName);
         m_favoriteIndex = m_mindDb.getOrCreateIndex(FAVORITE_INDEX_NAME);
 
         Vertex root = m_mindDb.getVertex(m_mindDb.getRootId());

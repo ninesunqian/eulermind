@@ -68,7 +68,7 @@ public class ObjectColumn extends AbstractColumn {
         try {
             // since Object's clone method is protected, we default to
             // using reflection to create clones.
-            Cloneable def = (Cloneable)defaultValue;
+            Object def = (Object)defaultValue;
             Method m = def.getClass().getMethod("clone", (Class[])null);
             for ( int i=0; i<capacity; ++i ) {
                 m_values[i] = m.invoke(m_defaultValue, (Object[])null);
@@ -106,7 +106,7 @@ public class ObjectColumn extends AbstractColumn {
             try {
                 // since Object's clone method is protected, we default to
                 // using reflection to create clones.
-                Cloneable def = (Cloneable)m_defaultValue;
+                Object def = (Object)m_defaultValue;
                 Method m = def.getClass().getMethod("clone", (Class[])null);
                 for ( int i=m_size; i<capacity; ++i ) {
                     values[i] = m.invoke(m_defaultValue, (Object[])null);
@@ -126,7 +126,7 @@ public class ObjectColumn extends AbstractColumn {
         try {
             // since Object's clone method is protected, we default to
             // using reflection to create clones.
-            Cloneable def = (Cloneable)m_defaultValue;
+            Object def = (Object)m_defaultValue;
             Method m = def.getClass().getMethod("clone", (Class[])null);
             set(m.invoke(m_defaultValue, (Object[])null), row);
         } catch ( Exception e ) {

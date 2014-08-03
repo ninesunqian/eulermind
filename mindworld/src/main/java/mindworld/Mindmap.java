@@ -1,5 +1,11 @@
 package mindworld;
 
+import com.orientechnologies.common.listener.OProgressListener;
+import com.orientechnologies.orient.core.metadata.schema.OType;
+import com.orientechnologies.orient.core.record.impl.ODocument;
+import com.tinkerpop.blueprints.impls.orient.OrientGraph;
+import com.tinkerpop.blueprints.impls.orient.OrientTransactionalGraph;
+import com.tinkerpop.blueprints.impls.orient.OrientVertexType;
 import mindworld.MindDB.EdgeVertex;
 
 import java.awt.*;
@@ -64,25 +70,66 @@ public class Mindmap {
 
     static void testJava()
     {
-        LinkedList<Integer> stack = new LinkedList<Integer>();
-        LinkedList<Integer> stack2 = new LinkedList<Integer>();
-        stack.addFirst(4);
-        stack.addFirst(3);
-        for (int i : stack) {
-            System.out.println(i);
-        }
-        stack2.push(2);
-        stack2.push(1);
-        for (int i : stack2) {
-            System.out.println(i);
+        deleteDir("/tmp/test/aaa");
+        String pathToDatabase = "plocal:/tmp/test/aaa";
+
+        OrientTransactionalGraph graph = new OrientGraph(pathToDatabase, false);
+
+        OrientVertexType type = graph.getVertexBaseType();
+        type.createProperty("text", OType.STRING);
+        OProgressListener oProgressListener = null;
+        type.createIndex("textIndex", "FULLTEXT", oProgressListener, null, "LUCENE", new String[]{"text"});
+
+        Vertex v0 = graph.addVertex(null, "text", "我们是好人" );
+        Vertex v1 = graph.addVertex(null, "text", "Rome");
+        v1.setProperty("text", "我们不是好人");
+
+        graph.addEdge(null, v0, v1, "E");
+
+        graph.commit();
+
+        v0 = graph.getVertex(v0.getId());
+        v1 = graph.getVertex(v1.getId());
+        Vertex v2 = graph.addVertex(null, "text", "我们是好人-2" );
+        Vertex v3 = graph.addVertex(null, "text", "Rome");
+        graph.addEdge(null, v0, v2, "E");
+        graph.addEdge(null, v0, v3, "E");
+
+        v3.setProperty("text", "我们不是好人-2");
+        System.out.println(graph.isUseClassForEdgeLabel());
+        System.out.println(graph.isUseClassForVertexLabel());
+        graph.commit();
+
+        Iterable<Vertex> vertexes = graph.getVertices("V", new String[]{"text"}, new Object[]{"我们 好人"});
+        for (Vertex v : vertexes) {
+            System.out.println(v.getId());
+            System.out.println(v.getProperty("text"));
         }
 
-        stack.addAll(0, stack2);
-        for (int i : stack) {
-            System.out.println(i);
-        }
+        graph.shutdown();
+        /*
+ OrientVertexType type = graph.createVertexType("City");
+    type.createProperty("latitude", OType.DOUBLE);
+    type.createProperty("longitude", OType.DOUBLE);
+    type.createProperty("name", OType.STRING);
+
+    ODocument metadata = new ODocument();
+    metadata.field("analyzer", "org.apache.lucene.analysis.en.EnglishAnalyzer");
+    type.createIndex("City.name", "FULLTEXT", null, metadata, "LUCENE", new String[] { "name" });
+
+    graph.addVertex("class:City", new Object[] { "name", "London" });
+    graph.addVertex("class:City", new Object[] { "name", "Rome" });
+
+    graph.commit();
+    Iterable<Vertex> vertexes = graph.getVertices("City.name", "London");
+    for (Vertex v : vertexes) {
+      System.out.println(v.getId());
+    }
+    graph.shutdown();
+    */
 
     }
+
 
 	public static void main(String argv[]) {
         testJava();
@@ -111,7 +158,6 @@ public class Mindmap {
 
 		MindDB mindDb = new MindDB(dbUrl);
 
-        mindDb.createFullTextVertexKeyIndex(MindModel.sm_textPropName);
 		mindDb = null;
 
         EventQueue.invokeLater(new Runnable() {

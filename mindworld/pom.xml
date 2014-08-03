@@ -14,12 +14,18 @@
     <name>mindworld</name>
 
     <properties>
-        <orient_ver>1.5.0</orient_ver>
+        <orient_ver>1.7.5</orient_ver>
         <libdir>${project.basedir}/lib</libdir>
         <jar.manifest.mainclass>mindworld.Mindmap</jar.manifest.mainclass>
     </properties>
 
     <dependencies>
+
+        <dependency>
+             <groupId>com.orientechnologies</groupId>
+             <artifactId>orientdb-lucene</artifactId>
+              <version>1.7.5</version>
+        </dependency>
 
         <dependency>
             <groupId>${project.groupId}</groupId>
