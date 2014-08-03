@@ -11,6 +11,10 @@
 package mindworld;
 
 import prefuse.visual.NodeItem;
+import java.awt.dnd.DragSource;
+import prefuse.util.ui.UILib;
+import prefuse.controls.Control;
+import java.awt.event.MouseEvent;
 
 public class MindViewFSM
     extends statemap.FSMContext
