@@ -3,6 +3,7 @@ package mindworld;
 import com.tinkerpop.blueprints.*;
 import mindworld.MindDB.EdgeVertex;
 import mindworld.MindDB.RefLinkInfo;
+import org.w3c.dom.Document;
 import prefuse.data.*;
 import prefuse.data.Edge;
 import prefuse.data.event.EventConstants;
@@ -13,9 +14,20 @@ import prefuse.visual.VisualItem;
 import prefuse.visual.VisualTable;
 import prefuse.visual.VisualTree;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 
 public class MindModel {
@@ -138,6 +150,9 @@ public class MindModel {
 
             m_mindDb.addRefEdge(root, root, 2);
 
+            importFreemind(edgeVertex.m_vertex.getId(), MindDB.ADDING_EDGE_END,
+            //        "/home/wangxuguang/import.mm");
+            "/home/wangxuguang/document/brain/knowledge/mm/愿景.mm");
             m_favoriteIndex.put(FAVORITE_KEY_NAME, FAVORITE_KEY_NAME, root);
         }
 
@@ -1081,6 +1096,97 @@ public class MindModel {
                 assert isParentChildRelation(parentOrReferrerNode, node);
             } else {
                 assert MindDB.EdgeType.values()[inEdgeType] == MindDB.EdgeType.REFERENCE;
+            }
+        }
+    }
+
+    private void importFreemindNode(Object parentDBId, int pos, org.w3c.dom.Element element,
+                                    HashMap<String, Object> mmId2dbIdMap,
+                                    HashMap<String, String> mmLinkMap)
+    {
+        String mmId = element.getAttribute("ID");
+        String text = element.getAttribute("TEXT");
+
+        s_logger.info("import freemind Nod {} : {}", mmId, text);
+
+        Vertex dbParent = m_mindDb.getVertex(parentDBId);
+        EdgeVertex edgeVertex = m_mindDb.addChild(dbParent, pos);
+        edgeVertex.m_vertex.setProperty(sm_textPropName, text);
+
+        Object dbId = edgeVertex.m_vertex.getId();
+
+        mmId2dbIdMap.put(mmId, dbId);
+
+        String linkAttribute = element.getAttribute("LINK");
+        if (linkAttribute.length() > 1 && linkAttribute.substring(0, 4).equals("#ID_")) {
+            mmLinkMap.put(mmId, linkAttribute.substring(1));
+        }
+
+        NodeList nodes = element.getChildNodes();
+        int childPos = 0;
+
+        for (int i=0; i < nodes.getLength(); i++)
+        {
+            org.w3c.dom.Node node = nodes.item(i);
+            if (node.getNodeName().equals("node")) {
+                importFreemindNode(dbId, childPos, (Element)node, mmId2dbIdMap, mmLinkMap);
+                childPos++;
+                //process child element
+            } else if (node.getNodeName().equals("arrowlink")) {
+                mmLinkMap.put(mmId, ((Element)node).getAttribute("DESTINATION"));
+            }
+        }
+    }
+
+    public void importFreemind(Object parentDBId, int pos, final String path)
+    {
+        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+        //Load and parse XML file into DOM
+        Document document = null;
+        try {
+            //DOM parser instance
+            DocumentBuilder builder = builderFactory.newDocumentBuilder();
+            //parse an XML file into a DOM tree
+            document = builder.parse(new File(path));
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //get root element
+        Element rootElement = document.getDocumentElement();
+
+        HashMap<String, Object> mmId2dbIdMap = new HashMap<String, Object>();
+        HashMap<String, String> mmLinkMap = new HashMap<String, String>();
+
+
+        //traverse child elements
+        NodeList nodes = rootElement.getChildNodes();
+        for (int i=0; i < nodes.getLength(); i++)
+        {
+            org.w3c.dom.Node node = nodes.item(i);
+            if (node.getNodeName().equals("node")) {
+                importFreemindNode(parentDBId, pos, (Element)node, mmId2dbIdMap, mmLinkMap);
+                //process child element
+            }
+        }
+
+        for(String mmLinkSource : mmLinkMap.keySet()) {
+            String mmLinkTarget = mmLinkMap.get(mmLinkSource);
+
+            s_logger.info("import freemind link {} -> {}", mmLinkSource, mmLinkTarget);
+            Object dbLinkSource = mmId2dbIdMap.get(mmLinkSource);
+            Object dbLinkTarget = mmId2dbIdMap.get(mmLinkTarget);
+
+            if (dbLinkSource != null && dbLinkTarget != null) {
+                s_logger.info("import link {} -> {}", dbLinkSource, dbLinkTarget);
+
+                Vertex vertexSource = m_mindDb.getVertex(dbLinkSource);
+                Vertex vertexTarget = m_mindDb.getVertex(dbLinkTarget);
+                m_mindDb.addRefEdge(vertexSource, vertexTarget, MindDB.ADDING_EDGE_END);
             }
         }
     }

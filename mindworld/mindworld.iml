@@ -10,7 +10,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-lucene:1.7.5" level="project" />
+    <orderEntry type="module" module-name="orientdb-lucene" />
     <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-core:1.7.5" level="project" />
     <orderEntry type="library" name="Maven: com.orientechnologies:orient-commons:1.7.5" level="project" />
     <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-nativeos:1.7.5" level="project" />

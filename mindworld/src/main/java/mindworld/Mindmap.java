@@ -24,6 +24,18 @@ import javax.swing.*;
 
 import com.tinkerpop.blueprints.Vertex;
 
+
+import java.io.File;
+import java.io.IOException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
 /**
  * Demonstration of a node-link tree viewer
  * 
@@ -68,6 +80,53 @@ public class Mindmap {
         }
     }
 
+
+    static void testXML()
+    {
+
+        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+        //Load and parse XML file into DOM
+        Document document = null;
+        try {
+            //DOM parser instance
+            DocumentBuilder builder = builderFactory.newDocumentBuilder();
+            //parse an XML file into a DOM tree
+            document = builder.parse(new File("/home/wangxuguang/excitedmind尽快可用.mm"));
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //get root element
+        Element rootElement = document.getDocumentElement();
+
+        //traverse child elements
+        NodeList nodes = rootElement.getChildNodes();
+        for (int i=0; i < nodes.getLength(); i++)
+        {
+            Node node = nodes.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                Element child = (Element) node;
+                //process child element
+            }
+        }
+
+        NodeList nodeList = rootElement.getElementsByTagName("node");
+        if(nodeList != null)
+        {
+            for (int i = 0 ; i < nodeList.getLength(); i++)
+            {
+                Element element = (Element)nodeList.item(i);
+                String id = element.getAttribute("ID");
+                String text = element.getAttribute("TEXT");
+                m_logger.info("freemind node {}: {}", id, text);
+            }
+        }
+    }
+
     static void testJava()
     {
         deleteDir("/tmp/test/aaa");
@@ -100,7 +159,7 @@ public class Mindmap {
         System.out.println(graph.isUseClassForVertexLabel());
         graph.commit();
 
-        Iterable<Vertex> vertexes = graph.getVertices("V", new String[]{"text"}, new Object[]{"我们 好人"});
+        Iterable<Vertex> vertexes = graph.getVertices("V", new String[]{"text"}, new Object[]{"(我们 好人)"});
         for (Vertex v : vertexes) {
             System.out.println(v.getId());
             System.out.println(v.getProperty("text"));
@@ -133,6 +192,7 @@ public class Mindmap {
 
 	public static void main(String argv[]) {
         testJava();
+        testXML();
 
         try {
             //UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
