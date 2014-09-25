@@ -1,0 +1,3 @@
+[submodule "orientdb-lucene"]
+	path = orientdb-lucene
+	url = git@github.com:ninesunqian/orientdb-lucene.git
