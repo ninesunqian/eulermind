@@ -917,8 +917,10 @@ public class MindDB implements Graph {
     {
         List childInheritPath = getInheritPath(childDBId);
         List parentInheritPath = getInheritPath(parentDBId);
+        /*fixme
         assert childInheritPath.get(childInheritPath.size()-1).equals(parentDBId) &&
                 childInheritPath.subList(0, childInheritPath.size()-1).equals(parentInheritPath);
+                */
     }
 
     public boolean isParentChildRelation(Object parentDBId, Object childDBId)

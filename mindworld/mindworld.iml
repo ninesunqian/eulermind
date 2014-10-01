@@ -60,8 +60,11 @@
     <orderEntry type="library" name="Maven: org.apache.ant:ant-launcher:1.8.3" level="project" />
     <orderEntry type="library" name="Maven: org.fusesource.jansi:jansi:1.5" level="project" />
     <orderEntry type="library" name="Maven: jline:jline:0.9.94" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-core:4.7.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-icu:4.7.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-common:4.7.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-core:4.7.0" level="project" />
+    <orderEntry type="library" name="Maven: com.ibm.icu:icu4j:52.1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-smartcn:4.7.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-queryparser:4.7.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-queries:4.7.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-sandbox:4.7.0" level="project" />

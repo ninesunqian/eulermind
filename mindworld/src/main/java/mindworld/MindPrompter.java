@@ -46,7 +46,7 @@ public class MindPrompter {
         m_jList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         m_jList.setLayoutOrientation(JList.VERTICAL);
         m_jList.setPrototypeCellValue("WWW");
-        m_jList.setVisibleRowCount(8);
+        m_jList.setVisibleRowCount(10);
     }
 
     public void addMouseListener(MouseListener mouseListener)
@@ -75,7 +75,7 @@ public class MindPrompter {
         m_followedEditor = editor;
 
         m_jScrollPane.setLocation(editor.getX(), editor.getY() + editor.getHeight());
-        m_jScrollPane.setSize(100, 100);
+        m_jScrollPane.setSize(400, 100);
         m_jScrollPane.setVisible(true);
     }
 
