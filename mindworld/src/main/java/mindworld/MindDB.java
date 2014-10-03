@@ -4,7 +4,6 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 import com.orientechnologies.orient.core.metadata.schema.OType;
-import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
 import com.tinkerpop.blueprints.impls.orient.OrientVertexType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,10 +59,10 @@ public class MindDB implements Graph {
 
     final int sm_inheritPathCapacity = 2048;
 
-    LinkedHashMap<Object, List<Object>> m_inheritPathCache =
-            new LinkedHashMap<Object, List<Object>>(256, 0.75f, true) {
+    LinkedHashMap<Object, Object> m_parentDBIdCache =
+            new LinkedHashMap<Object, Object>(256, 0.75f, true) {
           @Override
-          protected boolean removeEldestEntry (Map.Entry<Object, List<Object>> eldest) {
+          protected boolean removeEldestEntry (Map.Entry<Object, Object> eldest) {
              return size() > sm_inheritPathCapacity;
           }
      };
@@ -251,64 +250,16 @@ public class MindDB implements Graph {
     public List getInheritPath(Object dbId)
     {
         assert !(dbId instanceof Vertex);
+
         LinkedList inheritPath = new LinkedList();
 
-        List cachedInheritPath = m_inheritPathCache.get(dbId);
-
-        if (cachedInheritPath != null) {
-            inheritPath.addAll(cachedInheritPath);
-
-        } else {
-            Vertex parent = null;
-            if (isVertexTrashed(getVertex(dbId))) {
-                parent = getVertex(getVertex(dbId).getProperty(SAVED_PARENT_ID_PROP_NAME));
-            } else {
-                EdgeVertex parentEdge = getParentSkipCache(getVertex(dbId));
-                if (parentEdge == null) {
-                    parent = null;
-                } else {
-                    parent = parentEdge.m_vertex;
-                }
-            }
-
-            if (parent != null) {
-                inheritPath.addFirst(parent.getId());
-                List parentInheritPath = getInheritPath(parent.getId());
-                inheritPath.addAll(parentInheritPath);
-
-                m_inheritPathCache.put(parent.getId(), inheritPath);
-            }
+        Object parentDBId = getParentDBId(dbId);
+        while (parentDBId != null) {
+            inheritPath.addFirst(parentDBId);
+            parentDBId = getParentDBId(parentDBId);
         }
 
         return inheritPath;
-    }
-
-    private void updateInheritPath(Object dbId, List inheritPath)
-    {
-        //modify the inherit path of dbId's descendence
-        Iterator iterator = m_inheritPathCache.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<Object, LinkedList> entry = (Map.Entry) iterator.next();
-            LinkedList cachedInheritPath = entry.getValue();
-
-            int dbIdIndex = cachedInheritPath.indexOf(dbId);
-            if (dbIdIndex != -1) {
-                for (int i=0; i<dbIdIndex; i++) {
-                    cachedInheritPath.removeFirst();
-                }
-
-                cachedInheritPath.addAll(0, inheritPath);
-            }
-        }
-
-        //modify the inherit path of dbId
-        List oldInheritPath = m_inheritPathCache.get(dbId);
-        if (oldInheritPath != null) {
-            oldInheritPath.clear();
-            oldInheritPath.addAll(inheritPath);
-        } else {
-            m_inheritPathCache.put(dbId, (List)((LinkedList)inheritPath).clone());
-        }
     }
 
     static public InheritDirection getInheritDirection(List fromInheritPath, Object fromVetexDBId,
@@ -497,12 +448,9 @@ public class MindDB implements Graph {
 		}
 	};
 
-    private void addInheritPathToCache(Object parentId, Object childId)
+    private void addParentDBIdToCache(Object childId, Object parentId)
     {
-        List parentInheritPath = getInheritPath(parentId);
-        LinkedList childInheritPath = (LinkedList)(((LinkedList)parentInheritPath).clone());
-        childInheritPath.addLast(parentId);
-        updateInheritPath(childId, childInheritPath);
+        m_parentDBIdCache.put(childId, parentId);
     }
 	
 	public EdgeVertex addChild (Vertex parent, int pos)
@@ -516,7 +464,7 @@ public class MindDB implements Graph {
         child = getVertex(child.getId());
         edge = getEdge(edge.getId());
 
-        addInheritPathToCache(parent.getId(), child.getId());
+        addParentDBIdToCache(child.getId(), parent.getId());
 
         verifyVertex(parent);
         verifyVertex(child);
@@ -560,19 +508,36 @@ public class MindDB implements Graph {
 	
     public Object getParentDBId(Object dbId)
     {
-        List inheritPath = getInheritPath(dbId);
-
-        if (inheritPath.isEmpty()) {
+        if (dbId.equals(m_rootId)) {
             return null;
+        }
+
+        Object cachedParentDBId = m_parentDBIdCache.get(dbId);
+
+        if (cachedParentDBId != null) {
+            return cachedParentDBId;
         } else {
-            return inheritPath.get(inheritPath.size()-1);
+            EdgeVertex toParent = getParentSkipCache(getVertex(dbId));
+            Object parentDBId = toParent.m_vertex.getId();
+            m_parentDBIdCache.put(dbId, parentDBId);
+            return parentDBId;
         }
     }
 
     public Vertex getParent(Vertex vertex)
     {
-        Object parentDBId = getParentDBId(vertex.getId());
-        return parentDBId == null ? null : getVertex(parentDBId);
+        if (vertex.getId().equals(m_rootId)) {
+            return null;
+        }
+
+        Object cachedParentDBId = m_parentDBIdCache.get(vertex.getId());
+        if (cachedParentDBId == null) {
+            EdgeVertex toParent = getParentSkipCache(vertex);
+            m_parentDBIdCache.put(vertex.getId(), toParent.m_vertex.getId());
+            return toParent.m_vertex;
+        } else {
+            return getVertex(cachedParentDBId);
+        }
     }
 
     public EdgeVertex handoverChild(Vertex fromParent, int fromPos, Vertex toParent, int toPos)
@@ -583,7 +548,7 @@ public class MindDB implements Graph {
 
         commit();
 
-        addInheritPathToCache(toParent.getId(), child.getId());
+        addParentDBIdToCache(child.getId(), toParent.getId());
 
         verifyVertex(fromParent);
         verifyVertex(toParent);
@@ -848,7 +813,7 @@ public class MindDB implements Graph {
 
         commit();
 
-        addInheritPathToCache(parentId, vertex.getId());
+        addParentDBIdToCache(vertex.getId(), parentId);
 		return new EdgeVertex(edge, parent);
 	}
 
@@ -889,7 +854,6 @@ public class MindDB implements Graph {
 
     public void createFullTextVertexKeyIndex(String key)
     {
-        //FIXME:
         Set<String> indexedKeys = m_graph.getIndexedKeys(Vertex.class);
 
         for (String indexedKey : indexedKeys) {
@@ -917,10 +881,8 @@ public class MindDB implements Graph {
     {
         List childInheritPath = getInheritPath(childDBId);
         List parentInheritPath = getInheritPath(parentDBId);
-        /*fixme
         assert childInheritPath.get(childInheritPath.size()-1).equals(parentDBId) &&
                 childInheritPath.subList(0, childInheritPath.size()-1).equals(parentInheritPath);
-                */
     }
 
     public boolean isParentChildRelation(Object parentDBId, Object childDBId)
