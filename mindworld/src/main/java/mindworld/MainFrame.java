@@ -91,12 +91,20 @@ public class MainFrame extends JFrame {
     {
         JMenuBar menuBar = new JMenuBar();
         setJMenuBar(menuBar);
-        JMenu fileMenu = new JMenu("文件");
+        JMenu fileMenu = new JMenu("file");
         fileMenu.setMnemonic('F');
         menuBar.add(fileMenu);
 
-        JMenuItem openMenuItem = new JMenuItem("open", KeyEvent.VK_O);
-        fileMenu.add(openMenuItem);
+        JMenuItem importMenuItem = new JMenuItem("import", KeyEvent.VK_O);
+        fileMenu.add(importMenuItem);
+        importMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent)
+            {
+                m_mindController.getCurrentView().importFile();
+            }
+
+        });
 
         addFavoriteMenu(menuBar);
         addAncestorsMenu(menuBar);

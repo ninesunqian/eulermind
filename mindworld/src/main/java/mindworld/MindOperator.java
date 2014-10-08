@@ -47,6 +47,6 @@ public abstract class MindOperator extends AbstractUndoableEdit {
         return true;
     }
 
-    abstract public void does();
+    abstract public void does() throws Exception;
 
 }

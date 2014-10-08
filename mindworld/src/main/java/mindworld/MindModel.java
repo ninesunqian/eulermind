@@ -3,7 +3,6 @@ package mindworld;
 import com.tinkerpop.blueprints.*;
 import mindworld.MindDB.EdgeVertex;
 import mindworld.MindDB.RefLinkInfo;
-import org.w3c.dom.Document;
 import prefuse.data.*;
 import prefuse.data.Edge;
 import prefuse.data.event.EventConstants;
@@ -14,20 +13,10 @@ import prefuse.visual.VisualItem;
 import prefuse.visual.VisualTable;
 import prefuse.visual.VisualTree;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 
 public class MindModel {
@@ -38,15 +27,15 @@ public class MindModel {
     final static private String sm_outEdgeInnerIdsPropName = MindDB.OUT_EDGES_PROP_NAME;
     final static private String sm_outEdgeInnerIdPropName = MindDB.OUT_EDGE_INNER_ID_PROP_NAME;
 
-	final static String sm_textPropName = "text";
-    final static String sm_iconPropName = "icon";
-	final static String sm_fontFamilyPropName = "fontFamily";
-	final static String sm_fontSizePropName = "fontSize";
-	final static String sm_boldPropName = "bold";
-	final static String sm_italicPropName = "italic";
-	final static String sm_underlinedPropName = "underlined";
-	final static String sm_nodeColorPropName = "nodeColor";
-	final static String sm_textColorPropName = "textColor";
+	final static public String sm_textPropName = "text";
+    final static public String sm_iconPropName = "icon";
+	final static public String sm_fontFamilyPropName = "fontFamily";
+	final static public String sm_fontSizePropName = "fontSize";
+	final static public String sm_boldPropName = "bold";
+	final static public String sm_italicPropName = "italic";
+	final static public String sm_underlinedPropName = "underlined";
+	final static public String sm_nodeColorPropName = "nodeColor";
+	final static public String sm_textColorPropName = "textColor";
 
     private final static String FAVORITE_INDEX_NAME = "favoriteIndex";
     private final static String FAVORITE_KEY_NAME = "favorite";
@@ -150,10 +139,6 @@ public class MindModel {
 
             m_mindDb.addRefEdge(root, root, 2);
 
-            importFreemind(edgeVertex.m_vertex.getId(), MindDB.ADDING_EDGE_END,
-            //        "/home/wangxuguang/import.mm");
-            "/home/wangxuguang/document/brain/knowledge/mm/愿景.mm");
-
             m_favoriteIndex.put(FAVORITE_KEY_NAME, FAVORITE_KEY_NAME, root);
         }
 
@@ -250,7 +235,6 @@ public class MindModel {
     private static void verifyElementProperties(com.tinkerpop.blueprints.Element dbElement,
                                                    Tuple tuple, String keys[])
     {
-
         assert dbElement.getId().equals(tuple.get(sm_dbIdColumnName));
 
         for (String key : keys)
@@ -441,6 +425,81 @@ public class MindModel {
         verifyNode(sourceNode, false);
     }
 
+    protected void exposeNodeRelations(Node sourceNode, int pos, List<EdgeVertex> toTargets)
+    {
+        assert sourceNode != null;
+        assert sourceNode.isValid();
+
+        ArrayList<Short> outEdgeInnerIdsInNode = (ArrayList<Short>)sourceNode.get(sm_outEdgeInnerIdsPropName);
+        ArrayList<Short> outEdgeInnerIdsInVertex = m_mindDb.getOutEdgeInnerIds(getDBVertex(sourceNode), true);
+
+        //if this node is updated, skip
+        if (outEdgeInnerIdsInNode.equals(outEdgeInnerIdsInVertex)) {
+            verifyNode(sourceNode, false);
+            return;
+        }
+
+        for (int i=0; i<toTargets.size(); i++) {
+            EdgeVertex toTarget = toTargets.get(i);
+            outEdgeInnerIdsInNode.add(pos+i, m_mindDb.getOutEdgeInnerId(toTarget.m_edge));
+        }
+
+        //if children not attached, skip
+        if (sourceNode.getChildCount() == 0 && outEdgeInnerIdsInNode.size() > toTargets.size()) {
+            verifyNode(sourceNode, false);
+            return;
+        }
+
+        for (int i=0; i<toTargets.size(); i++) {
+            Tree tree = (Tree)sourceNode.getGraph();
+
+            Node child = tree.addNode();
+            Edge edge = tree.addChildEdge(sourceNode, child, pos+i);
+
+            EdgeVertex toTarget = toTargets.get(i);
+
+            loadNodeProperties(toTarget.m_vertex, child);
+            loadEdgeProperties(toTarget.m_edge, edge);
+        }
+
+        verifyNode(sourceNode, true);
+        verifyNode(sourceNode.getChild(pos), false);
+    }
+
+    protected void hideNodeRelations(Node sourceNode, int pos, int num)
+    {
+        assert (sourceNode != null);
+        assert (sourceNode.isValid());
+
+        ArrayList<Short> outEdgeInnerIdsInNode = (ArrayList<Short>)sourceNode.get(sm_outEdgeInnerIdsPropName);
+        ArrayList<Short> outEdgeInnerIdsInVertex = m_mindDb.getOutEdgeInnerIds(getDBVertex(sourceNode), true);
+
+        //if this node is updated, skip
+        if (outEdgeInnerIdsInNode.equals(outEdgeInnerIdsInVertex)) {
+            verifyNode(sourceNode, false);
+            return;
+        }
+
+        for (int i=0; i<num; i++) {
+            outEdgeInnerIdsInNode.remove(pos);
+        }
+
+        //its child is not displayed
+        if (sourceNode.getChildCount() == 0) {
+            verifyNode(sourceNode, false);
+            return;
+        }
+
+        Tree tree = (Tree)sourceNode.getGraph();
+
+        for (int i=0; i<num; i++) {
+            Node child = tree.getChild(sourceNode, pos);
+            tree.removeChild(child);
+        }
+
+        verifyNode(sourceNode, false);
+    }
+
     //Maybe there are more than one reference edge link source target
     //The callers of exposeTreeRelation has got target and dbEdge, so pass them as argument
     protected void exposeTreeRelation(final Tree tree, final Object sourceId, final int edgePosInSourceNode,
@@ -466,11 +525,27 @@ public class MindModel {
         });
     }
 
-    private void hideModelRelation(Object sourceId, int edgePosInSourceNode)
+    protected void exposeTreeRelations(final Tree tree, final Object sourceId, final int edgePosInSourceNode,
+                                      final List<EdgeVertex> toTargets)
     {
-        for (final Tree tree : m_trees) {
-            hideTreeRelation(tree, sourceId, edgePosInSourceNode);
-        }
+        final Vertex sourceVertex = m_mindDb.getVertex(sourceId);
+
+        visitNodeAvatars(tree, sourceId, new Visitor() {
+            public void visit(Node sourceNode)
+            {
+                exposeNodeRelations(sourceNode, edgePosInSourceNode, toTargets);
+            }
+        });
+    }
+
+    private void hideTreeRelations(final Tree tree, final Object sourceId, final int edgePosInSourceNode, final int num)
+    {
+        visitNodeAvatars(tree, sourceId, new Visitor() {
+            public void visit(Node sourceNode)
+            {
+                hideNodeRelations(sourceNode, edgePosInSourceNode, num);
+            }
+        });
     }
 
     //opNode: user operated node
@@ -481,6 +556,30 @@ public class MindModel {
         }
 
         verifyNode(opNode, true);
+    }
+
+    private void hideModelRelation(Object sourceId, int edgePosInSourceNode)
+    {
+        for (final Tree tree : m_trees) {
+            hideTreeRelation(tree, sourceId, edgePosInSourceNode);
+        }
+    }
+
+    //opNode: user operated node
+    protected void exposeModelRelations(Node opNode, int pos, List<EdgeVertex> toTargets)
+    {
+        for (Tree tree : m_trees) {
+            exposeTreeRelations(tree, getDBId(opNode), pos, toTargets);
+        }
+
+        verifyNode(opNode, true);
+    }
+
+    private void hideModelRelations(Object sourceId, int edgePosInSourceNode, int num)
+    {
+        for (final Tree tree : m_trees) {
+            hideTreeRelations(tree, sourceId, edgePosInSourceNode, num);
+        }
     }
 
     //return new child node
@@ -500,6 +599,30 @@ public class MindModel {
 
         return edgeVertex.m_vertex.getId();
 	}
+
+    //return new child node
+    public List importFile(Node parent, String path) throws Exception
+    {
+        if (! childrenAttached(parent)) {
+            attachChildren(parent);
+        }
+
+        int pos = parent.getChildCount();
+
+        Object parentDBId = getDBId(parent);
+        Importer importer = new Importer(m_mindDb);
+        List newChildren = importer.importFile(getDBId(parent), path);
+
+        Vertex dbParent = m_mindDb.getVertex(parentDBId);
+        ArrayList<EdgeVertex> newToTargets = new ArrayList<EdgeVertex>();
+        for (int i=0; i<newChildren.size(); i++) {
+            EdgeVertex edgeVertex = m_mindDb.getChildOrReferent(dbParent, pos+i);
+            newToTargets.add(edgeVertex);
+        }
+
+        exposeModelRelations(parent, pos, newToTargets);
+        return newChildren;
+    }
 
 	//return the DBid of node
 	public Object trashNode(Object parentDBId, int pos)
@@ -1101,94 +1224,4 @@ public class MindModel {
         }
     }
 
-    private void importFreemindNode(Object parentDBId, int pos, org.w3c.dom.Element element,
-                                    HashMap<String, Object> mmId2dbIdMap,
-                                    HashMap<String, String> mmLinkMap)
-    {
-        String mmId = element.getAttribute("ID");
-        String text = element.getAttribute("TEXT");
-
-        s_logger.info("import freemind Nod {} : {}", mmId, text);
-
-        Vertex dbParent = m_mindDb.getVertex(parentDBId);
-        EdgeVertex edgeVertex = m_mindDb.addChild(dbParent, pos);
-        edgeVertex.m_vertex.setProperty(sm_textPropName, text);
-
-        Object dbId = edgeVertex.m_vertex.getId();
-
-        mmId2dbIdMap.put(mmId, dbId);
-
-        String linkAttribute = element.getAttribute("LINK");
-        if (linkAttribute.length() > 1 && linkAttribute.substring(0, 4).equals("#ID_")) {
-            mmLinkMap.put(mmId, linkAttribute.substring(1));
-        }
-
-        NodeList nodes = element.getChildNodes();
-        int childPos = 0;
-
-        for (int i=0; i < nodes.getLength(); i++)
-        {
-            org.w3c.dom.Node node = nodes.item(i);
-            if (node.getNodeName().equals("node")) {
-                importFreemindNode(dbId, childPos, (Element)node, mmId2dbIdMap, mmLinkMap);
-                childPos++;
-                //process child element
-            } else if (node.getNodeName().equals("arrowlink")) {
-                mmLinkMap.put(mmId, ((Element)node).getAttribute("DESTINATION"));
-            }
-        }
-    }
-
-    public void importFreemind(Object parentDBId, int pos, final String path)
-    {
-        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
-        //Load and parse XML file into DOM
-        Document document = null;
-        try {
-            //DOM parser instance
-            DocumentBuilder builder = builderFactory.newDocumentBuilder();
-            //parse an XML file into a DOM tree
-            document = builder.parse(new File(path));
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        } catch (SAXException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        //get root element
-        Element rootElement = document.getDocumentElement();
-
-        HashMap<String, Object> mmId2dbIdMap = new HashMap<String, Object>();
-        HashMap<String, String> mmLinkMap = new HashMap<String, String>();
-
-
-        //traverse child elements
-        NodeList nodes = rootElement.getChildNodes();
-        for (int i=0; i < nodes.getLength(); i++)
-        {
-            org.w3c.dom.Node node = nodes.item(i);
-            if (node.getNodeName().equals("node")) {
-                importFreemindNode(parentDBId, pos, (Element)node, mmId2dbIdMap, mmLinkMap);
-                //process child element
-            }
-        }
-
-        for(String mmLinkSource : mmLinkMap.keySet()) {
-            String mmLinkTarget = mmLinkMap.get(mmLinkSource);
-
-            //s_logger.info("import freemind link {} -> {}", mmLinkSource, mmLinkTarget);
-            Object dbLinkSource = mmId2dbIdMap.get(mmLinkSource);
-            Object dbLinkTarget = mmId2dbIdMap.get(mmLinkTarget);
-
-            if (dbLinkSource != null && dbLinkTarget != null) {
-                //s_logger.info("import link {} -> {}", dbLinkSource, dbLinkTarget);
-
-                Vertex vertexSource = m_mindDb.getVertex(dbLinkSource);
-                Vertex vertexTarget = m_mindDb.getVertex(dbLinkTarget);
-                m_mindDb.addRefEdge(vertexSource, vertexTarget, MindDB.ADDING_EDGE_END);
-            }
-        }
-    }
 }

@@ -9,13 +9,10 @@ import com.tinkerpop.blueprints.impls.orient.OrientVertexType;
 import mindworld.MindDB.EdgeVertex;
 
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
-import java.util.LinkedList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -189,10 +186,11 @@ public class Mindmap {
 
     }
 
-
 	public static void main(String argv[]) {
+        /*
         testJava();
         testXML();
+        */
 
         try {
             //UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");

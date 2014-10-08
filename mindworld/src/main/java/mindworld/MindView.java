@@ -489,6 +489,32 @@ public class MindView extends Display {
         hideEditor();
     }
 
+    void importFile()
+    {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setMultiSelectionEnabled(false);
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        String path;
+
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            path = chooser.getSelectedFile().getPath();
+        } else {
+            return;
+        }
+
+        MindOperator operator = new ImportingFile(m_mindModel, getCursorSourceNode(), path);
+
+        m_mindController.does(operator);
+    }
+
+    NormalStateAction m_importAction = new NormalStateAction()  {
+
+        @Override
+        public void NormalStateActionPerformed(ActionEvent e) {
+            importFile();
+        }
+    };
+
     abstract class NormalStateAction extends AbstractAction {
         final public void actionPerformed(ActionEvent e) {
             if (m_fsm.getState() == MindViewFSM.MindViewStateMap.Normal) {
@@ -672,7 +698,6 @@ public class MindView extends Display {
         setActionMap(m_mindActionMap);
         */
         ActionMap m_mindActionMap = getActionMap();
-
 
         m_mindActionMap.put(sm_editActionName, m_editAction);
         m_mindActionMap.put(sm_removeActionName, m_removeAction);

@@ -169,14 +169,21 @@ public class MindController extends UndoManager {
 
     public boolean does(UndoableEdit edit) {
         MindOperator operator = (MindOperator)edit;
-        operator.does();
+        try {
+            operator.does();
+            updateMindViews(operator, false);
 
-        updateMindViews(operator, false);
+            m_logger.info("m_formerCursorPath: " + operator.m_formerCursorPath.toString());
+            m_logger.info("m_laterCursorPath: " + operator.m_laterCursorPath.toString());
 
-        m_logger.info("m_formerCursorPath: " + operator.m_formerCursorPath.toString());
-        m_logger.info("m_laterCursorPath: " + operator.m_laterCursorPath.toString());
+            return super.addEdit(edit);
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, e.getMessage(), e.getMessage(), JOptionPane.ERROR_MESSAGE);
+            m_logger.warn("operator exception" + e.getMessage());
+        }
 
-        return super.addEdit(edit);
+        return true;
     }
 
 

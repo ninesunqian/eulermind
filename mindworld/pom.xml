@@ -91,13 +91,23 @@
             <systemPath>${project.basedir}/lib/statemap.jar</systemPath>
         </dependency>
 
-
         <dependency>
               <groupId>ch.qos.logback</groupId>
               <artifactId>logback-classic</artifactId>
               <version>1.0.13</version>
         </dependency>
 
+        <dependency>
+             <groupId>org.apache.tika</groupId>
+             <artifactId>tika-parsers</artifactId>
+             <version>1.6</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.ibm.icu</groupId>
+            <artifactId>icu4j</artifactId>
+            <version>54.1</version>
+        </dependency>
 
     </dependencies>
 

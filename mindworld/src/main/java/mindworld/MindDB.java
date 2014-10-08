@@ -46,7 +46,7 @@ public class MindDB implements Graph {
                           LINEAL_ANCESTOR, COLLATERAL_ANCESTOR,
                           LINEAL_DESCENDANT, COLLATERAL_DESCENDANT};
 
-    protected static final int ADDING_EDGE_END = 0x7FFFFFFF;
+    public static final int ADDING_EDGE_END = 0x7FFFFFFF;
 
 	public OrientGraph m_graph;
 
@@ -448,11 +448,6 @@ public class MindDB implements Graph {
 		}
 	};
 
-    private void addParentDBIdToCache(Object childId, Object parentId)
-    {
-        m_parentDBIdCache.put(childId, parentId);
-    }
-	
 	public EdgeVertex addChild (Vertex parent, int pos)
 	{
 		Vertex child = addVertex(null);
@@ -464,13 +459,19 @@ public class MindDB implements Graph {
         child = getVertex(child.getId());
         edge = getEdge(edge.getId());
 
-        addParentDBIdToCache(child.getId(), parent.getId());
+        m_parentDBIdCache.put(child.getId(), parent.getId());
 
         verifyVertex(parent);
         verifyVertex(child);
 
         return new EdgeVertex(edge, child);
 	}
+
+    public int getChildOrReferentCount(Vertex vertex)
+    {
+        ArrayList<Short> outEdgeInnerIds = getOutEdgeInnerIds(vertex, false);
+        return outEdgeInnerIds.size();
+    }
 
 	public EdgeVertex getChildOrReferent(Vertex parent, int pos)
 	{
@@ -548,7 +549,7 @@ public class MindDB implements Graph {
 
         commit();
 
-        addParentDBIdToCache(child.getId(), toParent.getId());
+        m_parentDBIdCache.put(child.getId(), toParent.getId());
 
         verifyVertex(fromParent);
         verifyVertex(toParent);
@@ -813,7 +814,7 @@ public class MindDB implements Graph {
 
         commit();
 
-        addParentDBIdToCache(vertex.getId(), parentId);
+        m_parentDBIdCache.put(vertex.getId(), parentId);
 		return new EdgeVertex(edge, parent);
 	}
 
