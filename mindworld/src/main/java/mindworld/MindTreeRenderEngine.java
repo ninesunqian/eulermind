@@ -139,11 +139,39 @@ public class MindTreeRenderEngine {
         nodeRenderer.setHorizontalPadding(5);
         nodeRenderer.setVerticalPadding(5);
 
-	    EdgeRenderer edgeRenderer = new EdgeRenderer(Constants.EDGE_TYPE_CURVE);
+	    EdgeRenderer edgeRenderer = new EdgeRenderer(Constants.EDGE_TYPE_CURVE) {
+            @Override
+            protected void setAlignByVisualItem(VisualItem item1, VisualItem item2)
+            {
+                m_xAlign1 = Constants.RIGHT;
+                m_yAlign1 = Constants.BOTTOM;
+
+                m_xAlign2 = Constants.LEFT;
+
+                if (((NodeItem) item2).getChildCount() != 0) {
+                    if (item2.isExpanded()) {
+                        m_yAlign2 = Constants.BOTTOM;
+                    } else {
+                        m_yAlign2 = Constants.CENTER;
+                    }
+
+                } else {
+                    MindModel mindModel = m_mindView.m_mindModel;
+
+                    int childCount = mindModel.getDBChildCount((NodeItem) item2);
+
+                    if (childCount == 0) {
+                        m_yAlign2 = Constants.BOTTOM;
+                    } else {
+                        m_yAlign2 = Constants.CENTER;
+                    }
+                }
+            }
+        };
     	edgeRenderer.setHorizontalAlignment1(Constants.RIGHT);
+        edgeRenderer.setVerticalAlignment1(Constants.BOTTOM);
     	edgeRenderer.setHorizontalAlignment2(Constants.LEFT);
-    	edgeRenderer.setVerticalAlignment1(Constants.CENTER);
-    	edgeRenderer.setVerticalAlignment2(Constants.CENTER);
+    	edgeRenderer.setVerticalAlignment2(Constants.BOTTOM);
     	edgeRenderer.setDefaultLineWidth(1.5);
 
     	return new DefaultRendererFactory(nodeRenderer, edgeRenderer);

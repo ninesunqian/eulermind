@@ -771,10 +771,10 @@ public class GraphicsLib {
         } else if ( shape instanceof Line2D ) {
             if (sdraw) {
                 Line2D l = (Line2D)shape;
-                x = (int)(l.getX1()+0.5);
-                y = (int)(l.getY1()+0.5);
-                w = (int)(l.getX2()+0.5);
-                h = (int)(l.getY2()+0.5);
+                x = (int)(l.getX1());
+                y = (int)(l.getY1());
+                w = (int)(l.getX2());
+                h = (int)(l.getY2());
                 g.setPaint(strokeColor);
                 g.drawLine(x, y, w, h);
             }

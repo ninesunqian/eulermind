@@ -105,6 +105,11 @@ public class EdgeRenderer extends AbstractShapeRenderer {
     public int getRenderType(VisualItem item) {
         return RENDER_TYPE_DRAW;
     }
+
+    protected void setAlignByVisualItem(VisualItem item1, VisualItem item2)
+    {
+
+    }
     
     /**
      * @see prefuse.render.AbstractShapeRenderer#getRawShape(prefuse.visual.VisualItem)
@@ -115,6 +120,8 @@ public class EdgeRenderer extends AbstractShapeRenderer {
         VisualItem item2 = edge.getTargetItem();
         
         int type = m_edgeType;
+
+        setAlignByVisualItem(item1, item2);
         
         getAlignedPoint(m_tmpPoints[0], item1.getBounds(),
                         m_xAlign1, m_yAlign1);
@@ -318,7 +325,7 @@ public class EdgeRenderer extends AbstractShapeRenderer {
     {
         double dx = x2-x1, dy = y2-y1;      
         cp[0].setLocation(x1+2*dx/3,y1);
-        cp[1].setLocation(x2-dx/8,y2-dy/8);
+        cp[1].setLocation(x2-2*dx/3,y2);
     }
 
     /**

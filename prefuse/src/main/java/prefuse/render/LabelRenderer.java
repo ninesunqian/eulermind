@@ -1,11 +1,7 @@
 package prefuse.render;
 
 import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.geom.RectangularShape;
-import java.awt.geom.RoundRectangle2D;
+import java.awt.geom.*;
 
 import prefuse.Constants;
 import prefuse.util.ColorLib;
@@ -525,10 +521,15 @@ public class LabelRenderer extends AbstractShapeRenderer {
             }
             drawString(g, fm, text.substring(start), useInt, x, y, tw);
         }
-    
+
         // draw border
         if (type==RENDER_TYPE_DRAW || type==RENDER_TYPE_DRAW_AND_FILL) {
             GraphicsLib.paint(g,item,shape,getStroke(item),RENDER_TYPE_DRAW);
+        } else {
+            Line2D line = new Line2D.Double(shape.getMinX(), shape.getMaxY(),
+                    shape.getMaxX(), shape.getMaxY());
+
+            GraphicsLib.paint(g,item,line,getStroke(item),RENDER_TYPE_DRAW);
         }
 
     }
