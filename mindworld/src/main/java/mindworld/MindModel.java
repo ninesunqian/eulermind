@@ -360,7 +360,7 @@ public class MindModel {
 		}
 	}
 
-    protected void exposeNodeRelation(Node sourceNode, int pos, com.tinkerpop.blueprints.Edge dbEdge, Vertex target)
+    protected void exposeNodeRelation(Node sourceNode, int pos, EdgeVertex toTarget)
     {
         assert sourceNode != null;
         assert sourceNode.isValid();
@@ -374,7 +374,7 @@ public class MindModel {
             return;
         }
 
-        outEdgeInnerIdsInNode.add(pos, m_mindDb.getOutEdgeInnerId(dbEdge));
+        outEdgeInnerIdsInNode.add(pos, m_mindDb.getOutEdgeInnerId(toTarget.m_edge));
 
         //if children not attached, skip
         if (sourceNode.getChildCount() == 0 && outEdgeInnerIdsInNode.size() > 1) {
@@ -387,8 +387,8 @@ public class MindModel {
         Node child = tree.addNode();
         Edge edge = tree.addChildEdge(sourceNode, child, pos);
 
-        loadNodeProperties(target, child);
-        loadEdgeProperties(dbEdge, edge);
+        loadNodeProperties(toTarget.m_vertex, child);
+        loadEdgeProperties(toTarget.m_edge, edge);
 
         verifyNode(sourceNode, true);
         verifyNode(sourceNode.getChild(pos), false);
@@ -503,14 +503,14 @@ public class MindModel {
     //Maybe there are more than one reference edge link source target
     //The callers of exposeTreeRelation has got target and dbEdge, so pass them as argument
     protected void exposeTreeRelation(final Tree tree, final Object sourceId, final int edgePosInSourceNode,
-                                      final com.tinkerpop.blueprints.Edge dbEdge, final Vertex target)
+                                      final EdgeVertex toTarget)
 	{
         final Vertex sourceVertex = m_mindDb.getVertex(sourceId);
 
 		visitNodeAvatars(tree, sourceId, new Visitor() {
             public void visit(Node sourceNode)
             {
-                exposeNodeRelation(sourceNode, edgePosInSourceNode, dbEdge, target);
+                exposeNodeRelation(sourceNode, edgePosInSourceNode, toTarget);
             }
         });
 	}
@@ -549,10 +549,10 @@ public class MindModel {
     }
 
     //opNode: user operated node
-    protected void exposeModelRelation(Node opNode, int pos, com.tinkerpop.blueprints.Edge dbEdge, Vertex vertex)
+    protected void exposeModelRelation(Node opNode, int pos, EdgeVertex edgeVertex)
     {
         for (Tree tree : m_trees) {
-            exposeTreeRelation(tree, getDBId(opNode), pos, dbEdge, vertex);
+            exposeTreeRelation(tree, getDBId(opNode), pos, edgeVertex);
         }
 
         verifyNode(opNode, true);
@@ -595,7 +595,7 @@ public class MindModel {
 
         edgeVertex.m_vertex.setProperty(sm_textPropName, text);
 
-        exposeModelRelation(parent, pos, edgeVertex.m_edge, edgeVertex.m_vertex);
+        exposeModelRelation(parent, pos, edgeVertex);
 
         return edgeVertex.m_vertex.getId();
 	}
@@ -647,19 +647,17 @@ public class MindModel {
 
         final Vertex restoredVertex = m_mindDb.getVertex(dbId);
         final MindDB.TrashedTreeContext context = m_mindDb.getTrashedTreeContext(restoredVertex);
-        final Vertex parentVertex = m_mindDb.getVertex(context.m_parentId);
 
         final EdgeVertex edgeParent = m_mindDb.restoreTrashedSubTree(restoredVertex);
 
-        exposeModelRelation(parent, context.m_pos, edgeParent.m_edge, restoredVertex);
+        exposeModelRelation(parent, context.m_pos, new EdgeVertex(edgeParent.m_edge, restoredVertex));
 
         for (final RefLinkInfo refLinkInfo : context.m_refLinkInfos) {
             final Vertex referrerVertex = m_mindDb.getVertex(refLinkInfo.m_referrer);
-            final Vertex referentVertex = m_mindDb.getVertex(refLinkInfo.m_referent);
-            final com.tinkerpop.blueprints.Edge refDBEdge = m_mindDb.getEdge (referrerVertex, refLinkInfo.m_pos);
+            final EdgeVertex toReferent = m_mindDb.getChildOrReferent(referrerVertex, refLinkInfo.m_pos);
 
             for (final Tree tree : m_trees) {
-                exposeTreeRelation(tree, referrerVertex, refLinkInfo.m_pos, refDBEdge, referentVertex);
+                exposeTreeRelation(tree, referrerVertex, refLinkInfo.m_pos, toReferent);
             }
         }
 	}
@@ -675,7 +673,7 @@ public class MindModel {
         Vertex referentVertex = m_mindDb.getVertex(referentDBId);
         com.tinkerpop.blueprints.Edge refEdge = m_mindDb.addRefEdge(referrerVertex, referentVertex, pos);
 
-        exposeModelRelation(referrerNode, pos, refEdge, referentVertex);
+        exposeModelRelation(referrerNode, pos, new EdgeVertex(refEdge, referentVertex));
     }
 
 
@@ -692,7 +690,7 @@ public class MindModel {
         s_logger.info("arg: newPos:{}", newPos);
 
         Vertex parent = m_mindDb.getVertex(parentDBId);
-        m_mindDb.changeChildOrReferrentPos(parent, oldPos, newPos);
+        m_mindDb.changeChildOrReferentPos(parent, oldPos, newPos);
 
         for (final Tree tree : m_trees) {
             visitNodeAvatars(tree, parentDBId,
@@ -1089,7 +1087,7 @@ public class MindModel {
         for (int node2 : oldNewParentPairingInfo.m_nodeAvatars2Alone) {
             if (tree.getNodeTable().isValidRow(node2)) {
                 Node newParent = tree.getNode(node2);
-                exposeNodeRelation(newParent, newChildPos, childEdgeVertex.m_edge, childEdgeVertex.m_vertex);
+                exposeNodeRelation(newParent, newChildPos, childEdgeVertex);
                 verifyNode(newParent, false);
             }
         }
@@ -1178,6 +1176,7 @@ public class MindModel {
 
     void verifyNode(Node node, boolean forceChildAttached)
     {
+        /*
         Vertex vertex = getDBVertex(node);
 
         m_mindDb.verifyVertex(vertex);
@@ -1222,6 +1221,7 @@ public class MindModel {
                 assert MindDB.EdgeType.values()[inEdgeType] == MindDB.EdgeType.REFERENCE;
             }
         }
+        */
     }
 
 }
