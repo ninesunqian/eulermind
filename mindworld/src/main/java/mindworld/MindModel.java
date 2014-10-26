@@ -3,6 +3,9 @@ package mindworld;
 import com.tinkerpop.blueprints.*;
 import mindworld.MindDB.EdgeVertex;
 import mindworld.MindDB.RefLinkInfo;
+import mindworld.importer.FreemindImporter;
+import mindworld.importer.Importer;
+import mindworld.importer.TikaPlainTextImporter;
 import prefuse.data.*;
 import prefuse.data.Edge;
 import prefuse.data.event.EventConstants;
@@ -600,6 +603,16 @@ public class MindModel {
         return edgeVertex.m_vertex.getId();
 	}
 
+    public Importer getImporter(String path)
+    {
+
+        if (path.endsWith(".mm")) {
+            return new FreemindImporter(m_mindDb);
+        } else {
+            return new TikaPlainTextImporter(m_mindDb);
+        }
+    }
+
     //return new child node
     public List importFile(Node parent, String path) throws Exception
     {
@@ -610,8 +623,8 @@ public class MindModel {
         int pos = parent.getChildCount();
 
         Object parentDBId = getDBId(parent);
-        Importer importer = new Importer(m_mindDb);
-        List newChildren = importer.importFile(getDBId(parent), path);
+        Importer importer = getImporter(path);
+        List newChildren = importer.importFile(getDBId(parent), pos, path);
 
         Vertex dbParent = m_mindDb.getVertex(parentDBId);
         ArrayList<EdgeVertex> newToTargets = new ArrayList<EdgeVertex>();
