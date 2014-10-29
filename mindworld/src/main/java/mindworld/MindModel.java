@@ -149,7 +149,15 @@ public class MindModel {
             m_favoriteInfoes.add(new VertexBasicInfo(vertex));
         }
 
-	}
+
+        Importer importer =  new TikaPlainTextImporter(m_mindDb);
+        try {
+            importer.importFile(root.getId(), 0, "/home/wangxuguang/1.txt");
+        } catch (Exception e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+    }
 
     public Tree findTree(Object rootId)
     {
