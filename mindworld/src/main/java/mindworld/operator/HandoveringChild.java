@@ -76,11 +76,8 @@ public class HandoveringChild extends MindOperator{
         Node newParentNode = m_mindModel.getNodeByPath(tree, newParentPath);
 
         Node child = oldParentNode.getChild(oldPos);
-        MindDB.InheritDirection inheritDirectionToNewParent =
-                m_mindModel.getInheritDirection(child, newParentNode);
 
-        assert inheritDirectionToNewParent != MindDB.InheritDirection.SELF
-                && inheritDirectionToNewParent != MindDB.InheritDirection.LINEAL_DESCENDANT;
+        assert ! m_mindModel.isSelfInDB(child, newParentNode) && ! m_mindModel.isDescendantInDB(child, newParentNode);
 
         assert !MindModel.getDBId(oldParentNode).equals(MindModel.getDBId(newParentNode));
         assert !m_mindModel.isRefNode(child);

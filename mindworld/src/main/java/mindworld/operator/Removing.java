@@ -67,7 +67,7 @@ public class Removing extends MindOperator {
         if (mindModel.isRefNode(node)) {
             return true;
         } else {
-            if (mindModel.isInDBSubTree(root, node) || mindModel.sameDBNode(node, root)) {
+            if (mindModel.isDescendantInDB(node, root) || mindModel.isSelfInDB(node, root)) {
                 return false;
             } else {
                 return true;
@@ -83,7 +83,7 @@ public class Removing extends MindOperator {
         //firstly to right
         for (int i=start+1; i<parent.getChildCount(); i++) {
             Node tmp = parent.getChild(i);
-            if (!m_mindModel.sameDBNode(tmp, node)) {
+            if (!m_mindModel.isSelfInDB(tmp, node)) {
                 return tmp;
             }
         }
@@ -91,7 +91,7 @@ public class Removing extends MindOperator {
         //then to left
         for (int i=start-1; i>=0; i--) {
             Node tmp = parent.getChild(i);
-            if (!m_mindModel.sameDBNode(tmp, node)) {
+            if (!m_mindModel.isSelfInDB(tmp, node)) {
                 return tmp;
             }
         }
@@ -108,7 +108,7 @@ public class Removing extends MindOperator {
 
         while (tmpNode != null)
         {
-            if (m_mindModel.sameDBNode(tmpNode, node)) {
+            if (m_mindModel.isSelfInDB(tmpNode, node)) {
                 topNode = tmpNode;
             }
             tmpNode = tmpNode.getParent();
@@ -154,7 +154,7 @@ public class Removing extends MindOperator {
 
                 for (int i=0; i<parent.getChildCount(); i++) {
                     Node sibling = parent.getChild(i);
-                    if (!m_mindModel.sameDBNode(sibling, formerCursor)) {
+                    if (!m_mindModel.isSelfInDB(sibling, formerCursor)) {
                         siblingsWithDiffDBId.add(parent.getChild(i));
                     }
                 }

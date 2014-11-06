@@ -215,7 +215,7 @@ public class MindTreeRenderEngine {
 
             if (node == cursorNode)
                 return m_cursorBackColor;
-            else if (!m_mindView.isPlaceholer(node) && m_mindView.m_mindModel.sameDBNode(node,cursorNode))
+            else if (!m_mindView.isPlaceholer(node) && m_mindView.m_mindModel.isSelfInDB(node, cursorNode))
                 return m_shadowBackColor;
             else
                 return m_normalBackColor;

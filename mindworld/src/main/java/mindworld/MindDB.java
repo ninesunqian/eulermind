@@ -42,9 +42,15 @@ public class MindDB implements Graph {
 
 	enum EdgeType {INCLUDE, REFERENCE};
 
-    public enum InheritDirection {SELF, LINEAL_SIBLING,  COLLATERAL_SIBLING,
-                          LINEAL_ANCESTOR, COLLATERAL_ANCESTOR,
-                          LINEAL_DESCENDANT, COLLATERAL_DESCENDANT};
+    public enum InheritDirection {
+        SELF, //同一个节点
+        LINEAL_SIBLING,  //亲兄弟
+        COLLATERAL_SIBLING, //同一层次的节点，不是一个父节点
+        LINEAL_ANCESTOR, //直系祖先
+        COLLATERAL_ANCESTOR, //非直系祖先
+        LINEAL_DESCENDANT,   //直系后代
+        COLLATERAL_DESCENDANT  //非直系后代
+    };
 
     public static final int ADDING_EDGE_END = 0x7FFFFFFF;
 
@@ -57,13 +63,13 @@ public class MindDB implements Graph {
 
 	String m_path;
 
-    final int sm_parentDBIdCapacity = 2048;
+    final int sm_parentDBIdCacheCapacity = 2048;
 
     LinkedHashMap<Object, Object> m_parentDBIdCache =
             new LinkedHashMap<Object, Object>(256, 0.75f, true) {
           @Override
           protected boolean removeEldestEntry (Map.Entry<Object, Object> eldest) {
-             return size() > sm_parentDBIdCapacity;
+             return size() > sm_parentDBIdCacheCapacity;
           }
      };
 
@@ -102,6 +108,7 @@ public class MindDB implements Graph {
     @Override
 	public Edge addEdge(Object arg0, Vertex arg1, Vertex arg2, String arg3) {
 		//disable the method, to preserve a tree structure
+        m_logger.error("addEdge is forbidden, for preserve a tree structure");
 		assert (false);
 		return m_graph.addEdge(arg0, arg1, arg2, arg3);
 	}
@@ -262,63 +269,59 @@ public class MindDB implements Graph {
         return inheritPath;
     }
 
-    static public InheritDirection getInheritDirection(List fromInheritPath, Object fromVetexDBId,
-                                                List toInheritPath, Object toVetexDBId)
-    {
-        fromInheritPath = (List)((LinkedList)fromInheritPath).clone();
-        toInheritPath = (List)((LinkedList)toInheritPath).clone();
+    Object getSharedAncestorId(Object vertexId1, Object vertexId2) {
 
-        fromInheritPath.add(fromVetexDBId);
-        toInheritPath.add(toVetexDBId);
+        List inheritPath1 = getInheritPath(vertexId1);
+        List inheritPath2 = getInheritPath(vertexId2);
 
-        int fromGeneration = fromInheritPath.size();
-        int toGeneration = toInheritPath.size();
+        //FIXME; 如果有一个被删除了呢
+        Object sharedAncestorId = null;
 
-        int i;
-
-        for (i=0; i<fromGeneration && i<toGeneration; i++)
+        for (int i = 0; i < inheritPath1.size() && i < inheritPath2.size(); i++)
         {
-            if (! fromInheritPath.get(i).equals(toInheritPath.get(i)))
-            {
+            if (! inheritPath1.get(i).equals(inheritPath2.get(i))) {
+                if (i > 0) {
+                    sharedAncestorId = inheritPath1.get(i - 1);
+                }
                 break;
             }
         }
 
-        if (fromGeneration == toGeneration) {
-            if (i == fromGeneration)
-                return InheritDirection.LINEAL_SIBLING;
-            else
-                return InheritDirection.COLLATERAL_SIBLING;
-        } else if (fromGeneration < toGeneration) {
-            if (i == fromGeneration)
-                return InheritDirection.LINEAL_DESCENDANT;
-            else
-                return InheritDirection.COLLATERAL_DESCENDANT;
+        assert sharedAncestorId != null;
 
-        } else {
-            if (i == toGeneration)
-                return InheritDirection.LINEAL_ANCESTOR;
-            else
-                return InheritDirection.COLLATERAL_ANCESTOR;
-        }
-
+        return sharedAncestorId;
     }
 
-    public InheritDirection getInheritRelation (Vertex from, Vertex to)
-    {
-        if (from.getId() == to.getId()) {
-            return InheritDirection.SELF;
-        }
-
-        List fromInheritPath = getInheritPath(from.getId());
-        List toInheritPath = getInheritPath(to.getId());
-
-        return getInheritDirection(fromInheritPath, from.getId(), toInheritPath, to.getId());
+    boolean isVertexIdSelf(Object thiz, Object that) {
+        return thiz.equals(that);
     }
-	
+
+    boolean isVertexIdChild(Object thiz, Object that) {
+        return isVertexIdSelf(thiz, getParentDBId(that));
+    }
+
+    boolean isVertexIdParent(Object thiz, Object that) {
+        return isVertexIdSelf(getParentDBId(thiz), that);
+    }
+
+    boolean isVertexIdSibling(Object thiz, Object that) {
+        return isVertexIdSelf(getParentDBId(thiz), getParentDBId(that));
+    }
+
+
+    boolean isVertexIdAncestor(Object thiz, Object that) {
+        List thizInheritPath = getInheritPath(thiz);
+        return thizInheritPath.contains(that);
+    }
+
+    boolean isVertexIdDescendant(Object thiz, Object that) {
+        List thatInheritPath = getInheritPath(that);
+        return thatInheritPath.contains(thiz);
+    }
+
 	public EdgeType getEdgeType(Edge edge)
 	{
-        int edgeTypeValue = (Integer)edge.getProperty(EDGE_TYPE_PROP_NAME);
+        int edgeTypeValue = edge.getProperty(EDGE_TYPE_PROP_NAME);
 		return EdgeType.values()[edgeTypeValue];
 	}
 
@@ -858,9 +861,9 @@ public class MindDB implements Graph {
         }
 	}
 	
-	
-	private void copyProperty(Element from, Element to)
+	public void copyProperty(Element from, Element to)
 	{
+        assert from.getClass() == to.getClass();
 		for (String key : from.getPropertyKeys())
 		{
 			if (key != OUT_EDGES_PROP_NAME)
@@ -978,13 +981,11 @@ public class MindDB implements Graph {
 
     public void verifyVertex(Vertex vertex)
     {
-        /*
         //after commit, must add it
         vertex = m_graph.getVertex(vertex.getId());
 
         verifyInEdges(vertex);
         verifyOutEdges(vertex);
-        */
     }
 
     public boolean isVertexTrashed(Vertex vertex)
@@ -1030,7 +1031,7 @@ public class MindDB implements Graph {
 
         for (RefLinkInfo refLinkInfo : refLinkInfos) {
             assert root.getId().equals(refLinkInfo.m_referent) ||
-                    getInheritRelation(root, getVertex(refLinkInfo.m_referent)) == InheritDirection.LINEAL_DESCENDANT;
+                    isVertexIdDescendant(root.getId(), refLinkInfo.m_referent);
         }
 
         verifyOutEdges(root);
@@ -1056,4 +1057,5 @@ public class MindDB implements Graph {
             }
         });
     }
+
 }

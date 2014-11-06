@@ -738,8 +738,7 @@ public class MindModel {
     {
         assert(node.getGraph() == newParent.getGraph());
         assert(node.getParent() != null);
-        return (! sameDBNode(newParent, node))
-                && (!isInDBSubTree(newParent, node));
+        return (! isSelfInDB(node, newParent)) && (! isDescendantInDB(node, newParent));
     }
 
 
@@ -791,30 +790,29 @@ public class MindModel {
         return getDBChildCount(node) == node.getChildCount();
     }
 
-    public MindDB.InheritDirection getInheritDirection(Node from, Node to)
+    public boolean isSelfInDB(Node n1, Node n2)
     {
-        List fromInheritPath = m_mindDb.getInheritPath(getDBId(from));
-        List toInheritPath = m_mindDb.getInheritPath(getDBId(to));
-        return m_mindDb.getInheritDirection(fromInheritPath, getDBId(from), toInheritPath, getDBId(to));
+        return m_mindDb.isVertexIdSelf(getDBId(n1), getDBId(n2));
     }
 
-    public MindDB.InheritDirection getInheritDirection(Object fromDBId, Object toDBId)
-    {
-        Vertex fromVertex = m_mindDb.getVertex(fromDBId);
-        Vertex toVertex = m_mindDb.getVertex(toDBId);
-        return m_mindDb.getInheritRelation (fromVertex, toVertex);
+    public boolean isChildInDB(Node thiz, Node that) {
+        return m_mindDb.isVertexIdChild(getDBId(thiz), getDBId(that));
     }
 
-    public boolean sameDBNode(Node n1, Node n2)
-    {
-        return getDBId(n1) == getDBId(n2);
+    public boolean isParentInDB(Node thiz, Node that) {
+        return m_mindDb.isVertexIdParent(getDBId(thiz), getDBId(that));
     }
 
-    public boolean isInDBSubTree(Node node, Node treeRoot)
-    {
-        MindDB.InheritDirection inheritDirection = getInheritDirection(node, treeRoot);
-        return inheritDirection == MindDB.InheritDirection.LINEAL_ANCESTOR ||
-                inheritDirection == MindDB.InheritDirection.SELF;
+    public boolean isSiblingInDB(Node thiz, Node that) {
+        return m_mindDb.isVertexIdSibling(getDBId(thiz), getDBId(that));
+    }
+
+    public boolean isDescendantInDB(Node thiz, Node that) {
+        return m_mindDb.isVertexIdDescendant(getDBId(thiz), getDBId(that));
+    }
+
+    public boolean isAncestorInDB(Node thiz, Node that) {
+        return m_mindDb.isVertexIdAncestor(getDBId(thiz), getDBId(that));
     }
 
     private String objectToString(Object object)

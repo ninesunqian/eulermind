@@ -844,8 +844,7 @@ public class MindView extends Display {
                     m_newOperator = new HandoveringReference(m_mindModel, draggedNode, newParent, newPosition);
                 } else {
 
-                    MindDB.InheritDirection inheritDirection = m_mindModel.getInheritDirection(draggedNode, newParent);
-                    assert inheritDirection != MindDB.InheritDirection.LINEAL_DESCENDANT;
+                    assert ! m_mindModel.isDescendantInDB(draggedNode, newParent);
 
                     m_newOperator = new HandoveringChild(m_mindModel, draggedNode, newParent, newPosition);
                 }

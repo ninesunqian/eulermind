@@ -135,8 +135,7 @@ public class MindController extends UndoManager {
             Object trashedDBId = removing.m_removedDBId;
 
             for (Object rootDBId : m_mindViews.keySet()) {
-                if (m_mindModel.getInheritDirection(trashedDBId, rootDBId) ==
-                        MindDB.InheritDirection.LINEAL_DESCENDANT) {
+                if (m_mindModel.m_mindDb.isVertexIdDescendant(trashedDBId, rootDBId)) {
                     removeMindView(rootDBId);
                 }
             }
