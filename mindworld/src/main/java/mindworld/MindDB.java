@@ -42,16 +42,6 @@ public class MindDB implements Graph {
 
 	enum EdgeType {INCLUDE, REFERENCE};
 
-    public enum InheritDirection {
-        SELF, //同一个节点
-        LINEAL_SIBLING,  //亲兄弟
-        COLLATERAL_SIBLING, //同一层次的节点，不是一个父节点
-        LINEAL_ANCESTOR, //直系祖先
-        COLLATERAL_ANCESTOR, //非直系祖先
-        LINEAL_DESCENDANT,   //直系后代
-        COLLATERAL_DESCENDANT  //非直系后代
-    };
-
     public static final int ADDING_EDGE_END = 0x7FFFFFFF;
 
 	public OrientGraph m_graph;
@@ -325,16 +315,16 @@ public class MindDB implements Graph {
 		return EdgeType.values()[edgeTypeValue];
 	}
 
-    private List<Short> getNumberHoles(ArrayList<Short> numbers)
+    private short findNumberHole(ArrayList<Short> numbers)
     {
         short max = 0;
-        ArrayList<Short> holes = new ArrayList<Short>();
 
         for (short number : numbers) {
             if (max < number) {
                 max = number;
             }
         }
+
         boolean existArray[] = new boolean[max + 1];
         for (int i=0; i<existArray.length; i++) {
             existArray[i] = false;
@@ -346,24 +336,21 @@ public class MindDB implements Graph {
 
         for (short i = 0; i < existArray.length; i++) {
             if (existArray[i] == false) {
-                holes.add(i);
+                return i;
             }
         }
 
-        return holes;
+        return (short)(max + 1);
     }
 
-    private Short allocateOutEdgeInnerId(Vertex vertex, int pos)
+    private Short allocateOutEdgeInnerId(ArrayList<Short> outEdgeInnerIds, int pos)
     {
-        ArrayList<Short> outEdgeInnerIds = getOutEdgeInnerIds(vertex, false);
 
         if (outEdgeInnerIds == null) {
             outEdgeInnerIds = new ArrayList<Short>();
         }
 
-        List<Short> innerIdHoles = getNumberHoles(outEdgeInnerIds);
-
-        Short newEdgeInnerId = innerIdHoles.size() > 0 ? innerIdHoles.get(0) : (short)outEdgeInnerIds.size();
+        short newEdgeInnerId = findNumberHole(outEdgeInnerIds);
 
         if (pos == ADDING_EDGE_END) {
             outEdgeInnerIds.add(newEdgeInnerId);
@@ -372,25 +359,33 @@ public class MindDB implements Graph {
             outEdgeInnerIds.add(pos, newEdgeInnerId);
         }
 
-        //NOTICE: the container property must be reset to Vertex.
-        //If not, the last item will not be save to db.
-        //it is the bug of blueprints or orientdb
-        vertex.setProperty(OUT_EDGES_PROP_NAME, outEdgeInnerIds);
-
         return newEdgeInnerId;
     }
 
 	private Edge addEdge(Vertex source, Vertex target, int pos, EdgeType edgeType)
 	{
 		Edge edge = m_graph.addEdge(null, source, target, "E");
-        Short outEdgeInnerId = allocateOutEdgeInnerId(source, pos);
+
+        ArrayList<Short> outEdgeInnerIds = getOutEdgeInnerIds(source, false);
+
+        Short outEdgeInnerId = allocateOutEdgeInnerId(outEdgeInnerIds, pos);
+
+        //NOTICE: the container property must be reset to Vertex.
+        //If not, the last item will not be save to db.
+        //it is the bug of blueprints or orientdb
+        source.setProperty(OUT_EDGES_PROP_NAME, outEdgeInnerIds);
 
 		edge.setProperty(EDGE_TYPE_PROP_NAME, edgeType.ordinal());
         edge.setProperty(OUT_EDGE_INNER_ID_PROP_NAME, outEdgeInnerId);
 		
 		return edge;
 	}
-	
+
+    public Edge addRefEdge(Vertex referrer, Vertex referent)
+    {
+        return addRefEdge(referrer, referent, ADDING_EDGE_END);
+    }
+
     public Edge addRefEdge(Vertex referrer, Vertex referent, int pos)
     {
         Edge edge = addEdge(referrer, referent, pos, EdgeType.REFERENCE);
@@ -465,6 +460,11 @@ public class MindDB implements Graph {
 			m_edge = edge;
 		}
 	};
+
+    public EdgeVertex addChild (Vertex parent)
+    {
+        return addChild(parent, ADDING_EDGE_END);
+    }
 
 	public EdgeVertex addChild (Vertex parent, int pos)
 	{
@@ -908,14 +908,6 @@ public class MindDB implements Graph {
         List childInheritPath = getInheritPath(childDBId);
         List parentInheritPath = getInheritPath(parentDBId);
         assert childInheritPath.get(childInheritPath.size()-1).equals(parentDBId) &&
-                childInheritPath.subList(0, childInheritPath.size()-1).equals(parentInheritPath);
-    }
-
-    public boolean isParentChildRelation(Object parentDBId, Object childDBId)
-    {
-        List childInheritPath = getInheritPath(childDBId);
-        List parentInheritPath = getInheritPath(parentDBId);
-        return childInheritPath.get(childInheritPath.size()-1).equals(parentDBId) &&
                 childInheritPath.subList(0, childInheritPath.size()-1).equals(parentInheritPath);
     }
 

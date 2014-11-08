@@ -112,7 +112,7 @@ public class FreemindImporter extends Importer{
 
                 Vertex vertexSource = m_mindDb.getVertex(dbLinkSource);
                 Vertex vertexTarget = m_mindDb.getVertex(dbLinkTarget);
-                m_mindDb.addRefEdge(vertexSource, vertexTarget, MindDB.ADDING_EDGE_END);
+                m_mindDb.addRefEdge(vertexSource, vertexTarget);
             }
         }
 

@@ -819,10 +819,9 @@ public class MindView extends Display {
 
             m_newOperator = new AddingReference(m_mindModel, draggedNode, referrer, position);
         } else {
+
             Node newParent = (Node)possibleEdgeSource[0];
             int newPosition = (Integer)possibleEdgeSource[1];
-
-            assert(m_mindModel.canResetParent(draggedNode, newParent));
 
             if (draggedNode == m_tree.getRoot()) {
                 m_logger.info("forbid drag prefuse root to other as child");
@@ -840,11 +839,13 @@ public class MindView extends Display {
                 m_newOperator = new ChangingPosition(m_mindModel, draggedNode, newPosition);
 
             } else {
+
                 if (m_mindModel.isRefNode(draggedNode)) {
                     m_newOperator = new HandoveringReference(m_mindModel, draggedNode, newParent, newPosition);
                 } else {
 
                     assert ! m_mindModel.isDescendantInDB(draggedNode, newParent);
+                    assert(m_mindModel.canResetParent(draggedNode, newParent));
 
                     m_newOperator = new HandoveringChild(m_mindModel, draggedNode, newParent, newPosition);
                 }

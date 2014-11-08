@@ -8,6 +8,7 @@ import mindworld.importer.Importer;
 import mindworld.importer.TikaPlainTextImporter;
 import prefuse.data.*;
 import prefuse.data.Edge;
+import prefuse.data.Graph;
 import prefuse.data.event.EventConstants;
 import prefuse.data.event.TableListener;
 import prefuse.util.TypeLib;
@@ -738,7 +739,15 @@ public class MindModel {
     {
         assert(node.getGraph() == newParent.getGraph());
         assert(node.getParent() != null);
-        return (! isSelfInDB(node, newParent)) && (! isDescendantInDB(node, newParent));
+
+        Node oldParent = node.getParent();
+        Graph graph = node.getGraph();
+
+        if (isRefEdge(graph.getEdge(oldParent, node))) {
+            return true;
+        } else {
+            return (! isSelfInDB(node, newParent)) && (! isDescendantInDB(node, newParent));
+        }
     }
 
 
@@ -1188,14 +1197,8 @@ public class MindModel {
 
     }
 
-    private  boolean isParentChildRelation(Node parent, Node child)
-    {
-        return m_mindDb.isParentChildRelation(getDBId(parent), getDBId(child));
-    }
-
     void verifyNode(Node node, boolean forceChildAttached)
     {
-        /*
         Vertex vertex = getDBVertex(node);
 
         m_mindDb.verifyVertex(vertex);
@@ -1216,7 +1219,7 @@ public class MindModel {
 
             Integer outEdgeType = (Integer)outEdge.get(sm_edgeTypePropName);
             if (MindDB.EdgeType.values()[outEdgeType] == MindDB.EdgeType.INCLUDE) {
-                assert isParentChildRelation(node, childOrReferenceNode);
+                assert m_mindDb.isVertexIdParent(getDBId(childOrReferenceNode), getDBId(node));
             } else {
                 assert MindDB.EdgeType.values()[outEdgeType] == MindDB.EdgeType.REFERENCE;
             }
@@ -1235,12 +1238,11 @@ public class MindModel {
             assert parentOrReferrerOutEdgeInnerIds.get(node.getIndex()).equals(getOutEdgeInnerId(inEdge));
 
             if (MindDB.EdgeType.values()[inEdgeType] == MindDB.EdgeType.INCLUDE) {
-                assert isParentChildRelation(parentOrReferrerNode, node);
+                assert m_mindDb.isVertexIdChild(getDBId(parentOrReferrerNode), getDBId(node));
             } else {
                 assert MindDB.EdgeType.values()[inEdgeType] == MindDB.EdgeType.REFERENCE;
             }
         }
-        */
     }
 
 }
