@@ -48,9 +48,12 @@ public class MindModel {
     private Index<Vertex> m_favoriteIndex;
 
     class VertexBasicInfo {
-        String m_contextText;
         Object m_dbId;
+
+        //TODO: remove this
         List m_inheritPath;
+        //TODO: remove this
+        String m_contextText;
 
         VertexBasicInfo(Vertex vertex) {
             m_dbId = vertex.getId();
@@ -221,7 +224,7 @@ public class MindModel {
 		{
             Object value;
             if (key == sm_outEdgeInnerIdsPropName) {
-                value = m_mindDb.getContainerProperty((Vertex)dbElement, key, true);
+                value = m_mindDb.getContainerProperty((Vertex)dbElement, key);
             } else {
                 value = dbElement.getProperty(key);
             }
@@ -244,7 +247,7 @@ public class MindModel {
         }
     }
 
-    private static void verifyElementProperties(com.tinkerpop.blueprints.Element dbElement,
+    private void verifyElementProperties(com.tinkerpop.blueprints.Element dbElement,
                                                    Tuple tuple, String keys[])
     {
         assert dbElement.getId().equals(tuple.get(sm_dbIdColumnName));
@@ -252,11 +255,12 @@ public class MindModel {
         for (String key : keys)
         {
             Object tupleValue = tuple.get(key);
-            Object dbElementValue = dbElement.getProperty(key);
 
             if (key == sm_outEdgeInnerIdsPropName) {
+                ArrayList dbElementValue = m_mindDb.getContainerProperty(dbElement, key);
                 assert tupleValue == dbElementValue || tupleValue.equals(dbElementValue);
             } else {
+                Object dbElementValue = dbElement.getProperty(key);
                 assert tupleValue == dbElementValue || tupleValue.equals(dbElementValue);
             }
         }
@@ -378,7 +382,7 @@ public class MindModel {
         assert sourceNode.isValid();
 
         ArrayList<Short> outEdgeInnerIdsInNode = (ArrayList<Short>)sourceNode.get(sm_outEdgeInnerIdsPropName);
-        ArrayList<Short> outEdgeInnerIdsInVertex = m_mindDb.getOutEdgeInnerIds(getDBVertex(sourceNode), true);
+        ArrayList<Short> outEdgeInnerIdsInVertex = m_mindDb.getOutEdgeInnerIds(getDBVertex(sourceNode));
 
         //if this node is updated, skip
         if (outEdgeInnerIdsInNode.equals(outEdgeInnerIdsInVertex)) {
@@ -412,7 +416,7 @@ public class MindModel {
         assert (sourceNode.isValid());
 
         ArrayList<Short> outEdgeInnerIdsInNode = (ArrayList<Short>)sourceNode.get(sm_outEdgeInnerIdsPropName);
-        ArrayList<Short> outEdgeInnerIdsInVertex = m_mindDb.getOutEdgeInnerIds(getDBVertex(sourceNode), true);
+        ArrayList<Short> outEdgeInnerIdsInVertex = m_mindDb.getOutEdgeInnerIds(getDBVertex(sourceNode));
 
         //if this node is updated, skip
         if (outEdgeInnerIdsInNode.equals(outEdgeInnerIdsInVertex)) {
@@ -443,7 +447,7 @@ public class MindModel {
         assert sourceNode.isValid();
 
         ArrayList<Short> outEdgeInnerIdsInNode = (ArrayList<Short>)sourceNode.get(sm_outEdgeInnerIdsPropName);
-        ArrayList<Short> outEdgeInnerIdsInVertex = m_mindDb.getOutEdgeInnerIds(getDBVertex(sourceNode), true);
+        ArrayList<Short> outEdgeInnerIdsInVertex = m_mindDb.getOutEdgeInnerIds(getDBVertex(sourceNode));
 
         //if this node is updated, skip
         if (outEdgeInnerIdsInNode.equals(outEdgeInnerIdsInVertex)) {
@@ -484,7 +488,7 @@ public class MindModel {
         assert (sourceNode.isValid());
 
         ArrayList<Short> outEdgeInnerIdsInNode = (ArrayList<Short>)sourceNode.get(sm_outEdgeInnerIdsPropName);
-        ArrayList<Short> outEdgeInnerIdsInVertex = m_mindDb.getOutEdgeInnerIds(getDBVertex(sourceNode), true);
+        ArrayList<Short> outEdgeInnerIdsInVertex = m_mindDb.getOutEdgeInnerIds(getDBVertex(sourceNode));
 
         //if this node is updated, skip
         if (outEdgeInnerIdsInNode.equals(outEdgeInnerIdsInVertex)) {
@@ -965,7 +969,7 @@ public class MindModel {
     static final String MIRROR_X = "mirrorX";
     static final String MIRROR_Y = "mirrorY";
 
-    static public void addNodeMirrorXYColumn(Tree tree, VisualTree visualTree)
+    static void addNodeMirrorXYColumn(Tree tree, VisualTree visualTree)
     {
         final Table nodeTable = tree.getNodeTable();
         final VisualTable nodeItemTable = (VisualTable)visualTree.getNodeTable();

@@ -1,5 +1,6 @@
 package mindworld;
 
+import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Vertex;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
@@ -17,6 +18,16 @@ public class TestMindDB extends TestCase {
     MindDB m_mindDB;
     String m_dbPath;
 
+    Vertex m_root;
+    Vertex m_v0;
+    Vertex m_v1;
+
+    Vertex m_v00;
+    Vertex m_v01;
+
+    Vertex m_v10;
+    Vertex m_v100;
+
     TestMindDB(String method) {
         super(method);
     }
@@ -24,6 +35,16 @@ public class TestMindDB extends TestCase {
     public void setUp() {
         m_dbPath = System.getProperty("java.io.tmpdir") + File.separator + "mindworld_test";
         m_mindDB = new MindDB(m_dbPath);
+
+        m_root = m_mindDB.getVertex(m_mindDB.getRootId());
+        m_v0 = m_mindDB.addChild(m_root).m_vertex;
+        m_v1 = m_mindDB.addChild(m_root).m_vertex;
+
+        m_v00 = m_mindDB.addChild(m_v0).m_vertex;
+        m_v01 = m_mindDB.addChild(m_v0).m_vertex;
+
+        m_v10 = m_mindDB.addChild(m_v1).m_vertex;
+        m_v100 = m_mindDB.addChild(m_v10).m_vertex;
     }
 
     public void tearDown() {
@@ -34,104 +55,86 @@ public class TestMindDB extends TestCase {
         }
     }
 
+    void assertInitTree() {
+
+        assertTrue(m_mindDB.isVertexIdSelf(m_root.getId(), m_mindDB.getParent(m_v1).getId()));
+        assertTrue(m_mindDB.isVertexIdSelf(m_mindDB.getChildOrReferent(m_v1, 1).m_vertex.getId(), m_root.getId()));
+        assertEquals(2, m_mindDB.getChildOrReferentCount(m_root));
+
+        assertTrue(m_mindDB.isVertexIdParent(m_v0.getId(), m_root.getId()));
+        assertTrue(m_mindDB.isVertexIdChild(m_root.getId(), m_v0.getId()));
+
+        assertTrue(m_mindDB.isVertexIdAncestor(m_v0.getId(), m_root.getId()));
+        assertTrue(m_mindDB.isVertexIdAncestor(m_v100.getId(), m_root.getId()));
+        assertTrue(m_mindDB.isVertexIdDescendant(m_root.getId(), m_v100.getId()));
+
+        assertTrue(m_mindDB.isVertexIdSibling(m_v00.getId(), m_v01.getId()));
+        assertFalse(m_mindDB.isVertexIdSibling(m_v00.getId(), m_v10.getId()));
+
+        //getSharedAncestorId [MindDB]
+    }
+
+    public void testEdge() {
+        Edge refEdge = m_mindDB.addRefEdge(m_v00, m_v01);
+        assertEquals(m_mindDB.getEdgeType(refEdge), MindDB.EdgeType.REFERENCE);
+
+        //FIXME:
+        assertEquals(m_mindDB.getEdgeSource(refEdge), m_v00);
+        assertEquals(m_mindDB.getEdgeTarget(refEdge), m_v01);
+        //getEdgeType [MindDB]
+
+        /*
+        addRefEdge [MindDB]
+        removeRefEdge [MindDB]
+        */
+
+    }
+
     public void testInsertChild() {
-        Vertex root = m_mindDB.getVertex(m_mindDB.getRootId());
-        MindDB.EdgeVertex v0 = m_mindDB.addChild(root);
-        MindDB.EdgeVertex v1 = m_mindDB.addChild(root);
+        assertInitTree();
+    }
 
-        MindDB.EdgeVertex v00 = m_mindDB.addChild(v0.m_vertex);
-        MindDB.EdgeVertex v01 = m_mindDB.addChild(v0.m_vertex);
+    public void testRemove() {
+        m_mindDB.addRefEdge(m_v100, m_root);
+        //添加几个引用边
+        //删除，恢复后，看是否都在
+        /*
+        trashSubTree [MindDB]
+        restoreTrashedSubTree [MindDB]
+        isVertexTrashed [MindDB]
+        */
+        // 删除v0, 再删除v00
+        //cleanTrash [MindDB]
+    }
 
-        MindDB.EdgeVertex v10 = m_mindDB.addChild(v1.m_vertex);
-        MindDB.EdgeVertex v100 = m_mindDB.addChild(v10.m_vertex);
 
-        assertTrue(m_mindDB.isVertexIdParent(v0.m_vertex.getId(), root.getId()));
-        assertTrue(m_mindDB.isVertexIdChild(root.getId(), v0.m_vertex.getId()));
+    public void testIndex()
+    {
+   // getOrCreateIndex [MindDB]
+        //query [MindDB]
+        //createFullTextVertexKeyIndex [MindDB]
+    }
 
-        assertTrue(m_mindDB.isVertexIdAncestor(v0.m_vertex.getId(), root.getId()));
-        assertTrue(m_mindDB.isVertexIdAncestor(v100.m_vertex.getId(), root.getId()));
-        assertTrue(m_mindDB.isVertexIdDescendant(root.getId(), v100.m_vertex.getId()));
+    public void testHandover()
+    {
+        /*
+        handoverChild [MindDB]
+        handoverReferent [MindDB]
 
-        assertTrue(m_mindDB.isVertexIdSibling(v00.m_vertex.getId(), v01.m_vertex.getId()));
-        assertFalse(m_mindDB.isVertexIdSibling(v00.m_vertex.getId(), v10.m_vertex.getId()));
+        changeChildOrReferentPos [MindDB]
+        */
+    }
+
+    public void testProperty()
+    {
+        //copyProperty [MindDB]
 
     }
     /*
-        MindDB [MindDB]
-    finalize [MindDB]
-    addEdge [MindDB]
-    addVertex [MindDB]
-    getEdge [MindDB]
-    getEdges [MindDB]
-    getEdges [MindDB]
-    getFeatures [MindDB]
-    getVertex [MindDB]
-    getVertices [MindDB]
-    getVertices [MindDB]
-    removeEdge [MindDB]
-    removeVertex [MindDB]
-    shutdown [MindDB]
-    commit [MindDB]
-    getOrCreateIndex [MindDB]
-    getRootId [MindDB]
-    getEdgeSource [MindDB]
-    getEdgeTarget [MindDB]
-    getContainerProperty [MindDB]
-    getOutEdgeInnerIds [MindDB]
-    getOutEdgeInnerId [MindDB]
-    getParentSkipCache [MindDB]
-    getInheritPath [MindDB]
-    getSharedAncestorId [MindDB]
-    isVertexIdSelf [MindDB]
-    isVertexIdChild [MindDB]
-    isVertexIdParent [MindDB]
-    isVertexIdSibling [MindDB]
-    isVertexIdAncestor [MindDB]
-    isVertexIdDescendant [MindDB]
-    getEdgeType [MindDB]
-    getNumberHoles [MindDB]
-    allocateOutEdgeInnerId [MindDB]
-    addEdge [MindDB]
-    addRefEdge [MindDB]
-    removeEdge [MindDB]
-    removeRefEdgeImpl [MindDB]
-    removeRefEdge [MindDB]
-    getEdge [MindDB]
-    EdgeVertex [MindDB.EdgeVertex]
-    addChild [MindDB]
-    getChildOrReferentCount [MindDB]
-    getChildOrReferent [MindDB]
-    getChildrenAndReferents [MindDB]
-    getParentDBId [MindDB]
-    getParent [MindDB]
-    handoverChild [MindDB]
-    handoverReferent [MindDB]
-    changeChildOrReferentPos [MindDB]
-    getReferrers [MindDB]
-    run [MindDB.Processor]
-    deepTraverse [MindDB]
-    deepTraverse [MindDB]
-    RefLinkInfo [MindDB.RefLinkInfo]
-    toStream [MindDB.RefLinkInfo]
-    fromStream [MindDB.RefLinkInfo]
-    trashSubTree [MindDB]
-    TrashedTreeContext [MindDB.TrashedTreeContext]
-    getTrashedTreeContext [MindDB]
-    restoreTrashedSubTree [MindDB]
-    removeSubTree [MindDB]
-    cleanTrash [MindDB]
-    copyProperty [MindDB]
-    query [MindDB]
-    createFullTextVertexKeyIndex [MindDB]
-    getVertices [MindDB]
-    getVertices [MindDB]
     verifyCachedInheritPathValid [MindDB]
-    isParentChildRelation [MindDB]
     verifyOutEdges [MindDB]
     verifyInEdges [MindDB]
     verifyVertex [MindDB]
-    isVertexTrashed [MindDB]
-    setVertexTrashed [MindDB]
     verifyTrashedTree [MindDB]
 
 
