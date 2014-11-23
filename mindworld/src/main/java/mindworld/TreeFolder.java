@@ -1,4 +1,6 @@
 package mindworld;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 import java.util.*;
 
 import prefuse.Visualization;
@@ -17,18 +19,25 @@ import prefuse.visual.tuple.TableNodeItem;
  * Time: 下午10:42
  * To change this template use File | Settings | File Templates.
  */
-public class TreeFolder {
+public class TreeFolder extends NodeControl{
 
     private LinkedHashSet<Integer> m_foldedNodes = new LinkedHashSet<Integer>();
     VisualTree m_tree;
+    MindView m_mindView;
 
-    TreeFolder(VisualTree tree)
+    TreeFolder(MindView mindView)
     {
-        m_tree = tree;
+        super(mindView);
+        m_mindView = mindView;
+        m_tree = mindView.m_visualTree;
     }
 
-    public void unfoldNode(NodeItem node)
+    void unfoldNode(NodeItem node)
     {
+        if (! MindModel.childrenAttached(m_mindView.toSource(node))) {
+            m_mindView.m_mindModel.attachChildren(m_mindView.toSource(node));
+        }
+
         if (node.getChildCount() == 0 || node.isExpanded()) {
             return;
         }
@@ -106,5 +115,36 @@ public class TreeFolder {
 
 
         node.setExpanded(false);
+    }
+
+    public boolean isFolded(NodeItem node)
+    {
+        if (node.getChildCount() > 0) {
+            return ! node.isExpanded();
+        } else {
+            return MindModel.getDBChildCount(node) > 0;
+        }
+    }
+
+    public void toggleFoldNode(NodeItem node)
+    {
+        if (isFolded(node)) {
+            unfoldNode(node);
+        }
+        else {
+            foldNode(node);
+        }
+    }
+
+    @Override
+    public void nodeItemClicked(NodeItem item, MouseEvent e) {
+        toggleFoldNode(item);
+    }
+
+    @Override
+    public void nodeItemKeyPressed(NodeItem item, KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+            toggleFoldNode(item);
+        }
     }
 }

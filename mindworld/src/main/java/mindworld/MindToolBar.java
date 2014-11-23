@@ -103,8 +103,8 @@ public class MindToolBar extends JToolBar {
 	}
 
 	void setAllActions(boolean enabled) {
-		fonts.setEnabled(enabled);
-		size.setEnabled(enabled);
+		fonts.hold(enabled);
+		size.hold(enabled);
 	}
 */
 

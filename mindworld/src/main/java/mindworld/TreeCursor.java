@@ -1,11 +1,15 @@
 package mindworld;
 
+import prefuse.Display;
 import prefuse.data.Table;
 import prefuse.util.collections.IntIterator;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualTree;
 import prefuse.visual.expression.VisiblePredicate;
 
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,7 +18,11 @@ import java.util.Iterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TreeCursor {
+import javax.swing.*;
+
+public class TreeCursor extends NodeControl {
+
+    MindView m_mindView;
     VisualTree m_tree;
 
     NodeItem m_originCursor;
@@ -32,9 +40,12 @@ public class TreeCursor {
 
     final Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
-    public TreeCursor(VisualTree tree) {
-        m_tree = tree;
-        setCursorNodeItem((NodeItem) tree.getRoot());
+    public TreeCursor(MindView mindView) {
+        super(mindView);
+
+        m_mindView = mindView;
+        m_tree = mindView.m_visualTree;
+        setCursorNodeItem((NodeItem) m_tree.getRoot());
     }
 
     public NodeItem getCursorNodeItem()
@@ -51,6 +62,8 @@ public class TreeCursor {
         //so we can setCurserNode before layout tree
         m_xAxis = null;
         m_yAxis = null;
+
+        m_mindView.renderTree();
     }
 
     private void buildXYAxis(NodeItem originCursor)
@@ -138,8 +151,7 @@ public class TreeCursor {
         }
     }
 
-
-    public NodeItem moveLeft()
+    void moveLeft()
     {
         if (m_xAxis == null || m_currentYIndex != m_originYIndex) {
             buildXYAxis(m_currentCursor);
@@ -150,11 +162,9 @@ public class TreeCursor {
         }
 
         m_currentCursor = m_xAxis.get(m_currentXIndex);
-
-        return m_currentCursor;
     }
 
-    public NodeItem moveRight()
+    void moveRight()
     {
         if (m_xAxis == null || m_currentYIndex != m_originYIndex) {
             buildXYAxis(m_currentCursor);
@@ -165,11 +175,9 @@ public class TreeCursor {
         }
 
         m_currentCursor = m_xAxis.get(m_currentXIndex);
-
-        return m_currentCursor;
     }
 
-    public NodeItem moveUp()
+    void moveUp()
     {
         if (m_xAxis == null || m_currentXIndex != m_originXIndex) {
             buildXYAxis(m_currentCursor);
@@ -179,10 +187,9 @@ public class TreeCursor {
         }
 
         m_currentCursor = m_yAxis.get(m_currentYIndex);
-        return m_currentCursor;
     }
 
-    public NodeItem moveDown()
+    void moveDown()
     {
         if (m_xAxis == null || m_currentXIndex != m_originXIndex) {
             buildXYAxis(m_currentCursor);
@@ -193,6 +200,84 @@ public class TreeCursor {
         }
 
         m_currentCursor = m_yAxis.get(m_currentYIndex);
-        return m_currentCursor;
+    }
+
+    public void hold() {
+        stopCursorTimer();
+    }
+
+    @Override
+    public void nodeItemEntered(NodeItem item, MouseEvent e) {
+        startCursorTimer(item);
+    }
+
+    @Override
+    public void nodeItemExited(NodeItem item, MouseEvent e) {
+        stopCursorTimer();
+    }
+
+    @Override
+    public void nodeItemPressed(NodeItem item, MouseEvent e) {
+        stopCursorTimer();
+
+        if (item != m_currentCursor) {
+            setCursorNodeItem(item);
+            m_mindView.renderTree();
+        }
+    }
+
+
+    private Timer m_cursorTimer;
+
+    private void startCursorTimer(final NodeItem nodeItem)
+    {
+        m_cursorTimer = new Timer(500, new ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent actionEvent) {
+                setCursorNodeItem(nodeItem);
+            }
+        });
+        m_cursorTimer.setRepeats(false);
+        m_cursorTimer.setCoalesce(true);
+        m_cursorTimer.start();
+    }
+
+    private void stopCursorTimer()
+    {
+        if (m_cursorTimer != null) {
+            m_cursorTimer.stop();
+            m_cursorTimer = null;
+        }
+    }
+
+    public void nodeItemKeyPressed(NodeItem item, KeyEvent e) {
+        //一旦有按键先停止定时器
+        stopCursorTimer();
+
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_UP:
+            case KeyEvent.VK_KP_UP:
+                moveUp();
+                m_mindView.renderTree();
+                break;
+
+            case KeyEvent.VK_DOWN:
+            case KeyEvent.VK_KP_DOWN:
+                moveDown();
+                m_mindView.renderTree();
+                break;
+
+            case KeyEvent.VK_LEFT:
+            case KeyEvent.VK_KP_LEFT:
+                moveLeft();
+                m_mindView.renderTree();
+                break;
+
+            case KeyEvent.VK_RIGHT:
+            case KeyEvent.VK_KP_RIGHT:
+                moveRight();
+                m_mindView.renderTree();
+                break;
+        }
+
     }
 }

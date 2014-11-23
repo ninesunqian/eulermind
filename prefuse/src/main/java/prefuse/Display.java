@@ -1,15 +1,6 @@
 package prefuse;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsEnvironment;
-import java.awt.Image;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -29,11 +20,7 @@ import java.util.Iterator;
 import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
-import javax.swing.JComponent;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.JToolTip;
-import javax.swing.KeyStroke;
+import javax.swing.*;
 import javax.swing.text.JTextComponent;
 
 import prefuse.activity.Activity;
@@ -149,10 +136,12 @@ public class Display extends JComponent {
     
     // text editing variables
     private JTextComponent m_editor;
+    private JDialog m_editorContainer;
+
     private boolean        m_editing;
     private VisualItem     m_editItem;
     private String         m_editAttribute;
-    
+
     /**
      * Creates a new Display instance. You will need to associate this
      * Display with a {@link Visualization} for it to display anything.
@@ -202,9 +191,7 @@ public class Display extends JComponent {
         m_editing = false;
         m_editor = new JTextField();
         m_editor.setBorder(null);
-        m_editor.setVisible(false);
-        this.add(m_editor);
-        
+
         // register input event capturer
         InputEventCapturer iec = new InputEventCapturer();
         addMouseListener(iec);
@@ -2115,15 +2102,36 @@ public class Display extends JComponent {
      */
     public void editText(String txt, Rectangle r) {
         if ( m_editing ) { stopEditing(); }
+
+        if (m_editorContainer == null) {
+            JFrame root = (JFrame)SwingUtilities.getRoot(this);
+            m_editorContainer = new JDialog(root, true);
+            m_editorContainer.setUndecorated(true);
+            m_editorContainer.add(m_editor);
+        }
+
+        Point leftTop = r.getLocation();
+        Point rightBottom = new Point(leftTop.x + (int)r.getWidth(), leftTop.y + (int)r.getHeight());
+        SwingUtilities.convertPointToScreen(leftTop, this);
+        SwingUtilities.convertPointToScreen(rightBottom, this);
+
+        m_editorContainer.setLocation(leftTop);
+        m_editorContainer.setSize(rightBottom.x - leftTop.x, rightBottom.y - leftTop.y);
+        s_logger.info("display editor container {} {}", leftTop, rightBottom);
+
+        m_editor.setSize(rightBottom.x - leftTop.x, rightBottom.y - leftTop.y);
+        s_logger.info("display editor ", m_editor.getBounds());
+
         m_editing = true;
-        m_editor.setBounds(r.x,r.y,r.width,r.height);
+
         if (txt != null) {
             m_editor.setText(txt);
             m_editor.setCaretPosition(txt.length());
         }
 
-        m_editor.setVisible(true);
         m_editor.requestFocus();
+
+        m_editorContainer.setVisible(true);
     }
     
     /**
@@ -2133,7 +2141,8 @@ public class Display extends JComponent {
      * the item is updated with the edited text.
      */
     public void stopEditing2(boolean confirm) {
-        m_editor.setVisible(false);
+        m_editorContainer.setVisible(false);
+
         if ( m_editItem != null ) {
             String txt = m_editor.getText();
             if (confirm) {
@@ -2142,9 +2151,10 @@ public class Display extends JComponent {
 
             m_editItem = null;
             m_editAttribute = null;
-            m_editor.setBackground(null);
-            m_editor.setForeground(null);
+            //m_editor.setBackground(null);
+            //m_editor.setForeground(null);
         }
+
         m_editing = false;
         requestFocus();
     }

@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
  * Time: 下午6:52
  * To change this template use File | Settings | File Templates.
  */
-public abstract class NodeDndControl extends ControlAdapter {
+public abstract class NodeControl extends ControlAdapter {
 
     Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
@@ -40,7 +40,7 @@ public abstract class NodeDndControl extends ControlAdapter {
     };
     DragAction m_dragAction;
 
-    NodeDndControl(Display display) {
+    NodeControl(Display display) {
         m_display = display;
         m_hitNode = null;
         m_hitPosition = HitPosition.OUTSIDE;
@@ -77,7 +77,7 @@ public abstract class NodeDndControl extends ControlAdapter {
     }
 
 
-    public void itemEntered(VisualItem item, MouseEvent e) {
+    final public void itemEntered(VisualItem item, MouseEvent e) {
         if (item instanceof NodeItem) {
             nodeItemEntered((NodeItem) item, e);
         }
@@ -87,7 +87,7 @@ public abstract class NodeDndControl extends ControlAdapter {
 
     }
 
-    public void itemExited(VisualItem item, MouseEvent e) {
+    final public void itemExited(VisualItem item, MouseEvent e) {
         if (item instanceof NodeItem) {
             nodeItemExited((NodeItem)item, e);
         }
@@ -97,7 +97,7 @@ public abstract class NodeDndControl extends ControlAdapter {
 
     }
 
-    public void itemPressed(VisualItem item, MouseEvent e) {
+    final public void itemPressed(VisualItem item, MouseEvent e) {
         if (item instanceof NodeItem) {
             nodeItemPressed((NodeItem) item, e);
         }
@@ -109,7 +109,7 @@ public abstract class NodeDndControl extends ControlAdapter {
 
     }
 
-    public void itemClicked(VisualItem item, MouseEvent e) {
+    final public void itemClicked(VisualItem item, MouseEvent e) {
         if (item instanceof NodeItem) {
             nodeItemClicked((NodeItem) item, e);
         }
@@ -244,7 +244,7 @@ public abstract class NodeDndControl extends ControlAdapter {
     }
 
 
-    public void itemKeyPressed(VisualItem item, KeyEvent e) {
+    final public void itemKeyPressed(VisualItem item, KeyEvent e) {
         if (item instanceof NodeItem) {
             nodeItemKeyPressed((NodeItem)item, e);
         }
@@ -254,7 +254,7 @@ public abstract class NodeDndControl extends ControlAdapter {
 
     }
 
-    public void itemKeyReleased(VisualItem item, KeyEvent e) {
+    final public void itemKeyReleased(VisualItem item, KeyEvent e) {
         if (item instanceof NodeItem) {
             nodeItemKeyReleased((NodeItem)item, e);
         }

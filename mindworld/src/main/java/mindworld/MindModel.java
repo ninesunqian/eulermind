@@ -154,12 +154,14 @@ public class MindModel {
         }
 
 
+        /*
         Importer importer =  new TikaPlainTextImporter(m_mindDb);
         try {
             importer.importFile(root.getId(), 0, "/home/wangxuguang/1.txt");
         } catch (Exception e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
+        */
 
     }
 

@@ -30,8 +30,8 @@ public class MindController extends UndoManager {
     MindModel m_mindModel;
     JTabbedPane m_tabbedPane;
 
-    ArrayList<NodeDndControl> m_externalMouseContollers =
-            new ArrayList<NodeDndControl>();
+    ArrayList<NodeControl> m_externalMouseContollers =
+            new ArrayList<NodeControl>();
 
     MindController(MindModel mindModel, JTabbedPane tabbedPane) {
         super();
@@ -39,7 +39,7 @@ public class MindController extends UndoManager {
         m_tabbedPane = tabbedPane;
     }
 
-    void addExternalMouseController(NodeDndControl robustNodeItemController)
+    void addExternalMouseController(NodeControl robustNodeItemController)
     {
         if (m_externalMouseContollers.contains(robustNodeItemController)) {
             return;
@@ -63,7 +63,7 @@ public class MindController extends UndoManager {
 
         m_tabbedPane.addTab(m_mindModel.getText(root), mindView);
 
-        for(NodeDndControl controller : m_externalMouseContollers) {
+        for(NodeControl controller : m_externalMouseContollers) {
             mindView.addControlListener(controller);
         }
 

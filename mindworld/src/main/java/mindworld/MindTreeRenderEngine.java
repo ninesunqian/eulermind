@@ -81,13 +81,13 @@ public class MindTreeRenderEngine {
         m_vis.alwaysRunAfter(sm_itemPositionActions, "repaint");
 	}
 	
-	public void run (final  Runnable runeAfterRePaint)
+	public void run(final  Runnable runAfterRePaint)
 	{
-        if (runeAfterRePaint != null) {
+        if (runAfterRePaint != null) {
             m_repaintAction.addActivityListener(new ActivityAdapter() {
                 @Override
                 public void activityFinished(Activity a) {
-                    runeAfterRePaint.run();
+                    runAfterRePaint.run();
                     m_repaintAction.removeActivityListener(this);
                 }
             });
@@ -349,7 +349,7 @@ public class MindTreeRenderEngine {
                 float colorEndX = x + width;
                 float colorEndY = y + width;
 
-                switch (m_mindView.m_mouseControl.m_hitPosition){
+                switch (m_mindView.m_dragControl.m_hitPosition){
                     case TOP:
                         m_logger.info("TOP gradient");
                         height /= 2;
