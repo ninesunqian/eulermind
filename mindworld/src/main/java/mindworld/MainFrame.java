@@ -12,6 +12,10 @@ public class MainFrame extends JFrame {
 
     MindModel m_mindModel;
     MindController m_mindController;
+    MindIcons m_mindIcons;
+    MindToolBar m_mindToolBar;
+    JTabbedPane m_tabbedPane = new JTabbedPane();
+
     public MainFrame(String dbUrl)
     {
         setLocationByPlatform(true);
@@ -24,65 +28,36 @@ public class MainFrame extends JFrame {
         KeyStroke keyStrokeCtrlUp = KeyStroke.getKeyStroke(KeyEvent.VK_UP, InputEvent.CTRL_DOWN_MASK);
         map.remove(keyStrokeCtrlUp);
 
-        final JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.setFocusable(false);
+        //m_tabbedPane.setFocusable(false);
 
-        m_mindController = new MindController(m_mindModel, tabbedPane);
+        m_tabbedPane = new JTabbedPane();
 
-        add(new MindToolBar(m_mindController), BorderLayout.NORTH);
+        m_mindController = new MindController(m_mindModel, m_tabbedPane);
+        add(m_tabbedPane, BorderLayout.CENTER);
 
-        m_mindController.findOrAddMindView(m_mindModel.m_mindDb.getRootId());
-        //tabbedPane.add("aaaa", new TextArea());
-        //mindController.findOrAddMindView(Mindmap.m_rootVertex1.getId());
-
-        tabbedPane.addChangeListener(new ChangeListener() {
-            public void stateChanged(ChangeEvent e) {
-                Component comp = tabbedPane.getSelectedComponent();
-                comp.requestFocusInWindow();
-            }
-        });
-
-        //switch tab0 using ALT_1
-        tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
-
-        add(tabbedPane, BorderLayout.CENTER);
+        m_mindIcons = new MindIcons(m_mindController);
+        add(m_mindIcons.getToolbar(), BorderLayout.WEST);
 
         /*
-        Component textArea = new TextArea();
-        textArea.addKeyListener(new KeyListener() {
-            @Override
-            public void keyTyped(KeyEvent keyEvent)
-            {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-
-            @Override
-            public void keyPressed(KeyEvent keyEvent)
-            {
-                s_logger.info("text area key " + keyEvent.toString());
-            }
-
-            @Override
-            public void keyReleased(KeyEvent keyEvent)
-            {
-                s_logger.info("text area key released " + keyEvent.toString());
-            }
-        });
-        tabbedPane.addTab("text", textArea);
+        Component comp = m_tabbedPane.getSelectedComponent();
+        comp.requestFocusInWindow();
         */
 
-        Component comp = tabbedPane.getSelectedComponent();
-        comp.requestFocusInWindow();
-
-
-        MindIcons mindIcons = new MindIcons(m_mindController);
-        add(mindIcons.getToolbar(), BorderLayout.WEST);
+        m_mindToolBar = new MindToolBar(m_mindController);
+        add(m_mindToolBar, BorderLayout.NORTH);
 
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 m_mindModel.m_mindDb.shutdown();
                 MainFrame.this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            }
+        });
+
+        addWindowFocusListener(new WindowAdapter() {
+            public void windowGainedFocus(WindowEvent e) {
+                Component comp = m_tabbedPane.getSelectedComponent();
+                comp.requestFocusInWindow();
             }
         });
     }

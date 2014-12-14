@@ -603,9 +603,11 @@ public class MindModel {
     //return new child node
 	public Object addChild(Node parent, int pos, String text)
     {
+        /*FIXME: 为什么这里会出错
         if (! childrenAttached(parent)) {
             attachChildren(parent);
         }
+        */
 
         Object parentDBId = getDBId(parent);
 		Vertex dbParent = m_mindDb.getVertex(parentDBId);

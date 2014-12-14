@@ -17,7 +17,7 @@ public class MindToolBar extends JToolBar {
     FontCombobox m_fontFamilyCombobox;
     FontCombobox m_fontSizeCombobox;
     FontCombobox m_colorCombobox;
-    MindCombobox m_comboxbox;
+    MindEditor m_searchInputer;
 
     MindToolBar(MindController mindController) {
         m_mindController = mindController;
@@ -34,9 +34,16 @@ public class MindToolBar extends JToolBar {
         add(m_fontSizeCombobox);
         add(m_colorCombobox);
 
-        m_comboxbox = new MindCombobox(m_mindController.m_mindModel.m_mindDb);
-        m_comboxbox.setEditable(true);
-        add(m_comboxbox);
+        m_searchInputer = new MindEditor(10, m_mindController.m_mindModel.m_mindDb);
+        m_searchInputer.setHasPromptList(true);
+        m_searchInputer.setMinimumSize(new Dimension(50, 14));
+        m_searchInputer.addMindEditorListener(new MindEditor.MindEditorListener() {
+            public void promptListOk(Object dbId, String text, Object parentDBId, String parentText)
+            {
+                m_mindController.findOrAddMindView(dbId);
+            }
+        });
+        add(m_searchInputer);
 
         m_fontFamilyCombobox.addActionListener(
                 new ActionListener() {

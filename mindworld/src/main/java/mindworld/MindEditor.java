@@ -3,6 +3,7 @@ package mindworld;
 import com.tinkerpop.blueprints.Vertex;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
@@ -38,6 +39,26 @@ public class MindEditor extends JTextField {
     private SwingWorker<Boolean, PromptedNode> m_queryWorker;
 
     MindEditor(MindDB mindDb) {
+        super();
+        init(mindDb);
+    }
+
+    MindEditor(int columns, MindDB mindDb)  {
+        super(columns);
+        init(mindDb);
+    }
+
+    MindEditor(String text, MindDB mindDb)  {
+        super(text);
+        init(mindDb);
+    }
+
+    MindEditor(String text, int columns, MindDB mindDb)  {
+        super(text, columns);
+        init(mindDb);
+    }
+
+    private void init(MindDB mindDb) {
         m_mindDb = mindDb;
         setHasPromptList(false);
 
@@ -48,7 +69,7 @@ public class MindEditor extends JTextField {
 
         m_promptList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         m_promptList.setLayoutOrientation(JList.VERTICAL);
-        m_promptList.setPrototypeCellValue("WWW");
+        m_promptList.setPrototypeCellValue("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
         m_promptList.setVisibleRowCount(10);
         m_promptList.setFocusable(false);
 
@@ -56,6 +77,7 @@ public class MindEditor extends JTextField {
         m_promptList.addMouseListener(m_prompterMouseListener);
 
         m_hasPromptList = false;
+
     }
 
     void setHasPromptList(boolean hasPromptList) {
@@ -67,42 +89,64 @@ public class MindEditor extends JTextField {
 
         if (m_hasPromptList) {
             getDocument().addDocumentListener(m_editTextListener);
-            addHierarchyListener(m_hierarchyListener);
+            //addHierarchyListener(m_hierarchyListener);
+            addFocusListener(m_focusListener);
         } else {
             getDocument().removeDocumentListener(m_editTextListener);
-            removeHierarchyListener(m_hierarchyListener);
+            //removeHierarchyListener(m_hierarchyListener);
+            removeFocusListener(m_focusListener);
         }
     }
 
-
-
-    HierarchyListener  m_hierarchyListener = new HierarchyListener() {
-        @Override
-        public void hierarchyChanged(HierarchyEvent e)
-        {
-            m_logger.warn ("TTTTTTTTTTTTTTTTTTTTTTTT: HierarchyEvent.SHOWING_CHANGED");
-            if ((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0) {
-                if (isShowing()) {
-                    showPrompter();
-                } else {
-                    hidePrompter();
-                }
+    protected FocusListener m_focusListener = new FocusAdapter() {
+        public void focusGained(FocusEvent e) {
+            if (e.isTemporary()) {
+                return;
             }
-            //To change body of implemented methods use File | Settings | File Templates.
+
+            showPrompter();
+
+            //清空list放在focusGained，而不是focusLost, 防止focusLost与list的点击事件的处理冲突
+            DefaultListModel listModel = (DefaultListModel) m_promptList.getModel();
+            listModel.clear();
+            m_logger.info("MindEditor: focusGained");
+        }
+
+        public void focusLost(FocusEvent e) {
+            if (e.isTemporary()) {
+                return;
+            }
+
+            hidePrompter();
+            stopQueryWorker();
+            m_logger.info("MindEditor: focusLost");
         }
     };
 
-    private DocumentListener m_editTextListener = new DocumentListener() {
-
-        private void restartQueryWorker()
-        {
-            if (m_queryWorker != null) {
-                m_queryWorker.cancel(true);
-            }
-
-            m_queryWorker = new QueryWorker();
-            m_queryWorker.execute();
+    private void stopQueryWorker()
+    {
+        if (m_queryWorker != null && ! m_queryWorker.isDone()) {
+            m_queryWorker.cancel(true);
         }
+        m_queryWorker = null;
+    }
+
+    private void startQueryWorker()
+    {
+        //SwingWorker 被设计为只执行一次。多次执行 SwingWorker 将不会调用两次 doInBackground 方法。
+        //所以每次要 new一个新对象
+        m_queryWorker = new QueryWorker();
+        m_queryWorker.execute();
+    }
+
+    private void restartQueryWorker()
+    {
+        stopQueryWorker();
+        startQueryWorker();
+    }
+
+
+    private DocumentListener m_editTextListener = new DocumentListener() {
 
         @Override
         public void insertUpdate(DocumentEvent documentEvent)
@@ -227,6 +271,7 @@ public class MindEditor extends JTextField {
                     PromptedNode selected = m_promptedNodes.get(selectedIndex);
                     firePromptListOk(selected.m_dbId, selected.m_text, selected.m_parentDBId, selected.m_parentText);
                 } else {
+                    m_logger.info("MindEditor: get enter key");
                     fireEditorOk(getText());
                 }
             }

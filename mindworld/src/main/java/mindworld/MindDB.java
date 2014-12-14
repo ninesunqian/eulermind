@@ -422,6 +422,8 @@ public class MindDB {
 
 	public EdgeVertex addChild (Vertex parent, int pos)
 	{
+        m_logger.info("MindDB insert at {}", pos);
+
 		Vertex child = addVertex(null);
         parent = getVertex(parent.getId());
         Edge edge = addEdge(parent, child, pos, EdgeType.INCLUDE);

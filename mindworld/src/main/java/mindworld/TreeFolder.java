@@ -74,6 +74,7 @@ public class TreeFolder extends NodeControl{
         }, 0);
 
         node.setExpanded(true);
+        m_mindView.renderTree();
     }
 
     public void foldNode(NodeItem node)
@@ -115,6 +116,7 @@ public class TreeFolder extends NodeControl{
 
 
         node.setExpanded(false);
+        m_mindView.renderTree();
     }
 
     public boolean isFolded(NodeItem node)
@@ -138,12 +140,14 @@ public class TreeFolder extends NodeControl{
 
     @Override
     public void nodeItemClicked(NodeItem item, MouseEvent e) {
+        m_logger.info("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
         toggleFoldNode(item);
     }
 
     @Override
     public void nodeItemKeyPressed(NodeItem item, KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+            m_logger.info("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
             toggleFoldNode(item);
         }
     }

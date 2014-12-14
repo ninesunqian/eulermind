@@ -1,5 +1,6 @@
 package mindworld;
 
+import java.awt.*;
 import java.awt.event.*;
 
 import java.util.ArrayList;
@@ -42,46 +43,59 @@ public class MindView extends Display {
     Tree m_tree;
 	MindTreeRenderEngine m_renderEngine;
 
-    private MindPrompter m_prompter;
+    MindEditor m_mindEditor;
 
-    MouseListener m_prompterMouseListener = new MouseAdapter() {
-        public void mouseClicked(MouseEvent mouseEvent) {
-            stopInserting(true, true);
+    boolean m_editorForInserting = false;
+
+    MindEditor.MindEditorListener m_mindEditorListener = new MindEditor.MindEditorListener() {
+        public void editorOk(String text) {
+            MindOperator operator;
+
+            if (m_editorForInserting) {  //inserting
+                operator = new AddingChild(m_mindModel, getCursorSourceNode().getParent(), getCursorSourceNode().getIndex(), text);
+                m_logger.info("MindView fire OK, insert at {}", getCursorSourceNode().getIndex());
+                removePlaceholderCursor();
+
+            } else { //editing
+                operator = new SettingProperty(m_mindModel, getCursorSourceNode(), MindModel.sm_textPropName, text);
+            }
+
+            m_mindController.does(operator);
+            hideEditor();
         }
+
+        public void promptListOk(Object dbId, String text, Object parentDBId, String parentText) {
+            MindOperator operator;
+
+            operator = new AddingReference(m_mindModel, getCursorSourceNode().getParent(),
+                    dbId, getCursorSourceNode().getIndex());
+            removePlaceholderCursor();
+
+            m_mindController.does(operator);
+            hideEditor();
+        }
+
+        public void cancel() {
+            if (m_editorForInserting) {
+                removePlaceholderCursor();
+            }
+
+            hideEditor();
+        }
+
     };
 
-    KeyListener m_editorKeyListener = new KeyAdapter() {
+    protected FocusListener m_mindEditorFocusListener = new FocusAdapter() {
 
-        @Override
-        public void keyPressed(KeyEvent e)
-        {
-            m_newOperator = null;
-
-            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-
-                //TODO
-                if (true) {  //inserting
-                    stopInserting(true, false);
-                } else { //editing
-                    stopEditing(true);
+            @Override
+            public void focusLost(FocusEvent e) {
+                /*
+                if (isEditing()) {
+                    String text = getTextEditor().getText();
+                    m_mindEditorListener.editorOk(text);
                 }
-
-                if (m_newOperator != null) {
-                    m_mindController.does(m_newOperator);
-                    m_newOperator = null;
-                }
-
+                */
             }
-
-            else if (e.getKeyCode() == KeyEvent.VK_ESCAPE)  {
-                //TODO
-                if (true) {  //inserting
-                    stopInserting(false, false);
-                } else { //editing
-                    stopEditing(false);
-                }
-            }
-        }
     };
 
     VisualTree m_visualTree;
@@ -106,15 +120,22 @@ public class MindView extends Display {
         m_cursor = new TreeCursor(this);
         m_folder = new TreeFolder(this);
 
-        getTextEditor().addKeyListener(m_editorKeyListener);
 		setMouseControlListener();
 		setKeyControlListener();
 
-        m_prompter = new MindPrompter(this, m_mindModel.m_mindDb);
-        m_prompter.addMouseListener(m_prompterMouseListener);
+        m_mindEditor = new MindEditor(m_mindModel.m_mindDb);
+        m_mindEditor.setHasPromptList(true);
+        m_mindEditor.addMindEditorListener(m_mindEditorListener);
 
-        //m_testTimer.setRepeats(true);
-        //m_testTimer.start();
+        m_mindEditor.setBorder(null);
+        m_mindEditor.setVisible(false);
+
+        setTextEditor(m_mindEditor);
+        this.requestFocusInWindow();
+
+        m_mindEditor.addFocusListener(m_mindEditorFocusListener);
+        this.setFocusCycleRoot(true);
+
 	}
 
     public NodeItem toVisual (Node node)
@@ -181,10 +202,10 @@ public class MindView extends Display {
         addControlListener(m_zoomControl);
         addControlListener(m_wheelZoomControl);
         addControlListener(m_panControl);
-        addControlListener(m_dragControl);
 
         addControlListener(m_cursor);
         addControlListener(m_dragControl);
+        addControlListener(m_folder);
 	}
 
     void setMouseControlEnabled(boolean enabled)
@@ -198,40 +219,26 @@ public class MindView extends Display {
 
     void startEditing()
     {
+        m_cursor.hold();
         showEditor(false);
-    }
-
-    void stopEditing(boolean confirm)
-    {
-        m_logger.warn("++++++++++++++ stopEditing");
-        if (confirm) {
-            String text = getTextEditor().getText();
-            SettingProperty settingProperty = new SettingProperty(m_mindModel,
-                    getCursorSourceNode(), MindModel.sm_textPropName, text);
-
-            settingProperty.does();
-            m_mindController.does(settingProperty);
-        }
-
-        hideEditor();
     }
 
     private void showEditor(boolean withPrompter)
     {
+
         if (isEditing())
             return;
 
+        m_mindEditor.setHasPromptList(withPrompter);
         editText(toVisual(getCursorSourceNode()), MindModel.sm_textPropName) ;
-
-        if (withPrompter) {
-            m_prompter.show(getTextEditor());
-        }
     }
 
     private void hideEditor()
     {
         super.stopEditing2(false);
-        m_prompter.hide();
+        m_addSiblingAction.setEnabled(true);
+        m_logger.info("enable key event");
+
     }
 
     public void setCursorNodeByPath(ArrayList<Integer> path)
@@ -241,6 +248,10 @@ public class MindView extends Display {
 
     void startInserting(boolean asChild)
     {
+        m_cursor.hold();
+        m_logger.info("disable key event");
+        m_addSiblingAction.setEnabled(false);
+
         NodeItem cursorItem = m_cursor.getCursorNodeItem();
         if (asChild) {
             if (m_folder.isFolded(cursorItem)) {
@@ -253,6 +264,9 @@ public class MindView extends Display {
                 return;
             }
         }
+
+
+        m_logger.info("startInserting---------------");
 
         addPlaceholder(asChild);
 
@@ -269,33 +283,6 @@ public class MindView extends Display {
                 });
             }
         });
-    }
-
-    void stopInserting(boolean confirm, boolean fromPrompter)
-    {
-        m_logger.warn("++++++++++++++ stopInserting");
-        if (confirm) {
-            MindOperator operator;
-
-            if (fromPrompter) {
-                int selectedIndex = m_prompter.getSelectedIndex();
-                MindPrompter.PromptedNode selected = m_prompter.getPromptedNode(selectedIndex);
-
-                operator = new AddingReference(m_mindModel, getCursorSourceNode().getParent(),
-                        selected.m_dbId, getCursorSourceNode().getIndex());
-            } else {
-                String text = getTextEditor().getText();
-                operator = new AddingChild(m_mindModel, getCursorSourceNode().getParent(), getCursorSourceNode().getIndex(), text);
-            }
-
-            removePlaceholder();
-            m_mindController.does(operator);
-
-        } else {
-            removePlaceholder();
-        }
-
-        hideEditor();
     }
 
     void importFile()
@@ -376,16 +363,17 @@ public class MindView extends Display {
 
         @Override
         public void NormalStateActionPerformed(ActionEvent e) {
-            if (canRemove())
-            {
-                removeCursor();
-            }
+        if (canRemove())
+        {
+            removeCursor();
+        }
         }
     };
 
     public AbstractAction m_addChildAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
+            m_editorForInserting = true;
             startInserting(true);
         }
     };
@@ -393,7 +381,16 @@ public class MindView extends Display {
     public AbstractAction m_editAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
+            m_editorForInserting = false;
             startEditing();
+        }
+    };
+
+    public AbstractAction m_addSiblingAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            m_editorForInserting = true;
+            startInserting(false);
         }
     };
 
@@ -417,13 +414,6 @@ public class MindView extends Display {
         }
     }
 
-    public AbstractAction m_addSiblingAction = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            startInserting(false);
-        }
-    };
-
     final static String sm_editActionName = "edit";
     final static String sm_undoActionName = "undo";
     final static String sm_redoActionName = "redo";
@@ -433,14 +423,7 @@ public class MindView extends Display {
     final static String sm_addSiblingActionName = "addSibling";
     final static String sm_removeActionName = "remove";
 
-
     public void setKeyControlListener() {
-        /*
-        ActionMap m_mindActionMap = new ActionMap();
-        ActionMap defaultActionMap = getActionMap();
-        m_mindActionMap.setParent(defaultActionMap);
-        setActionMap(m_mindActionMap);
-        */
         ActionMap m_mindActionMap = getActionMap();
 
         m_mindActionMap.put(sm_editActionName, m_editAction);
@@ -478,7 +461,9 @@ public class MindView extends Display {
 
         } else {
             newNode = m_tree.addChild(cursorNode.getParent(), cursorNode.getIndex() + 1);
+            m_logger.info("add sibling at {}", cursorNode.getIndex() + 1);
         }
+
 
         //NOTE: newNode.setString(MindModel.sm_textPropName, "") error
 
@@ -487,9 +472,12 @@ public class MindView extends Display {
         m_cursor.setCursorNodeItem(toVisual(newNode));
     }
 
-    private void removePlaceholder()
+    private void removePlaceholderCursor()
     {
         Node placeholderNode = getCursorSourceNode();
+        if (isPlaceholer(placeholderNode) == false) {
+            int i=0;
+        }
         assert(isPlaceholer(placeholderNode));
         assert(placeholderNode != m_tree.getRoot());
 
@@ -511,6 +499,9 @@ public class MindView extends Display {
 
     public Node getCursorSourceNode()
     {
+        if (m_cursor.getCursorNodeItem() == null) {
+            int debug = 1;
+        }
         return toSource(m_cursor.getCursorNodeItem());
     }
 
@@ -524,7 +515,5 @@ public class MindView extends Display {
 
         m_mindController.does(operator);
     }
-
-    MindOperator m_newOperator;
 
 } // end of class TreeMap

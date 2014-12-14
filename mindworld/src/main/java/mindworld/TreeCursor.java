@@ -58,6 +58,10 @@ public class TreeCursor extends NodeControl {
         m_originCursor = node;
         m_currentCursor = node;
 
+        if (node == null) {
+            int debug = 1;
+        }
+
         //build m_xAxis and m_yAxis by lazy mode.
         //so we can setCurserNode before layout tree
         m_xAxis = null;
@@ -70,6 +74,10 @@ public class TreeCursor extends NodeControl {
     {
         m_originCursor = originCursor;
         m_currentCursor = originCursor;
+
+        if (originCursor == null) {
+            int debug = 1;
+        }
 
         m_xAxis = new ArrayList<NodeItem>();
         m_yAxis = new ArrayList<NodeItem>();

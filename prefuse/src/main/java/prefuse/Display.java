@@ -2044,7 +2044,7 @@ public class Display extends JComponent {
     public void setTextEditor(JTextComponent tc) {
         this.remove(m_editor);
         m_editor = tc;
-        this.add(m_editor, 1);
+        this.add(m_editor, -1);
     }
     
     /**

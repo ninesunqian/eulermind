@@ -7,8 +7,12 @@ import prefuse.data.Tree;
 import prefuse.util.collections.IntIterator;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.undo.UndoManager;
 import javax.swing.undo.UndoableEdit;
+import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
@@ -37,6 +41,17 @@ public class MindController extends UndoManager {
         super();
         m_mindModel = mindModel;
         m_tabbedPane = tabbedPane;
+
+        m_tabbedPane.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent e) {
+                Component comp = m_tabbedPane.getSelectedComponent();
+                comp.requestFocusInWindow();
+            }
+        });
+        findOrAddMindView(m_mindModel.m_mindDb.getRootId());
+
+        //防止切换tab时，焦点被切换到工具栏
+        m_tabbedPane.setFocusCycleRoot(true);
     }
 
     void addExternalMouseController(NodeControl robustNodeItemController)
@@ -65,6 +80,15 @@ public class MindController extends UndoManager {
 
         for(NodeControl controller : m_externalMouseContollers) {
             mindView.addControlListener(controller);
+        }
+
+        int lastMindViewIndex = m_tabbedPane.getTabCount() - 1;
+        if (lastMindViewIndex < 9) {
+            m_tabbedPane.setMnemonicAt(lastMindViewIndex, KeyEvent.VK_1 + lastMindViewIndex);
+        } else if (lastMindViewIndex == 9) {
+            m_tabbedPane.setMnemonicAt(lastMindViewIndex, KeyEvent.VK_0);
+        } else {
+            //not setMnemonicAt
         }
 
         return  mindView;

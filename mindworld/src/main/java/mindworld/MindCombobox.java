@@ -5,6 +5,7 @@ import com.tinkerpop.blueprints.Vertex;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.plaf.basic.BasicComboBoxEditor;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -21,12 +22,13 @@ import org.slf4j.LoggerFactory;
  */
 public class MindCombobox extends JComboBox {
 
+    //FIXME: override BasicComboBoxEditor
     class MindComboBoxEditor implements ComboBoxEditor {
         final protected JTextField m_editor;
 
         public MindComboBoxEditor() {
             m_editor = new JTextField();
-            //TODO m_comboxbox->textchanged, call prompter
+            //TODO m_searchInputer->textchanged, call prompter
         }
 
         public Component getEditorComponent() {
@@ -74,6 +76,11 @@ public class MindCombobox extends JComboBox {
         }
     }
 
+    @Override
+    public Component add(Component comp)
+    {
+        return super.add(comp);    //To change body of overridden methods use File | Settings | File Templates.
+    }
 
     MindCombobox(MindDB mindDb)
     {
@@ -84,7 +91,6 @@ public class MindCombobox extends JComboBox {
         m_followedEditor.getDocument().addDocumentListener(m_editTextListener);
 
         m_mindDb = mindDb;
-
 
         //setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         this.setPrototypeDisplayValue("WWW");
@@ -183,4 +189,25 @@ public class MindCombobox extends JComboBox {
             }
         }
     };
+
+
+    private boolean layingOut = false;
+
+    public void doLayout(){
+        try{
+            layingOut = true;
+            super.doLayout();
+        }finally{
+            layingOut = false;
+        }
+    }
+
+    public Dimension getSize(){
+        Dimension dim = super.getSize();
+        if(!layingOut) {
+            //dim.width = Math.max(dim.width, 100);
+            dim.width = Math.max(dim.width, getPreferredSize().width);
+        }
+        return dim;
+    }
 }
