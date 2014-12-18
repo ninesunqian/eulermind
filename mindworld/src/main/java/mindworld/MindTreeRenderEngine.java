@@ -96,7 +96,6 @@ public class MindTreeRenderEngine {
         //add this line, to make the edge invalid, so prefuse will recompute the position,
         m_vis.invalidateAll();
 		m_vis.run(sm_layoutAction);
-
 	}
 	
     private Action makeItemStyleActions ()
@@ -215,7 +214,7 @@ public class MindTreeRenderEngine {
 
             if (node == cursorNode)
                 return m_cursorBackColor;
-            else if (!m_mindView.isPlaceholer(node) && m_mindView.m_mindModel.isSelfInDB(node, cursorNode))
+            else if (!m_mindView.isPlaceholder(node) && m_mindView.m_mindModel.isSelfInDB(node, cursorNode))
                 return m_shadowBackColor;
             else
                 return m_normalBackColor;
@@ -276,7 +275,7 @@ public class MindTreeRenderEngine {
         }
 
         public BasicStroke getStroke(VisualItem item) {
-            if (m_mindView.isPlaceholer(item)) {
+            if (m_mindView.isPlaceholder(item)) {
                 return StrokeLib.getStroke(1.0f);
             }
 

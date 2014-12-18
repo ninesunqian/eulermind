@@ -38,6 +38,8 @@ public class TreeCursor extends NodeControl {
     int m_currentXIndex;
     int m_currentYIndex;
 
+    boolean m_isHeld = false;
+
     final Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
     public TreeCursor(MindView mindView) {
@@ -210,12 +212,12 @@ public class TreeCursor extends NodeControl {
         m_currentCursor = m_yAxis.get(m_currentYIndex);
     }
 
-    public void hold() {
-        stopCursorTimer();
-    }
-
     @Override
     public void nodeItemEntered(NodeItem item, MouseEvent e) {
+        if (m_isHeld) {
+            return;
+        }
+
         startCursorTimer(item);
     }
 
@@ -227,6 +229,10 @@ public class TreeCursor extends NodeControl {
     @Override
     public void nodeItemPressed(NodeItem item, MouseEvent e) {
         stopCursorTimer();
+
+        if (m_isHeld) {
+            return;
+        }
 
         if (item != m_currentCursor) {
             setCursorNodeItem(item);
@@ -261,6 +267,10 @@ public class TreeCursor extends NodeControl {
         //一旦有按键先停止定时器
         stopCursorTimer();
 
+        if (m_isHeld) {
+            return;
+        }
+
         switch (e.getKeyCode()) {
             case KeyEvent.VK_UP:
             case KeyEvent.VK_KP_UP:
@@ -288,4 +298,15 @@ public class TreeCursor extends NodeControl {
         }
 
     }
+
+    public void hold() {
+        stopCursorTimer();
+        m_isHeld = true;
+        //TODO: m_isHold,  moveUp,  mouseMove is disabled
+    }
+
+    public void free() {
+        m_isHeld = true;
+    }
+
 }

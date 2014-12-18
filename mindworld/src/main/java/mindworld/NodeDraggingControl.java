@@ -19,6 +19,7 @@ import java.awt.dnd.DragSource;
 class NodeDraggingControl extends NodeControl {
 
     private MindView m_mindView;
+    private boolean m_dragging = false;
 
     NodeDraggingControl(MindView mindView) {
         super(mindView);
@@ -27,7 +28,10 @@ class NodeDraggingControl extends NodeControl {
 
     @Override
     public void dragStart(NodeItem item, DragAction dragAction) {
-        m_mindView.setCursor(dragAction == DragAction.LINK ? DragSource.DefaultLinkDrop : DragSource.DefaultMoveDrop);
+        if (m_mindView.beginChanging()) {
+            m_mindView.setCursor(dragAction == DragAction.LINK ? DragSource.DefaultLinkDrop : DragSource.DefaultMoveDrop);
+            m_dragging = true;
+        }
     }
 
     private Object[] getPossibleEdgeSource(Node droppedNode, NodeControl.HitPosition hitPosition)
@@ -115,6 +119,10 @@ class NodeDraggingControl extends NodeControl {
     public void dragHit(NodeItem item, NodeItem hitNode,
                         HitPosition hitPosition, DragAction dragAction)
     {
+        if (!m_dragging) {
+            return;
+        }
+
         setCursorShape(item, hitNode, hitPosition, dragAction);
         m_dragHitted = hitNode;
         m_mindView.renderTree();
@@ -123,6 +131,10 @@ class NodeDraggingControl extends NodeControl {
     @Override
     public void dragMiss(NodeItem item, NodeItem dropNode, DragAction dragAction)
     {
+        if (!m_dragging) {
+            return;
+        }
+
         setCursorShape(item, null, HitPosition.OUTSIDE, dragAction);
         m_dragHitted = null;
         m_mindView.renderTree();
@@ -183,23 +195,36 @@ class NodeDraggingControl extends NodeControl {
     @Override
     public void dragEnd(NodeItem draggedNode, NodeItem droppedNode, HitPosition hitPosition, DragAction dragAction)
     {
+        if (!m_dragging) {
+            return;
+        }
+
         m_logger.info("nodeItemDropped");
+        MindOperator operator = null;
 
         if (droppedNode != null) {
             m_logger.info(String.format("--- dragAction %s", dragAction.toString()));
             if (canDrop(draggedNode, droppedNode, hitPosition, dragAction)) {
-                MindOperator operator = getDragOperator(draggedNode, droppedNode, hitPosition, dragAction);
-
-                if (operator != null) {
-                    m_mindView.m_mindController.does(operator);
-                }
+                operator = getDragOperator(draggedNode, droppedNode, hitPosition, dragAction);
             }
         }
+
+        if (operator != null) {
+            m_mindView.m_mindController.does(operator);
+        } else {
+            m_mindView.renderTreeToEndChanging();
+        }
+
+        m_dragging = false;
     }
 
     @Override
     public void dragActionChanged(NodeItem draggedNode, NodeItem hitNode, HitPosition hitPosition, DragAction dragAction)
     {
+        if (!m_dragging) {
+            return;
+        }
+
         setCursorShape(draggedNode, hitNode, hitPosition, dragAction);
     }
 }

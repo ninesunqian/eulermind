@@ -71,7 +71,7 @@ public class MindController extends UndoManager {
             return mindView;
         }
 
-        mindView = new MindView(m_mindModel, this, rootDBId);
+        mindView = new MindKeyView(m_mindModel, this, rootDBId);
 
         m_mindViews.put(rootDBId, mindView);
         Node root = mindView.m_tree.getRoot();
@@ -186,7 +186,7 @@ public class MindController extends UndoManager {
                 }
             }
 
-            mindView.renderTree();
+            mindView.renderTreeToEndChanging();
         }
     }
 

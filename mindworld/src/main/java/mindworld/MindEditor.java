@@ -3,7 +3,6 @@ package mindworld;
 import com.tinkerpop.blueprints.Vertex;
 
 import javax.swing.*;
-import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
@@ -25,7 +24,7 @@ public class MindEditor extends JTextField {
 
     boolean m_hasPromptList;
 
-    Set<MindEditorListener> m_mindEditorListeners = new LinkedHashSet<MindEditorListener>();
+    MindEditorListener m_mindEditorListener;
 
     Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
@@ -306,25 +305,25 @@ public class MindEditor extends JTextField {
     }
 
 
-    void addMindEditorListener(MindEditorListener listener)
+    void setMindEditorListener(MindEditorListener listener)
     {
-        m_mindEditorListeners.add(listener);
+        m_mindEditorListener = listener;
     }
 
     void fireEditorOk(String text) {
-        for (MindEditorListener listener : m_mindEditorListeners) {
-            listener.editorOk(text);
+        if (m_mindEditorListener != null) {
+            m_mindEditorListener.editorOk(text);
         }
     }
 
     void fireCancel() {
-        for (MindEditorListener listener : m_mindEditorListeners) {
-            listener.cancel();
+        if (m_mindEditorListener != null) {
+            m_mindEditorListener.cancel();
         }
     }
     void firePromptListOk(Object dbId, String text, Object parentDBId, String parentText) {
-        for (MindEditorListener listener : m_mindEditorListeners) {
-            listener.promptListOk(dbId, text, parentDBId, parentText);
+        if (m_mindEditorListener != null) {
+            m_mindEditorListener.promptListOk(dbId, text, parentDBId, parentText);
         }
     }
 }

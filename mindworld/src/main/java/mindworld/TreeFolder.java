@@ -74,7 +74,6 @@ public class TreeFolder extends NodeControl{
         }, 0);
 
         node.setExpanded(true);
-        m_mindView.renderTree();
     }
 
     public void foldNode(NodeItem node)
@@ -116,7 +115,6 @@ public class TreeFolder extends NodeControl{
 
 
         node.setExpanded(false);
-        m_mindView.renderTree();
     }
 
     public boolean isFolded(NodeItem node)

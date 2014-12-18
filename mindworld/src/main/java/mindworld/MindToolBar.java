@@ -37,7 +37,7 @@ public class MindToolBar extends JToolBar {
         m_searchInputer = new MindEditor(10, m_mindController.m_mindModel.m_mindDb);
         m_searchInputer.setHasPromptList(true);
         m_searchInputer.setMinimumSize(new Dimension(50, 14));
-        m_searchInputer.addMindEditorListener(new MindEditor.MindEditorListener() {
+        m_searchInputer.setMindEditorListener(new MindEditor.MindEditorListener() {
             public void promptListOk(Object dbId, String text, Object parentDBId, String parentText)
             {
                 m_mindController.findOrAddMindView(dbId);
