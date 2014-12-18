@@ -216,6 +216,7 @@ class NodeDraggingControl extends NodeControl {
         }
 
         m_dragging = false;
+        m_mindView.setCursor(null);
     }
 
     @Override

@@ -277,6 +277,8 @@ public class MindView extends Display {
         if (m_isChanging) {
             return false;
         }
+
+        m_logger.info("beginChanging++++++++++++++++++++++");
         m_cursor.hold();
         setTransformEnabled(false);
         m_isChanging = true;
@@ -289,6 +291,8 @@ public class MindView extends Display {
         }
         m_cursor.free();
         setTransformEnabled(true);
+
+        m_logger.info("endChanging----------------------");
         m_isChanging = false;
     }
 
@@ -401,6 +405,11 @@ public class MindView extends Display {
     public boolean isPlaceholder(Tuple tuple)
     {
         return (m_mindModel.getDBId(tuple) == null);
+    }
+
+    public NodeItem getCursorNodeItem()
+    {
+        return m_cursor.getCursorNodeItem();
     }
 
     public Node getCursorSourceNode()

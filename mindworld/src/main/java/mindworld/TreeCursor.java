@@ -306,7 +306,7 @@ public class TreeCursor extends NodeControl {
     }
 
     public void free() {
-        m_isHeld = true;
+        m_isHeld = false;
     }
 
 }

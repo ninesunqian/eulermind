@@ -128,24 +128,32 @@ public class TreeFolder extends NodeControl{
 
     public void toggleFoldNode(NodeItem node)
     {
+        if (m_mindView.getCursorNodeItem() != node) {
+            return;
+        }
+
+        if (! m_mindView.beginChanging()) {
+            return;
+        }
+
         if (isFolded(node)) {
             unfoldNode(node);
         }
         else {
             foldNode(node);
         }
+
+        m_mindView.renderTreeToEndChanging();
     }
 
     @Override
     public void nodeItemClicked(NodeItem item, MouseEvent e) {
-        m_logger.info("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
         toggleFoldNode(item);
     }
 
     @Override
     public void nodeItemKeyPressed(NodeItem item, KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            m_logger.info("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
             toggleFoldNode(item);
         }
     }

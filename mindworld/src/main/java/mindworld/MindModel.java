@@ -734,7 +734,9 @@ public class MindModel {
                         outEdgeInnerIds.add(newPos, edgeInnerId);
 
                         s_logger.info("after change: outEdgeInnerIds:{}", outEdgeInnerIds);
-                        tree.changeChildIndex(parent, oldPos, newPos);
+                        if (parent.getChildCount() > 0) {
+                            tree.changeChildIndex(parent, oldPos, newPos);
+                        }
                         verifyNode(parent, false);
                     }
                 });

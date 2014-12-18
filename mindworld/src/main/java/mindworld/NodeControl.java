@@ -217,8 +217,6 @@ public abstract class NodeControl extends ControlAdapter {
             return;
         }
 
-        m_logger.info("itemReleased : " + item.getString(MindModel.sm_textPropName));
-
         NodeItem draggedNode = (NodeItem)item;
         nodeItemReleased(draggedNode, e);
 
