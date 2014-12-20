@@ -21,6 +21,9 @@ public class HandoveringReference extends MindOperator{
     ArrayList<Integer> m_newReferrerPath;
     int m_newPos;
 
+    ArrayList<Integer> m_oldReferrerPathAfterDoing;
+    ArrayList<Integer> m_newReferrerPathAfterDoing;
+
     public HandoveringReference(MindModel mindModel, Node formerCursor, Node newReferrer, int newPos)
     {
         super(mindModel, formerCursor);
@@ -30,29 +33,38 @@ public class HandoveringReference extends MindOperator{
         m_logger.info("arg: {}: {}", "newReferrer", newReferrer);
         m_logger.info("arg: {}: {}", "newPos", newPos);
 
-
-        m_oldReferrerPath = m_mindModel.getNodePath(formerCursor.getParent());
+        m_oldReferrerPath = getNodePath(formerCursor.getParent());
         m_oldPos = formerCursor.getIndex();
 
-        m_newReferrerPath = m_mindModel.getNodePath(newReferrer);
+        m_newReferrerPath = getNodePath(newReferrer);
         m_newPos = newPos;
 
-        m_laterCursorPath = (ArrayList<Integer>)m_newReferrerPath.clone();
-        m_laterCursorPath.add(m_newPos);
         m_logger.info("ret:");
     }
 
     public void does()
     {
         m_logger.info("arg:");
+
+        Node oldReferrerNode = getNodeByPath(m_oldReferrerPath);
+        Node newReferrerNode = getNodeByPath(m_newReferrerPath);
+
         handoverReferent(m_oldReferrerPath, m_oldPos, m_newReferrerPath, m_newPos);
+
+        m_oldReferrerPathAfterDoing = getNodePath(oldReferrerNode);
+        m_newReferrerPathAfterDoing = getNodePath(newReferrerNode);
+
+        m_laterCursorPath = (ArrayList) m_newReferrerPathAfterDoing.clone();
+        m_laterCursorPath.add(m_newPos);
         m_logger.info("ret:");
     }
 
     public void undo()
     {
         m_logger.info("arg:");
-        handoverReferent(m_newReferrerPath, m_newPos, m_oldReferrerPath, m_oldPos);
+
+        handoverReferent(m_newReferrerPathAfterDoing, m_newPos,
+                m_oldReferrerPathAfterDoing, m_oldPos);
         m_logger.info("ret:");
     }
 
@@ -61,11 +73,6 @@ public class HandoveringReference extends MindOperator{
         m_logger.info("arg: ");
         handoverReferent(m_oldReferrerPath, m_oldPos, m_newReferrerPath, m_newPos);
         m_logger.info("ret: ");
-    }
-
-    static public boolean canDo()
-    {
-        return false;
     }
 
     private void handoverReferent(ArrayList<Integer> oldReferrerPath, int oldPos, ArrayList<Integer> newReferrerPath, int newPos)

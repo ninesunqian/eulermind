@@ -22,6 +22,8 @@ public class HandoveringChild extends MindOperator{
     ArrayList<Integer> m_newParentPath;
     int m_newPos;
 
+    ArrayList<Integer> m_oldParentPathAfterDoing;
+    ArrayList<Integer> m_newParentPathAfterDoing;
     public HandoveringChild(MindModel mindModel, Node formerCursor, Node newParent, int newPos)
     {
         super(mindModel, formerCursor);
@@ -32,10 +34,10 @@ public class HandoveringChild extends MindOperator{
         m_logger.info("arg: {}: {}", "newPos", newPos);
 
 
-        m_oldParentPath = m_mindModel.getNodePath(formerCursor.getParent());
+        m_oldParentPath = getNodePath(formerCursor.getParent());
         m_oldPos = formerCursor.getIndex();
 
-        m_newParentPath = m_mindModel.getNodePath(newParent);
+        m_newParentPath = getNodePath(newParent);
         m_newPos = newPos;
 
         m_laterCursorPath = (ArrayList<Integer>)m_newParentPath.clone();
@@ -46,14 +48,25 @@ public class HandoveringChild extends MindOperator{
     public void does()
     {
         m_logger.info("arg:");
+
+        Node oldParentNode = getNodeByPath(m_oldParentPath);
+        Node newParentNode = getNodeByPath(m_newParentPath);
+
         handoverChild(m_oldParentPath, m_oldPos, m_newParentPath, m_newPos);
+
+        m_oldParentPathAfterDoing = getNodePath(oldParentNode);
+        m_newParentPathAfterDoing = getNodePath(newParentNode);
+
+        m_laterCursorPath = (ArrayList) m_newParentPathAfterDoing.clone();
+        m_laterCursorPath.add(m_newPos);
         m_logger.info("ret:");
     }
 
     public void undo()
     {
         m_logger.info("arg:");
-        handoverChild(m_newParentPath, m_newPos, m_oldParentPath, m_oldPos);
+        handoverChild(m_newParentPathAfterDoing, m_newPos,
+                m_oldParentPathAfterDoing, m_oldPos);
         m_logger.info("ret:");
     }
 

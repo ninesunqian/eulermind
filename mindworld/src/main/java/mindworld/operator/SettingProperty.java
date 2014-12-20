@@ -33,6 +33,6 @@ public class SettingProperty extends MindOperator {
 
     public void redo ()
     {
-        m_mindModel.setProperty(m_nodeDBId, m_property, m_newValue);
+        does();
     }
 }

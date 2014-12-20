@@ -976,9 +976,11 @@ public class MindDB {
 
         verifyCachedInheritPathValid(parentId, root.getId());
 
-        for (RefLinkInfo refLinkInfo : refLinkInfos) {
-            assert root.getId().equals(refLinkInfo.m_referent) ||
-                    isVertexIdDescendant(root.getId(), refLinkInfo.m_referent);
+        if (refLinkInfos != null) {
+            for (RefLinkInfo refLinkInfo : refLinkInfos) {
+                assert root.getId().equals(refLinkInfo.m_referent) ||
+                        isVertexIdDescendant(root.getId(), refLinkInfo.m_referent);
+            }
         }
 
         verifyOutEdges(root);

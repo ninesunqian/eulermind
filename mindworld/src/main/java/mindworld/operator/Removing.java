@@ -39,7 +39,6 @@ public class Removing extends MindOperator {
 
     public void undo()
     {
-
         ArrayList parentPath = (ArrayList)m_formerCursorPath.clone();
         parentPath.remove(parentPath.size() - 1);
 
@@ -126,19 +125,19 @@ public class Removing extends MindOperator {
         parent = topSameDBNode(tree, parent);
         formerCursor = parent.getChild(m_siblingPos);
 
-        m_formerCursorPath = m_mindModel.getNodePath(formerCursor);
+        m_formerCursorPath = getNodePath(formerCursor);
 
         if (m_isRefRelation) {
             if (parent.getChildCount()  == 1) {
-                m_laterCursorPath = m_mindModel.getNodePath(parent);
+                m_laterCursorPath = getNodePath(parent);
 
             } else {
                 if (formerCursor.getIndex() == parent.getChildCount() - 1) {
-                    m_laterCursorPath = m_mindModel.getNodePath(formerCursor);
+                    m_laterCursorPath = getNodePath(formerCursor);
                     m_laterCursorPath.set(0, formerCursor.getIndex() - 1);
                 } else {
                     //formerCursor's older sibling move into this position
-                    m_laterCursorPath = m_mindModel.getNodePath(formerCursor);
+                    m_laterCursorPath = getNodePath(formerCursor);
                 }
             }
 
@@ -147,7 +146,7 @@ public class Removing extends MindOperator {
             Node nearestSiblingWithDiffDBId =  getNearestSiblingWithDiffDBId(formerCursor);
 
             if (nearestSiblingWithDiffDBId == null) {
-                m_laterCursorPath = m_mindModel.getNodePath(parent);
+                m_laterCursorPath = getNodePath(parent);
 
             } else {
                 ArrayList<Node> siblingsWithDiffDBId = new ArrayList<Node>();
@@ -159,7 +158,7 @@ public class Removing extends MindOperator {
                     }
                 }
 
-                m_laterCursorPath = m_mindModel.getNodePath(formerCursor);
+                m_laterCursorPath = getNodePath(formerCursor);
                 m_laterCursorPath.set(m_laterCursorPath.size()-1, siblingsWithDiffDBId.indexOf(nearestSiblingWithDiffDBId));
             }
         }

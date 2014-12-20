@@ -39,6 +39,10 @@ public abstract class MindOperator extends AbstractUndoableEdit {
         return node;
     }
 
+    protected ArrayList<Integer> getNodePath(Node node) {
+        return m_mindModel.getNodePath(node);
+    }
+
     public boolean canRedo() {
         return true;
     }

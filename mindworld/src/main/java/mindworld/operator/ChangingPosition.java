@@ -17,8 +17,10 @@ import java.util.ArrayList;
 public class ChangingPosition extends MindOperator{
 
     int m_oldPos;
-    ArrayList<Integer> m_parentPath;
     int m_newPos;
+    ArrayList<Integer> m_parentPath;
+
+    ArrayList<Integer> m_parentPathAfterDoing;
 
     public ChangingPosition(MindModel mindModel, Node formerCursor, int newPos)
     {
@@ -28,26 +30,36 @@ public class ChangingPosition extends MindOperator{
         m_logger.info("arg: {}: {}", "formerCursor", formerCursor);
         m_logger.info("arg: {}: {}", "newPos", newPos);
 
-        m_parentPath = m_mindModel.getNodePath(formerCursor.getParent());
         m_oldPos = formerCursor.getIndex();
         m_newPos = newPos;
 
-        m_laterCursorPath = (ArrayList<Integer>) m_parentPath.clone();
-        m_laterCursorPath.add(m_newPos);
+        m_parentPath = getNodePath(formerCursor.getParent());
+
         m_logger.info("ret:");
     }
 
     public void does()
     {
         m_logger.info("arg:");
+
+        Node parent = getNodeByPath(m_parentPath);
         changePosition(m_parentPath, m_oldPos, m_newPos);
+
+        m_parentPathAfterDoing = getNodePath(parent);
+
+        //在引用父节点的情况下， 在显示树中改变一个节点的位置，有可能改变父节点，以及父节点的父节点的位置..
+        //所以要重新获取一下路径
+        m_laterCursorPath = (ArrayList)m_parentPathAfterDoing.clone();
+        m_laterCursorPath.add(m_newPos);
         m_logger.info("ret:");
     }
 
     public void undo()
     {
         m_logger.info("arg:");
-        changePosition(m_parentPath, m_newPos, m_oldPos);
+
+        changePosition(m_parentPathAfterDoing, m_newPos, m_oldPos);
+
         m_logger.info("ret:");
     }
 
@@ -68,9 +80,7 @@ public class ChangingPosition extends MindOperator{
             return;
         }
 
-        Tree tree = m_mindModel.findTree(m_rootDBId);
-        Node parentNode = m_mindModel.getNodeByPath(tree, parentPath);
-
+        Node parentNode = getNodeByPath(parentPath);
         m_mindModel.changeChildPos(m_mindModel.getDBId(parentNode), oldPos, newPos);
 
         m_logger.info("ret:");
