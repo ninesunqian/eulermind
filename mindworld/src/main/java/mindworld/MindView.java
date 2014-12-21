@@ -482,4 +482,22 @@ public class MindView extends Display {
         showEditor();
     }
 
+    public void cursorMoveUp() {
+        m_cursor.moveUp();
+    }
+
+    public void cursorMoveDown() {
+        m_cursor.moveDown();
+    }
+
+    public void cursorMoveLeft() {
+        m_cursor.moveLeft();
+    }
+    public void cursorMoveRight() {
+        m_cursor.moveRight();
+    }
+
+    public void toggleFoldNode() {
+        m_folder.toggleFoldNode(m_cursor.getCursorNodeItem());
+    }
 } // end of class TreeMap

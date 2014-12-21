@@ -77,10 +77,6 @@ public class TreeCursor extends NodeControl {
         m_originCursor = originCursor;
         m_currentCursor = originCursor;
 
-        if (originCursor == null) {
-            int debug = 1;
-        }
-
         m_xAxis = new ArrayList<NodeItem>();
         m_yAxis = new ArrayList<NodeItem>();
 
@@ -95,22 +91,22 @@ public class TreeCursor extends NodeControl {
         m_xAxis.add(0, root);
 
         //add righters
-        NodeItem righter = m_originCursor;
-        while (righter.getChildCount() > 0 && righter.isExpanded() == true) {
-            Iterator children = righter.children();
-            NodeItem right = null;
+        NodeItem righterParent = m_originCursor;
+        while (righterParent.getChildCount() > 0 && righterParent.isExpanded() == true) {
+            Iterator children = righterParent.children();
+            NodeItem righter = null;
 
             while (children.hasNext()) {
                 NodeItem child = (NodeItem)children.next();
 
-                if (right == null ||
-                        Math.abs(child.getY() - righter.getY()) < Math.abs(right.getY() - righter.getY())) {
-                    right = child;
+                if (righter == null ||
+                        Math.abs(child.getY() - righterParent.getY()) < Math.abs(righter.getY() - righterParent.getY())) {
+                    righter = child;
                 }
             }
-            m_xAxis.add(right);
+            m_xAxis.add(righter);
 
-            righter = right;
+            righterParent = righter;
         }
 
         //fill uper and downer
@@ -163,53 +159,94 @@ public class TreeCursor extends NodeControl {
 
     void moveLeft()
     {
+        stopCursorTimer();
+
+        if (m_isHeld) {
+            return;
+        }
+
         if (m_xAxis == null || m_currentYIndex != m_originYIndex) {
             buildXYAxis(m_currentCursor);
         }
 
         if (m_currentXIndex > 0) {
             m_currentXIndex--;
-        }
 
-        m_currentCursor = m_xAxis.get(m_currentXIndex);
+            m_currentCursor = m_xAxis.get(m_currentXIndex);
+            m_mindView.renderTree();
+        }
     }
 
     void moveRight()
     {
+        stopCursorTimer();
+
+        if (m_isHeld) {
+            return;
+        }
+
         if (m_xAxis == null || m_currentYIndex != m_originYIndex) {
             buildXYAxis(m_currentCursor);
         }
 
         if (m_currentXIndex < m_xAxis.size() - 1) {
-            m_currentXIndex++;
+            //如果该节点闭合了，焦点就不能右移动了。
+            if (!m_currentCursor.isExpanded()) {
+                return;
+            }
+
+        } else if (m_currentXIndex == m_xAxis.size() - 1) {
+            //如果最右边的节点张开了，重新计算
+            if (m_currentCursor.getChildCount() > 0 && m_currentCursor.isExpanded()) {
+                buildXYAxis(m_originCursor);
+            }
         }
 
-        m_currentCursor = m_xAxis.get(m_currentXIndex);
+        if (m_currentXIndex < m_xAxis.size() - 1) {
+            m_currentXIndex++;
+
+            m_currentCursor = m_xAxis.get(m_currentXIndex);
+            m_mindView.renderTree();
+        }
     }
 
     void moveUp()
     {
+        stopCursorTimer();
+
+        if (m_isHeld) {
+            return;
+        }
+
         if (m_xAxis == null || m_currentXIndex != m_originXIndex) {
             buildXYAxis(m_currentCursor);
         }
         if (m_currentYIndex > 0) {
             m_currentYIndex--;
-        }
 
-        m_currentCursor = m_yAxis.get(m_currentYIndex);
+            m_currentCursor = m_yAxis.get(m_currentYIndex);
+            m_mindView.renderTree();
+        }
     }
 
     void moveDown()
     {
+        stopCursorTimer();
+
+        if (m_isHeld) {
+            return;
+        }
+
         if (m_xAxis == null || m_currentXIndex != m_originXIndex) {
             buildXYAxis(m_currentCursor);
         }
 
         if (m_currentYIndex < m_yAxis.size() - 1) {
             m_currentYIndex++;
-        }
 
-        m_currentCursor = m_yAxis.get(m_currentYIndex);
+            m_currentCursor = m_yAxis.get(m_currentYIndex);
+            m_mindView.renderTree();
+        }
     }
 
     @Override
@@ -240,7 +277,6 @@ public class TreeCursor extends NodeControl {
         }
     }
 
-
     private Timer m_cursorTimer;
 
     private void startCursorTimer(final NodeItem nodeItem)
@@ -263,46 +299,15 @@ public class TreeCursor extends NodeControl {
         }
     }
 
-    public void nodeItemKeyPressed(NodeItem item, KeyEvent e) {
-        //一旦有按键先停止定时器
-        stopCursorTimer();
-
-        if (m_isHeld) {
-            return;
-        }
-
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_UP:
-            case KeyEvent.VK_KP_UP:
-                moveUp();
-                m_mindView.renderTree();
-                break;
-
-            case KeyEvent.VK_DOWN:
-            case KeyEvent.VK_KP_DOWN:
-                moveDown();
-                m_mindView.renderTree();
-                break;
-
-            case KeyEvent.VK_LEFT:
-            case KeyEvent.VK_KP_LEFT:
-                moveLeft();
-                m_mindView.renderTree();
-                break;
-
-            case KeyEvent.VK_RIGHT:
-            case KeyEvent.VK_KP_RIGHT:
-                moveRight();
-                m_mindView.renderTree();
-                break;
-        }
-
+    @Override
+    public void nodeItemKeyPressed(NodeItem nodeItem, KeyEvent e) {
+        keyPressed(e);
     }
+
 
     public void hold() {
         stopCursorTimer();
         m_isHeld = true;
-        //TODO: m_isHold,  moveUp,  mouseMove is disabled
     }
 
     public void free() {
