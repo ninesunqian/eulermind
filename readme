@@ -1,4 +1,3 @@
  mvn install -Dmaven.test.skip=true  安装parent 和 prefuse
  可能还需要到 prefuse内 再执行一次
-cd excitedmind; mvn generate-sources 编译smc
 mvn compile
