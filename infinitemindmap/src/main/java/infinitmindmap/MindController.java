@@ -144,7 +144,6 @@ public class MindController extends UndoManager {
     String getTreeNodeRows(Tree tree)
     {
         Table nodeTable = tree.getNodeTable();
-
         IntIterator allRows = nodeTable.rows();
 
         String str = "[";

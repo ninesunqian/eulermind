@@ -49,7 +49,7 @@ public class TestMindDB extends TestCase {
     }
 
     public void setUp() {
-        m_dbPath = System.getProperty("java.io.tmpdir") + File.separator + "mindworld_test";
+        m_dbPath = System.getProperty("java.io.tmpdir") + File.separator + "infinitemindmap_test";
         m_mindDB = new MindDB(m_dbPath);
 
         m_root = m_mindDB.getVertex(m_mindDB.getRootId());
