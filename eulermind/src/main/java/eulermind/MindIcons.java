@@ -56,8 +56,6 @@ public class MindIcons {
 		m_iconScrollPane.getVerticalScrollBar().setUnitIncrement(100);
         m_iconScrollPane.setPreferredSize(new Dimension(50, 0));
 
-
-
         String icon_files[] = sm_iconsList.split(";");
         for (String icon_file : icon_files){
             addIcon(icon_file + ".png");

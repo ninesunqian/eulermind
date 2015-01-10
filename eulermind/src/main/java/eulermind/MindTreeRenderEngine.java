@@ -70,11 +70,7 @@ public class MindTreeRenderEngine {
 
     private RepaintAction m_repaintAction = new RepaintAction();
 
-    private int m_cursorBackColor = ColorLib.rgb(210, 210, 210);
-    private int m_shadowBackColor = ColorLib.rgb(240, 240, 240);
-    private int m_normalBackColor = ColorLib.rgb(255, 255, 255);
-
-	public MindTreeRenderEngine(MindView mindView, String treeGroupName) {
+    public MindTreeRenderEngine(MindView mindView, String treeGroupName) {
         //m_logger.setLevel(Level.OFF);
 		m_mindView = mindView;
 		m_vis = m_mindView.getVisualization();
@@ -235,11 +231,11 @@ public class MindTreeRenderEngine {
             Node cursorNode = m_mindView.getCursorSourceNode();
 
             if (node == cursorNode)
-                return m_cursorBackColor;
+                return Style.m_cursorBackColor;
             else if (!m_mindView.isPlaceholder(node) && m_mindView.m_mindModel.isSelfInDB(node, cursorNode))
-                return m_shadowBackColor;
+                return Style.m_shadowBackColor;
             else
-                return m_normalBackColor;
+                return Style.getNodeColor(node);
         }
     }
     
@@ -250,12 +246,7 @@ public class MindTreeRenderEngine {
         }
 
         public int getColor(VisualItem item) {
-            Integer color = (Integer)item.get(MindModel.sm_textColorPropName);
-
-            if (color == null)
-                return ColorLib.rgb(0, 0, 0);
-            else
-                return color;
+            return Style.getTextColor((NodeItem) item);
         }
     }
     
@@ -266,18 +257,7 @@ public class MindTreeRenderEngine {
         }
 
         public Font getFont(VisualItem item) {
-            String family = (String)item.get(MindModel.sm_fontFamilyPropName);
-            Integer size = (Integer)item.get(MindModel.sm_fontSizePropName);
-
-            if (family == null) {
-                family = "SansSerif";
-            }
-
-            if (size == null) {
-                size = 16;
-            }
-            //String family = (family)item.get(MindModel.sm_fontFamilyPropName);
-            return FontLib.getFont(family, Font.PLAIN, size);
+            return Style.getNodeFont((NodeItem)item);
         }
     }
     
@@ -404,9 +384,9 @@ public class MindTreeRenderEngine {
                         return;
                 }
 
-                int red = ColorLib.red(m_cursorBackColor);
-                int green = ColorLib.green(m_cursorBackColor);
-                int blue = ColorLib.blue(m_cursorBackColor);
+                int red = ColorLib.red(Style.m_cursorBackColor);
+                int green = ColorLib.green(Style.m_cursorBackColor);
+                int blue = ColorLib.blue(Style.m_cursorBackColor);
 
                 red = green = blue = 128;
 

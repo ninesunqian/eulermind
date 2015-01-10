@@ -65,7 +65,7 @@ public class MindToolBar extends JToolBar {
                     public void actionPerformed(ActionEvent actionEvent) {
                         String family = (String) m_fontFamilyCombobox.getSelectedItem();
                         m_mindController.getCurrentView().setCursorProperty(
-                                MindModel.sm_fontFamilyPropName, family);
+                                Style.sm_fontFamilyPropName, family);
                     }
                 }
         );
@@ -75,7 +75,7 @@ public class MindToolBar extends JToolBar {
                     public void actionPerformed(ActionEvent actionEvent) {
                         Integer size = (Integer) m_fontSizeCombobox.getSelectedItem();
                         m_mindController.getCurrentView().setCursorProperty(
-                                MindModel.sm_fontSizePropName, size);
+                                Style.sm_fontSizePropName, size);
                     }
                 }
         );
@@ -85,7 +85,7 @@ public class MindToolBar extends JToolBar {
                     public void actionPerformed(ActionEvent actionEvent) {
                         Color color = (Color) m_colorCombobox.getSelectedItem();
                         m_mindController.getCurrentView().setCursorProperty(
-                                MindModel.sm_textColorPropName, color.getRGB());
+                                Style.sm_textColorPropName, color.getRGB());
                     }
                 }
         );

@@ -30,7 +30,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 public class MainFrame extends JFrame {
-    static Logger m_logger = LoggerFactory.getLogger(Mindmap.class);
+    static Logger m_logger = LoggerFactory.getLogger(EulerMind.class);
 
     MindModel m_mindModel;
     MindController m_mindController;

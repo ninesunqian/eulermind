@@ -55,8 +55,8 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public class Mindmap {
-    static Logger m_logger = LoggerFactory.getLogger(Mindmap.class);
+public class EulerMind {
+    static Logger m_logger = LoggerFactory.getLogger(EulerMind.class);
 
     public static void deleteDir(String path)
     {
@@ -90,53 +90,6 @@ public class Mindmap {
                 }
             }
             file.delete();
-        }
-    }
-
-
-    static void testXML()
-    {
-
-        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
-        //Load and parse XML file into DOM
-        Document document = null;
-        try {
-            //DOM parser instance
-            DocumentBuilder builder = builderFactory.newDocumentBuilder();
-            //parse an XML file into a DOM tree
-            document = builder.parse(new File("/home/wangxuguang/excitedmind尽快可用.mm"));
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        } catch (SAXException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        //get root element
-        Element rootElement = document.getDocumentElement();
-
-        //traverse child elements
-        NodeList nodes = rootElement.getChildNodes();
-        for (int i=0; i < nodes.getLength(); i++)
-        {
-            Node node = nodes.item(i);
-            if (node.getNodeType() == Node.ELEMENT_NODE) {
-                Element child = (Element) node;
-                //process child element
-            }
-        }
-
-        NodeList nodeList = rootElement.getElementsByTagName("node");
-        if(nodeList != null)
-        {
-            for (int i = 0 ; i < nodeList.getLength(); i++)
-            {
-                Element element = (Element)nodeList.item(i);
-                String id = element.getAttribute("ID");
-                String text = element.getAttribute("TEXT");
-                m_logger.info("freemind node {}: {}", id, text);
-            }
         }
     }
 
@@ -209,8 +162,6 @@ public class Mindmap {
         */
 
         try {
-            //UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
-
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.

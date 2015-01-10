@@ -11,13 +11,18 @@ import prefuse.data.Edge;
 import prefuse.data.Graph;
 import prefuse.data.event.EventConstants;
 import prefuse.data.event.TableListener;
+import prefuse.util.ColorLib;
+import prefuse.util.FontLib;
 import prefuse.util.TypeLib;
 import prefuse.util.collections.IntIterator;
 import prefuse.visual.VisualItem;
 import prefuse.visual.VisualTable;
 import prefuse.visual.VisualTree;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,17 +58,9 @@ public class MindModel {
 
 	final static public String sm_textPropName = "text";
     final static public String sm_iconPropName = "icon";
-	final static public String sm_fontFamilyPropName = "fontFamily";
-	final static public String sm_fontSizePropName = "fontSize";
-	final static public String sm_boldPropName = "bold";
-	final static public String sm_italicPropName = "italic";
-	final static public String sm_underlinedPropName = "underlined";
-	final static public String sm_nodeColorPropName = "nodeColor";
-	final static public String sm_textColorPropName = "textColor";
 
     private final static String FAVORITE_INDEX_NAME = "favoriteIndex";
     private final static String FAVORITE_KEY_NAME = "favorite";
-
 
     private Index<Vertex> m_favoriteIndex;
 
@@ -90,15 +87,17 @@ public class MindModel {
 
             sm_iconPropName,
 
-            sm_fontFamilyPropName,
-            sm_fontSizePropName,
+            Style.sm_fontFamilyPropName,
+            Style.sm_fontSizePropName,
 
-            sm_boldPropName,
-            sm_italicPropName,
-            sm_underlinedPropName,
+            Style.sm_boldPropName,
+            Style.sm_italicPropName,
+            Style.sm_underlinedPropName,
 
-            sm_nodeColorPropName,
-            sm_textColorPropName,
+            Style.sm_nodeColorPropName,
+            Style.sm_textColorPropName,
+
+            Style.sm_stylePropName
     };
 
     static private Hashtable<String, Class> sm_propertyClassMap = new Hashtable<String, Class>();
@@ -135,15 +134,17 @@ public class MindModel {
 
         sm_propertyClassMap.put(sm_iconPropName, String.class);
 
-        sm_propertyClassMap.put(sm_fontFamilyPropName, String.class);
-        sm_propertyClassMap.put(sm_fontSizePropName, Integer.class);
+        sm_propertyClassMap.put(Style.sm_fontFamilyPropName, String.class);
+        sm_propertyClassMap.put(Style.sm_fontSizePropName, Integer.class);
 
-        sm_propertyClassMap.put(sm_boldPropName, Boolean.class);
-        sm_propertyClassMap.put(sm_italicPropName, Boolean.class);
-        sm_propertyClassMap.put(sm_underlinedPropName, Boolean.class);
+        sm_propertyClassMap.put(Style.sm_boldPropName, Boolean.class);
+        sm_propertyClassMap.put(Style.sm_italicPropName, Boolean.class);
+        sm_propertyClassMap.put(Style.sm_underlinedPropName, Boolean.class);
 
-        sm_propertyClassMap.put(sm_nodeColorPropName, Integer.class);
-        sm_propertyClassMap.put(sm_textColorPropName, Integer.class);
+        sm_propertyClassMap.put(Style.sm_nodeColorPropName, Integer.class);
+        sm_propertyClassMap.put(Style.sm_textColorPropName, Integer.class);
+
+        sm_propertyClassMap.put(Style.sm_stylePropName, String.class);
     }
 
 	public MindModel(String dbPath)
@@ -172,16 +173,6 @@ public class MindModel {
         for (Vertex vertex : m_favoriteIndex.get(FAVORITE_KEY_NAME, FAVORITE_KEY_NAME))  {
             m_favoriteInfoes.add(new VertexBasicInfo(vertex));
         }
-
-
-        /*
-        Importer importer =  new TikaPlainTextImporter(m_mindDb);
-        try {
-            importer.importFile(root.getId(), 0, "/home/wangxuguang/1.txt");
-        } catch (Exception e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-        */
 
     }
 
