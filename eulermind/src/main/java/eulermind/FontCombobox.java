@@ -70,7 +70,7 @@ public class FontCombobox extends JComboBox{
         sm_constantLoaded = true;
     }
 
-    FontCombobox(ListWhich listWhich)
+    public FontCombobox()
     {
         loadConstant();
         this.setRenderer(new FontCellRenderer());
@@ -78,11 +78,9 @@ public class FontCombobox extends JComboBox{
         m_family = "SansSerif";
         m_size = 14;
         m_color = sm_colors[0];
-
-        setListWitch(listWhich);
     }
 
-    private void setListWitch(ListWhich listWhich)
+    public void setListWitch(ListWhich listWhich)
     {
         if (m_listWhich == listWhich) {
             return;

@@ -8,10 +8,6 @@ import com.tinkerpop.blueprints.impls.orient.OrientVertexType;
 import eulermind.MindDB.EdgeVertex;
 
 import java.awt.*;
-import java.nio.file.DirectoryNotEmptyException;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Paths;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,15 +18,6 @@ import com.tinkerpop.blueprints.Vertex;
 
 
 import java.io.File;
-import java.io.IOException;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 
 /*
@@ -58,104 +45,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 public class EulerMind {
     static Logger m_logger = LoggerFactory.getLogger(EulerMind.class);
 
-    public static void deleteDir(String path)
-    {
-        File file = new File(path);
-        file.setWritable(true);
-        if (file.exists())
-        {
-            if (file.isDirectory())
-            {
-                File[] files = file.listFiles();
-                for (File subFile : files)
-                {
-                    if (subFile.isDirectory())
-                        deleteDir(subFile.getPath());
-                    else {
-                        subFile.setWritable(true);
-      //                  boolean ret = subFile.delete();
-       //                 s_logger.info("delete file: " + ret);
-
-                        try {
-                            Files.delete(Paths.get(subFile.getPath()));
-                        } catch (NoSuchFileException x) {
-                            System.err.format("%s: no such" + " file or directory%n", path);
-                        } catch (DirectoryNotEmptyException x) {
-                            System.err.format("%s not empty%n", path);
-                        } catch (IOException x) {
-                            // File permission problems are caught here.
-                            System.err.println(x);
-                        }
-                    }
-                }
-            }
-            file.delete();
-        }
-    }
-
-    static void testJava()
-    {
-        deleteDir("/tmp/test/aaa");
-        String pathToDatabase = "plocal:/tmp/test/aaa";
-
-        OrientTransactionalGraph graph = new OrientGraph(pathToDatabase, false);
-
-        OrientVertexType type = graph.getVertexBaseType();
-        type.createProperty("text", OType.STRING);
-        OProgressListener oProgressListener = null;
-        type.createIndex("textIndex", "FULLTEXT", oProgressListener, null, "LUCENE", new String[]{"text"});
-
-        Vertex v0 = graph.addVertex(null, "text", "我们是好人" );
-        Vertex v1 = graph.addVertex(null, "text", "Rome");
-        v1.setProperty("text", "我们不是好人");
-
-        graph.addEdge(null, v0, v1, "E");
-
-        graph.commit();
-
-        v0 = graph.getVertex(v0.getId());
-        v1 = graph.getVertex(v1.getId());
-        Vertex v2 = graph.addVertex(null, "text", "我们是好人-2" );
-        Vertex v3 = graph.addVertex(null, "text", "Rome");
-        graph.addEdge(null, v0, v2, "E");
-        graph.addEdge(null, v0, v3, "E");
-
-        v3.setProperty("text", "我们不是好人-2");
-        System.out.println(graph.isUseClassForEdgeLabel());
-        System.out.println(graph.isUseClassForVertexLabel());
-        graph.commit();
-
-        Iterable<Vertex> vertexes = graph.getVertices("V", new String[]{"text"}, new Object[]{"(我们 好人)"});
-        for (Vertex v : vertexes) {
-            System.out.println(v.getId());
-            System.out.println(v.getProperty("text"));
-        }
-
-        graph.shutdown();
-        /*
- OrientVertexType type = graph.createVertexType("City");
-    type.createProperty("latitude", OType.DOUBLE);
-    type.createProperty("longitude", OType.DOUBLE);
-    type.createProperty("name", OType.STRING);
-
-    ODocument metadata = new ODocument();
-    metadata.field("analyzer", "org.apache.lucene.analysis.en.EnglishAnalyzer");
-    type.createIndex("City.name", "FULLTEXT", null, metadata, "LUCENE", new String[] { "name" });
-
-    graph.addVertex("class:City", new Object[] { "name", "London" });
-    graph.addVertex("class:City", new Object[] { "name", "Rome" });
-
-    graph.commit();
-    Iterable<Vertex> vertexes = graph.getVertices("City.name", "London");
-    for (Vertex v : vertexes) {
-      System.out.println(v.getId());
-    }
-    graph.shutdown();
-    */
-
-    }
-
-	public static void main(String argv[]) {
+    public static void main(String argv[]) {
         /*
         testJava();
         testXML();
@@ -176,59 +66,27 @@ public class EulerMind {
 
         String dbPath = System.getProperty("user.home") + "/.eulermind/mind_db";
         //TODO: for debug
-        deleteDir(dbPath);
+        Utils.deleteDir(dbPath);
 
 		final String dbUrl = "local:" + dbPath.replace(File.separatorChar, '/');
         m_logger.info ("dbUrl = " + dbUrl);
 
 		MindDB mindDb = new MindDB(dbUrl);
+//        Utils.createTree(mindDb, 2);
 
 		mindDb = null;
 
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                MainFrame frame = new MainFrame(dbUrl);
+
+                JFrame frame = new MainFrame(dbUrl);
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                frame.pack();
                 frame.setVisible(true);
                 KeyboardFocusManager.getCurrentKeyboardFocusManager().clearGlobalFocusOwner();
 
             }
         });
-	}
-	
-	static private Vertex m_rootVertex;
-
-	static private void createTree (MindDB mindDb, Vertex parent, String parentText, int level)
-	{
-		if (level >= 3)
-		{
-			return;
-			
-		} else if (level == 0) {
-			Vertex root = mindDb.getVertex(mindDb.getRootId());
-			root.setProperty(MindModel.sm_textPropName, "a");
-			m_rootVertex = root;
-			
-			createTree (mindDb, root, "a", 1);
-			
-		} else {
-
-			EdgeVertex edgeVertex = mindDb.addChild(parent, 0);
-			edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, parentText + "a");
-			createTree (mindDb, edgeVertex.m_vertex, parentText + "a", level + 1);
-
-			edgeVertex = mindDb.addChild(parent, 1);
-			edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, parentText + "b");
-			createTree (mindDb, edgeVertex.m_vertex, parentText + "b", level + 1);
-			
-			edgeVertex = mindDb.addChild(parent, 2);
-			edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, parentText + "c");
-			createTree (mindDb, edgeVertex.m_vertex, parentText + "c", level + 1);
-			
-			mindDb.addRefEdge(parent, m_rootVertex, 3);
-		}
 	}
 
 } // end of class TreeMap

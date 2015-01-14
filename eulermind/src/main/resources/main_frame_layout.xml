@@ -1,0 +1,27 @@
+<frame name="mainframe" title="aaaaaaaaaa" layout="BorderLayout" size="800,600"  >
+
+    <menubar name="menubar">
+        <menu name="filemenu" text="File" mnemonic="VK_F" >
+            <menuitem name="mi_open" text="Open" mnemonic="VK_O" />
+            <menuitem name="mi_import" text="Import" mnemonic="VK_I" Action="m_importAction"/>
+            <separator/>
+        </menu>
+        <menu text="Favorite" id="m_favoriteMenu" Action=""/>
+        <menu text="Ancestor" id="m_ancestor" Action=""/>
+
+    </menubar>
+
+    <toolBar floatable="false" constraints="BorderLayout.NORTH" autoscrolls="true" orientation="HORIZONTAL">
+        <fontCombobox id="m_fontFamilyCombobox"/>
+        <fontCombobox id="m_fontSizeCombobox"/>
+        <fontCombobox id="m_textColorCombobox"/>
+        <mindEditor id="m_searchInputer" columns="10"  minimumSize="50, 14"/>
+    </toolBar>
+
+    <tabbedPane id="m_tabbedPane" constraints="BorderLayout.CENTER"/>
+
+    <scrollPane constraints="BorderLayout.WEST"  preferredSize="50, 0">
+        <mindIconToolBar id="m_mindIconToolBar"  floatable="false" orientation="VERTICAL"/>
+    </scrollPane>
+
+</frame>

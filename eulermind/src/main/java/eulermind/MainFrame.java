@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.event.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.swixml.SwingEngine;
 
 /*
 The MIT License (MIT)
@@ -29,21 +30,86 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public class MainFrame extends JFrame {
+public class MainFrame  extends JFrame {
     static Logger m_logger = LoggerFactory.getLogger(EulerMind.class);
 
     MindModel m_mindModel;
     MindController m_mindController;
-    MindIcons m_mindIcons;
+    MindIconToolBar m_mindIconToolBar;
     MindToolBar m_mindToolBar;
-    JTabbedPane m_tabbedPane = new JTabbedPane();
+    JTabbedPane m_tabbedPane;
+
+    SwingEngine m_swingEngine;
+
+    FontCombobox m_fontFamilyCombobox;
+    FontCombobox m_fontSizeCombobox;
+    FontCombobox m_textColorCombobox;
+
+    MindEditor m_searchInputer;
 
     public MainFrame(String dbUrl)
     {
-        setLocationByPlatform(true);
-        addMenu();
+
+        try {
+            m_swingEngine = new SwingEngine(this);
+            m_swingEngine.getTaglib().registerTag("mindIconToolBar", MindIconToolBar.class);
+            m_swingEngine.getTaglib().registerTag("fontCombobox", FontCombobox.class);
+            m_swingEngine.getTaglib().registerTag("mindEditor", MindEditor.class);
+            m_swingEngine.render("main_frame_layout.xml");
+        } catch (Exception e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
 
         m_mindModel = new MindModel(dbUrl);
+        m_mindController = new MindController(m_mindModel, m_tabbedPane);
+
+        m_mindIconToolBar.setMindController(m_mindController);
+
+        m_fontFamilyCombobox.setListWitch(FontCombobox.ListWhich.list_family);
+        m_fontSizeCombobox.setListWitch(FontCombobox.ListWhich.list_size);
+        m_textColorCombobox.setListWitch(FontCombobox.ListWhich.list_color);
+
+        m_fontFamilyCombobox.addActionListener(
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        String family = (String) m_fontFamilyCombobox.getSelectedItem();
+                        m_mindController.getCurrentView().setCursorProperty(
+                                Style.sm_fontFamilyPropName, family);
+                    }
+                }
+        );
+
+        m_fontSizeCombobox.addActionListener(
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        Integer size = (Integer) m_fontSizeCombobox.getSelectedItem();
+                        m_mindController.getCurrentView().setCursorProperty(
+                                Style.sm_fontSizePropName, size);
+                    }
+                }
+        );
+
+        m_textColorCombobox.addActionListener(
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        Color color = (Color) m_textColorCombobox.getSelectedItem();
+                        m_mindController.getCurrentView().setCursorProperty(
+                                Style.sm_textColorPropName, color.getRGB());
+                    }
+                }
+        );
+
+        /*
+        m_searchInputer.init(m_mindController.m_mindModel.m_mindDb);
+        m_searchInputer.setHasPromptList(true);
+        m_searchInputer.setMinimumSize(new Dimension(50, 14));
+        m_searchInputer.setMindEditorListener(new MindEditor.MindEditorListener() {
+            public void promptListOk(Object dbId, String text, Object parentDBId, String parentText)
+            {
+                m_mindController.findOrAddMindView(dbId);
+            }
+        });
+        */
 
         InputMap map;
         map = (InputMap) UIManager.get("TabbedPane.ancestorInputMap");
@@ -51,20 +117,23 @@ public class MainFrame extends JFrame {
         map.remove(keyStrokeCtrlUp);
 
         //m_tabbedPane.setFocusable(false);
+        setLocationByPlatform(true);
+        //addMenu();
 
-        m_tabbedPane = new JTabbedPane();
 
-        m_mindController = new MindController(m_mindModel, m_tabbedPane);
-        add(m_tabbedPane, BorderLayout.CENTER);
 
-        m_mindIcons = new MindIcons(m_mindController);
-        add(m_mindIcons.getToolbar(), BorderLayout.WEST);
+
+        /*
+        m_mindIconToolBar = new MindIconToolBar(m_mindController);
+        add(m_mindIconToolBar.getToolbar(), BorderLayout.WEST);
+        */
 
         /*
         Component comp = m_tabbedPane.getSelectedComponent();
         comp.requestFocusInWindow();
         */
 
+        /*
         m_mindToolBar = new MindToolBar(m_mindController);
         add(m_mindToolBar, BorderLayout.NORTH);
 
@@ -82,10 +151,21 @@ public class MainFrame extends JFrame {
                 comp.requestFocusInWindow();
             }
         });
+        */
     }
+
+    ActionListener m_importAction =new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent)
+            {
+                m_mindController.getCurrentView().importFile();
+            }
+
+        };
 
     void addMenu()
     {
+        /*
         JMenuBar menuBar = new JMenuBar();
         setJMenuBar(menuBar);
         JMenu fileMenu = new JMenu("file");
@@ -107,119 +187,100 @@ public class MainFrame extends JFrame {
         addAncestorsMenu(menuBar);
 
         setJMenuBar(menuBar);
+        */
     }
 
     JMenu m_favoriteMenu;
+    MenuListener m_favoriteMenuListener = new MenuListener() {
+        @Override
+        public void menuSelected(MenuEvent menuEvent)
+        {
+            final Object currentVertexId = m_mindController.getCurrentVertexId();
+            JMenuItem addingMenuItem = new JMenuItem("add to favorite");
+            addingMenuItem.setEnabled(currentVertexId != null && ! m_mindModel.isInFavorite(currentVertexId));
+            addingMenuItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent)
+                {
+                    m_mindModel.addToFavorite(currentVertexId);
+                }
+            });
+            m_favoriteMenu.add(addingMenuItem);
 
-    void addFavoriteMenu(JMenuBar menuBar)
-    {
-        m_favoriteMenu = new JMenu("Favorite");
-        m_favoriteMenu.setMnemonic('f');
+            JMenuItem removingMenuItem = new JMenuItem("remove from favorite");
+            removingMenuItem.setEnabled(currentVertexId != null && m_mindModel.isInFavorite(currentVertexId));
+            removingMenuItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent)
+                {
+                    m_mindModel.removeFromFavorite(currentVertexId);
+                }
+            });
+            m_favoriteMenu.add(removingMenuItem);
 
-        m_favoriteMenu.addMenuListener(new MenuListener() {
-            @Override
-            public void menuSelected(MenuEvent menuEvent)
-            {
-                final Object currentVertexId = m_mindController.getCurrentVertexId();
-                JMenuItem addingMenuItem = new JMenuItem("add to favorite");
-                addingMenuItem.setEnabled(currentVertexId != null && ! m_mindModel.isInFavorite(currentVertexId));
-                addingMenuItem.addActionListener(new ActionListener() {
+            m_favoriteMenu.addSeparator();
+
+            for (final MindModel.VertexBasicInfo vertexBasicInfo : m_mindModel.m_favoriteInfoes) {
+                JMenuItem menuItem = new JMenuItem(vertexBasicInfo.m_contextText);
+                menuItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent actionEvent)
                     {
-                        m_mindModel.addToFavorite(currentVertexId);
+                        m_mindController.findOrAddMindView(vertexBasicInfo.m_dbId);
                     }
                 });
-                m_favoriteMenu.add(addingMenuItem);
 
-                JMenuItem removingMenuItem = new JMenuItem("remove from favorite");
-                removingMenuItem.setEnabled(currentVertexId != null && m_mindModel.isInFavorite(currentVertexId));
-                removingMenuItem.addActionListener(new ActionListener() {
+                m_favoriteMenu.add(menuItem);
+            }
+        }
+
+        @Override
+        public void menuDeselected(MenuEvent menuEvent)
+        {
+            m_favoriteMenu.removeAll();
+        }
+
+        @Override
+        public void menuCanceled(MenuEvent menuEvent)
+        {
+            m_favoriteMenu.removeAll();
+        }
+    };
+
+    JMenu m_ancestorMenu;
+
+    MenuListener m_ancestorMenuListener = new MenuListener() {
+        @Override
+        public void menuSelected(MenuEvent menuEvent)
+        {
+            final Object currentVertexId = m_mindController.getCurrentVertexId();
+            MindModel.VertexBasicInfo vertexBasicInfo =  m_mindModel.getVertexBasicInfo(currentVertexId);
+
+            for (Object ancestor : vertexBasicInfo.m_inheritPath) {
+                final MindModel.VertexBasicInfo ancestorBasicInfo = m_mindModel.getVertexBasicInfo(ancestor);
+                JMenuItem menuItem = new JMenuItem(ancestorBasicInfo.m_contextText);
+                menuItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent actionEvent)
                     {
-                        m_mindModel.removeFromFavorite(currentVertexId);
+                        m_mindController.findOrAddMindView(ancestorBasicInfo.m_dbId);
                     }
                 });
-                m_favoriteMenu.add(removingMenuItem);
 
-                m_favoriteMenu.addSeparator();
-
-                for (final MindModel.VertexBasicInfo vertexBasicInfo : m_mindModel.m_favoriteInfoes) {
-                    JMenuItem menuItem = new JMenuItem(vertexBasicInfo.m_contextText);
-                    menuItem.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent actionEvent)
-                        {
-                            m_mindController.findOrAddMindView(vertexBasicInfo.m_dbId);
-                        }
-                    });
-
-                    m_favoriteMenu.add(menuItem);
-                }
-            }
-
-            @Override
-            public void menuDeselected(MenuEvent menuEvent)
-            {
-                m_favoriteMenu.removeAll();
-            }
-
-            @Override
-            public void menuCanceled(MenuEvent menuEvent)
-            {
-                m_favoriteMenu.removeAll();
+                m_ancestorMenu.add(menuItem);
             }
         }
 
-        );
-
-        menuBar.add(m_favoriteMenu);
-    }
-
-    void addAncestorsMenu(JMenuBar menuBar)
-    {
-        m_favoriteMenu = new JMenu("Ancestors");
-        m_favoriteMenu.setMnemonic('a');
-
-        m_favoriteMenu.addMenuListener(new MenuListener() {
-            @Override
-            public void menuSelected(MenuEvent menuEvent)
-            {
-                final Object currentVertexId = m_mindController.getCurrentVertexId();
-                MindModel.VertexBasicInfo vertexBasicInfo =  m_mindModel.getVertexBasicInfo(currentVertexId);
-
-                for (Object ancestor : vertexBasicInfo.m_inheritPath) {
-                    final MindModel.VertexBasicInfo ancestorBasicInfo = m_mindModel.getVertexBasicInfo(ancestor);
-                    JMenuItem menuItem = new JMenuItem(ancestorBasicInfo.m_contextText);
-                    menuItem.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent actionEvent)
-                        {
-                            m_mindController.findOrAddMindView(ancestorBasicInfo.m_dbId);
-                        }
-                    });
-
-                    m_favoriteMenu.add(menuItem);
-                }
-            }
-
-            @Override
-            public void menuDeselected(MenuEvent menuEvent)
-            {
-                m_favoriteMenu.removeAll();
-            }
-
-            @Override
-            public void menuCanceled(MenuEvent menuEvent)
-            {
-                m_favoriteMenu.removeAll();
-            }
+        @Override
+        public void menuDeselected(MenuEvent menuEvent)
+        {
+            m_ancestorMenu.removeAll();
         }
 
-        );
-
-        menuBar.add(m_favoriteMenu);
-        //弹出菜单时再显示菜单
-    }
+        @Override
+        public void menuCanceled(MenuEvent menuEvent)
+        {
+            m_ancestorMenu.removeAll();
+        }
+    };
 }

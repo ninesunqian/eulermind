@@ -26,12 +26,10 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public class MindIcons {
+public class MindIconToolBar extends JToolBar {
     private MindController m_mindController;
-    private JToolBar m_iconToolBar;
-	private JScrollPane m_iconScrollPane;
 
-    private static String sm_iconDir = MindIcons.class.getClassLoader().getResource("icons/").getPath();
+    private static String sm_iconDir = MindIconToolBar.class.getClassLoader().getResource("icons/").getPath();
 
     private static String sm_iconsList = "remove;idea;help;yes;messagebox_warning;stop-sign;closed;info;button_ok;button_cancel;"
             + "full-1;full-2;full-3;full-4;full-5;full-6;full-7;full-8;full-9;full-0;"
@@ -47,14 +45,11 @@ public class MindIcons {
         return name == null ? null : sm_iconDir + "/" + name;
     }
 
-    public MindIcons(MindController mindController)
+    public MindIconToolBar()
     {
-        m_mindController = mindController;
-        m_iconToolBar = new JToolBar();
-		m_iconScrollPane = new JScrollPane(m_iconToolBar);
-		m_iconToolBar.setOrientation(JToolBar.VERTICAL);
-		m_iconScrollPane.getVerticalScrollBar().setUnitIncrement(100);
-        m_iconScrollPane.setPreferredSize(new Dimension(50, 0));
+        super();
+
+		setOrientation(JToolBar.VERTICAL);
 
         String icon_files[] = sm_iconsList.split(";");
         for (String icon_file : icon_files){
@@ -62,21 +57,22 @@ public class MindIcons {
         }
     }
 
+    public void setMindController(MindController mindController)
+    {
+        m_mindController = mindController;
+    }
+
     private void addIcon(final String name)
     {
         ImageIcon imageIcon = new ImageIcon(getIconPath(name));
+        imageIcon.getDescription();
         AbstractAction action = new AbstractAction(name, imageIcon) {
             public void actionPerformed(ActionEvent event) {
                 m_mindController.getCurrentView().setCursorProperty(
-                        MindModel.sm_iconPropName, name == "remove" ? null : name);
+                        MindModel.sm_iconPropName, name.equals("remove.png") ? null : name);
             }
         };
 
-		m_iconToolBar.add(action);
-    }
-
-    public JComponent getToolbar()
-    {
-        return m_iconScrollPane;
+		add(action);
     }
 }

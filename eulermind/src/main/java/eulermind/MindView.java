@@ -173,7 +173,8 @@ public class MindView extends Display {
 
 		setMouseControlListener();
 
-        m_mindEditor = new MindEditor(m_mindModel.m_mindDb);
+        m_mindEditor = new MindEditor();
+        m_mindEditor.init(m_mindModel.m_mindDb);
         m_mindEditor.setHasPromptList(true);
 
         m_mindEditor.setBorder(null);

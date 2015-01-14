@@ -305,8 +305,8 @@ public class MindTreeRenderEngine {
         }
 
         protected String getImageLocation(VisualItem item) {
-            return MindIcons.getIconPath(item.getString(MindModel.sm_iconPropName));
-            //return MindIcons.getIconPath("icon");
+            return MindIconToolBar.getIconPath(item.getString(MindModel.sm_iconPropName));
+            //return MindIconToolBar.getIconPath("icon");
             //return null;
         }
 

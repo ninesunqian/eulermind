@@ -52,27 +52,11 @@ public class MindEditor extends JTextField {
     private ArrayList<PromptedNode> m_promptedNodes = new ArrayList<PromptedNode>();
     private SwingWorker<Boolean, PromptedNode> m_queryWorker;
 
-    MindEditor(MindDB mindDb) {
+    public MindEditor() {
         super();
-        init(mindDb);
     }
 
-    MindEditor(int columns, MindDB mindDb)  {
-        super(columns);
-        init(mindDb);
-    }
-
-    MindEditor(String text, MindDB mindDb)  {
-        super(text);
-        init(mindDb);
-    }
-
-    MindEditor(String text, int columns, MindDB mindDb)  {
-        super(text, columns);
-        init(mindDb);
-    }
-
-    private void init(MindDB mindDb) {
+    public void init(MindDB mindDb) {
         m_mindDb = mindDb;
         setHasPromptList(false);
 
