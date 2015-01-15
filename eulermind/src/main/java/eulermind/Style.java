@@ -41,18 +41,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 @XStreamAlias("style")
 public class Style {
 
-    final static public String sm_fontFamilyPropName = "fontFamily";
-    final static public String sm_fontSizePropName = "fontSize";
-    final static public String sm_boldPropName = "bold";
-    final static public String sm_italicPropName = "italic";
-    final static public String sm_underlinedPropName = "underlined";
-    final static public String sm_nodeColorPropName = "nodeColor";
-    final static public String sm_textColorPropName = "textColor";
-    final static public String sm_stylePropName = "style";
+    public final static String sm_fontFamilyPropName = "fontFamily";
+    public final static String sm_fontSizePropName = "fontSize";
+    public final static String sm_boldPropName = "bold";
+    public final static String sm_italicPropName = "italic";
+    public final static String sm_underlinedPropName = "underlined";
+    public final static String sm_nodeColorPropName = "nodeColor";
+    public final static String sm_textColorPropName = "textColor";
+    public final static String sm_stylePropName = "style";
 
-    final static int m_cursorBackColor = ColorLib.rgb(210, 210, 210);
-    final static int m_shadowBackColor = ColorLib.rgb(240, 240, 240);
-    private final static int m_normalBackColor = ColorLib.rgb(255, 255, 255);
+    public final static int m_cursorBackColor = ColorLib.rgb(210, 210, 210);
+    public final static int m_shadowBackColor = ColorLib.rgb(240, 240, 240);
+    public final static int m_normalBackColor = ColorLib.rgb(255, 255, 255);
 
     @XStreamAlias("fontFamily")
     String m_fontFamily;
@@ -194,7 +194,7 @@ public class Style {
         return sm_defaultStyle;
     }
 
-    static Font getNodeFont(Node node)
+    public static Font getNodeFont(Node node)
     {
         String family = (String)node.get(Style.sm_fontFamilyPropName);
         Integer size = (Integer)node.get(Style.sm_fontSizePropName);
@@ -231,7 +231,7 @@ public class Style {
         return FontLib.getFont(family, fontStyle, size);
     }
 
-    static int getNodeColor(Node node)
+    public static int getNodeColor(Node node)
     {
         Integer color = (Integer)node.get(Style.sm_nodeColorPropName);
 
@@ -244,7 +244,7 @@ public class Style {
         return color;
     }
 
-    static int getTextColor(Node node)
+    public static int getTextColor(Node node)
     {
         Integer color = (Integer)node.get(Style.sm_textColorPropName);
 

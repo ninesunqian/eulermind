@@ -4,6 +4,10 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
+
+import eulermind.component.FontCombobox;
+import eulermind.component.MindIconToolBar;
+import eulermind.view.MindEditor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.swixml.SwingEngine;
@@ -36,7 +40,6 @@ public class MainFrame  extends JFrame {
     MindModel m_mindModel;
     MindController m_mindController;
     MindIconToolBar m_mindIconToolBar;
-    MindToolBar m_mindToolBar;
     JTabbedPane m_tabbedPane;
 
     SwingEngine m_swingEngine;
@@ -47,9 +50,14 @@ public class MainFrame  extends JFrame {
 
     MindEditor m_searchInputer;
 
+    JMenu m_ancestorMenu;
+    JMenu m_favoriteMenu;
+
+    JMenuItem mi_open;
+    JMenuItem mi_import;
+
     public MainFrame(String dbUrl)
     {
-
         try {
             m_swingEngine = new SwingEngine(this);
             m_swingEngine.getTaglib().registerTag("mindIconToolBar", MindIconToolBar.class);
@@ -64,6 +72,9 @@ public class MainFrame  extends JFrame {
         m_mindController = new MindController(m_mindModel, m_tabbedPane);
 
         m_mindIconToolBar.setMindController(m_mindController);
+
+        m_favoriteMenu.addMenuListener(m_favoriteMenuListener);
+        m_ancestorMenu.addMenuListener(m_ancestorMenuListener);
 
         m_fontFamilyCombobox.setListWitch(FontCombobox.ListWhich.list_family);
         m_fontSizeCombobox.setListWitch(FontCombobox.ListWhich.list_size);
@@ -99,43 +110,21 @@ public class MainFrame  extends JFrame {
                 }
         );
 
-        /*
         m_searchInputer.init(m_mindController.m_mindModel.m_mindDb);
         m_searchInputer.setHasPromptList(true);
-        m_searchInputer.setMinimumSize(new Dimension(50, 14));
         m_searchInputer.setMindEditorListener(new MindEditor.MindEditorListener() {
             public void promptListOk(Object dbId, String text, Object parentDBId, String parentText)
             {
                 m_mindController.findOrAddMindView(dbId);
             }
         });
-        */
 
         InputMap map;
         map = (InputMap) UIManager.get("TabbedPane.ancestorInputMap");
         KeyStroke keyStrokeCtrlUp = KeyStroke.getKeyStroke(KeyEvent.VK_UP, InputEvent.CTRL_DOWN_MASK);
         map.remove(keyStrokeCtrlUp);
 
-        //m_tabbedPane.setFocusable(false);
         setLocationByPlatform(true);
-        //addMenu();
-
-
-
-
-        /*
-        m_mindIconToolBar = new MindIconToolBar(m_mindController);
-        add(m_mindIconToolBar.getToolbar(), BorderLayout.WEST);
-        */
-
-        /*
-        Component comp = m_tabbedPane.getSelectedComponent();
-        comp.requestFocusInWindow();
-        */
-
-        /*
-        m_mindToolBar = new MindToolBar(m_mindController);
-        add(m_mindToolBar, BorderLayout.NORTH);
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -151,46 +140,17 @@ public class MainFrame  extends JFrame {
                 comp.requestFocusInWindow();
             }
         });
-        */
     }
 
-    ActionListener m_importAction =new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent)
-            {
-                m_mindController.getCurrentView().importFile();
-            }
+    public Action m_importAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent)
+        {
+            m_mindController.getCurrentView().importFile();
+        }
 
-        };
+    };
 
-    void addMenu()
-    {
-        /*
-        JMenuBar menuBar = new JMenuBar();
-        setJMenuBar(menuBar);
-        JMenu fileMenu = new JMenu("file");
-        fileMenu.setMnemonic('F');
-        menuBar.add(fileMenu);
-
-        JMenuItem importMenuItem = new JMenuItem("import", KeyEvent.VK_O);
-        fileMenu.add(importMenuItem);
-        importMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent)
-            {
-                m_mindController.getCurrentView().importFile();
-            }
-
-        });
-
-        addFavoriteMenu(menuBar);
-        addAncestorsMenu(menuBar);
-
-        setJMenuBar(menuBar);
-        */
-    }
-
-    JMenu m_favoriteMenu;
     MenuListener m_favoriteMenuListener = new MenuListener() {
         @Override
         public void menuSelected(MenuEvent menuEvent)
@@ -246,8 +206,6 @@ public class MainFrame  extends JFrame {
             m_favoriteMenu.removeAll();
         }
     };
-
-    JMenu m_ancestorMenu;
 
     MenuListener m_ancestorMenuListener = new MenuListener() {
         @Override

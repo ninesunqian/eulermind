@@ -109,7 +109,7 @@ public class MindModel {
             sm_outEdgeInnerIdPropName
     };
 
-	MindDB m_mindDb;
+	public MindDB m_mindDb;
     ArrayList<Tree> m_trees = new ArrayList<Tree>();
 
 	//return sorted copy of propName
@@ -986,7 +986,7 @@ public class MindModel {
     static final String MIRROR_X = "mirrorX";
     static final String MIRROR_Y = "mirrorY";
 
-    static void addNodeMirrorXYColumn(Tree tree, VisualTree visualTree)
+    public static void addNodeMirrorXYColumn(Tree tree, VisualTree visualTree)
     {
         final Table nodeTable = tree.getNodeTable();
         final VisualTable nodeItemTable = (VisualTable)visualTree.getNodeTable();

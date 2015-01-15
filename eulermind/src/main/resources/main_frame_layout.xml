@@ -2,20 +2,20 @@
 
     <menubar name="menubar">
         <menu name="filemenu" text="File" mnemonic="VK_F" >
-            <menuitem name="mi_open" text="Open" mnemonic="VK_O" />
-            <menuitem name="mi_import" text="Import" mnemonic="VK_I" Action="m_importAction"/>
-            <separator/>
+            <menuitem id="mi_open" text="Open" mnemonic="VK_O" />
+            <menuitem id="mi_import" text="Import" mnemonic="VK_I" Action="m_importAction"/>
         </menu>
-        <menu text="Favorite" id="m_favoriteMenu" Action=""/>
-        <menu text="Ancestor" id="m_ancestor" Action=""/>
+        <menu text="Favorite" id="m_favoriteMenu"/>
+        <menu text="Ancestor" id="m_ancestorMenu"/>
 
     </menubar>
 
-    <toolBar floatable="false" constraints="BorderLayout.NORTH" autoscrolls="true" orientation="HORIZONTAL">
+    <toolBar floatable="false" constraints="BorderLayout.NORTH" autoscrolls="true"  preferredSize="0, 30"
+             orientation="HORIZONTAL">
         <fontCombobox id="m_fontFamilyCombobox"/>
         <fontCombobox id="m_fontSizeCombobox"/>
         <fontCombobox id="m_textColorCombobox"/>
-        <mindEditor id="m_searchInputer" columns="10"  minimumSize="50, 14"/>
+        <mindEditor id="m_searchInputer" columns="10"/>
     </toolBar>
 
     <tabbedPane id="m_tabbedPane" constraints="BorderLayout.CENTER"/>

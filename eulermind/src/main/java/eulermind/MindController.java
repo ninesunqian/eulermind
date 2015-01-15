@@ -1,6 +1,9 @@
 package eulermind;
 
 import eulermind.operator.Removing;
+import eulermind.view.MindKeyView;
+import eulermind.view.MindView;
+import eulermind.view.NodeControl;
 import prefuse.data.Node;
 import prefuse.data.Table;
 import prefuse.data.Tree;
