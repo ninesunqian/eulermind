@@ -7,8 +7,6 @@ import java.awt.geom.RectangularShape;
 import eulermind.MindModel;
 import eulermind.Style;
 import eulermind.component.MindIconToolBar;
-import eulermind.view.MindTreeLayout;
-import eulermind.view.MindView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -236,9 +234,9 @@ public class MindTreeRenderEngine {
             Node cursorNode = m_mindView.getCursorSourceNode();
 
             if (node == cursorNode)
-                return Style.m_cursorBackColor;
+                return Style.sm_cursorBackColor;
             else if (!m_mindView.isPlaceholder(node) && m_mindView.m_mindModel.isSelfInDB(node, cursorNode))
-                return Style.m_shadowBackColor;
+                return Style.sm_shadowBackColor;
             else
                 return Style.getNodeColor(node);
         }
@@ -389,9 +387,9 @@ public class MindTreeRenderEngine {
                         return;
                 }
 
-                int red = ColorLib.red(Style.m_cursorBackColor);
-                int green = ColorLib.green(Style.m_cursorBackColor);
-                int blue = ColorLib.blue(Style.m_cursorBackColor);
+                int red = ColorLib.red(Style.sm_cursorBackColor);
+                int green = ColorLib.green(Style.sm_cursorBackColor);
+                int blue = ColorLib.blue(Style.sm_cursorBackColor);
 
                 red = green = blue = 128;
 

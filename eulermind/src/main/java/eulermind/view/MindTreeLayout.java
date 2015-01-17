@@ -374,7 +374,9 @@ public class MindTreeLayout extends TreeLayout {
     }
     
     protected void initSchema(TupleSet ts) {
-        ts.addColumns(PARAMS_SCHEMA);
+        try {
+            ts.addColumns(PARAMS_SCHEMA);
+        } catch ( IllegalArgumentException iae ) {}
     }
     
     public static Params getParams(NodeItem item) {

@@ -13,8 +13,13 @@
     <toolBar floatable="false" constraints="BorderLayout.NORTH" autoscrolls="true"  preferredSize="0, 30"
              orientation="HORIZONTAL">
         <fontCombobox id="m_fontFamilyCombobox"/>
-        <fontCombobox id="m_fontSizeCombobox"/>
-        <fontCombobox id="m_textColorCombobox"/>
+
+        <booleanCombobox id="m_italicCombobox"/>
+        <booleanCombobox id="m_boldCombobox"/>
+
+        <colorbutton id="m_textColorButton" text="T" Font="COURIER-BOLD-14"/>
+        <colorbutton id="m_nodeColorButton" text="T" Font="COURIER-BOLD-14"/>
+        <separator/>
         <mindEditor id="m_searchInputer" columns="10"/>
     </toolBar>
 

@@ -14,6 +14,7 @@ import prefuse.util.FontLib;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /*
@@ -50,9 +51,10 @@ public class Style {
     public final static String sm_textColorPropName = "textColor";
     public final static String sm_stylePropName = "style";
 
-    public final static int m_cursorBackColor = ColorLib.rgb(210, 210, 210);
-    public final static int m_shadowBackColor = ColorLib.rgb(240, 240, 240);
-    public final static int m_normalBackColor = ColorLib.rgb(255, 255, 255);
+    public final static int sm_cursorBackColor = ColorLib.rgb(210, 210, 210);
+    public final static int sm_shadowBackColor = ColorLib.rgb(240, 240, 240);
+    public final static int sm_defaultNodeColor = ColorLib.rgb(255, 255, 255);
+    public final static int sm_defaultTextColor = ColorLib.rgb(0, 0, 0);
 
     @XStreamAlias("fontFamily")
     String m_fontFamily;
@@ -255,5 +257,21 @@ public class Style {
         }
 
         return color;
+    }
+
+    public static ArrayList<String> getFontFamilies() {
+        ArrayList<String> fontFamilies = new ArrayList<String>();
+        for (String family : GraphicsEnvironment .getLocalGraphicsEnvironment().getAvailableFontFamilyNames()) {
+            Font font = new Font(family, Font.PLAIN, 1);
+            if (font.canDisplay('a')) {
+                fontFamilies.add(family);
+            }
+        }
+
+        return fontFamilies;
+    }
+
+    public static String getDefaultFontFamily() {
+        return "SansSerif";
     }
 }

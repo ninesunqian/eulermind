@@ -5,6 +5,8 @@ import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
 
+import eulermind.component.BooleanCombobox;
+import eulermind.component.ColorButton;
 import eulermind.component.FontCombobox;
 import eulermind.component.MindIconToolBar;
 import eulermind.view.MindEditor;
@@ -45,16 +47,17 @@ public class MainFrame  extends JFrame {
     SwingEngine m_swingEngine;
 
     FontCombobox m_fontFamilyCombobox;
-    FontCombobox m_fontSizeCombobox;
-    FontCombobox m_textColorCombobox;
+    BooleanCombobox m_italicCombobox;
+    BooleanCombobox m_boldCombobox;
+    //FontCombobox m_fontSizeCombobox;
+
+    ColorButton m_textColorButton;
+    ColorButton m_nodeColorButton;
 
     MindEditor m_searchInputer;
 
     JMenu m_ancestorMenu;
     JMenu m_favoriteMenu;
-
-    JMenuItem mi_open;
-    JMenuItem mi_import;
 
     public MainFrame(String dbUrl)
     {
@@ -62,6 +65,9 @@ public class MainFrame  extends JFrame {
             m_swingEngine = new SwingEngine(this);
             m_swingEngine.getTaglib().registerTag("mindIconToolBar", MindIconToolBar.class);
             m_swingEngine.getTaglib().registerTag("fontCombobox", FontCombobox.class);
+            m_swingEngine.getTaglib().registerTag("booleanCombobox", BooleanCombobox.class);
+            m_swingEngine.getTaglib().registerTag("colorButton", ColorButton.class);
+
             m_swingEngine.getTaglib().registerTag("mindEditor", MindEditor.class);
             m_swingEngine.render("main_frame_layout.xml");
         } catch (Exception e) {
@@ -76,39 +82,14 @@ public class MainFrame  extends JFrame {
         m_favoriteMenu.addMenuListener(m_favoriteMenuListener);
         m_ancestorMenu.addMenuListener(m_ancestorMenuListener);
 
-        m_fontFamilyCombobox.setListWitch(FontCombobox.ListWhich.list_family);
-        m_fontSizeCombobox.setListWitch(FontCombobox.ListWhich.list_size);
-        m_textColorCombobox.setListWitch(FontCombobox.ListWhich.list_color);
+        m_textColorButton.setForBackground(false);
+        m_nodeColorButton.setForBackground(true);
 
-        m_fontFamilyCombobox.addActionListener(
-                new ActionListener() {
-                    public void actionPerformed(ActionEvent actionEvent) {
-                        String family = (String) m_fontFamilyCombobox.getSelectedItem();
-                        m_mindController.getCurrentView().setCursorProperty(
-                                Style.sm_fontFamilyPropName, family);
-                    }
-                }
-        );
-
-        m_fontSizeCombobox.addActionListener(
-                new ActionListener() {
-                    public void actionPerformed(ActionEvent actionEvent) {
-                        Integer size = (Integer) m_fontSizeCombobox.getSelectedItem();
-                        m_mindController.getCurrentView().setCursorProperty(
-                                Style.sm_fontSizePropName, size);
-                    }
-                }
-        );
-
-        m_textColorCombobox.addActionListener(
-                new ActionListener() {
-                    public void actionPerformed(ActionEvent actionEvent) {
-                        Color color = (Color) m_textColorCombobox.getSelectedItem();
-                        m_mindController.getCurrentView().setCursorProperty(
-                                Style.sm_textColorPropName, color.getRGB());
-                    }
-                }
-        );
+        m_mindController.connectPropertyComponent(Style.sm_fontFamilyPropName, m_fontFamilyCombobox);
+        m_mindController.connectPropertyComponent(Style.sm_italicPropName, m_italicCombobox);
+        m_mindController.connectPropertyComponent(Style.sm_boldPropName, m_boldCombobox);
+        m_mindController.connectPropertyComponent(Style.sm_textColorPropName, m_textColorButton);
+        m_mindController.connectPropertyComponent(Style.sm_nodeColorPropName, m_nodeColorButton);
 
         m_searchInputer.init(m_mindController.m_mindModel.m_mindDb);
         m_searchInputer.setHasPromptList(true);
