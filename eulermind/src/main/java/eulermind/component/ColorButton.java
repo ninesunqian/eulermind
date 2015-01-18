@@ -4,6 +4,8 @@ import eulermind.Style;
 import prefuse.util.ColorLib;
 
 import javax.swing.*;
+import javax.swing.colorchooser.AbstractColorChooserPanel;
+import javax.swing.colorchooser.ColorChooserComponentFactory;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -35,11 +37,47 @@ public class ColorButton extends JButton implements PropertyComponent {
     private JColorChooser m_colorChooser = new JColorChooser();
     private Color m_color;
 
+    private boolean m_choosed;
+
     boolean m_forBackground = false;
+    JDialog m_dialog;
 
 
     public ColorButton() {
         addActionListener(m_updateMindNodeAction);
+
+        AbstractColorChooserPanel panels[] = ColorChooserComponentFactory.getDefaultChooserPanels();
+        m_colorChooser.setChooserPanels(panels);
+
+        m_dialog = JColorChooser.createDialog(ColorButton.this.getTopLevelAncestor(),
+                "", true, m_colorChooser,
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        m_color = m_colorChooser.getColor();
+                        m_choosed = true;
+                    }
+                },
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        m_choosed = false;
+                    }
+                });
+
+
+        JButton button = new JButton();
+        button.setText("style default color");
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                m_color = null;
+                m_choosed = true;
+                m_dialog.setVisible(false);
+            }
+        });
+        Container contentPane = m_dialog.getContentPane();
+        contentPane.add(button, BorderLayout.NORTH);
+
     }
 
     public void setForBackground(boolean forBackground) {
@@ -50,21 +88,13 @@ public class ColorButton extends JButton implements PropertyComponent {
         @Override
         public void actionPerformed(ActionEvent e)
         {
-            //GrayScalePanel gsp = new GrayScalePanel();
-            //m_colorChooser.addChooserPanel(gsp);
 
-            JDialog dialog = JColorChooser.createDialog(ColorButton.this.getTopLevelAncestor(),
-            "", true, m_colorChooser,
-            new ActionListener() {
-              public void actionPerformed(ActionEvent e) {
-                m_color = m_colorChooser.getColor();
-              }
-            }, null);
-
-            dialog.setVisible(true);
+            m_dialog.setVisible(true);
             //如何区分去掉颜色，和取消选择
-            m_propertyComponentConnector.updateMindNode(m_color == null ? null : (Integer)m_color.getRGB());
-            updateButtonColor();
+            if (m_choosed) {
+                m_propertyComponentConnector.updateMindNode(m_color == null ? null : (Integer)m_color.getRGB());
+                updateButtonColor();
+            }
         }
     };
 
