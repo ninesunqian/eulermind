@@ -238,7 +238,7 @@ public class MindTreeRenderEngine {
             else if (!m_mindView.isPlaceholder(node) && m_mindView.m_mindModel.isSelfInDB(node, cursorNode))
                 return Style.sm_shadowBackColor;
             else
-                return Style.getNodeColor(node);
+                return MindModel.getNodeColor(node);
         }
     }
     
@@ -249,7 +249,7 @@ public class MindTreeRenderEngine {
         }
 
         public int getColor(VisualItem item) {
-            return Style.getTextColor((NodeItem) item);
+            return MindModel.getNodeTextColor((NodeItem) item);
         }
     }
     
@@ -260,7 +260,7 @@ public class MindTreeRenderEngine {
         }
 
         public Font getFont(VisualItem item) {
-            return Style.getNodeFont((NodeItem)item);
+            return MindModel.getNodeFont((NodeItem) item);
         }
     }
     
@@ -308,9 +308,7 @@ public class MindTreeRenderEngine {
         }
 
         protected String getImageLocation(VisualItem item) {
-            return MindIconToolBar.getIconPath(item.getString(MindModel.sm_iconPropName));
-            //return MindIconToolBar.getIconPath("icon");
-            //return null;
+            return MindIconToolBar.getIconPath(MindModel.getNodeIcon(item));
         }
 
         public int getRenderType(VisualItem item) {

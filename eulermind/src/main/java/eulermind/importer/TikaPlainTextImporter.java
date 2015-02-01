@@ -116,13 +116,18 @@ public class TikaPlainTextImporter extends Importer{
     //把相邻连续空行压缩成一个，并记录下连续空行数。 以后利用空行对文章分章节
     private List<LineNode> splitTextToLines(String text)
     {
-        String lines[] = StringUtils.splitPreserveAllTokens(text, '\n');
+        //String lines[] = StringUtils.splitPreserveAllTokens(text, '\n');
+
+        //为了爬虫测试，去掉空行处理
+        String lines[] = StringUtils.split(text, '\n');
+
         ArrayList<LineNode> compressedLines = new ArrayList<LineNode>();
 
         for (String line : lines) {
             LineNode curNode = new LineNode(line);
 
             if (curNode.isBlank()) {
+                /*
                 if (compressedLines.size() == 0) {
                     continue;
                 }
@@ -133,6 +138,7 @@ public class TikaPlainTextImporter extends Importer{
                 } else {
                     compressedLines.add(curNode);
                 }
+                */
 
             } else {
                 compressedLines.add(curNode);
@@ -389,38 +395,39 @@ public class TikaPlainTextImporter extends Importer{
             }
         } else {
 
-            ArrayList<LineNode> newChildren = new ArrayList<LineNode>();
-            //FIXME
-            newChildren.add(root.getChildAt(0));
-            newChildren.get(0).m_indent = minIndent;
-
+            ArrayList<LineNode> oldChildren = new ArrayList<LineNode>();
             for (int i = 1; i < root.getChildCount(); i++) {
-                LineNode oldChild = root.getChildAt(i);
-                LineNode oldElderChild = null;
+                oldChildren.add(root.getChildAt(i));
+            }
+            root.removeAllChildren();
+
+            if (oldChildren.get(0).m_indent > minIndent) {
+                LineNode fakeFirstLine = new LineNode("fake first node");
+                fakeFirstLine.m_indent = minIndent;
+                oldChildren.add(0, fakeFirstLine);
+            }
+
+            root.add(oldChildren.get(0));
+
+            for (int i=1; i<oldChildren.size(); i++) {
+
+                LineNode oldChild = oldChildren.get(i);
 
                 //向上找到一行，它的缩进大于或等于当前行
                 //等于： 它是当前行的兄弟
                 //小于：它是当前行的父亲
                 for (int j = i - 1; j >= 0; j--) {
-                    oldElderChild = root.getChildAt(j);
-                    if (oldElderChild.m_indent <= oldChild.m_indent) {
+                    LineNode addedChild = oldChildren.get(j);
+                    if (addedChild.m_indent < oldChild.m_indent) {
+                        addedChild.add(oldChild);
+                        break;
+                    } else if (addedChild.m_indent == oldChild.m_indent) {
+                        addedChild.getParent().add(oldChild);
                         break;
                     }
                 }
 
-                assert oldElderChild != null;
-
-                if (oldChild.m_indent == oldElderChild.m_indent) {
-                    oldElderChild.getParent().add(oldChild);
-                } else {
-                    oldElderChild.add(oldChild);
-                }
-            }
-
-            root.removeAllChildren();
-
-            for (LineNode newChild : newChildren) {
-                root.add(newChild);
+                assert(oldChild.getParent() != null);
             }
         }
     }
@@ -441,7 +448,7 @@ public class TikaPlainTextImporter extends Importer{
 
         if (end == root.m_trimLine.length()) {
             dbId = addTextDBChild(parentDBId, pos, root.m_trimLine);
-            s_logger.info("import line {}", root.m_trimLine);
+            s_logger.debug("import line {}", root.m_trimLine);
 
 
         } else {
@@ -479,7 +486,8 @@ public class TikaPlainTextImporter extends Importer{
         rebuildContinuousLinesByIndent(root);
 
         //root = manyChildToSubTree(root);
-        root = removeNodeWithSingleChild(root);
+
+        //root = removeNodeWithSingleChild(root);
 
 
         Object dbId = importLineNode(parentDBId, pos, root);

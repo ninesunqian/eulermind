@@ -33,7 +33,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 public abstract class MindOperator extends AbstractUndoableEdit {
     protected MindModel m_mindModel;
-    protected Object m_rootDBId;
+    protected Object m_rootDbId;
     protected ArrayList<Integer> m_formerCursorPath;
     protected ArrayList<Integer> m_laterCursorPath;
 
@@ -44,12 +44,12 @@ public abstract class MindOperator extends AbstractUndoableEdit {
 
         Tree tree = (Tree)formerCursor.getGraph();
         m_mindModel = mindModel;
-        m_rootDBId = m_mindModel.getDBId(tree.getRoot());
+        m_rootDbId = m_mindModel.getDbId(tree.getRoot());
         m_formerCursorPath = m_mindModel.getNodePath(formerCursor);
     }
 
     protected Node getNodeByPath(ArrayList<Integer> path) {
-        Tree tree = m_mindModel.findTree(m_rootDBId);
+        Tree tree = m_mindModel.findTree(m_rootDbId);
         Node node = m_mindModel.getNodeByPath(tree, path);
         return node;
     }

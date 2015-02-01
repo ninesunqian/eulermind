@@ -19,14 +19,17 @@
 
         <colorbutton id="m_textColorButton" text="T" Font="COURIER-BOLD-14"/>
         <colorbutton id="m_nodeColorButton" text="T" Font="COURIER-BOLD-14"/>
+        <iconbutton id="m_iconButton" />
+
         <separator/>
         <mindEditor id="m_searchInputer" columns="10"/>
     </toolBar>
 
-    <tabbedPane id="m_tabbedPane" constraints="BorderLayout.CENTER"/>
-
-    <scrollPane constraints="BorderLayout.WEST"  preferredSize="50, 0">
-        <mindIconToolBar id="m_mindIconToolBar"  floatable="false" orientation="VERTICAL"/>
+    <scrollPane constraints="BorderLayout.WEST"  preferredSize="100, 0">
+        <styleList id="m_styleList"/>
     </scrollPane>
+
+
+    <tabbedPane id="m_tabbedPane" constraints="BorderLayout.CENTER"/>
 
 </frame>

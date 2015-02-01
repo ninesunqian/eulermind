@@ -67,7 +67,6 @@ public class MindIconToolBar extends JToolBar {
     private void addIcon(final String name)
     {
         ImageIcon imageIcon = new ImageIcon(getIconPath(name));
-        imageIcon.getDescription();
         AbstractAction action = new AbstractAction(name, imageIcon) {
             public void actionPerformed(ActionEvent event) {
                 m_mindController.getCurrentView().setCursorProperty(

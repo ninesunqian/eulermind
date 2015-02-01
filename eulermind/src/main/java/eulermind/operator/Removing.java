@@ -40,10 +40,10 @@ public class Removing extends MindOperator {
     {
         super(mindModel, formerCursor);
         Node parent = formerCursor.getParent();
-        m_parentDBId = m_mindModel.getDBId(parent);
+        m_parentDBId = m_mindModel.getDbId(parent);
 
         m_siblingPos = formerCursor.getIndex();
-        m_removedDBId = mindModel.getDBId(formerCursor);
+        m_removedDBId = mindModel.getDbId(formerCursor);
 
         computeLaterCursor(formerCursor);
 

@@ -63,6 +63,8 @@ public class EulerMind {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
+        Style.load();
+        Style.save();
 
         String dbPath = System.getProperty("user.home") + "/.eulermind/mind_db";
         //TODO: for debug
@@ -72,7 +74,7 @@ public class EulerMind {
         m_logger.info ("dbUrl = " + dbUrl);
 
 		MindDB mindDb = new MindDB(dbUrl);
-//        Utils.createTree(mindDb, 2);
+        //Utils.createTree(mindDb, 2);
 
 		mindDb = null;
 

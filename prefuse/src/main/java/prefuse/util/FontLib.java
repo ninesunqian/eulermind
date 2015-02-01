@@ -66,7 +66,32 @@ public class FontLib {
         lookups++;
         return f;
     }
-    
+
+    public static Font getFont(String name, boolean bold, boolean italic, int size) {
+
+        int fontStyle = Font.PLAIN;
+        if (bold) {
+            fontStyle |= Font.BOLD;
+        }
+        if (italic) {
+            fontStyle |= Font.ITALIC;
+        }
+
+        return getFont(name, fontStyle, size);
+    }
+
+    public static Font getFont(String name, boolean bold, boolean italic, double size) {
+
+        int fontStyle = Font.PLAIN;
+        if (bold) {
+            fontStyle |= Font.BOLD;
+        }
+        if (italic) {
+            fontStyle |= Font.ITALIC;
+        }
+
+        return getFont(name, fontStyle, size);
+    }
     /**
      * Get the number of cache misses to the Font object cache.
      * @return the number of cache misses

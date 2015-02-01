@@ -97,13 +97,13 @@ public class HandoveringReference extends MindOperator{
         m_logger.info("arg: {}:{}", "newReferrerPath", newReferrerPath);
         m_logger.info("arg: {}:{}", "newPos", newPos);
 
-        Tree tree = m_mindModel.findTree(m_rootDBId);
+        Tree tree = m_mindModel.findTree(m_rootDbId);
         Node oldReferrerNode = m_mindModel.getNodeByPath(tree, oldReferrerPath);
         Node newReferrerNode = m_mindModel.getNodeByPath(tree, newReferrerPath);
 
         Node child = oldReferrerNode.getChild(oldPos);
 
-        assert !MindModel.getDBId(oldReferrerNode).equals(MindModel.getDBId(newReferrerNode));
+        assert !MindModel.getDbId(oldReferrerNode).equals(MindModel.getDbId(newReferrerNode));
         assert m_mindModel.isRefNode(child);
 
         m_mindModel.handoverReferent(oldReferrerNode, oldPos, newReferrerNode, newPos);

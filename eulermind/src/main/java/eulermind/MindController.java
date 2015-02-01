@@ -19,7 +19,6 @@ import javax.swing.undo.UndoableEdit;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Hashtable;
 
 import org.slf4j.Logger;
@@ -69,7 +68,18 @@ public class MindController extends UndoManager {
                 comp.requestFocusInWindow();
             }
         });
-        findOrAddMindView(m_mindModel.m_mindDb.getRootId());
+
+        //findOrAddMindView(m_mindModel.sm_mindDb.getRootId());
+       Crawler.sm_mindDb = m_mindModel.m_mindDb;
+
+        Crawler crawler = new Crawler();
+        crawler.start();
+        int rootDepth = crawler.m_depthParentIdMap.size() - 5;
+        if (rootDepth < 0)
+            rootDepth = 0;
+
+        findOrAddMindView(crawler.m_depthParentIdMap.get(rootDepth));
+
 
         //防止切换tab时，焦点被切换到工具栏
         m_tabbedPane.setFocusCycleRoot(true);
@@ -144,7 +154,7 @@ public class MindController extends UndoManager {
         }
 
         Node node = currentView.getCursorSourceNode();
-        return m_mindModel.getDBId(node);
+        return m_mindModel.getDbId(node);
     }
 
     String getTreeNodeRows(Tree tree)
@@ -189,7 +199,7 @@ public class MindController extends UndoManager {
             int i = 0;
         }
 
-        MindView operatorBornView = exposeMindView(operator.m_rootDBId);
+        MindView operatorBornView = exposeMindView(operator.m_rootDbId);
 
         //repaint remain mindviews
         for (Object rootDBId : m_mindViews.keySet()) {

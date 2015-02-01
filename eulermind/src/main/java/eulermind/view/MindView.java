@@ -77,7 +77,7 @@ public class MindView extends Display {
 
     }
 
-    void endInserting(Object dbId, String text, Object parentDBId, String parentText)
+    void endInserting(Object dbId, String text, Object parentDbId, String parentText)
     {
         MindOperator operator = new AddingReference(m_mindModel, getCursorSourceNode().getParent(),
                 dbId, getCursorSourceNode().getIndex());
@@ -103,8 +103,8 @@ public class MindView extends Display {
             endInserting(text);
         }
 
-        public void promptListOk(Object dbId, String text, Object parentDBId, String parentText) {
-            endInserting(dbId, text, parentDBId, parentText);
+        public void promptListOk(Object dbId, String text, Object parentDbId, String parentText) {
+            endInserting(dbId, text, parentDbId, parentText);
         }
 
         public void cancel() {
@@ -423,7 +423,7 @@ public class MindView extends Display {
     //include node and edge, the edge is used rendering
     public boolean isPlaceholder(Tuple tuple)
     {
-        return (m_mindModel.getDBId(tuple) == null);
+        return (m_mindModel.getDbId(tuple) == null);
     }
 
     public NodeItem getCursorNodeItem()

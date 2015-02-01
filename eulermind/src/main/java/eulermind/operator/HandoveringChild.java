@@ -98,7 +98,7 @@ public class HandoveringChild extends MindOperator{
         m_logger.info("arg: {}:{}", "newParentPath", newParentPath);
         m_logger.info("arg: {}:{}", "newPos", newPos);
 
-        Tree tree = m_mindModel.findTree(m_rootDBId);
+        Tree tree = m_mindModel.findTree(m_rootDbId);
         Node oldParentNode = m_mindModel.getNodeByPath(tree, oldParentPath);
         Node newParentNode = m_mindModel.getNodeByPath(tree, newParentPath);
 
@@ -106,7 +106,7 @@ public class HandoveringChild extends MindOperator{
 
         assert ! m_mindModel.isSelfInDB(child, newParentNode) && ! m_mindModel.isDescendantInDB(child, newParentNode);
 
-        assert !MindModel.getDBId(oldParentNode).equals(MindModel.getDBId(newParentNode));
+        assert !MindModel.getDbId(oldParentNode).equals(MindModel.getDbId(newParentNode));
         assert !m_mindModel.isRefNode(child);
 
         m_mindModel.handoverChild(oldParentNode, oldPos, newParentNode, newPos);

@@ -95,7 +95,7 @@ public class ChangingPosition extends MindOperator{
         }
 
         Node parentNode = getNodeByPath(parentPath);
-        m_mindModel.changeChildPos(m_mindModel.getDBId(parentNode), oldPos, newPos);
+        m_mindModel.changeChildPos(m_mindModel.getDbId(parentNode), oldPos, newPos);
 
         m_logger.info("ret:");
     }

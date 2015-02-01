@@ -75,13 +75,13 @@ public class MindDB {
 
 	String m_path;
 
-    final int sm_parentDBIdCacheCapacity = 2048;
+    final int sm_parentDbIdCacheCapacity = 2048;
 
-    LinkedHashMap<Object, Object> m_parentDBIdCache =
+    LinkedHashMap<Object, Object> m_parentDbIdCache =
             new LinkedHashMap<Object, Object>(256, 0.75f, true) {
 
           protected boolean removeEldestEntry (Map.Entry<Object, Object> eldest) {
-             return size() > sm_parentDBIdCacheCapacity;
+             return size() > sm_parentDbIdCacheCapacity;
           }
      };
 
@@ -115,10 +115,16 @@ public class MindDB {
         m_graph.commit();
     }
 
+    int m_vertexCount = 0;
 	private Vertex addVertex(Object arg0) {
         Vertex vertex =  m_graph.addVertex(null, MindModel.sm_textPropName, "a");
+        m_vertexCount++;
         return m_graph.getVertex(vertex.getId());
 	}
+
+    public int getVertexCount() {
+        return m_vertexCount;
+    }
 
 	public Edge getEdge(Object arg0) {
 		return m_graph.getEdge(arg0);
@@ -230,10 +236,10 @@ public class MindDB {
 
         LinkedList inheritPath = new LinkedList();
 
-        Object parentDBId = getParentDBId(dbId);
-        while (parentDBId != null) {
-            inheritPath.addFirst(parentDBId);
-            parentDBId = getParentDBId(parentDBId);
+        Object parentDbId = getParentDbId(dbId);
+        while (parentDbId != null) {
+            inheritPath.addFirst(parentDbId);
+            parentDbId = getParentDbId(parentDbId);
         }
 
         return inheritPath;
@@ -267,15 +273,15 @@ public class MindDB {
     }
 
     boolean isVertexIdChild(Object thiz, Object that) {
-        return isVertexIdSelf(thiz, getParentDBId(that));
+        return isVertexIdSelf(thiz, getParentDbId(that));
     }
 
     boolean isVertexIdParent(Object thiz, Object that) {
-        return isVertexIdSelf(getParentDBId(thiz), that);
+        return isVertexIdSelf(getParentDbId(thiz), that);
     }
 
     boolean isVertexIdSibling(Object thiz, Object that) {
-        return isVertexIdSelf(getParentDBId(thiz), getParentDBId(that));
+        return isVertexIdSelf(getParentDbId(thiz), getParentDbId(that));
     }
 
 
@@ -444,7 +450,7 @@ public class MindDB {
 
 	public EdgeVertex addChild (Vertex parent, int pos)
 	{
-        m_logger.info("MindDB insert at {}", pos);
+        m_logger.debug("MindDB insert at {}", pos);
 
 		Vertex child = addVertex(null);
         parent = getVertex(parent.getId());
@@ -456,7 +462,7 @@ public class MindDB {
         child = getVertex(child.getId());
         edge = getEdge(edge.getId());
 
-        m_parentDBIdCache.put(child.getId(), parent.getId());
+        m_parentDbIdCache.put(child.getId(), parent.getId());
 
         verifyVertex(parent);
         verifyVertex(child);
@@ -503,26 +509,26 @@ public class MindDB {
 		return children;
 	}
 	
-    public Object getParentDBId(Object dbId)
+    public Object getParentDbId(Object dbId)
     {
         if (dbId.equals(m_rootId)) {
             return null;
         }
 
-        Object cachedParentDBId = m_parentDBIdCache.get(dbId);
+        Object cachedParentDbId = m_parentDbIdCache.get(dbId);
 
-        if (cachedParentDBId != null) {
-            return cachedParentDBId;
+        if (cachedParentDbId != null) {
+            return cachedParentDbId;
         } else {
             EdgeVertex toParent = getParentSkipCache(getVertex(dbId));
             if (toParent == null || toParent.m_vertex == null) {
                 int i= 1;
             }
-            Object parentDBId = toParent.m_vertex.getId();
+            Object parentDbId = toParent.m_vertex.getId();
             assert(!(dbId instanceof Vertex));
-            assert(!(parentDBId instanceof Vertex));
-            m_parentDBIdCache.put(dbId, parentDBId);
-            return parentDBId;
+            assert(!(parentDbId instanceof Vertex));
+            m_parentDbIdCache.put(dbId, parentDbId);
+            return parentDbId;
         }
     }
 
@@ -532,13 +538,13 @@ public class MindDB {
             return null;
         }
 
-        Object cachedParentDBId = m_parentDBIdCache.get(vertex.getId());
-        if (cachedParentDBId == null) {
+        Object cachedParentDbId = m_parentDbIdCache.get(vertex.getId());
+        if (cachedParentDbId == null) {
             EdgeVertex toParent = getParentSkipCache(vertex);
-            m_parentDBIdCache.put(vertex.getId(), toParent.m_vertex.getId());
+            m_parentDbIdCache.put(vertex.getId(), toParent.m_vertex.getId());
             return toParent.m_vertex;
         } else {
-            return getVertex(cachedParentDBId);
+            return getVertex(cachedParentDbId);
         }
     }
 
@@ -548,7 +554,7 @@ public class MindDB {
         removeEdge (fromParent, fromPos, EdgeType.INCLUDE);
         Edge edge = addEdge(toParent, child, toPos, EdgeType.INCLUDE);
 
-        m_parentDBIdCache.put(child.getId(), toParent.getId());
+        m_parentDbIdCache.put(child.getId(), toParent.getId());
 
         verifyVertex(fromParent);
         verifyVertex(toParent);
@@ -816,7 +822,7 @@ public class MindDB {
         m_trashIndex.remove(TRASH_KEY_NAME, TRASH_KEY_NAME, vertex);
 
         assert(!(parentId instanceof Vertex));
-        m_parentDBIdCache.put(vertex.getId(), parentId);
+        m_parentDbIdCache.put(vertex.getId(), parentId);
 		return new EdgeVertex(edge, parent);
 	}
 
@@ -880,11 +886,11 @@ public class MindDB {
         return m_graph.getVertices(label, iKey, iValue);
     }
 
-    private void verifyCachedInheritPathValid(Object parentDBId, Object childDBId)
+    private void verifyCachedInheritPathValid(Object parentDbId, Object childDbId)
     {
-        List childInheritPath = getInheritPath(childDBId);
-        List parentInheritPath = getInheritPath(parentDBId);
-        assert childInheritPath.get(childInheritPath.size()-1).equals(parentDBId) &&
+        List childInheritPath = getInheritPath(childDbId);
+        List parentInheritPath = getInheritPath(parentDbId);
+        assert childInheritPath.get(childInheritPath.size()-1).equals(parentDbId) &&
                 childInheritPath.subList(0, childInheritPath.size()-1).equals(parentInheritPath);
     }
 

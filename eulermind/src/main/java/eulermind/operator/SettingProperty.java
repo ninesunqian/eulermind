@@ -36,7 +36,7 @@ public class SettingProperty extends MindOperator {
 
     public SettingProperty(MindModel mindModel, Node formerCursor, String property, Object newValue) {
         super(mindModel, formerCursor);
-        m_nodeDBId = m_mindModel.getDBId(formerCursor);
+        m_nodeDBId = m_mindModel.getDbId(formerCursor);
         m_property = property;
         m_newValue = newValue;
         m_oldValue = m_mindModel.getProperty(m_nodeDBId, m_property);

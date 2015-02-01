@@ -1,0 +1,31 @@
+<dialog name="mainframe" title="style editor" layout="GridBagLayout" size="800,600"  >
+
+    <panel>
+        <layout type="FormLayout" columns="right:pref, 3dlu, pref, 3dlu, pref"
+                rows="p, 5dlu, p, 3dlu, p, 3dlu, p, 3dlu, p, 3dlu, p, 3dlu, p, 5dlu, p" columnGroups="1, 3, 5"/>
+        <styleList constraints="1, 1"/>
+        <textfield constraints="2, 1"/>
+
+        <label constraints="1, 2" text="family"/>
+        <fontCombobox constraints="2, 2"/>
+
+        <label constraints="3, 1" text="size"/>
+        <combobox constraints="3, 3"/>
+
+        <label constraints="4, 1" text="italic"/>
+        <boolCombobox constraints="4, 2"/>
+
+        <label constraints="5, 1" text="bold"/>
+        <boolCombobox constraints="5, 2"/>
+
+        <colorButton constraints="6, 1" text="T"/>
+        <colorButton constraints="6, 2" text="T"/>
+        <iconButton constraints="6, 3"/>
+
+        <button constraints="8, 1" text="new"/>
+        <button constraints="8, 2" text="delete"/>
+        <button constraints="8, 3" text="save"/>
+        <button constraints="8, 4" text="up"/>
+        <button constraints="8, 5" text="down"/>
+    </panel>
+</dialog>

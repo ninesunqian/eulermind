@@ -103,7 +103,7 @@ class NodeDraggingControl extends NodeControl {
             case LINK:
                 return true;
             case MOVE:
-                if (!MindModel.getDBId(parentNode).equals(MindModel.getDBId(newParentNode))) {
+                if (!MindModel.getDbId(parentNode).equals(MindModel.getDbId(newParentNode))) {
                     if (! m_mindView.m_mindModel.isRefNode(fromNode)) {
                         return m_mindView.m_mindModel.canResetParent(fromNode, (Node)possibleEdgeSource[0]);
                     }
@@ -186,7 +186,7 @@ class NodeDraggingControl extends NodeControl {
 
             Node parent = draggedNode.getParent();
 
-            if (MindModel.getDBId(newParent).equals(MindModel.getDBId(parent))) {
+            if (MindModel.getDbId(newParent).equals(MindModel.getDbId(parent))) {
                 int oldPosition = draggedNode.getIndex();
                 if (oldPosition < newPosition) {
                     newPosition--;

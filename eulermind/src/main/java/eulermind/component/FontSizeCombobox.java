@@ -1,6 +1,8 @@
 package eulermind.component;
 
 import eulermind.Style;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import prefuse.util.FontLib;
 
 import javax.swing.*;
@@ -8,9 +10,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /*
 The MIT License (MIT)
@@ -34,11 +33,11 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public class FontCombobox extends JComboBox implements PropertyComponent {
+public class FontSizeCombobox extends JComboBox implements PropertyComponent {
 
     final Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
-    public FontCombobox()
+    public FontSizeCombobox()
     {
         setRenderer(new FontCellRenderer());
 
@@ -52,17 +51,10 @@ public class FontCombobox extends JComboBox implements PropertyComponent {
         addActionListener(m_updateMindNodeAction);
     }
 
-    //boolean m_updateMindNodeEnabled = true;
-
     ActionListener m_updateMindNodeAction = new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e)
         {
-            /*
-            if (!m_updateMindNodeEnabled) {
-                return;
-            }
-            */
 
             if (m_propertyComponentConnector != null) {
                 Object value = getSelectedItem();
@@ -100,9 +92,7 @@ public class FontCombobox extends JComboBox implements PropertyComponent {
     @Override
     public void setPropertyValue(Object value)
     {
-        //m_updateMindNodeEnabled = false;
         setSelectedItem(value);
-        //m_updateMindNodeEnabled = true;
     }
 
     @Override

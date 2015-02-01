@@ -57,7 +57,7 @@ public class AddingChild extends MindOperator{
 
     public void undo() {
         Node parent = getNodeByPath(m_parentPathAfterDoing);
-        m_mindModel.trashNode(MindModel.getDBId(parent), pos);
+        m_mindModel.trashNode(MindModel.getDbId(parent), pos);
     }
 
     public void redo() {

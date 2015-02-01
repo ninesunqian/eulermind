@@ -4,6 +4,7 @@ import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.converters.extended.NamedMapConverter;
 import com.thoughtworks.xstream.io.xml.DomDriver;
+import eulermind.component.MindIconDialog;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,11 +12,11 @@ import prefuse.data.Node;
 import prefuse.util.ColorLib;
 import prefuse.util.FontLib;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
 /*
 The MIT License (MIT)
@@ -42,19 +43,21 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 @XStreamAlias("style")
 public class Style {
 
-    public final static String sm_fontFamilyPropName = "fontFamily";
-    public final static String sm_fontSizePropName = "fontSize";
-    public final static String sm_boldPropName = "bold";
-    public final static String sm_italicPropName = "italic";
-    public final static String sm_underlinedPropName = "underlined";
-    public final static String sm_nodeColorPropName = "nodeColor";
-    public final static String sm_textColorPropName = "textColor";
-    public final static String sm_stylePropName = "style";
-
     public final static int sm_cursorBackColor = ColorLib.rgb(210, 210, 210);
     public final static int sm_shadowBackColor = ColorLib.rgb(240, 240, 240);
     public final static int sm_defaultNodeColor = ColorLib.rgb(255, 255, 255);
     public final static int sm_defaultTextColor = ColorLib.rgb(0, 0, 0);
+
+    private final static String DEFAULT_STYLE_NAME = "default";
+    public static String sm_iconsList = "idea;help;yes;messagebox_warning;stop-sign;closed;info;button_ok;button_cancel;"
+            + "full-1;full-2;full-3;full-4;full-5;full-6;full-7;full-8;full-9;full-0;"
+            + "stop;prepare;go;back;forward;up;down;attach;ksmiletris;"
+            + "smiley-neutral;smiley-oh;smiley-angry;smily_bad;clanbomber;desktop_new;gohome;"
+            + "folder;korn;Mail;kmail;list;edit;kaddressbook;knotify;password;pencil;wizard;xmag;bell;bookmark;"
+            + "penguin;licq;freemind_butterfly;broken-line;calendar;clock;hourglass;launch;"
+            + "flag-black;flag-blue;flag-green;flag-orange;flag-pink;flag;flag-yellow;family;"
+            + "female1;female2;male1;male2;fema;group";
+    private static String sm_iconDir = MindIconDialog.class.getClassLoader().getResource("icons/").getPath();
 
     @XStreamAlias("fontFamily")
     String m_fontFamily;
@@ -68,9 +71,6 @@ public class Style {
     @XStreamAlias("italic")
     Boolean m_italic;
 
-    @XStreamAlias("underlined")
-    Boolean m_underlined;
-
     @XStreamAlias("nodeColor")
     Integer m_nodeColor;
 
@@ -80,32 +80,71 @@ public class Style {
     @XStreamAlias("icon")
     String m_icon;
 
-    @XStreamAlias("shortcutKey")
-    String m_shortcutKey;
-
     Style() {
 
     }
 
     static HashMap<String, Style> sm_styles = new HashMap<String, Style>();
+    static Style sm_defaultStyle;
 
-    static public Style getStyle(String name) {
+    private static void initDefaultStyle()
+    {
+        if (! hasStyle(DEFAULT_STYLE_NAME)) {
+            sm_defaultStyle = new Style();
+            sm_styles.put(DEFAULT_STYLE_NAME, sm_defaultStyle);
+        } else {
+            sm_defaultStyle = sm_styles.get(DEFAULT_STYLE_NAME);
+        }
+
+        if (sm_defaultStyle.m_fontFamily == null ||
+                !getFontFamilies().contains(sm_defaultStyle.m_fontFamily)) {
+            sm_defaultStyle.m_fontFamily = Font.SANS_SERIF;
+        }
+
+        if (sm_defaultStyle.m_fontSize == null ||
+                !getFontSizes().contains(sm_defaultStyle.m_fontSize)) {
+            sm_defaultStyle.m_fontSize = 16;
+        }
+
+        if (sm_defaultStyle.m_bold == null) {
+            sm_defaultStyle.m_bold = false;
+        }
+
+        if (sm_defaultStyle.m_italic == null) {
+            sm_defaultStyle.m_italic = false;
+        }
+
+        if (sm_defaultStyle.m_textColor == null) {
+            sm_defaultStyle.m_textColor = ColorLib.rgb(255, 0, 0);
+        }
+
+        if (sm_defaultStyle.m_nodeColor == null) {
+            sm_defaultStyle.m_nodeColor = ColorLib.rgb(255, 255, 255);
+        }
+    }
+
+    public static Set<String> getStyleNames()
+    {
+        return sm_styles.keySet();
+    }
+
+    public static Style getStyle(String name) {
         return sm_styles.get(name);
     }
 
-    static public Style getDefaultStyle() {
-        return sm_styles.get("default");
+    public static Style getDefaultStyle() {
+        return sm_defaultStyle;
     }
 
-    static public void addStyle(String name, Style style) {
+    public static void addStyle(String name, Style style) {
         sm_styles.put(name, style);
     }
 
-    static public void removeStyle(String name) {
+    public static void removeStyle(String name) {
         sm_styles.remove(name);
     }
 
-    static public boolean hasStyle(String name) {
+    public static boolean hasStyle(String name) {
         return sm_styles.containsKey(name);
     }
 
@@ -120,7 +159,7 @@ public class Style {
         return xstream;
     }
 
-    static void load() {
+    public static void load() {
         String userStylesPath = System.getProperty("user.home") + "/.eulermind/styles.xml";
         File userStylesFile = new File(userStylesPath);
 
@@ -136,11 +175,16 @@ public class Style {
             }
         }
 
+        /*
         XStream xstream = createXStream();
         sm_styles = (HashMap)xstream.fromXML(userStylesFile);
+        */
+        sm_styles = new HashMap<String, Style>();
+
+        initDefaultStyle();
     }
 
-    static void save() {
+    public static void save() {
 
         String userStylesPath = System.getProperty("user.home") + "/.eulermind/styles.xml";
         File userStylesFile = new File(userStylesPath);
@@ -157,6 +201,24 @@ public class Style {
     }
 
     static Logger s_logger = LoggerFactory.getLogger(Style.class);
+
+
+    ArrayList<String> fontFamilies = null;
+    public static ArrayList<String> getFontFamilies() {
+        ArrayList<String> fontFamilies = new ArrayList<String>();
+        for (String family : GraphicsEnvironment .getLocalGraphicsEnvironment().getAvailableFontFamilyNames()) {
+            Font font = new Font(family, Font.PLAIN, 1);
+            if (font.canDisplay('a')) {
+                fontFamilies.add(family);
+            }
+        }
+
+        return fontFamilies;
+    }
+
+    public static ArrayList<Integer> getFontSizes() {
+        return new ArrayList<Integer>(Arrays.asList(8, 10, 12, 14, 16, 18, 20, 24, 28));
+    }
 
     public static void main(String argv[]) {
         Style normalStyle = new Style();
@@ -180,98 +242,67 @@ public class Style {
         s_logger.info("fontSize = {}", normalStyle.m_fontSize);
     }
 
-    static Style sm_defaultStyle;
-
-    static Style getNodeStyle(Node node)
+    public static String getIconPath(String name)
     {
-        String styleName = (String) node.get(Style.sm_stylePropName);
+        return name == null ? null : sm_iconDir + "/" + name + ".png";
+    }
 
-        if (styleName != null && styleName.length() > 0) {
-            Style specialStyle = getStyle(styleName);
-            if (specialStyle != null) {
-                return specialStyle;
+    public static Icon getImageIcon(String name) {
+        return new ImageIcon(Style.getIconPath(name));
+    }
+
+    static private Style getStyleSurely(String name)
+    {
+        if (name == null) {
+            return sm_defaultStyle;
+        } else {
+            Style namedStyle = sm_styles.get(name);
+            if (namedStyle == null) {
+                return namedStyle;
             }
+            return sm_defaultStyle;
         }
-
-        return sm_defaultStyle;
     }
 
-    public static Font getNodeFont(Node node)
+    public static String getFontFamilySurely(String name)
     {
-        String family = (String)node.get(Style.sm_fontFamilyPropName);
-        Integer size = (Integer)node.get(Style.sm_fontSizePropName);
-        Boolean bold = (Boolean)node.get(Style.sm_boldPropName);
-        Boolean italic = (Boolean)node.get(Style.sm_italicPropName);
-
-        Style style = getNodeStyle(node);
-
-        if (family == null) {
-            family = (style != null && style.m_fontFamily != null)  ?  style.m_fontFamily : "SansSerif";
-        }
-
-        if (size == null) {
-            size = (style != null && style.m_fontSize != null) ?  style.m_fontSize : 16;
-        }
-
-        if (bold == null) {
-            bold = (style != null && style.m_bold != null) ? style.m_bold : false;
-        }
-
-        if (italic == null) {
-            italic = (style != null && style.m_italic != null) ? style.m_italic : false;
-        }
-
-        int fontStyle = Font.PLAIN;
-        if (bold) {
-            fontStyle |= Font.BOLD;
-        }
-        if (italic) {
-            fontStyle |= Font.ITALIC;
-        }
-
-        //String family = (family)item.get(MindModel.sm_fontFamilyPropName);
-        return FontLib.getFont(family, fontStyle, size);
+        Style style = getStyleSurely(name);
+        return style.m_fontFamily != null ? style.m_fontFamily : sm_defaultStyle.m_fontFamily;
     }
 
-    public static int getNodeColor(Node node)
+    public static Integer getFontSizeSurely(String name)
     {
-        Integer color = (Integer)node.get(Style.sm_nodeColorPropName);
-
-        Style style = getNodeStyle(node);
-
-        if (color == null) {
-            color = style != null && style.m_nodeColor != null ? style.m_nodeColor : ColorLib.rgb(255, 255, 255);
-        }
-
-        return color;
+        Style style = getStyleSurely(name);
+        return style.m_fontSize != null ? style.m_fontSize : sm_defaultStyle.m_fontSize;
     }
 
-    public static int getTextColor(Node node)
+    public static Boolean getBoldSurely(String name)
     {
-        Integer color = (Integer)node.get(Style.sm_textColorPropName);
-
-        Style style = getNodeStyle(node);
-
-        if (color == null) {
-            color = style != null && style.m_textColor != null ? style.m_textColor : ColorLib.rgb(0, 0, 0);
-        }
-
-        return color;
+        Style style = getStyleSurely(name);
+        return style.m_bold != null ? style.m_bold : sm_defaultStyle.m_bold;
     }
 
-    public static ArrayList<String> getFontFamilies() {
-        ArrayList<String> fontFamilies = new ArrayList<String>();
-        for (String family : GraphicsEnvironment .getLocalGraphicsEnvironment().getAvailableFontFamilyNames()) {
-            Font font = new Font(family, Font.PLAIN, 1);
-            if (font.canDisplay('a')) {
-                fontFamilies.add(family);
-            }
-        }
-
-        return fontFamilies;
+    public static Boolean getItalicSurely(String name)
+    {
+        Style style = getStyleSurely(name);
+        return style.m_italic != null ? style.m_italic : sm_defaultStyle.m_italic;
     }
 
-    public static String getDefaultFontFamily() {
-        return "SansSerif";
+    public static Integer getTextColorSurely(String name)
+    {
+        Style style = getStyleSurely(name);
+        return style.m_textColor != null ? style.m_textColor : sm_defaultStyle.m_textColor;
+    }
+
+    public static Integer getNodeColorSurely(String name)
+    {
+        Style style = getStyleSurely(name);
+        return style.m_nodeColor != null ? style.m_nodeColor : sm_defaultStyle.m_nodeColor;
+    }
+
+    public static String getIconSurely(String name)
+    {
+        Style style = getStyleSurely(name);
+        return style.m_icon != null ? style.m_icon : sm_defaultStyle.m_icon;
     }
 }

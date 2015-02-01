@@ -5,10 +5,7 @@ import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
 
-import eulermind.component.BooleanCombobox;
-import eulermind.component.ColorButton;
-import eulermind.component.FontCombobox;
-import eulermind.component.MindIconToolBar;
+import eulermind.component.*;
 import eulermind.view.MindEditor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,18 +38,20 @@ public class MainFrame  extends JFrame {
 
     MindModel m_mindModel;
     MindController m_mindController;
-    MindIconToolBar m_mindIconToolBar;
+    StyleList m_styleList;
     JTabbedPane m_tabbedPane;
 
     SwingEngine m_swingEngine;
 
-    FontCombobox m_fontFamilyCombobox;
+    FontFamilyCombobox m_fontFamilyCombobox;
     BooleanCombobox m_italicCombobox;
     BooleanCombobox m_boldCombobox;
-    //FontCombobox m_fontSizeCombobox;
+    //FontFamilyCombobox m_fontSizeCombobox;
 
     ColorButton m_textColorButton;
     ColorButton m_nodeColorButton;
+
+    IconButton m_iconButton;
 
     MindEditor m_searchInputer;
 
@@ -63,10 +62,11 @@ public class MainFrame  extends JFrame {
     {
         try {
             m_swingEngine = new SwingEngine(this);
-            m_swingEngine.getTaglib().registerTag("mindIconToolBar", MindIconToolBar.class);
-            m_swingEngine.getTaglib().registerTag("fontCombobox", FontCombobox.class);
+            m_swingEngine.getTaglib().registerTag("fontCombobox", FontFamilyCombobox.class);
             m_swingEngine.getTaglib().registerTag("booleanCombobox", BooleanCombobox.class);
             m_swingEngine.getTaglib().registerTag("colorButton", ColorButton.class);
+            m_swingEngine.getTaglib().registerTag("iconButton", IconButton.class);
+            m_swingEngine.getTaglib().registerTag("styleList", StyleList.class);
 
             m_swingEngine.getTaglib().registerTag("mindEditor", MindEditor.class);
             m_swingEngine.render("main_frame_layout.xml");
@@ -77,7 +77,6 @@ public class MainFrame  extends JFrame {
         m_mindModel = new MindModel(dbUrl);
         m_mindController = new MindController(m_mindModel, m_tabbedPane);
 
-        m_mindIconToolBar.setMindController(m_mindController);
 
         m_favoriteMenu.addMenuListener(m_favoriteMenuListener);
         m_ancestorMenu.addMenuListener(m_ancestorMenuListener);
@@ -85,11 +84,15 @@ public class MainFrame  extends JFrame {
         m_textColorButton.setForBackground(false);
         m_nodeColorButton.setForBackground(true);
 
-        m_mindController.connectPropertyComponent(Style.sm_fontFamilyPropName, m_fontFamilyCombobox);
-        m_mindController.connectPropertyComponent(Style.sm_italicPropName, m_italicCombobox);
-        m_mindController.connectPropertyComponent(Style.sm_boldPropName, m_boldCombobox);
-        m_mindController.connectPropertyComponent(Style.sm_textColorPropName, m_textColorButton);
-        m_mindController.connectPropertyComponent(Style.sm_nodeColorPropName, m_nodeColorButton);
+        //TODO: 应该都是MindModel的值
+        m_mindController.connectPropertyComponent(MindModel.sm_fontFamilyPropName, m_fontFamilyCombobox);
+        m_mindController.connectPropertyComponent(MindModel.sm_italicPropName, m_italicCombobox);
+        m_mindController.connectPropertyComponent(MindModel.sm_boldPropName, m_boldCombobox);
+        m_mindController.connectPropertyComponent(MindModel.sm_textColorPropName, m_textColorButton);
+        m_mindController.connectPropertyComponent(MindModel.sm_nodeColorPropName, m_nodeColorButton);
+        m_mindController.connectPropertyComponent(MindModel.sm_iconPropName, m_iconButton);
+
+        m_mindController.connectPropertyComponent(MindModel.sm_stylePropName, m_styleList);
 
         m_searchInputer.init(m_mindController.m_mindModel.m_mindDb);
         m_searchInputer.setHasPromptList(true);

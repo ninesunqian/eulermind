@@ -55,13 +55,13 @@ public class AddingReference extends MindOperator {
     public AddingReference(MindModel mindModel, Node formerCursor, Node referrerNode, int pos) {
         super(mindModel, formerCursor);
         s_logger.info(String.format("formerCursor %s -- refererNode %s", m_mindModel.getNodeDebugInfo(formerCursor), m_mindModel.getNodeDebugInfo(referrerNode)));
-        init(referrerNode, m_mindModel.getDBId(referrerNode), m_mindModel.getDBId(formerCursor), pos);
+        init(referrerNode, m_mindModel.getDbId(referrerNode), m_mindModel.getDbId(formerCursor), pos);
     }
 
     //formerCursor is referrer: using add referent node by edit prompter
     public AddingReference(MindModel mindModel, Node formerCursor, Object referentDBId, int pos) {
         super(mindModel, formerCursor);
-        init(formerCursor, m_mindModel.getDBId(formerCursor), referentDBId, pos);
+        init(formerCursor, m_mindModel.getDbId(formerCursor), referentDBId, pos);
     }
 
     public void does() {
