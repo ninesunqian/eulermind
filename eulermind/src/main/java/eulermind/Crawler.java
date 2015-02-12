@@ -16,8 +16,6 @@ import edu.uci.ics.crawler4j.fetcher.PageFetcher;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtConfig;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtServer;
 import eulermind.importer.TikaPlainTextImporter;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,13 +51,14 @@ public class Crawler extends WebCrawler {
 
     TikaPlainTextImporter m_importer;
 
-    HashMap<Integer, Object> m_depthParentIdMap = new HashMap<Integer, Object>();
+    HashMap<Integer, Object> m_docId2DbIdMap = new HashMap<Integer, Object>();
+    static final int m_rootDocId = 0;
 
     int page_count = 0;
 
     public Crawler() {
-        initConfig(1, 0);
-        m_depthParentIdMap.put(0, sm_mindDb.getRootId());
+        initConfig(10000, 100);
+        m_docId2DbIdMap.put(m_rootDocId, sm_mindDb.getRootId());
 
         //TODO: 放到mindModel内部，用一个函数实现import text的功能
         m_importer = new TikaPlainTextImporter(sm_mindDb);
@@ -82,11 +81,7 @@ public class Crawler extends WebCrawler {
     @Override
     public boolean shouldVisit(Page page, WebURL url) {
         String href = url.getURL().toLowerCase();
-
-        //return true;
-
         return !BINARY_FILES_EXTENSIONS.matcher(href).matches();
-        //return !BINARY_FILES_EXTENSIONS.matcher(href).matches() && href.startsWith("http://baike.baidu.com");
     }
 
     private Object addChild(Object parentDbId, String text)
@@ -106,22 +101,22 @@ public class Crawler extends WebCrawler {
         super.visit(page);
 
         int docid = page.getWebURL().getDocid();
+        int parentDocid = page.getWebURL().getParentDocid();
         String url = page.getWebURL().getURL();
         String parentUrl = page.getWebURL().getParentUrl();
+        page.getWebURL().getParentDocid();
 
-        m_logger.info("URL: {}", url);
-        m_logger.debug("Parent page: {}", parentUrl);
+        m_logger.info("URL: {}, parentUrl: {}", url, parentUrl);
+        m_logger.info("docId:{},  parentDocid: {}", docid, parentDocid);
+
+
 
         if (page.getParseData() instanceof HtmlParseData) {
 
-            int depth = page.getWebURL().getDepth();
-            Object parentDbId = m_depthParentIdMap.get(depth);
-
-            m_logger.info("PPPPP: depth {},  parentDbId:{}", depth, parentDbId);
+            Object parentDbId = m_docId2DbIdMap.get(parentDocid);
 
             Object currentDbId = addChild(parentDbId, url);
-            m_logger.info("PPPPP: currentDbId:{}", currentDbId);
-            m_depthParentIdMap.put(depth + 1, currentDbId);
+            m_docId2DbIdMap.put(docid, currentDbId);
 
             HtmlParseData htmlParseData = (HtmlParseData) page.getParseData();
             String text = htmlParseData.getText();
@@ -163,7 +158,8 @@ public class Crawler extends WebCrawler {
         CrawlController controller = null;
 
         try {
-            controller = new CrawlController(m_config, pageFetcher, robotstxtServer);
+            //controller = new CrawlController(m_config, pageFetcher, robotstxtServer);
+            controller = new CrawlController(m_config, pageFetcher);
         } catch (Exception e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
@@ -173,12 +169,14 @@ public class Crawler extends WebCrawler {
          * URLs that are fetched and then the crawler starts following links
          * which are found in these pages
          */
-        //controller.addSeed("http://baike.baidu.com");
-        //controller.addSeed("http://zhidao.baidu.com");
+        controller.addSeed("http://baike.baidu.com");
+        controller.addSeed("http://zhidao.baidu.com");
         controller.addSeed("http://www.163.com");
         controller.addSeed("http://www.sohu.com");
         controller.addSeed("http://www.sina.com");
         controller.addSeed("http://www.sina.com.cn");
+        controller.addSeed("http://www.taobao.com");
+        controller.addSeed("http://zh.wikipedia.org/wiki/Wikipedia:%E9%A6%96%E9%A1%B5");
 
         /*
          * Start the crawl. This is a blocking operation, meaning that your code
@@ -200,7 +198,7 @@ public class Crawler extends WebCrawler {
      * Be polite: Make sure that we don't send more than 1 request per
      * second (1000 milliseconds between requests).
      */
-        m_config.setPolitenessDelay(0);
+        m_config.setPolitenessDelay(1500);
 
     /*
      * You can set the maximum crawl depth here. The default value is -1 for

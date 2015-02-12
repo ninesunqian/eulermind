@@ -155,6 +155,7 @@ public class MindView extends Display {
 
 	public MindView(MindModel mindModel, MindController undoManager, Object rootId) {
 		super(new Visualization());
+        JPanel pp = new JPanel();
 
         //s_logger.setLevel(Level.OFF);
 		setSize(700, 600);

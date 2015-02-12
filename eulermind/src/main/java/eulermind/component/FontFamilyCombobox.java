@@ -37,15 +37,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 public class FontFamilyCombobox extends JComboBox implements PropertyComponent {
 
     final Logger m_logger = LoggerFactory.getLogger(this.getClass());
+    ArrayList<String> m_families = Style.getFontFamilies();
 
     public FontFamilyCombobox()
     {
         setRenderer(new FontCellRenderer());
 
-        ArrayList<String> families = Style.getFontFamilies();
 
         addItem(null);
-        for (Object item : families) {
+        for (Object item : m_families) {
             addItem(item);
         }
 
@@ -58,8 +58,7 @@ public class FontFamilyCombobox extends JComboBox implements PropertyComponent {
         {
 
             if (m_propertyComponentConnector != null) {
-                Object value = getSelectedItem();
-                m_propertyComponentConnector.updateMindNode(value);
+                m_propertyComponentConnector.updateMindNode(getValue());
             }
         }
     };
@@ -91,9 +90,17 @@ public class FontFamilyCombobox extends JComboBox implements PropertyComponent {
     }
 
     @Override
-    public void setPropertyValue(Object value)
+    public void setValue(Object value)
     {
-        setSelectedItem(value);
+        if (m_families.indexOf(value) >= 0) {
+            setSelectedItem(value);
+        }
+    }
+
+    @Override
+    public String getValue()
+    {
+        return (String)getSelectedItem();
     }
 
     @Override

@@ -90,9 +90,8 @@ public class ColorButton extends JButton implements PropertyComponent {
         {
 
             m_dialog.setVisible(true);
-            //如何区分去掉颜色，和取消选择
             if (m_choosed) {
-                m_propertyComponentConnector.updateMindNode(m_color == null ? null : (Integer)m_color.getRGB());
+                m_propertyComponentConnector.updateMindNode(getValue());
                 updateButtonColor();
             }
         }
@@ -117,7 +116,7 @@ public class ColorButton extends JButton implements PropertyComponent {
     }
 
     @Override
-    public void setPropertyValue(Object value)
+    public void setValue(Object value)
     {
         if (value == null) {
             m_color = null;
@@ -125,6 +124,12 @@ public class ColorButton extends JButton implements PropertyComponent {
             m_color = ColorLib.getColor((Integer)value);
         }
         updateButtonColor();
+    }
+
+    @Override
+    public Integer getValue()
+    {
+        return m_color == null ? null : m_color.getRGB();
     }
 
     @Override

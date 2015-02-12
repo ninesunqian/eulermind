@@ -50,23 +50,13 @@ public class BooleanCombobox extends JComboBox implements PropertyComponent {
         public void actionPerformed(ActionEvent e)
         {
             if (m_propertyComponentConnector != null) {
-                switch (getSelectedIndex()) {
-                    case 0:
-                        m_propertyComponentConnector.updateMindNode(null);
-                        break;
-                    case 1:
-                        m_propertyComponentConnector.updateMindNode(true);
-                        break;
-                    case 2:
-                        m_propertyComponentConnector.updateMindNode(false);
-                        break;
-                }
+                m_propertyComponentConnector.updateMindNode(getValue());
             }
         }
     };
 
     @Override
-    public void setPropertyValue(Object value)
+    public void setValue(Object value)
     {
         if (value == null) {
             setSelectedIndex(0);
@@ -78,6 +68,14 @@ public class BooleanCombobox extends JComboBox implements PropertyComponent {
         } else {
             setSelectedIndex(0);
         }
+    }
+
+    @Override
+    public Boolean getValue()
+    {
+        int index = getSelectedIndex();
+        Boolean []values = {null, true, false};
+        return values[index];
     }
 
     @Override

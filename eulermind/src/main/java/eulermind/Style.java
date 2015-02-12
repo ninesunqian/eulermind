@@ -60,40 +60,43 @@ public class Style {
     private static String sm_iconDir = MindIconDialog.class.getClassLoader().getResource("icons/").getPath();
 
     @XStreamAlias("fontFamily")
-    String m_fontFamily;
+    public String m_fontFamily;
 
     @XStreamAlias("fontSize")
-    Integer m_fontSize;
+    public Integer m_fontSize;
 
     @XStreamAlias("bold")
-    Boolean m_bold;
+    public Boolean m_bold;
 
     @XStreamAlias("italic")
-    Boolean m_italic;
+    public Boolean m_italic;
 
     @XStreamAlias("nodeColor")
-    Integer m_nodeColor;
+    public Integer m_nodeColor;
 
     @XStreamAlias("textColor")
-    Integer m_textColor;
+    public Integer m_textColor;
 
     @XStreamAlias("icon")
-    String m_icon;
+    public String m_icon;
 
-    Style() {
+    @XStreamAlias("name")
+    public String m_name;
 
+    public Style(String name) {
+        m_name = name;
     }
 
-    static HashMap<String, Style> sm_styles = new HashMap<String, Style>();
+    static ArrayList<Style> sm_styles;
     static Style sm_defaultStyle;
 
     private static void initDefaultStyle()
     {
-        if (! hasStyle(DEFAULT_STYLE_NAME)) {
-            sm_defaultStyle = new Style();
-            sm_styles.put(DEFAULT_STYLE_NAME, sm_defaultStyle);
+        if (getStyle(DEFAULT_STYLE_NAME) == null) {
+            sm_defaultStyle = new Style(DEFAULT_STYLE_NAME);
+            addStyle(sm_defaultStyle);
         } else {
-            sm_defaultStyle = sm_styles.get(DEFAULT_STYLE_NAME);
+            sm_defaultStyle = getStyle(DEFAULT_STYLE_NAME);
         }
 
         if (sm_defaultStyle.m_fontFamily == null ||
@@ -123,29 +126,75 @@ public class Style {
         }
     }
 
-    public static Set<String> getStyleNames()
+    public static ArrayList<String> getStyleNames()
     {
-        return sm_styles.keySet();
+        ArrayList<String> names = new ArrayList<String>();
+        for (Style style : sm_styles) {
+            names.add(style.m_name);
+        }
+        return names;
     }
 
     public static Style getStyle(String name) {
-        return sm_styles.get(name);
+        for (Style style : sm_styles) {
+            if (style.m_name.equals(name)) {
+                return style;
+            }
+        }
+        return null;
+    }
+
+    public static boolean hasStyle(String name) {
+        return getStyle(name) != null;
     }
 
     public static Style getDefaultStyle() {
         return sm_defaultStyle;
     }
 
-    public static void addStyle(String name, Style style) {
-        sm_styles.put(name, style);
+    public static boolean addStyle(int index, Style newStyle) {
+        assert newStyle.m_name.length() > 0;
+        for (Style style : sm_styles) {
+            if (style.m_name.equals(newStyle)) {
+                return false;
+            }
+        }
+
+        sm_styles.add(index, newStyle);
+        return true;
+    }
+
+    public static boolean addStyle(Style newStyle) {
+        return addStyle(sm_styles.size(), newStyle);
     }
 
     public static void removeStyle(String name) {
-        sm_styles.remove(name);
+        Style style = getStyle(name);
+        if (style != null) {
+            sm_styles.remove(style);
+        }
     }
 
-    public static boolean hasStyle(String name) {
-        return sm_styles.containsKey(name);
+    public static int getStyleIndex(Style style)
+    {
+        return sm_styles.indexOf(style);
+    }
+
+    public static int moveStyle(String name, int offset) {
+        Style style = getStyle(name);
+        int index = sm_styles.indexOf(style);
+        index += offset;
+
+        if (index < 0) {
+            index = 0;
+        }
+        if (index >= sm_styles.size()) {
+            index = sm_styles.size() - 1;
+        }
+
+        sm_styles.remove(style);
+        sm_styles.add(index, style);
+        return index;
     }
 
     private static XStream createXStream() {
@@ -177,9 +226,9 @@ public class Style {
 
         /*
         XStream xstream = createXStream();
-        sm_styles = (HashMap)xstream.fromXML(userStylesFile);
+        sm_styles = (ArrayList)xstream.fromXML(userStylesFile);
         */
-        sm_styles = new HashMap<String, Style>();
+        sm_styles = new ArrayList<Style>();
 
         initDefaultStyle();
     }
@@ -221,7 +270,7 @@ public class Style {
     }
 
     public static void main(String argv[]) {
-        Style normalStyle = new Style();
+        Style normalStyle = new Style("normal");
 
         XStream xstream = new XStream(new DomDriver());
         xstream.processAnnotations(Style.class);
@@ -229,11 +278,11 @@ public class Style {
         s_logger.info("normalStyle = {}", normalXml);
 
         normalStyle.m_bold = true;
-        Style bigStyle = new Style();
+        Style bigStyle = new Style("big");
         normalStyle.m_fontSize = 100;
 
-        addStyle("normal", normalStyle);
-        addStyle("big", bigStyle);
+        addStyle(normalStyle);
+        addStyle(bigStyle);
 
         save();
         load();
@@ -256,7 +305,7 @@ public class Style {
         if (name == null) {
             return sm_defaultStyle;
         } else {
-            Style namedStyle = sm_styles.get(name);
+            Style namedStyle = getStyle(name);
             if (namedStyle == null) {
                 return namedStyle;
             }

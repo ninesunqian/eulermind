@@ -463,7 +463,7 @@ public class TikaPlainTextImporter extends Importer{
 
                 addTextDBChild(dbId, childPos, lineNode.m_trimLine);
 
-                s_logger.info("import sentence {}", lineNode.m_trimLine);
+                s_logger.debug("import sentence {}", lineNode.m_trimLine);
                 childPos++;
             }
         }

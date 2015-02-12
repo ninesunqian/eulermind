@@ -73,6 +73,12 @@ public class StyleList extends JList implements PropertyComponent {
             listCellRendererComponent.setForeground(ColorLib.getColor(textColorValue));
             listCellRendererComponent.setBackground(ColorLib.getColor(nodeColorValue));
 
+            if (isSelected) {
+                listCellRendererComponent.setBorder(BorderFactory.createLoweredBevelBorder());
+            } else {
+                listCellRendererComponent.setBorder(null);
+            }
+
             if (icon != null) {
                 listCellRendererComponent.setIcon(Style.getImageIcon(icon));
             }
@@ -82,8 +88,86 @@ public class StyleList extends JList implements PropertyComponent {
     }
 
     @Override
-    public void setPropertyValue(Object value)
+    public String getValue()
     {
+        return (String)getSelectedValue();
+    }
+
+    public void removeSelectedStyle() {
+        String styleName = getValue();
+        Style.removeStyle(styleName);
+        m_listMode.removeElement(styleName);
+    }
+
+    public void editSelectedStyle() {
+        String styleName = getValue();
+        Style style = Style.getStyle(styleName);
+        int index = Style.getStyleIndex(style);
+
+        Style newStyle = StyleEditorDialog.showDialog(this, style);
+        if (newStyle != null) {
+            if (newStyle.m_name.equals(style.m_name) || Style.hasStyle(newStyle.m_name)) {
+                Style.addStyle(index, style);
+            } else {
+                JOptionPane.showMessageDialog(this, "style name is same as other style");
+            }
+        }
+    }
+
+    public void upSelectedStyle() {
+        int index = getSelectedIndex();
+        if (index == 0) {
+            return;
+        }
+
+        String styleName = getValue();
+        Style.moveStyle(styleName, -1);
+
+        String upperStyleName = m_listMode.get(index - 1);
+        m_listMode.set(index - 1, styleName);
+        m_listMode.set(index, upperStyleName);
+    }
+
+    public void downSelectedStyle() {
+        int index = getSelectedIndex();
+        if (index == m_listMode.size() - 1) {
+            return;
+        }
+
+        String styleName = getValue();
+        Style.moveStyle(styleName, 1);
+
+        String downerStyleName = m_listMode.get(index + 1);
+        m_listMode.set(index + 1, styleName);
+        m_listMode.set(index, downerStyleName);
+    }
+
+    public void newStyle() {
+        Integer name_postfix = 0;
+        String name = "new Style";
+        while (Style.hasStyle(name)) {
+            name = "new style" + name_postfix.toString();
+            name_postfix++;
+        }
+
+        Style style = new Style(name);
+        Style retStyle = StyleEditorDialog.showDialog(this, style);
+
+        if (Style.hasStyle(retStyle.m_name)) {
+            JOptionPane.showMessageDialog(this, "style name is same as other style");
+        } else {
+            Style.addStyle(retStyle);
+            m_listMode.addElement(retStyle.m_name);
+        }
+    }
+
+    @Override
+    public void setValue(Object value)
+    {
+        int index = m_listMode.indexOf(value);
+        if (index >= 0) {
+            setSelectedIndex(index);
+        }
     }
 
     @Override
@@ -93,4 +177,5 @@ public class StyleList extends JList implements PropertyComponent {
     }
 
     PropertyComponentConnector m_propertyComponentConnector;
+
 }

@@ -1,31 +1,34 @@
-<dialog name="mainframe" title="style editor" layout="GridBagLayout" size="800,600"  >
+<dialog name="style_editor" title="style editor" layout="BorderLayout" size="800,600"  >
 
-    <panel>
-        <layout type="FormLayout" columns="right:pref, 3dlu, pref, 3dlu, pref"
-                rows="p, 5dlu, p, 3dlu, p, 3dlu, p, 3dlu, p, 3dlu, p, 3dlu, p, 5dlu, p" columnGroups="1, 3, 5"/>
-        <styleList constraints="1, 1"/>
-        <textfield constraints="2, 1"/>
+    <panel border="EmptyBorder(10,10,10,10)" constraints="BorderLayout.CENTER">
+        <layout type="FormLayout" columns="right:pref, 3dlu, 40dlu"
+                rows="pref, pref, pref, pref, pref, pref, pref, pref, pref"/>
+
+        <label constraints="1, 1" text="name"/>
+        <textfield constraints="3, 1" id="m_nameTextField"/>
 
         <label constraints="1, 2" text="family"/>
-        <fontCombobox constraints="2, 2"/>
+        <fontFamilyCombobox constraints="3, 2" id="m_fontFamilyCombbox"/>
 
-        <label constraints="3, 1" text="size"/>
-        <combobox constraints="3, 3"/>
+        <label constraints="1, 3" text="size"/>
+        <fontSizeCombobox constraints="3, 3" id="m_fontSizeCombbox"/>
 
-        <label constraints="4, 1" text="italic"/>
-        <boolCombobox constraints="4, 2"/>
+        <label constraints="1, 4" text="italic"/>
+        <booleanCombobox constraints="3, 4" id="m_italicCombobox"/>
 
-        <label constraints="5, 1" text="bold"/>
-        <boolCombobox constraints="5, 2"/>
+        <label constraints="1, 5" text="bold"/>
+        <booleanCombobox constraints="3, 5"  id="m_boldCombobox"/>
 
-        <colorButton constraints="6, 1" text="T"/>
-        <colorButton constraints="6, 2" text="T"/>
-        <iconButton constraints="6, 3"/>
+        <label constraints="1, 6" text="text color"/>
+        <colorButton constraints="3, 6" text="T" id="m_textColorButton"/>
 
-        <button constraints="8, 1" text="new"/>
-        <button constraints="8, 2" text="delete"/>
-        <button constraints="8, 3" text="save"/>
-        <button constraints="8, 4" text="up"/>
-        <button constraints="8, 5" text="down"/>
+        <label constraints="1, 7" text="node color"/>
+        <colorButton constraints="3, 7" text="T" id="m_nodeColorButton"/>
+
+        <label constraints="1, 8" text="icon"/>
+        <iconButton constraints="3, 8"  id="m_iconButton"/>
+
+        <button constraints="1, 9" text="ok" id="m_okButton"/>
+        <button constraints="3, 9" text="cancel" id="m_cancelButton"/>
     </panel>
 </dialog>

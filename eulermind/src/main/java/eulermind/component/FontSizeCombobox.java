@@ -57,8 +57,7 @@ public class FontSizeCombobox extends JComboBox implements PropertyComponent {
         {
 
             if (m_propertyComponentConnector != null) {
-                Object value = getSelectedItem();
-                m_propertyComponentConnector.updateMindNode(value);
+                m_propertyComponentConnector.updateMindNode(getValue());
             }
         }
     };
@@ -90,9 +89,15 @@ public class FontSizeCombobox extends JComboBox implements PropertyComponent {
     }
 
     @Override
-    public void setPropertyValue(Object value)
+    public void setValue(Object value)
     {
         setSelectedItem(value);
+    }
+
+    @Override
+    public Integer getValue()
+    {
+        return (Integer)getSelectedItem();
     }
 
     @Override

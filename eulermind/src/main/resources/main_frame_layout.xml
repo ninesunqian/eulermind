@@ -12,7 +12,8 @@
 
     <toolBar floatable="false" constraints="BorderLayout.NORTH" autoscrolls="true"  preferredSize="0, 30"
              orientation="HORIZONTAL">
-        <fontCombobox id="m_fontFamilyCombobox"/>
+        <fontFamilyCombobox id="m_fontFamilyCombobox"/>
+        <fontSizeCombobox id="m_fontSizeCombobox"/>
 
         <booleanCombobox id="m_italicCombobox"/>
         <booleanCombobox id="m_boldCombobox"/>
@@ -25,9 +26,23 @@
         <mindEditor id="m_searchInputer" columns="10"/>
     </toolBar>
 
-    <scrollPane constraints="BorderLayout.WEST"  preferredSize="100, 0">
-        <styleList id="m_styleList"/>
-    </scrollPane>
+    <vbox constraints="BorderLayout.EAST"  preferredSize="100, 0">
+        <scrollPane  preferredSize="100, 10000">
+            <styleList id="m_styleList"/>
+        </scrollPane>
+
+
+        <panel Layout="GridLayout(0,2)"  preferredSize="100, 10">
+        <button text="new" id="m_styleNewButton"/>
+        <button text="delete" id="m_styleDeletingButton"/>
+        <button text="edit" id="m_styleEditingButton"/>
+        </panel>
+
+        <panel Layout="GridLayout(0,2)"   preferredSize="100, 10">
+            <button text="up" id="m_styleUpButton"/>
+            <button text="down" id="m_styleDownButton"/>
+        </panel>
+    </vbox>
 
 
     <tabbedPane id="m_tabbedPane" constraints="BorderLayout.CENTER"/>

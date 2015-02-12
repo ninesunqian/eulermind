@@ -69,16 +69,7 @@ public class MindController extends UndoManager {
             }
         });
 
-        //findOrAddMindView(m_mindModel.sm_mindDb.getRootId());
-       Crawler.sm_mindDb = m_mindModel.m_mindDb;
-
-        Crawler crawler = new Crawler();
-        crawler.start();
-        int rootDepth = crawler.m_depthParentIdMap.size() - 5;
-        if (rootDepth < 0)
-            rootDepth = 0;
-
-        findOrAddMindView(crawler.m_depthParentIdMap.get(rootDepth));
+        findOrAddMindView(m_mindModel.m_mindDb.getRootId());
 
 
         //防止切换tab时，焦点被切换到工具栏

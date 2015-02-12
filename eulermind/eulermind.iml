@@ -84,6 +84,7 @@
     <orderEntry type="library" name="Maven: org.swixml:swixml:2.6.20130530" level="project" />
     <orderEntry type="library" name="Maven: javax.jnlp:jnlp:1.6" level="project" />
     <orderEntry type="library" name="Maven: com.apple:AppleJavaExtensions:1.4" level="project" />
+    <orderEntry type="library" name="Maven: com.jgoodies:forms:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: com.thoughtworks.xstream:xstream:1.4.7" level="project" />
     <orderEntry type="library" name="Maven: xmlpull:xmlpull:1.1.3.1" level="project" />
     <orderEntry type="library" name="Maven: xpp3:xpp3_min:1.1.4c" level="project" />
@@ -131,7 +132,9 @@
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.4" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.11" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
-    <orderEntry type="library" name="Maven: edu.uci.ics:crawler4j:4.0" level="project" />
+    <orderEntry type="library" name="Maven: edu.uci.ics:crawler4j:4.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: uk.org.lidalia:lidalia-slf4j-ext:1.0.0" level="project" />
+    <orderEntry type="library" name="Maven: com.google.guava:guava:14.0.1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpclient:4.3.5" level="project" />
     <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpcore:4.3.2" level="project" />
     <orderEntry type="library" name="Maven: com.sleepycat:je:5.0.73" level="project" />

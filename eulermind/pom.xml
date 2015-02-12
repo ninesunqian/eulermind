@@ -57,6 +57,13 @@
             <version>2.6.20130530</version>
         </dependency>
 
+
+        <dependency>
+            <groupId>com.jgoodies</groupId>
+            <artifactId>forms</artifactId>
+            <version>1.2.1</version>
+        </dependency>
+
         <dependency>
             <groupId>com.thoughtworks.xstream</groupId>
             <artifactId>xstream</artifactId>
@@ -161,7 +168,7 @@
         <dependency>
             <groupId>edu.uci.ics</groupId>
             <artifactId>crawler4j</artifactId>
-            <version>4.0</version>
+            <version>4.1-SNAPSHOT</version>
         </dependency>
 
     </dependencies>

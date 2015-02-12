@@ -68,15 +68,23 @@ public class EulerMind {
 
         String dbPath = System.getProperty("user.home") + "/.eulermind/mind_db";
         //TODO: for debug
-        Utils.deleteDir(dbPath);
 
-		final String dbUrl = "local:" + dbPath.replace(File.separatorChar, '/');
+        final String dbUrl = "local:" + dbPath.replace(File.separatorChar, '/');
         m_logger.info ("dbUrl = " + dbUrl);
 
-		MindDB mindDb = new MindDB(dbUrl);
-        //Utils.createTree(mindDb, 2);
+        boolean newDb = false;
+        if (newDb) {
+            Utils.deleteDir(dbPath);
 
-		mindDb = null;
+            MindDB mindDb = new MindDB(dbUrl);
+            //Utils.createTree(mindDb, 2);
+
+            Crawler.sm_mindDb = mindDb;
+            Crawler crawler = new Crawler();
+            crawler.start();
+            mindDb = null;
+        }
+
 
         EventQueue.invokeLater(new Runnable() {
             @Override

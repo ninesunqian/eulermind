@@ -23,11 +23,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import eulermind.MindController;
-import eulermind.component.PropertyComponent;
 
-import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class PropertyComponentConnector {
+
+    Object m_cachedPropertyValue;
+
     public PropertyComponentConnector(MindController mindController,
                                PropertyComponent component,
                                String propertyName)
@@ -35,19 +40,27 @@ public class PropertyComponentConnector {
         m_mindController = mindController;
         m_component = component;
         m_propertyName = propertyName;
+
+        m_component.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e)
+            {
+                if (! m_updateComponentEnabled) {
+                    return;
+                }
+                m_updateMindNodeEnabled = false;
+                m_component.setValue(m_cachedPropertyValue);
+                m_updateMindNodeEnabled = true;
+            }
+        });
     }
 
     boolean m_updateMindNodeEnabled = true;
     boolean m_updateComponentEnabled = true;
 
-    public void updateComponent(Object value)
+    public void updateComponent(final Object value)
     {
-        if (! m_updateComponentEnabled) {
-            return;
-        }
-        m_updateMindNodeEnabled = false;
-        m_component.setPropertyValue(value);
-        m_updateMindNodeEnabled = true;
+        m_cachedPropertyValue = value;
     }
 
     public void updateMindNode(Object value)

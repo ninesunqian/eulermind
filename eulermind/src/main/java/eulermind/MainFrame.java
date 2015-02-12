@@ -44,14 +44,21 @@ public class MainFrame  extends JFrame {
     SwingEngine m_swingEngine;
 
     FontFamilyCombobox m_fontFamilyCombobox;
+    FontSizeCombobox m_fontSizeCombobox;
+
     BooleanCombobox m_italicCombobox;
     BooleanCombobox m_boldCombobox;
-    //FontFamilyCombobox m_fontSizeCombobox;
 
     ColorButton m_textColorButton;
     ColorButton m_nodeColorButton;
 
     IconButton m_iconButton;
+
+    JButton m_styleNewButton;
+    JButton m_styleDeletingButton;
+    JButton m_styleEditingButton;
+    JButton m_styleUpButton;
+    JButton m_styleDownButton;
 
     MindEditor m_searchInputer;
 
@@ -62,7 +69,8 @@ public class MainFrame  extends JFrame {
     {
         try {
             m_swingEngine = new SwingEngine(this);
-            m_swingEngine.getTaglib().registerTag("fontCombobox", FontFamilyCombobox.class);
+            m_swingEngine.getTaglib().registerTag("fontFamilyCombobox", FontFamilyCombobox.class);
+            m_swingEngine.getTaglib().registerTag("fontSizeCombobox", FontSizeCombobox.class);
             m_swingEngine.getTaglib().registerTag("booleanCombobox", BooleanCombobox.class);
             m_swingEngine.getTaglib().registerTag("colorButton", ColorButton.class);
             m_swingEngine.getTaglib().registerTag("iconButton", IconButton.class);
@@ -84,8 +92,8 @@ public class MainFrame  extends JFrame {
         m_textColorButton.setForBackground(false);
         m_nodeColorButton.setForBackground(true);
 
-        //TODO: 应该都是MindModel的值
         m_mindController.connectPropertyComponent(MindModel.sm_fontFamilyPropName, m_fontFamilyCombobox);
+        m_mindController.connectPropertyComponent(MindModel.sm_fontSizePropName, m_fontSizeCombobox);
         m_mindController.connectPropertyComponent(MindModel.sm_italicPropName, m_italicCombobox);
         m_mindController.connectPropertyComponent(MindModel.sm_boldPropName, m_boldCombobox);
         m_mindController.connectPropertyComponent(MindModel.sm_textColorPropName, m_textColorButton);
@@ -124,6 +132,12 @@ public class MainFrame  extends JFrame {
                 comp.requestFocusInWindow();
             }
         });
+
+        m_styleNewButton.addActionListener(m_styleNewAction);
+        m_styleDeletingButton.addActionListener(m_styleDeletingAction);
+        m_styleEditingButton.addActionListener(m_styleEditingAction);
+        m_styleUpButton.addActionListener(m_styleUpAction);
+        m_styleDownButton.addActionListener(m_styleDownAction);
     }
 
     public Action m_importAction = new AbstractAction() {
@@ -223,6 +237,43 @@ public class MainFrame  extends JFrame {
         public void menuCanceled(MenuEvent menuEvent)
         {
             m_ancestorMenu.removeAll();
+        }
+    };
+
+    public Action m_styleNewAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent)
+        {
+            m_styleList.newStyle();
+        }
+    };
+
+    public Action m_styleDeletingAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent)
+        {
+            m_styleList.removeSelectedStyle();
+        }
+    };
+    public Action m_styleEditingAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent)
+        {
+            m_styleList.editSelectedStyle();
+        }
+    };
+    public Action m_styleUpAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent)
+        {
+            m_styleList.upSelectedStyle();
+        }
+    };
+    public Action m_styleDownAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent)
+        {
+            m_styleList.downSelectedStyle();
         }
     };
 }

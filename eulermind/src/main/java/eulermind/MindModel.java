@@ -333,6 +333,17 @@ public class MindModel {
 			return;
 		}
 
+        if (edgeVertexArray.size() > 50) {
+            for (EdgeVertex edgeVertex : edgeVertexArray)
+            {
+                Vertex parentV = getDBVertex(parent);
+                Vertex childV = edgeVertex.m_vertex;
+
+                s_logger.info("[{}] -> [{}]", parentV.getProperty(sm_textPropName), childV.getProperty(sm_textPropName));
+            }
+
+        }
+
 		for (EdgeVertex edgeVertex : edgeVertexArray)
 		{
 			Node child = tree.addChild(parent);
