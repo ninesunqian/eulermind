@@ -1,4 +1,4 @@
-<dialog name="style_editor" title="style editor" layout="BorderLayout" size="800,600"  >
+<dialog name="style_editor" title="style editor" layout="BorderLayout">
 
     <panel border="EmptyBorder(10,10,10,10)" constraints="BorderLayout.CENTER">
         <layout type="FormLayout" columns="right:pref, 3dlu, 40dlu"
@@ -28,7 +28,13 @@
         <label constraints="1, 8" text="icon"/>
         <iconButton constraints="3, 8"  id="m_iconButton"/>
 
-        <button constraints="1, 9" text="ok" id="m_okButton"/>
-        <button constraints="3, 9" text="cancel" id="m_cancelButton"/>
     </panel>
+
+    <hbox  constraints="BorderLayout.SOUTH">
+        <glue/>
+        <button text="ok" id="m_okButton"/>
+        <glue/>
+        <button text="cancel" id="m_cancelButton"/>
+        <glue/>
+    </hbox>
 </dialog>

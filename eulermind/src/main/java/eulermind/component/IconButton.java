@@ -41,6 +41,7 @@ public class IconButton extends JButton implements PropertyComponent {
 
     public IconButton() {
         addActionListener(m_updateMindNodeAction);
+        setIcon(new EmptyIcon(16, 16));
     }
 
     ActionListener m_updateMindNodeAction = new ActionListener() {
@@ -55,7 +56,9 @@ public class IconButton extends JButton implements PropertyComponent {
 
             if (result != null) {
                 m_iconName = (result == MindIconDialog.REMOVE_ICON_NAME) ? null : result;
-                m_propertyComponentConnector.updateMindNode(m_iconName);
+                if (m_propertyComponentConnector != null) {
+                    m_propertyComponentConnector.updateMindNode(m_iconName);
+                }
                 updateButtonIcon();
             }
         }
@@ -66,7 +69,7 @@ public class IconButton extends JButton implements PropertyComponent {
         if (m_iconName != null) {
             setIcon(Style.getImageIcon(m_iconName));
         } else {
-            setIcon(null);
+            setIcon(new EmptyIcon(16, 16));
         }
     }
 
@@ -94,4 +97,33 @@ public class IconButton extends JButton implements PropertyComponent {
     }
 
     PropertyComponentConnector m_propertyComponentConnector;
+
+    public final class EmptyIcon implements Icon {
+
+        private int width;
+        private int height;
+
+        public EmptyIcon() {
+            this(0, 0);
+        }
+
+        public EmptyIcon(int width, int height) {
+            this.width = width;
+            this.height = height;
+        }
+
+        public int getIconHeight() {
+            return height;
+        }
+
+        public int getIconWidth() {
+            return width;
+        }
+
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            g.setColor(Color.white);
+            g.drawRoundRect(x, y, width, height, 2, 2);
+        }
+
+    }
 }

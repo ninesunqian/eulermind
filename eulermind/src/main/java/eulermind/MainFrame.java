@@ -54,6 +54,8 @@ public class MainFrame  extends JFrame {
 
     IconButton m_iconButton;
 
+    JCheckBox m_checkboxForEnableStyleList;
+
     JButton m_styleNewButton;
     JButton m_styleDeletingButton;
     JButton m_styleEditingButton;
@@ -99,6 +101,7 @@ public class MainFrame  extends JFrame {
         m_mindController.connectPropertyComponent(MindModel.sm_textColorPropName, m_textColorButton);
         m_mindController.connectPropertyComponent(MindModel.sm_nodeColorPropName, m_nodeColorButton);
         m_mindController.connectPropertyComponent(MindModel.sm_iconPropName, m_iconButton);
+        m_mindController.connectPropertyComponent(MindModel.sm_stylePropName, m_styleList);
 
         m_mindController.connectPropertyComponent(MindModel.sm_stylePropName, m_styleList);
 
@@ -138,6 +141,16 @@ public class MainFrame  extends JFrame {
         m_styleEditingButton.addActionListener(m_styleEditingAction);
         m_styleUpButton.addActionListener(m_styleUpAction);
         m_styleDownButton.addActionListener(m_styleDownAction);
+
+        m_checkboxForEnableStyleList.addActionListener( new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                m_styleList.setUpdatingMindNodeEnabled(m_checkboxForEnableStyleList.isSelected());
+            }
+        });
+
+        m_checkboxForEnableStyleList.setSelected(true);
     }
 
     public Action m_importAction = new AbstractAction() {
@@ -244,6 +257,9 @@ public class MainFrame  extends JFrame {
         @Override
         public void actionPerformed(ActionEvent actionEvent)
         {
+            if (m_checkboxForEnableStyleList.isSelected()) {
+                return;
+            }
             m_styleList.newStyle();
         }
     };
@@ -252,6 +268,9 @@ public class MainFrame  extends JFrame {
         @Override
         public void actionPerformed(ActionEvent actionEvent)
         {
+            if (m_checkboxForEnableStyleList.isSelected()) {
+                return;
+            }
             m_styleList.removeSelectedStyle();
         }
     };
@@ -259,6 +278,9 @@ public class MainFrame  extends JFrame {
         @Override
         public void actionPerformed(ActionEvent actionEvent)
         {
+            if (m_checkboxForEnableStyleList.isSelected()) {
+                return;
+            }
             m_styleList.editSelectedStyle();
         }
     };
@@ -266,6 +288,9 @@ public class MainFrame  extends JFrame {
         @Override
         public void actionPerformed(ActionEvent actionEvent)
         {
+            if (m_checkboxForEnableStyleList.isSelected()) {
+                return;
+            }
             m_styleList.upSelectedStyle();
         }
     };
@@ -273,6 +298,9 @@ public class MainFrame  extends JFrame {
         @Override
         public void actionPerformed(ActionEvent actionEvent)
         {
+            if (m_checkboxForEnableStyleList.isSelected()) {
+                return;
+            }
             m_styleList.downSelectedStyle();
         }
     };

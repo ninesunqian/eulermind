@@ -695,20 +695,32 @@ public class GraphicsLib {
         // set up colors
         Color strokeColor = ColorLib.getColor(item.getStrokeColor());
         Color fillColor = ColorLib.getColor(item.getFillColor());
+
+        paint(g, shape, stroke, strokeColor, fillColor, type);
+    }
+
+    public static void paint(Graphics2D g, Shape shape,
+                             BasicStroke stroke, Color strokeColor, Color fillColor,
+                             int type)
+    {
+        // if render type is NONE, then there is nothing to do
+        if ( type == AbstractShapeRenderer.RENDER_TYPE_NONE )
+            return;
+
         boolean sdraw = (type == AbstractShapeRenderer.RENDER_TYPE_DRAW ||
-                         type == AbstractShapeRenderer.RENDER_TYPE_DRAW_AND_FILL) &&
-                        strokeColor.getAlpha() != 0;
+                type == AbstractShapeRenderer.RENDER_TYPE_DRAW_AND_FILL) &&
+                strokeColor.getAlpha() != 0;
         boolean fdraw = (type == AbstractShapeRenderer.RENDER_TYPE_FILL ||
-                         type == AbstractShapeRenderer.RENDER_TYPE_DRAW_AND_FILL) &&
-                        fillColor.getAlpha() != 0;
+                type == AbstractShapeRenderer.RENDER_TYPE_DRAW_AND_FILL) &&
+                fillColor.getAlpha() != 0;
         if ( !(sdraw || fdraw) ) return;
-        
+
         Stroke origStroke = null;
         if ( sdraw ) {
             origStroke = g.getStroke();
             g.setStroke(stroke);
         }
-        
+
         int x, y, w, h, aw, ah;
         double xx, yy, ww, hh;
 
@@ -726,14 +738,14 @@ public class GraphicsLib {
         else if ( shape instanceof RectangularShape )
         {
             RectangularShape r = (RectangularShape)shape;
-            xx = r.getX(); ww = r.getWidth(); 
+            xx = r.getX(); ww = r.getWidth();
             yy = r.getY(); hh = r.getHeight();
-            
+
             x = (int)xx;
             y = (int)yy;
             w = (int)(ww+xx-x);
             h = (int)(hh+yy-y);
-            
+
             if ( shape instanceof Rectangle2D ) {
                 if (fdraw) {
                     g.setPaint(fillColor);
@@ -786,5 +798,5 @@ public class GraphicsLib {
             g.setStroke(origStroke);
         }
     }
-    
+
 } // end of class GraphicsLib

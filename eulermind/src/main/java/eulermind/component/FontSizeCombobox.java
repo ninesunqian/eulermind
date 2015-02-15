@@ -41,10 +41,10 @@ public class FontSizeCombobox extends JComboBox implements PropertyComponent {
     {
         setRenderer(new FontCellRenderer());
 
-        ArrayList<String> families = Style.getFontFamilies();
+        ArrayList<Integer> fontSizes = Style.getFontSizes();
 
         addItem(null);
-        for (Object item : families) {
+        for (Object item : fontSizes) {
             addItem(item);
         }
 
@@ -70,18 +70,20 @@ public class FontSizeCombobox extends JComboBox implements PropertyComponent {
             JLabel renderer = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index,
                     isSelected, cellHasFocus);
 
-            String family = (String) value;
+            Integer fontSize = (Integer) value;
 
-            if (family == null) {
-                family = "SansSerif";
+            if (fontSize == null) {
+                fontSize = 16;
             }
 
-            Font font = FontLib.getFont(family, 20);
+            Font font = FontLib.getFont("SansSerif", fontSize);
 
             renderer.setFont(font);
 
             if (value == null) {
                 renderer.setText("default");
+            } else {
+                renderer.setText(fontSize.toString());
             }
 
             return renderer;

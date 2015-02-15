@@ -48,7 +48,7 @@ public class Style {
     public final static int sm_defaultNodeColor = ColorLib.rgb(255, 255, 255);
     public final static int sm_defaultTextColor = ColorLib.rgb(0, 0, 0);
 
-    private final static String DEFAULT_STYLE_NAME = "default";
+    public final static String DEFAULT_STYLE_NAME = "default";
     public static String sm_iconsList = "idea;help;yes;messagebox_warning;stop-sign;closed;info;button_ok;button_cancel;"
             + "full-1;full-2;full-3;full-4;full-5;full-6;full-7;full-8;full-9;full-0;"
             + "stop;prepare;go;back;forward;up;down;attach;ksmiletris;"
@@ -170,7 +170,7 @@ public class Style {
 
     public static void removeStyle(String name) {
         Style style = getStyle(name);
-        if (style != null) {
+        if (style != null && style != sm_defaultStyle) {
             sm_styles.remove(style);
         }
     }
@@ -306,10 +306,11 @@ public class Style {
             return sm_defaultStyle;
         } else {
             Style namedStyle = getStyle(name);
+
             if (namedStyle == null) {
-                return namedStyle;
+                return sm_defaultStyle;
             }
-            return sm_defaultStyle;
+            return namedStyle;
         }
     }
 

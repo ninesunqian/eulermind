@@ -6,6 +6,7 @@ import prefuse.util.ColorLib;
 import javax.swing.*;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 import javax.swing.colorchooser.ColorChooserComponentFactory;
+import javax.swing.text.SimpleAttributeSet;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -64,9 +65,9 @@ public class ColorButton extends JButton implements PropertyComponent {
                 });
 
 
-        JButton button = new JButton();
-        button.setText("style default color");
-        button.addActionListener(new ActionListener() {
+        JButton defaultColorButton = new JButton();
+        defaultColorButton.setText("style default color");
+        defaultColorButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e)
             {
@@ -76,8 +77,45 @@ public class ColorButton extends JButton implements PropertyComponent {
             }
         });
         Container contentPane = m_dialog.getContentPane();
-        contentPane.add(button, BorderLayout.NORTH);
+        contentPane.add(defaultColorButton, BorderLayout.NORTH);
+    }
 
+    protected void paintComponent(Graphics g) {
+        Color forceGround = ColorLib.getColor(Style.getTextColorSurely(Style.DEFAULT_STYLE_NAME));
+        Color backGround = ColorLib.getColor(Style.getNodeColorSurely(Style.DEFAULT_STYLE_NAME));
+
+        if (! m_forBackground) {
+            if (m_color != null) {
+                forceGround = m_color;
+            }
+        } else {
+            if (m_color != null) {
+                backGround = m_color;
+            }
+        }
+
+        if (getModel().isPressed()) {
+            g.setColor(backGround.darker());
+        } else if (getModel().isRollover()) {
+            g.setColor(backGround.brighter());
+        } else {
+            g.setColor(backGround);
+        }
+        g.fillRect(0, 0, getWidth(), getHeight());
+
+        Dimension d = getSize();
+        FontMetrics fm = g.getFontMetrics();
+
+        String text = getText();
+        int x = (d.width - fm.stringWidth(text)) / 2;
+        int y = (d.height + fm.getAscent()) / 2;
+
+        g.setColor(forceGround);
+        g.drawString(text, x, y);
+    }
+
+   @Override
+    public void setContentAreaFilled(boolean b) {
     }
 
     public void setForBackground(boolean forBackground) {
@@ -88,32 +126,14 @@ public class ColorButton extends JButton implements PropertyComponent {
         @Override
         public void actionPerformed(ActionEvent e)
         {
-
             m_dialog.setVisible(true);
             if (m_choosed) {
-                m_propertyComponentConnector.updateMindNode(getValue());
-                updateButtonColor();
+                if (m_propertyComponentConnector != null) {
+                    m_propertyComponentConnector.updateMindNode(getValue());
+                }
             }
         }
     };
-
-    private void updateButtonColor()
-    {
-        Color color = m_color;
-
-        if (! m_forBackground) {
-            if (color == null) {
-                color = ColorLib.getColor(Style.sm_defaultTextColor);
-            }
-            setForeground(color);
-        } else {
-            if (color == null) {
-                color = ColorLib.getColor(Style.sm_defaultNodeColor);
-            }
-            setBackground(color);
-            setOpaque(true);
-        }
-    }
 
     @Override
     public void setValue(Object value)
@@ -123,7 +143,7 @@ public class ColorButton extends JButton implements PropertyComponent {
         } else {
             m_color = ColorLib.getColor((Integer)value);
         }
-        updateButtonColor();
+        repaint();
     }
 
     @Override

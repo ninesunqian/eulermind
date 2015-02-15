@@ -1,4 +1,4 @@
-<frame name="mainframe" title="aaaaaaaaaa" layout="BorderLayout" size="800,600"  >
+<frame name="mainframe" title="EulerMind" layout="BorderLayout" size="800,600"  >
 
     <menubar name="menubar">
         <menu name="filemenu" text="File" mnemonic="VK_F" >
@@ -13,10 +13,13 @@
     <toolBar floatable="false" constraints="BorderLayout.NORTH" autoscrolls="true"  preferredSize="0, 30"
              orientation="HORIZONTAL">
         <fontFamilyCombobox id="m_fontFamilyCombobox"/>
+        <separator/>
         <fontSizeCombobox id="m_fontSizeCombobox"/>
+        <separator/>
 
         <booleanCombobox id="m_italicCombobox"/>
         <booleanCombobox id="m_boldCombobox"/>
+        <separator/>
 
         <colorbutton id="m_textColorButton" text="T" Font="COURIER-BOLD-14"/>
         <colorbutton id="m_nodeColorButton" text="T" Font="COURIER-BOLD-14"/>
@@ -31,6 +34,7 @@
             <styleList id="m_styleList"/>
         </scrollPane>
 
+        <checkbox text="enable style list" id="m_checkboxForEnableStyleList"/>
 
         <panel Layout="GridLayout(0,2)"  preferredSize="100, 10">
         <button text="new" id="m_styleNewButton"/>

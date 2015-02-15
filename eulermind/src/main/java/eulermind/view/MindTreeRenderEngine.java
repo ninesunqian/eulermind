@@ -2,11 +2,12 @@ package eulermind.view;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
+import java.awt.geom.RoundRectangle2D;
 
 import eulermind.MindModel;
 import eulermind.Style;
-import eulermind.component.MindIconToolBar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,13 +66,20 @@ public class MindTreeRenderEngine {
     
     private static final String sm_itemStyleActions = "itemStyleActions";
     private static final String sm_itemPositionActions = "itemPositionActions";
-    
+
+
+    private static final int m_nodeDepthSpacing = 50;
+    private static final int m_nodeBreadthSpacing = 10;
+
+
     public static final String sm_layoutAction = "layoutAction";
     
     
     private int m_orientation = Constants.ORIENT_LEFT_RIGHT;
 
     private RepaintAction m_repaintAction = new RepaintAction();
+
+    private boolean m_showBigBorderOfCursor = true;
 
     public MindTreeRenderEngine(MindView mindView, String treeGroupName) {
         //m_logger.setLevel(Level.OFF);
@@ -131,12 +139,12 @@ public class MindTreeRenderEngine {
 
         return actions;
     }
-    
+
     private Action makeItemPositionActions ()
     {
         
         MindTreeLayout treeLayout =
-        	new MindTreeLayout(m_treeGroupName, m_orientation, 50, 10);
+        	new MindTreeLayout(m_treeGroupName, m_orientation, m_nodeDepthSpacing, m_nodeBreadthSpacing);
         
     	treeLayout.setOrientation(Constants.ORIENT_LEFT_RIGHT);
         //must set the anchor, if not, the anchor will move to the center of display, every time.
@@ -230,15 +238,21 @@ public class MindTreeRenderEngine {
 
         public int getColor(VisualItem item) {
 
-            Node node = m_mindView.toSource((NodeItem)item);
-            Node cursorNode = m_mindView.getCursorSourceNode();
+            Node node = m_mindView.toSource((NodeItem) item);
 
-            if (node == cursorNode)
-                return Style.sm_cursorBackColor;
-            else if (!m_mindView.isPlaceholder(node) && m_mindView.m_mindModel.isSelfInDB(node, cursorNode))
-                return Style.sm_shadowBackColor;
-            else
+            if (! m_showBigBorderOfCursor) {
+                //用颜色表示当前焦点节点
+                Node cursorNode = m_mindView.getCursorSourceNode();
+                if (node == cursorNode)
+                    return Style.sm_cursorBackColor;
+                else if (!m_mindView.isPlaceholder(node) && m_mindView.m_mindModel.isSelfInDB(node, cursorNode))
+                    return Style.sm_shadowBackColor;
+                else
+                    return MindModel.getNodeColor(node);
+
+            } else {
                 return MindModel.getNodeColor(node);
+            }
         }
     }
     
@@ -308,7 +322,8 @@ public class MindTreeRenderEngine {
         }
 
         protected String getImageLocation(VisualItem item) {
-            return MindIconToolBar.getIconPath(MindModel.getNodeIcon(item));
+            //return MindIconToolBar.getIconPath(MindModel.getNodeIcon(item) + ".png");
+            return Style.getIconPath(MindModel.getNodeIcon(item));
         }
 
         public int getRenderType(VisualItem item) {
@@ -337,6 +352,10 @@ public class MindTreeRenderEngine {
 
         public void render(Graphics2D g, VisualItem item) {
             super.render(g, item);
+
+            if (! (item instanceof NodeItem)) {
+                return;
+            }
 
             if (item == m_mindView.getDragHitNode()) {
                 RectangularShape shape = (RectangularShape)getShape(item);
@@ -398,6 +417,37 @@ public class MindTreeRenderEngine {
 
                 g.setPaint(gradientPaint);
                 g.fillRect((int)x, (int)y, (int)width, (int)height);
+            }
+
+            if (! m_showBigBorderOfCursor) {
+                return;
+            }
+
+            //用一个大的边框表示焦点节点
+
+            Node node = m_mindView.toSource((NodeItem)item);
+            Node cursorNode = m_mindView.getCursorSourceNode();
+
+
+            if (m_mindView.m_mindModel.isSelfInDB(node, cursorNode)) {
+                BasicStroke stroke;
+                Rectangle2D bounds = (Rectangle2D)item.getBounds().clone();
+
+
+                double amount = Math.min(m_nodeBreadthSpacing, m_nodeDepthSpacing) / 2;
+                GraphicsLib.expand(bounds, amount);
+
+                RoundRectangle2D borderShape = new RoundRectangle2D.Double(
+                        bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight(), amount, amount);
+
+                if (node == cursorNode) {
+                    stroke = StrokeLib.getStroke(3.0f);
+                } else {
+                    float dash [] = {10f, 3f};
+                    stroke = StrokeLib.getStroke(3.0f, dash);
+                }
+
+                GraphicsLib.paint(g, borderShape, stroke, Color.blue, null, RENDER_TYPE_DRAW);
             }
         }
     }

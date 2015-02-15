@@ -445,6 +445,8 @@ public class MindView extends Display {
         //called by toolbar controls' action listener,
         beginChanging();
 
+        m_logger.info("setCursorProperty: {} - {}", key, value);
+
         Node cursorNode = getCursorSourceNode();
         MindOperator operator = new SettingProperty(m_mindModel, cursorNode, key, value);
 

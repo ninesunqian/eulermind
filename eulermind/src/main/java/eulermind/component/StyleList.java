@@ -5,7 +5,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
 import prefuse.util.ColorLib;
 import prefuse.util.FontLib;
@@ -45,6 +50,27 @@ public class StyleList extends JList implements PropertyComponent {
         this.setModel(m_listMode);
     }
 
+    MouseListener mouseListenerForUpdatingMindNode = new MouseAdapter() {
+        public void mouseClicked(MouseEvent mouseEvent) {
+            int index = locationToIndex(mouseEvent.getPoint());
+            if (index >= 0) {
+                Object value = m_listMode.getElementAt(index);
+                if (m_propertyComponentConnector != null) {
+                    m_propertyComponentConnector.updateMindNode(value);
+                }
+            }
+        }
+    };
+
+    public void setUpdatingMindNodeEnabled(boolean enabled)
+    {
+        if (enabled) {
+            this.addMouseListener(mouseListenerForUpdatingMindNode);
+        } else {
+            this.removeMouseListener(mouseListenerForUpdatingMindNode);
+        }
+    }
+
     class StyleCellRenderer implements ListCellRenderer {
         protected DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
 
@@ -72,11 +98,15 @@ public class StyleList extends JList implements PropertyComponent {
             listCellRendererComponent.setText(styleName);
             listCellRendererComponent.setForeground(ColorLib.getColor(textColorValue));
             listCellRendererComponent.setBackground(ColorLib.getColor(nodeColorValue));
+            listCellRendererComponent.setOpaque(true);
+
+            int borderThickness = 3;
 
             if (isSelected) {
-                listCellRendererComponent.setBorder(BorderFactory.createLoweredBevelBorder());
+                listCellRendererComponent.setBorder(BorderFactory.createLineBorder(Color.blue, borderThickness));
             } else {
-                listCellRendererComponent.setBorder(null);
+                listCellRendererComponent.setBorder(BorderFactory.createEmptyBorder(
+                        borderThickness, borderThickness, borderThickness, borderThickness));
             }
 
             if (icon != null) {
@@ -90,13 +120,34 @@ public class StyleList extends JList implements PropertyComponent {
     @Override
     public String getValue()
     {
-        return (String)getSelectedValue();
+        String styleName = (String)getSelectedValue();
+        if (styleName.equals("default")) {
+            return null;
+        }
+        return styleName;
     }
 
     public void removeSelectedStyle() {
         String styleName = getValue();
+
+        if (styleName == Style.DEFAULT_STYLE_NAME) {
+            return;
+        }
+
         Style.removeStyle(styleName);
         m_listMode.removeElement(styleName);
+    }
+
+    static void copyStyle(Style from, Style to)
+    {
+        to.m_fontFamily = from.m_fontFamily;
+        to.m_fontSize = from.m_fontSize;
+        to.m_bold = from.m_bold;
+        to.m_italic = from.m_italic;
+        to.m_nodeColor = from.m_nodeColor;
+        to.m_textColor = from.m_textColor;
+        to.m_icon = from.m_icon;
+        to.m_name = from.m_name;
     }
 
     public void editSelectedStyle() {
@@ -104,14 +155,19 @@ public class StyleList extends JList implements PropertyComponent {
         Style style = Style.getStyle(styleName);
         int index = Style.getStyleIndex(style);
 
-        Style newStyle = StyleEditorDialog.showDialog(this, style);
-        if (newStyle != null) {
-            if (newStyle.m_name.equals(style.m_name) || Style.hasStyle(newStyle.m_name)) {
-                Style.addStyle(index, style);
-            } else {
-                JOptionPane.showMessageDialog(this, "style name is same as other style");
-            }
+        Style retStyle = StyleEditorDialog.showDialog(this, style);
+
+        if (retStyle == null) {
+            return;
         }
+
+        if (!retStyle.m_name.equals(style.m_name) && Style.hasStyle(retStyle.m_name)) {
+            JOptionPane.showMessageDialog(this, "style name is same as other style");
+            return;
+        }
+
+        copyStyle(retStyle, style);
+        m_listMode.set(index, style.m_name);
     }
 
     public void upSelectedStyle() {
@@ -152,6 +208,10 @@ public class StyleList extends JList implements PropertyComponent {
 
         Style style = new Style(name);
         Style retStyle = StyleEditorDialog.showDialog(this, style);
+
+        if (retStyle == null) {
+            return;
+        }
 
         if (Style.hasStyle(retStyle.m_name)) {
             JOptionPane.showMessageDialog(this, "style name is same as other style");

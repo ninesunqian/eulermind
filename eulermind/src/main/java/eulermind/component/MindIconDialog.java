@@ -101,6 +101,8 @@ public class MindIconDialog extends JDialog {
         };
 
         button.setAction(action);
+        //去掉图标按钮的"..."字符
+        button.setText("");
         return button;
     }
 

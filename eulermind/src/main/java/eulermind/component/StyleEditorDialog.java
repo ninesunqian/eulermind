@@ -80,11 +80,16 @@ public class StyleEditorDialog extends JDialog {
 
         m_textColorButton.setValue(style.m_textColor);
         m_nodeColorButton.setValue(style.m_nodeColor);
+        m_nodeColorButton.setForBackground(true);
 
         m_iconButton.setValue(style.m_icon);
 
         m_okButton.addActionListener(m_okActionListener);
         m_cancelButton.addActionListener(m_cancelActionListener);
+
+        //swixml没有自动计算size， 所以要pack一下
+        pack();
+        setLocationRelativeTo(parent);
     }
 
     Style m_retStyle;
