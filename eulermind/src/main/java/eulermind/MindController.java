@@ -134,6 +134,13 @@ public class MindController extends UndoManager {
         return mindView;
     }
 
+    public void updateAllMindViews() {
+        ArrayList<MindView> mindViews = new ArrayList<MindView>();
+        for(int i=0; i<m_tabbedPane.getTabCount(); i++) {
+            ((MindView)m_tabbedPane.getComponentAt(i)).renderTree();
+        }
+    }
+
     public MindView getCurrentView() {
         return (MindView)m_tabbedPane.getSelectedComponent();
     }

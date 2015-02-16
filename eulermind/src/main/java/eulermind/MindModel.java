@@ -1308,6 +1308,9 @@ public class MindModel {
             italic = Style.getItalicSurely(tuple.getString(sm_stylePropName));
         }
 
+        if (family == null || bold == null || italic == null || size ==null) {
+            int debug =1;
+        }
         return FontLib.getFont(family, bold, italic, size);
     }
 

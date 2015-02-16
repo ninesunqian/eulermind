@@ -267,6 +267,7 @@ public class MainFrame  extends JFrame {
         {
             m_styleList.setUpdatingMindNodeEnabled(false);
             m_styleList.editSelectedStyle();
+            m_mindController.updateAllMindViews();
             m_styleList.setUpdatingMindNodeEnabled(true);
         }
     };

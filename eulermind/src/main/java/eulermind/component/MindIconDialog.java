@@ -40,9 +40,9 @@ public class MindIconDialog extends JDialog {
 
     public final static String REMOVE_ICON_NAME = "remove";
 
-    public MindIconDialog(Frame owner)
+    public MindIconDialog(Component parent)
     {
-        super(owner, "select icon", true);
+        super(JOptionPane.getFrameForComponent(parent), true);
 
 		getContentPane().setLayout(new BorderLayout());
 
@@ -62,6 +62,7 @@ public class MindIconDialog extends JDialog {
 
 		getContentPane().add(createButton(REMOVE_ICON_NAME), BorderLayout.SOUTH);
 		pack();
+        setLocationRelativeTo(parent);
     }
 
     private void addIcons(JPanel iconPanel){

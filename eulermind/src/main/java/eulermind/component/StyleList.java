@@ -5,8 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -44,11 +42,8 @@ public class StyleList extends JList implements PropertyComponent {
     {
         this.setCellRenderer(new StyleCellRenderer());
 
-        m_listMode.addElement(null);
         for (String styleName : Style.getStyleNames()) {
-            if (styleName != "default") {
-                m_listMode.addElement(styleName);
-            }
+            m_listMode.addElement(styleName);
         }
         this.setModel(m_listMode);
     }
@@ -58,6 +53,9 @@ public class StyleList extends JList implements PropertyComponent {
             int index = locationToIndex(mouseEvent.getPoint());
             if (index >= 0) {
                 Object value = m_listMode.getElementAt(index);
+                if (value == "default") {
+                    value = null;
+                }
                 if (m_propertyComponentConnector != null) {
                     m_propertyComponentConnector.updateMindNode(value);
                 }
@@ -82,11 +80,14 @@ public class StyleList extends JList implements PropertyComponent {
             JLabel listCellRendererComponent = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index,
                     isSelected, cellHasFocus);
 
-            String styleName = (value == null) ? "default" : (String)value;
+            String styleName = (String)value;
 
             String family = Style.getFontFamilySurely(styleName);
             Integer size = Style.getFontSizeSurely(styleName);
 
+            if (styleName == null) {
+                int debug =1;
+            }
             boolean bold = Style.getBoldSurely(styleName);
             boolean italic = Style.getItalicSurely(styleName);
 
@@ -123,11 +124,17 @@ public class StyleList extends JList implements PropertyComponent {
     @Override
     public String getValue()
     {
+        String valueInList = getValueInList();
+        return (valueInList == "default") ? null : valueInList;
+    }
+
+    public String getValueInList()
+    {
         return (String)getSelectedValue();
     }
 
     public void removeSelectedStyle() {
-        String styleName = getValue();
+        String styleName = getValueInList();
 
         if (styleName == Style.DEFAULT_STYLE_NAME) {
             return;
@@ -150,7 +157,7 @@ public class StyleList extends JList implements PropertyComponent {
     }
 
     public void editSelectedStyle() {
-        String styleName = getValue();
+        String styleName = getValueInList();
         Style style = Style.getStyle(styleName);
         int index = Style.getStyleIndex(style);
 
@@ -165,7 +172,13 @@ public class StyleList extends JList implements PropertyComponent {
             return;
         }
 
-        copyStyle(retStyle, style);
+        if (style.m_name == "default") {
+            copyStyle(retStyle, style);
+            style.m_name = "default";
+        } else {
+            copyStyle(retStyle, style);
+        }
+
         m_listMode.set(index, style.m_name);
     }
 
@@ -175,7 +188,7 @@ public class StyleList extends JList implements PropertyComponent {
             return;
         }
 
-        String styleName = getValue();
+        String styleName = getValueInList();
         Style.moveStyle(styleName, -1);
 
         String upperStyleName = m_listMode.get(index - 1);
@@ -189,7 +202,7 @@ public class StyleList extends JList implements PropertyComponent {
             return;
         }
 
-        String styleName = getValue();
+        String styleName = getValueInList();
         Style.moveStyle(styleName, 1);
 
         String downerStyleName = m_listMode.get(index + 1);
@@ -223,6 +236,10 @@ public class StyleList extends JList implements PropertyComponent {
     @Override
     public void setValue(Object value)
     {
+        if (value == null) {
+            value = "default";
+        }
+
         int index = m_listMode.indexOf(value);
         if (index >= 0) {
             setSelectedIndex(index);

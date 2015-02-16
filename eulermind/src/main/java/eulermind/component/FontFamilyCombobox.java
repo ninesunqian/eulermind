@@ -43,7 +43,6 @@ public class FontFamilyCombobox extends JComboBox implements PropertyComponent {
     {
         setRenderer(new FontCellRenderer());
 
-
         addItem(null);
         for (Object item : m_families) {
             addItem(item);
@@ -56,10 +55,9 @@ public class FontFamilyCombobox extends JComboBox implements PropertyComponent {
         @Override
         public void actionPerformed(ActionEvent e)
         {
-
-            if (m_propertyComponentConnector != null) {
-                m_propertyComponentConnector.updateMindNode(getValue());
-            }
+        if (m_propertyComponentConnector != null) {
+            m_propertyComponentConnector.updateMindNode(getValue());
+        }
         }
     };
 
@@ -92,9 +90,7 @@ public class FontFamilyCombobox extends JComboBox implements PropertyComponent {
     @Override
     public void setValue(Object value)
     {
-        if (m_families.indexOf(value) >= 0) {
-            setSelectedItem(value);
-        }
+        setSelectedItem(value);
     }
 
     @Override

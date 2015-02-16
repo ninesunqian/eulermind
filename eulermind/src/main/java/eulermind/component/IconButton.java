@@ -48,7 +48,7 @@ public class IconButton extends JButton implements PropertyComponent {
         @Override
         public void actionPerformed(ActionEvent e)
         {
-            MindIconDialog mindIconDialog = new MindIconDialog(null);
+            MindIconDialog mindIconDialog = new MindIconDialog(IconButton.this);
             mindIconDialog.setModal(true);
             mindIconDialog.setVisible(true);
 

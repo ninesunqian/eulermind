@@ -341,37 +341,44 @@ public class Style {
     public static String getFontFamilySurely(String name)
     {
         Style style = getStyleSurely(name);
-        return style.m_fontFamily != null ? style.m_fontFamily : sm_defaultStyle.m_fontFamily;
+        String family = style.m_fontFamily != null ? style.m_fontFamily : sm_defaultStyle.m_fontFamily;
+        return family != null ? family : "SansSerif";
     }
 
     public static Integer getFontSizeSurely(String name)
     {
         Style style = getStyleSurely(name);
-        return style.m_fontSize != null ? style.m_fontSize : sm_defaultStyle.m_fontSize;
+        Integer size = style.m_fontSize != null ? style.m_fontSize : sm_defaultStyle.m_fontSize;
+        return size != null ? size : 14;
     }
 
     public static Boolean getBoldSurely(String name)
     {
         Style style = getStyleSurely(name);
-        return style.m_bold != null ? style.m_bold : sm_defaultStyle.m_bold;
+        Boolean bold = style.m_bold != null ? style.m_bold : sm_defaultStyle.m_bold;
+        return bold != null ? bold : false;
     }
 
     public static Boolean getItalicSurely(String name)
     {
         Style style = getStyleSurely(name);
-        return style.m_italic != null ? style.m_italic : sm_defaultStyle.m_italic;
+        Boolean italic = style.m_italic != null ? style.m_italic : sm_defaultStyle.m_italic;
+        return italic != null ? italic : false;
     }
 
     public static Integer getTextColorSurely(String name)
     {
         Style style = getStyleSurely(name);
-        return style.m_textColor != null ? style.m_textColor : sm_defaultStyle.m_textColor;
+        Integer color = style.m_textColor != null ? style.m_textColor : sm_defaultStyle.m_textColor;
+        return color != null ? color : 0;
     }
+
 
     public static Integer getNodeColorSurely(String name)
     {
         Style style = getStyleSurely(name);
-        return style.m_nodeColor != null ? style.m_nodeColor : sm_defaultStyle.m_nodeColor;
+        Integer color = style.m_nodeColor != null ? style.m_nodeColor : sm_defaultStyle.m_nodeColor;
+        return color != null ? color : 0xFFFFFF;
     }
 
     public static String getIconSurely(String name)
