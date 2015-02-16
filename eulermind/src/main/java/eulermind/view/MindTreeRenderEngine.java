@@ -70,6 +70,7 @@ public class MindTreeRenderEngine {
 
     private static final int m_nodeDepthSpacing = 50;
     private static final int m_nodeBreadthSpacing = 10;
+    private double m_cursorBorderExpand = Math.min(m_nodeBreadthSpacing, m_nodeDepthSpacing) / 2;
 
 
     public static final String sm_layoutAction = "layoutAction";
@@ -80,6 +81,8 @@ public class MindTreeRenderEngine {
     private RepaintAction m_repaintAction = new RepaintAction();
 
     private boolean m_showBigBorderOfCursor = true;
+
+
 
     public MindTreeRenderEngine(MindView mindView, String treeGroupName) {
         //m_logger.setLevel(Level.OFF);
@@ -108,6 +111,8 @@ public class MindTreeRenderEngine {
         m_vis.alwaysRunAfter(sm_layoutAction, "repaint");
         m_vis.alwaysRunAfter(sm_itemStyleActions, "repaint");
         m_vis.alwaysRunAfter(sm_itemPositionActions, "repaint");
+
+        mindView.setClipExpand(m_cursorBorderExpand);
 	}
 	
 	public void run(final  Runnable runAfterRePaint)
@@ -433,12 +438,10 @@ public class MindTreeRenderEngine {
                 BasicStroke stroke;
                 Rectangle2D bounds = (Rectangle2D)item.getBounds().clone();
 
-
-                double amount = Math.min(m_nodeBreadthSpacing, m_nodeDepthSpacing) / 2;
-                GraphicsLib.expand(bounds, amount);
+                GraphicsLib.expand(bounds, m_cursorBorderExpand);
 
                 RoundRectangle2D borderShape = new RoundRectangle2D.Double(
-                        bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight(), amount, amount);
+                        bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight(), m_cursorBorderExpand, m_cursorBorderExpand);
 
                 if (node == cursorNode) {
                     stroke = StrokeLib.getStroke(3.0f);

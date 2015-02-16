@@ -45,6 +45,7 @@ import prefuse.data.expression.Predicate;
 import prefuse.data.expression.parser.ExpressionParser;
 import prefuse.render.Renderer;
 import prefuse.util.ColorLib;
+import prefuse.util.GraphicsLib;
 import prefuse.util.StringLib;
 import prefuse.util.UpdateListener;
 import prefuse.util.collections.CopyOnWriteArrayList;
@@ -818,7 +819,19 @@ public class Display extends JComponent {
             nframes = 0;
         }
     }
-    
+
+    double m_clipExpand;
+
+    public void setClipExpand(double clipExpand)
+    {
+        m_clipExpand = clipExpand;
+    }
+
+    public double getClipExpand(double clipExpand)
+    {
+        return m_clipExpand;
+    }
+
     /**
      * Renders the display within the given graphics context and size bounds.
      * @param g2D the <code>Graphics2D</code> context to use for rendering
@@ -851,7 +864,7 @@ public class Display extends JComponent {
                 }
   
                 // expand the clip by the extra pixel margin
-                m_clip.expand(pixel);
+                m_clip.expand(pixel + m_clipExpand/getScale());
                 
                 // set the transform, rendering keys, etc
                 prepareGraphics(g2D);
@@ -899,7 +912,7 @@ public class Display extends JComponent {
                 VisualItem item = (VisualItem)items.next();
                 Rectangle2D bounds = item.getBounds();
                 m_bounds.union(bounds); // add to item bounds
-                
+
                 if ( m_clip.intersects(bounds, pixel) ) {
 
                     m_queue.addToRenderQueue(item);

@@ -21,8 +21,10 @@
         <booleanCombobox id="m_boldCombobox"/>
         <separator/>
 
-        <colorbutton id="m_textColorButton" text="T" Font="COURIER-BOLD-14"/>
-        <colorbutton id="m_nodeColorButton" text="T" Font="COURIER-BOLD-14"/>
+
+        <colorCombobox id="m_textColorCombobox" text="T" Font="COURIER-BOLD-14"/>
+        <colorCombobox id="m_nodeColorCombobox" text="T" Font="COURIER-BOLD-14"/>
+
         <iconbutton id="m_iconButton" />
 
         <separator/>

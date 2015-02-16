@@ -44,8 +44,11 @@ public class StyleList extends JList implements PropertyComponent {
     {
         this.setCellRenderer(new StyleCellRenderer());
 
+        m_listMode.addElement(null);
         for (String styleName : Style.getStyleNames()) {
-            m_listMode.addElement(styleName);
+            if (styleName != "default") {
+                m_listMode.addElement(styleName);
+            }
         }
         this.setModel(m_listMode);
     }
@@ -79,7 +82,7 @@ public class StyleList extends JList implements PropertyComponent {
             JLabel listCellRendererComponent = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index,
                     isSelected, cellHasFocus);
 
-            String styleName = (String)value;
+            String styleName = (value == null) ? "default" : (String)value;
 
             String family = Style.getFontFamilySurely(styleName);
             Integer size = Style.getFontSizeSurely(styleName);
@@ -120,11 +123,7 @@ public class StyleList extends JList implements PropertyComponent {
     @Override
     public String getValue()
     {
-        String styleName = (String)getSelectedValue();
-        if (styleName.equals("default")) {
-            return null;
-        }
-        return styleName;
+        return (String)getSelectedValue();
     }
 
     public void removeSelectedStyle() {

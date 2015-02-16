@@ -20,10 +20,10 @@
         <booleanCombobox constraints="3, 5"  id="m_boldCombobox"/>
 
         <label constraints="1, 6" text="text color"/>
-        <colorButton constraints="3, 6" text="T" id="m_textColorButton"/>
+        <colorCombobox constraints="3, 6" id="m_textColorCombobox"/>
 
         <label constraints="1, 7" text="node color"/>
-        <colorButton constraints="3, 7" text="T" id="m_nodeColorButton"/>
+        <colorCombobox constraints="3, 7" id="m_nodeColorCombobox"/>
 
         <label constraints="1, 8" text="icon"/>
         <iconButton constraints="3, 8"  id="m_iconButton"/>

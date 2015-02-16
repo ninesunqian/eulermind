@@ -1,7 +1,6 @@
 package eulermind.component;
 
 import eulermind.Style;
-import eulermind.component.*;
 import org.swixml.SwingEngine;
 
 import javax.swing.*;
@@ -45,9 +44,9 @@ public class StyleEditorDialog extends JDialog {
 
     BooleanCombobox m_boldCombobox;
 
-    ColorButton m_textColorButton;
+    ColorCombobox m_textColorCombobox;
 
-    ColorButton m_nodeColorButton;
+    ColorCombobox m_nodeColorCombobox;
 
     IconButton m_iconButton;
 
@@ -59,12 +58,6 @@ public class StyleEditorDialog extends JDialog {
         super(JOptionPane.getFrameForComponent(parent), true);
         try {
             m_swingEngine = new SwingEngine(this);
-            m_swingEngine.getTaglib().registerTag("fontFamilyCombobox", FontFamilyCombobox.class);
-            m_swingEngine.getTaglib().registerTag("fontSizeCombobox", FontSizeCombobox.class);
-            m_swingEngine.getTaglib().registerTag("booleanCombobox", BooleanCombobox.class);
-            m_swingEngine.getTaglib().registerTag("colorButton", ColorButton.class);
-            m_swingEngine.getTaglib().registerTag("iconButton", IconButton.class);
-
             m_swingEngine.render("style_editor_layout.xml");
         } catch (Exception e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
@@ -78,9 +71,8 @@ public class StyleEditorDialog extends JDialog {
         m_italicCombobox.setValue(style.m_italic);
         m_boldCombobox.setValue(style.m_bold);
 
-        m_textColorButton.setValue(style.m_textColor);
-        m_nodeColorButton.setValue(style.m_nodeColor);
-        m_nodeColorButton.setForBackground(true);
+        m_textColorCombobox.setValue(style.m_textColor);
+        m_nodeColorCombobox.setValue(style.m_nodeColor);
 
         m_iconButton.setValue(style.m_icon);
 
@@ -106,8 +98,8 @@ public class StyleEditorDialog extends JDialog {
             m_retStyle.m_italic = m_italicCombobox.getValue();
             m_retStyle.m_italic = m_italicCombobox.getValue();
 
-            m_retStyle.m_textColor = m_textColorButton.getValue();
-            m_retStyle.m_nodeColor = m_nodeColorButton.getValue();
+            m_retStyle.m_textColor = m_textColorCombobox.getValue();
+            m_retStyle.m_nodeColor = m_nodeColorCombobox.getValue();
 
             m_retStyle.m_icon = m_iconButton.getValue();
 

@@ -9,12 +9,15 @@ import eulermind.MindDB.EdgeVertex;
 
 import java.awt.*;
 
+import eulermind.component.*;
+import eulermind.view.MindEditor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 
 import com.tinkerpop.blueprints.Vertex;
+import org.swixml.SwingTagLibrary;
 
 
 import java.io.File;
@@ -50,6 +53,14 @@ public class EulerMind {
         testJava();
         testXML();
         */
+
+        SwingTagLibrary.getInstance().registerTag("fontFamilyCombobox", FontFamilyCombobox.class);
+        SwingTagLibrary.getInstance().registerTag("fontSizeCombobox", FontSizeCombobox.class);
+        SwingTagLibrary.getInstance().registerTag("booleanCombobox", BooleanCombobox.class);
+        SwingTagLibrary.getInstance().registerTag("colorCombobox", ColorCombobox.class);
+        SwingTagLibrary.getInstance().registerTag("iconButton", IconButton.class);
+        SwingTagLibrary.getInstance().registerTag("styleList", StyleList.class);
+        SwingTagLibrary.getInstance().registerTag("mindEditor", MindEditor.class);
 
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());

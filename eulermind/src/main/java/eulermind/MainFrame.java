@@ -49,8 +49,8 @@ public class MainFrame  extends JFrame {
     BooleanCombobox m_italicCombobox;
     BooleanCombobox m_boldCombobox;
 
-    ColorButton m_textColorButton;
-    ColorButton m_nodeColorButton;
+    ColorCombobox m_textColorCombobox;
+    ColorCombobox m_nodeColorCombobox;
 
     IconButton m_iconButton;
 
@@ -71,14 +71,6 @@ public class MainFrame  extends JFrame {
     {
         try {
             m_swingEngine = new SwingEngine(this);
-            m_swingEngine.getTaglib().registerTag("fontFamilyCombobox", FontFamilyCombobox.class);
-            m_swingEngine.getTaglib().registerTag("fontSizeCombobox", FontSizeCombobox.class);
-            m_swingEngine.getTaglib().registerTag("booleanCombobox", BooleanCombobox.class);
-            m_swingEngine.getTaglib().registerTag("colorButton", ColorButton.class);
-            m_swingEngine.getTaglib().registerTag("iconButton", IconButton.class);
-            m_swingEngine.getTaglib().registerTag("styleList", StyleList.class);
-
-            m_swingEngine.getTaglib().registerTag("mindEditor", MindEditor.class);
             m_swingEngine.render("main_frame_layout.xml");
         } catch (Exception e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
@@ -91,15 +83,12 @@ public class MainFrame  extends JFrame {
         m_favoriteMenu.addMenuListener(m_favoriteMenuListener);
         m_ancestorMenu.addMenuListener(m_ancestorMenuListener);
 
-        m_textColorButton.setForBackground(false);
-        m_nodeColorButton.setForBackground(true);
-
         m_mindController.connectPropertyComponent(MindModel.sm_fontFamilyPropName, m_fontFamilyCombobox);
         m_mindController.connectPropertyComponent(MindModel.sm_fontSizePropName, m_fontSizeCombobox);
         m_mindController.connectPropertyComponent(MindModel.sm_italicPropName, m_italicCombobox);
         m_mindController.connectPropertyComponent(MindModel.sm_boldPropName, m_boldCombobox);
-        m_mindController.connectPropertyComponent(MindModel.sm_textColorPropName, m_textColorButton);
-        m_mindController.connectPropertyComponent(MindModel.sm_nodeColorPropName, m_nodeColorButton);
+        m_mindController.connectPropertyComponent(MindModel.sm_textColorPropName, m_textColorCombobox);
+        m_mindController.connectPropertyComponent(MindModel.sm_nodeColorPropName, m_nodeColorCombobox);
         m_mindController.connectPropertyComponent(MindModel.sm_iconPropName, m_iconButton);
         m_mindController.connectPropertyComponent(MindModel.sm_stylePropName, m_styleList);
 
@@ -146,7 +135,7 @@ public class MainFrame  extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                m_styleList.setUpdatingMindNodeEnabled(m_checkboxForEnableStyleList.isSelected());
+                //m_styleList.setUpdatingMindNodeEnabled(m_checkboxForEnableStyleList.isSelected());
             }
         });
 
@@ -257,10 +246,9 @@ public class MainFrame  extends JFrame {
         @Override
         public void actionPerformed(ActionEvent actionEvent)
         {
-            if (m_checkboxForEnableStyleList.isSelected()) {
-                return;
-            }
+            m_styleList.setUpdatingMindNodeEnabled(false);
             m_styleList.newStyle();
+            m_styleList.setUpdatingMindNodeEnabled(true);
         }
     };
 
@@ -268,40 +256,36 @@ public class MainFrame  extends JFrame {
         @Override
         public void actionPerformed(ActionEvent actionEvent)
         {
-            if (m_checkboxForEnableStyleList.isSelected()) {
-                return;
-            }
+            m_styleList.setUpdatingMindNodeEnabled(false);
             m_styleList.removeSelectedStyle();
+            m_styleList.setUpdatingMindNodeEnabled(true);
         }
     };
     public Action m_styleEditingAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent actionEvent)
         {
-            if (m_checkboxForEnableStyleList.isSelected()) {
-                return;
-            }
+            m_styleList.setUpdatingMindNodeEnabled(false);
             m_styleList.editSelectedStyle();
+            m_styleList.setUpdatingMindNodeEnabled(true);
         }
     };
     public Action m_styleUpAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent actionEvent)
         {
-            if (m_checkboxForEnableStyleList.isSelected()) {
-                return;
-            }
+            m_styleList.setUpdatingMindNodeEnabled(false);
             m_styleList.upSelectedStyle();
+            m_styleList.setUpdatingMindNodeEnabled(true);
         }
     };
     public Action m_styleDownAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent actionEvent)
         {
-            if (m_checkboxForEnableStyleList.isSelected()) {
-                return;
-            }
+            m_styleList.setUpdatingMindNodeEnabled(false);
             m_styleList.downSelectedStyle();
+            m_styleList.setUpdatingMindNodeEnabled(true);
         }
     };
 }
