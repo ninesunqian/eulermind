@@ -35,6 +35,9 @@ public class ColorCombobox extends JComboBox implements PropertyComponent {
 
     final Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
+    boolean m_forBackground = false;
+    Color m_anotherColor;
+
     public ColorCombobox()
     {
         setRenderer(new ColorCellRenderer());
@@ -88,20 +91,37 @@ public class ColorCombobox extends JComboBox implements PropertyComponent {
                 return colorCellComponent;
             }
 
-
             if (colorValue == null) {
                 colorCellComponent.setText("default");
                 return colorCellComponent;
             }
 
             Color color = new Color(colorValue);
-            colorCellComponent.setBackground(color);
-            colorCellComponent.setOpaque(true);
+
+            if (!m_forBackground) {
+                colorCellComponent.setForeground(color);
+                if (m_anotherColor != null) {
+                    colorCellComponent.setBackground(color);
+                    colorCellComponent.setOpaque(true);
+                }
+            } else {
+                colorCellComponent.setBackground(color);
+                colorCellComponent.setOpaque(true);
+
+                if (m_anotherColor != null) {
+                    colorCellComponent.setForeground(m_anotherColor);
+                }
+            }
 
             text = String.format("#%06x", colorValue & 0xFFFFFF);
             colorCellComponent.setText(text);
             return colorCellComponent;
         }
+    }
+
+    public void setForBackground(Boolean forBackground)
+    {
+        m_forBackground = forBackground;
     }
 
     @Override

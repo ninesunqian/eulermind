@@ -29,5 +29,4 @@ public interface PropertyComponent {
     public void setValue(Object value);
     public Object getValue();
     public void setPropertyComponentConnector(PropertyComponentConnector propertyComponentConnector);
-    public void addMouseListener(MouseListener l);
 }

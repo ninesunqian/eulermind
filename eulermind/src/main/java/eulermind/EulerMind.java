@@ -1,27 +1,15 @@
 package eulermind;
 
-import com.orientechnologies.common.listener.OProgressListener;
-import com.orientechnologies.orient.core.metadata.schema.OType;
-import com.tinkerpop.blueprints.impls.orient.OrientGraph;
-import com.tinkerpop.blueprints.impls.orient.OrientTransactionalGraph;
-import com.tinkerpop.blueprints.impls.orient.OrientVertexType;
-import eulermind.MindDB.EdgeVertex;
-
 import java.awt.*;
 
 import eulermind.component.*;
 import eulermind.view.MindEditor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import javax.swing.*;
-
-import com.tinkerpop.blueprints.Vertex;
 import org.swixml.SwingTagLibrary;
 
-
 import java.io.File;
-
 
 /*
 The MIT License (MIT)
@@ -49,6 +37,7 @@ public class EulerMind {
     static Logger m_logger = LoggerFactory.getLogger(EulerMind.class);
 
     public static void main(String argv[]) {
+
         /*
         testJava();
         testXML();

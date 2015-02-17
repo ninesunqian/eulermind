@@ -79,7 +79,6 @@ public class MainFrame  extends JFrame {
         m_mindModel = new MindModel(dbUrl);
         m_mindController = new MindController(m_mindModel, m_tabbedPane);
 
-
         m_favoriteMenu.addMenuListener(m_favoriteMenuListener);
         m_ancestorMenu.addMenuListener(m_ancestorMenuListener);
 
@@ -94,6 +93,9 @@ public class MainFrame  extends JFrame {
 
         m_mindController.connectPropertyComponent(MindModel.sm_stylePropName, m_styleList);
 
+        m_nodeColorCombobox.setForBackground(true);
+        m_textColorCombobox.setForBackground(false);
+
         m_searchInputer.init(m_mindController.m_mindModel.m_mindDb);
         m_searchInputer.setHasPromptList(true);
         m_searchInputer.setMindEditorListener(new MindEditor.MindEditorListener() {
@@ -104,7 +106,7 @@ public class MainFrame  extends JFrame {
         });
 
         InputMap map;
-        map = (InputMap) UIManager.get("TabbedPane.ancestorInputMap");
+        map = (InputMap)UIManager.get("TabbedPane.ancestorInputMap");
         KeyStroke keyStrokeCtrlUp = KeyStroke.getKeyStroke(KeyEvent.VK_UP, InputEvent.CTRL_DOWN_MASK);
         map.remove(keyStrokeCtrlUp);
 

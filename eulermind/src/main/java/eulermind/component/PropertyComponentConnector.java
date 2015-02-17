@@ -31,8 +31,6 @@ import java.awt.event.MouseEvent;
 
 public class PropertyComponentConnector {
 
-    Object m_cachedPropertyValue;
-
     public PropertyComponentConnector(MindController mindController,
                                PropertyComponent component,
                                String propertyName)
@@ -40,16 +38,6 @@ public class PropertyComponentConnector {
         m_mindController = mindController;
         m_component = component;
         m_propertyName = propertyName;
-
-        /*有mouseEnter 来刷新，容易导致多个控件不一致
-        m_component.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e)
-            {
-                invalidateComponent();
-            }
-        });
-        */
     }
 
     boolean m_updateMindNodeEnabled = true;
@@ -57,18 +45,12 @@ public class PropertyComponentConnector {
 
     public void updateComponent(final Object value)
     {
-        m_cachedPropertyValue = value;
-        invalidateComponent();
-    }
-
-    private void invalidateComponent() {
         if (! m_updateComponentEnabled) {
             return;
         }
         m_updateMindNodeEnabled = false;
-        m_component.setValue(m_cachedPropertyValue);
+        m_component.setValue(value);
         m_updateMindNodeEnabled = true;
-
     }
 
     public void updateMindNode(Object value)

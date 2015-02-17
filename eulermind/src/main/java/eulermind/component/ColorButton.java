@@ -1,5 +1,6 @@
 package eulermind.component;
 
+import eulermind.MindModel;
 import eulermind.Style;
 import prefuse.util.ColorLib;
 
