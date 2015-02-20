@@ -7,6 +7,8 @@ import eulermind.view.MindEditor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.swing.*;
+import javax.swing.plaf.ColorUIResource;
+
 import org.swixml.SwingTagLibrary;
 
 import java.io.File;
@@ -42,7 +44,6 @@ public class EulerMind {
         testJava();
         testXML();
         */
-
         SwingTagLibrary.getInstance().registerTag("fontFamilyCombobox", FontFamilyCombobox.class);
         SwingTagLibrary.getInstance().registerTag("fontSizeCombobox", FontSizeCombobox.class);
         SwingTagLibrary.getInstance().registerTag("booleanCombobox", BooleanCombobox.class);

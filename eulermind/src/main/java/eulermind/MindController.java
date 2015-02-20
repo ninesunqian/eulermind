@@ -1,6 +1,6 @@
 package eulermind;
 
-import eulermind.component.PropertyComponent;
+import eulermind.component.MindPropertyComponent;
 import eulermind.component.PropertyComponentConnector;
 import eulermind.operator.Removing;
 import eulermind.view.MindKeyView;
@@ -18,6 +18,8 @@ import javax.swing.undo.UndoManager;
 import javax.swing.undo.UndoableEdit;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
@@ -260,39 +262,50 @@ public class MindController extends UndoManager {
         updateMindViews(operator, true);
     }
 
-    ArrayList<PropertyComponentConnector> m_propertyComponentConnectors = new ArrayList<PropertyComponentConnector>();
+    ArrayList<MindPropertyComponent> m_mindPropertyComponents = new ArrayList<MindPropertyComponent>();
 
-    public void connectPropertyComponent(String propertyName, PropertyComponent propertyComponent) {
-        if (propertyComponent == null) {
-            int debug = 1;
+    boolean m_settingNodePropertyEnabled = true;
+    PropertyChangeListener m_listenerForSettingNodeProperty = new PropertyChangeListener() {
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt)
+        {
+            String eventPropertyName = evt.getPropertyName();
+            if (! eventPropertyName.startsWith(MindPropertyComponent.MIND_PROPERTY_PREFIX)) {
+                return;
+            }
+
+            if (! m_settingNodePropertyEnabled) {
+                return;
+            }
+
+            String propertyName = eventPropertyName.substring(MindPropertyComponent.MIND_PROPERTY_PREFIX.length());
+
+            getCurrentView().setCursorProperty(propertyName, evt.getNewValue());
         }
-        PropertyComponentConnector connector = new PropertyComponentConnector(this, propertyComponent, propertyName);
-        m_propertyComponentConnectors.add(connector);
-        propertyComponent.setPropertyComponentConnector(connector);
+    };
+
+    public void addMindPropertyComponent(String propertyName, MindPropertyComponent mindPropertyComponent) {
+        String propertyNameInComponent = MindPropertyComponent.MIND_PROPERTY_PREFIX + propertyName;
+        mindPropertyComponent.setMindPropertyName(propertyNameInComponent);
+        mindPropertyComponent.addPropertyChangeListener(propertyNameInComponent, m_listenerForSettingNodeProperty);
+        m_mindPropertyComponents.add(mindPropertyComponent);
     }
 
-    public void disconnectPropertyComponent(PropertyComponent propertyComponent) {
-        for (PropertyComponentConnector connector : m_propertyComponentConnectors) {
-            if (connector.m_component == propertyComponent) {
-                m_propertyComponentConnectors.remove(connector);
-                connector.m_component.setPropertyComponentConnector(null);
+    public void updateMindPropertyComponents(Node node)
+    {
+        m_settingNodePropertyEnabled = false;
+        for (String propertyName : MindModel.sm_nodePropNames) {
+            Object propertyValue = node.get(propertyName);
+
+            String propertyNameInComponent = MindPropertyComponent.MIND_PROPERTY_PREFIX + propertyName;
+
+            for (MindPropertyComponent component : m_mindPropertyComponents) {
+                if (component.getMindPropertyName().equals(propertyNameInComponent)) {
+                    component.setMindPropertyValue(propertyValue);
+                }
             }
         }
-    }
-
-    private void updatePropertyComponent(String propertyName, Object propertyValue)
-    {
-        for (PropertyComponentConnector connector : m_propertyComponentConnectors) {
-            if (connector.m_propertyName == propertyName) {
-                connector.updateComponent(propertyValue);
-            }
-        }
-    }
-
-    public void updateNodePropertyComponent(Node node)
-    {
-        for (String property : MindModel.sm_nodePropNames) {
-            updatePropertyComponent(property, node.get(property));
-        }
+        m_settingNodePropertyEnabled = true;
     }
 }

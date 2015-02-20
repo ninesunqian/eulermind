@@ -33,9 +33,11 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public class FontSizeCombobox extends JComboBox implements PropertyComponent {
+public class FontSizeCombobox extends JComboBox implements MindPropertyComponent {
 
     final Logger m_logger = LoggerFactory.getLogger(this.getClass());
+
+    String m_mindPropertyName;
 
     public FontSizeCombobox()
     {
@@ -55,10 +57,7 @@ public class FontSizeCombobox extends JComboBox implements PropertyComponent {
         @Override
         public void actionPerformed(ActionEvent e)
         {
-
-            if (m_propertyComponentConnector != null) {
-                m_propertyComponentConnector.updateMindNode(getValue());
-            }
+            firePropertyChange(m_mindPropertyName, null, getMindPropertyValue());
         }
     };
 
@@ -90,23 +89,28 @@ public class FontSizeCombobox extends JComboBox implements PropertyComponent {
         }
     }
 
+
     @Override
-    public void setValue(Object value)
+    public void setMindPropertyName(String propertyName)
+    {
+        m_mindPropertyName = propertyName;
+    }
+
+    @Override
+    public String getMindPropertyName()
+    {
+        return m_mindPropertyName;
+    }
+
+    @Override
+    public void setMindPropertyValue(Object value)
     {
         setSelectedItem(value);
     }
 
     @Override
-    public Integer getValue()
+    public Integer getMindPropertyValue()
     {
         return (Integer)getSelectedItem();
     }
-
-    @Override
-    public void setPropertyComponentConnector(PropertyComponentConnector propertyComponentConnector)
-    {
-        m_propertyComponentConnector = propertyComponentConnector;
-    }
-
-    PropertyComponentConnector m_propertyComponentConnector;
 }

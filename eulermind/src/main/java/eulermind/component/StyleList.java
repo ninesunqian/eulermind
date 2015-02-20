@@ -32,11 +32,12 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public class StyleList extends JList implements PropertyComponent {
+public class StyleList extends JList implements MindPropertyComponent {
 
     final Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
     DefaultListModel<String> m_listMode = new DefaultListModel<String>();
+    String m_mindPropertyName;
 
     public StyleList()
     {
@@ -56,9 +57,8 @@ public class StyleList extends JList implements PropertyComponent {
                 if (value == "default") {
                     value = null;
                 }
-                if (m_propertyComponentConnector != null) {
-                    m_propertyComponentConnector.updateMindNode(value);
-                }
+
+                firePropertyChange(m_mindPropertyName, null, value);
             }
         }
     };
@@ -122,7 +122,19 @@ public class StyleList extends JList implements PropertyComponent {
     }
 
     @Override
-    public String getValue()
+    public void setMindPropertyName(String propertyName)
+    {
+        m_mindPropertyName = propertyName;
+    }
+
+    @Override
+    public String getMindPropertyName()
+    {
+        return m_mindPropertyName;
+    }
+
+    @Override
+    public String getMindPropertyValue()
     {
         String valueInList = getValueInList();
         return (valueInList == "default") ? null : valueInList;
@@ -234,7 +246,7 @@ public class StyleList extends JList implements PropertyComponent {
     }
 
     @Override
-    public void setValue(Object value)
+    public void setMindPropertyValue(Object value)
     {
         if (value == null) {
             value = "default";
@@ -245,13 +257,4 @@ public class StyleList extends JList implements PropertyComponent {
             setSelectedIndex(index);
         }
     }
-
-    @Override
-    public void setPropertyComponentConnector(PropertyComponentConnector propertyComponentConnector)
-    {
-        m_propertyComponentConnector = propertyComponentConnector;
-    }
-
-    PropertyComponentConnector m_propertyComponentConnector;
-
 }

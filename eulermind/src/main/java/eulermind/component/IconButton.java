@@ -1,15 +1,11 @@
 package eulermind.component;
 
 import eulermind.Style;
-import prefuse.util.ColorLib;
 
 import javax.swing.*;
-import javax.swing.colorchooser.AbstractColorChooserPanel;
-import javax.swing.colorchooser.ColorChooserComponentFactory;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
 
 /*
 The MIT License (MIT)
@@ -33,11 +29,11 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public class IconButton extends JButton implements PropertyComponent {
-
+public class IconButton extends JButton implements MindPropertyComponent {
 
     private final int m_iconSize = 27;
     private String m_iconName;
+    String m_mindPropertyName;
 
     public IconButton() {
         addActionListener(m_updateMindNodeAction);
@@ -56,9 +52,8 @@ public class IconButton extends JButton implements PropertyComponent {
 
             if (result != null) {
                 m_iconName = (result == MindIconDialog.REMOVE_ICON_NAME) ? null : result;
-                if (m_propertyComponentConnector != null) {
-                    m_propertyComponentConnector.updateMindNode(m_iconName);
-                }
+
+                firePropertyChange(m_mindPropertyName, null, m_iconName);
                 updateButtonIcon();
             }
         }
@@ -74,7 +69,19 @@ public class IconButton extends JButton implements PropertyComponent {
     }
 
     @Override
-    public void setValue(Object value)
+    public void setMindPropertyName(String propertyName)
+    {
+        m_mindPropertyName = propertyName;
+    }
+
+    @Override
+    public String getMindPropertyName()
+    {
+        return m_mindPropertyName;
+    }
+
+    @Override
+    public void setMindPropertyValue(Object value)
     {
         m_iconName = (String)value;
         if (value == null) {
@@ -85,18 +92,10 @@ public class IconButton extends JButton implements PropertyComponent {
     }
 
     @Override
-    public String getValue()
+    public String getMindPropertyValue()
     {
         return m_iconName;
     }
-
-    @Override
-    public void setPropertyComponentConnector(PropertyComponentConnector propertyComponentConnector)
-    {
-        m_propertyComponentConnector = propertyComponentConnector;
-    }
-
-    PropertyComponentConnector m_propertyComponentConnector;
 
     public final class EmptyIcon implements Icon {
 

@@ -24,15 +24,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import eulermind.MindController;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-
 public class PropertyComponentConnector {
 
     public PropertyComponentConnector(MindController mindController,
-                               PropertyComponent component,
+                               MindPropertyComponent component,
                                String propertyName)
     {
         m_mindController = mindController;
@@ -49,7 +44,7 @@ public class PropertyComponentConnector {
             return;
         }
         m_updateMindNodeEnabled = false;
-        m_component.setValue(value);
+        m_component.setMindPropertyValue(value);
         m_updateMindNodeEnabled = true;
     }
 
@@ -66,6 +61,6 @@ public class PropertyComponentConnector {
 
     public MindController m_mindController;
 
-    public PropertyComponent m_component;
+    public MindPropertyComponent m_component;
     public String m_propertyName;
 }

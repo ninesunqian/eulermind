@@ -1,12 +1,9 @@
 package eulermind.component;
 
-import eulermind.Style;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import prefuse.util.FontLib;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -32,9 +29,11 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public class BooleanCombobox extends JComboBox implements PropertyComponent {
+public class BooleanCombobox extends JComboBox implements MindPropertyComponent {
 
     final Logger m_logger = LoggerFactory.getLogger(this.getClass());
+
+    String m_mindPropertyName;
 
     public BooleanCombobox()
     {
@@ -49,14 +48,24 @@ public class BooleanCombobox extends JComboBox implements PropertyComponent {
         @Override
         public void actionPerformed(ActionEvent e)
         {
-            if (m_propertyComponentConnector != null) {
-                m_propertyComponentConnector.updateMindNode(getValue());
-            }
+            firePropertyChange(m_mindPropertyName, null, getMindPropertyValue());
         }
     };
 
     @Override
-    public void setValue(Object value)
+    public void setMindPropertyName(String propertyName)
+    {
+        m_mindPropertyName = propertyName;
+    }
+
+    @Override
+    public String getMindPropertyName()
+    {
+        return m_mindPropertyName;
+    }
+
+    @Override
+    public void setMindPropertyValue(Object value)
     {
         if (value == null) {
             setSelectedIndex(0);
@@ -71,18 +80,10 @@ public class BooleanCombobox extends JComboBox implements PropertyComponent {
     }
 
     @Override
-    public Boolean getValue()
+    public Boolean getMindPropertyValue()
     {
         int index = getSelectedIndex();
         Boolean []values = {null, true, false};
         return values[index];
     }
-
-    @Override
-    public void setPropertyComponentConnector(PropertyComponentConnector propertyComponentConnector)
-    {
-        m_propertyComponentConnector = propertyComponentConnector;
-    }
-
-    PropertyComponentConnector m_propertyComponentConnector;
 }

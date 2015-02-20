@@ -434,7 +434,7 @@ public class TikaPlainTextImporter extends Importer{
 
     private Object importLineNode(Object parentDBId, int pos, LineNode root)
     {
-        //OGlobalConfiguration.FILE_MMAP_AUTOFLUSH_UNUSED_TIME.setValue(100);
+        //OGlobalConfiguration.FILE_MMAP_AUTOFLUSH_UNUSED_TIME.setMindPropertyValue(100);
 
         BreakIterator boundary = BreakIterator.getSentenceInstance();
         boundary.setText(root.m_trimLine);

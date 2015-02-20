@@ -1,34 +1,42 @@
 <dialog name="style_editor" title="style editor" layout="BorderLayout">
 
-    <panel border="EmptyBorder(10,10,10,10)" constraints="BorderLayout.CENTER">
-        <layout type="FormLayout" columns="right:pref, 3dlu, 40dlu"
-                rows="pref, pref, pref, pref, pref, pref, pref, pref, pref"/>
+    <vbox constraints="BorderLayout.CENTER">
+        <panel border="EmptyBorder(10,10,10,10)">
+            <layout type="FormLayout" columns="right:pref, 3dlu, 40dlu"
+                    rows="pref, pref, pref, pref, pref, pref, pref, pref, pref"/>
 
-        <label constraints="1, 1" text="name"/>
-        <textfield constraints="3, 1" id="m_nameTextField"/>
+            <label constraints="1, 1" text="name"/>
+            <textfield constraints="3, 1" id="m_nameTextField"/>
 
-        <label constraints="1, 2" text="family"/>
-        <fontFamilyCombobox constraints="3, 2" id="m_fontFamilyCombbox"/>
+            <label constraints="1, 2" text="family"/>
+            <fontFamilyCombobox constraints="3, 2" id="m_fontFamilyCombobox"/>
 
-        <label constraints="1, 3" text="size"/>
-        <fontSizeCombobox constraints="3, 3" id="m_fontSizeCombbox"/>
+            <label constraints="1, 3" text="size"/>
+            <fontSizeCombobox constraints="3, 3" id="m_fontSizeCombobox"/>
 
-        <label constraints="1, 4" text="italic"/>
-        <booleanCombobox constraints="3, 4" id="m_italicCombobox"/>
+            <label constraints="1, 4" text="italic"/>
+            <booleanCombobox constraints="3, 4" id="m_italicCombobox"/>
 
-        <label constraints="1, 5" text="bold"/>
-        <booleanCombobox constraints="3, 5"  id="m_boldCombobox"/>
+            <label constraints="1, 5" text="bold"/>
+            <booleanCombobox constraints="3, 5"  id="m_boldCombobox"/>
 
-        <label constraints="1, 6" text="text color"/>
-        <colorCombobox constraints="3, 6" id="m_textColorCombobox"/>
+            <label constraints="1, 6" text="text color"/>
+            <colorCombobox constraints="3, 6" id="m_textColorCombobox"/>
 
-        <label constraints="1, 7" text="node color"/>
-        <colorCombobox constraints="3, 7" id="m_nodeColorCombobox"/>
+            <label constraints="1, 7" text="node color"/>
+            <colorCombobox constraints="3, 7" id="m_nodeColorCombobox"/>
 
-        <label constraints="1, 8" text="icon"/>
-        <iconButton constraints="3, 8"  id="m_iconButton"/>
+            <label constraints="1, 8" text="icon"/>
+            <iconButton constraints="3, 8"  id="m_iconButton"/>
 
-    </panel>
+        </panel>
+
+        <hbox>
+            <glue/>
+            <label text="example" id="m_previewLabel"/>
+            <glue/>
+        </hbox>
+    </vbox>
 
     <hbox  constraints="BorderLayout.SOUTH">
         <glue/>

@@ -2,11 +2,15 @@ package eulermind.component;
 
 import eulermind.Style;
 import org.swixml.SwingEngine;
+import prefuse.util.ColorLib;
+import prefuse.util.FontLib;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 /*
 The MIT License (MIT)
@@ -36,9 +40,9 @@ public class StyleEditorDialog extends JDialog {
 
     JTextField m_nameTextField;
 
-    FontFamilyCombobox m_fontFamilyCombbox;
+    FontFamilyCombobox m_fontFamilyCombobox;
 
-    FontSizeCombobox m_fontSizeCombbox;
+    FontSizeCombobox m_fontSizeCombobox;
 
     BooleanCombobox m_italicCombobox;
 
@@ -50,6 +54,7 @@ public class StyleEditorDialog extends JDialog {
 
     IconButton m_iconButton;
 
+    JLabel m_previewLabel;
     JButton m_okButton;
     JButton m_cancelButton;
 
@@ -65,16 +70,39 @@ public class StyleEditorDialog extends JDialog {
 
         m_nameTextField.setText(style.m_name);
 
-        m_fontFamilyCombbox.setValue(style.m_fontFamily);
-        m_fontSizeCombbox.setValue(style.m_fontSize);
+        m_fontFamilyCombobox.setMindPropertyValue(style.m_fontFamily);
+        m_fontSizeCombobox.setMindPropertyValue(style.m_fontSize);
 
-        m_italicCombobox.setValue(style.m_italic);
-        m_boldCombobox.setValue(style.m_bold);
+        m_italicCombobox.setMindPropertyValue(style.m_italic);
+        m_boldCombobox.setMindPropertyValue(style.m_bold);
 
-        m_textColorCombobox.setValue(style.m_textColor);
-        m_nodeColorCombobox.setValue(style.m_nodeColor);
+        m_textColorCombobox.setMindPropertyValue(style.m_textColor);
+        m_textColorCombobox.setForBackground(false);
+        m_nodeColorCombobox.setMindPropertyValue(style.m_nodeColor);
+        m_nodeColorCombobox.setForBackground(true);
 
-        m_iconButton.setValue(style.m_icon);
+        m_iconButton.setMindPropertyValue(style.m_icon);
+
+        /*
+        m_fontFamilyCombobox.addActionListener(updatePreviewLabelActionListener);
+        m_fontSizeCombobox.addActionListener(updatePreviewLabelActionListener);
+
+        m_italicCombobox.addActionListener(updatePreviewLabelActionListener);
+        m_boldCombobox.addActionListener(updatePreviewLabelActionListener);
+
+        m_textColorCombobox.addActionListener(updatePreviewLabelActionListener);
+        m_nodeColorCombobox.addActionListener(updatePreviewLabelActionListener);
+        */
+        addListenerForUpdatePreview(m_fontFamilyCombobox);
+        addListenerForUpdatePreview(m_fontSizeCombobox);
+
+        addListenerForUpdatePreview(m_italicCombobox);
+        addListenerForUpdatePreview(m_boldCombobox);
+
+        addListenerForUpdatePreview(m_textColorCombobox);
+        addListenerForUpdatePreview(m_nodeColorCombobox);
+
+        addListenerForUpdatePreview(m_iconButton);
 
         m_okButton.addActionListener(m_okActionListener);
         m_cancelButton.addActionListener(m_cancelActionListener);
@@ -82,9 +110,62 @@ public class StyleEditorDialog extends JDialog {
         //swixml没有自动计算size， 所以要pack一下
         pack();
         setLocationRelativeTo(parent);
+        updatePreviewLabel();
     }
 
     Style m_retStyle;
+
+    ActionListener updatePreviewLabelActionListener = new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e)
+        {
+            updatePreviewLabel();
+        }
+    };
+
+    void updatePreviewLabel()
+    {
+        String fontFamily = m_fontFamilyCombobox.getMindPropertyValue();
+        if (fontFamily == null) {
+            fontFamily = Style.getFontFamilySurely(null);
+        }
+        Integer fontSize = m_fontSizeCombobox.getMindPropertyValue();
+        if (fontSize == null) {
+            fontSize = Style.getFontSizeSurely(null);
+        }
+
+        Boolean italic = m_italicCombobox.getMindPropertyValue();
+        if (italic == null) {
+            italic = Style.getItalicSurely(null);
+        }
+
+        Boolean bold = m_boldCombobox.getMindPropertyValue();
+        if (bold == null) {
+            bold = Style.getBoldSurely(null);
+        }
+
+        Integer textColor = m_textColorCombobox.getMindPropertyValue();
+        if (textColor  == null) {
+            textColor = Style.getTextColorSurely(null);
+        }
+
+        Integer nodeColor = m_nodeColorCombobox.getMindPropertyValue();
+        if (nodeColor == null) {
+            nodeColor = Style.getNodeColorSurely(null);
+        }
+
+        String icon = m_iconButton.getMindPropertyValue();
+        if (icon == null) {
+            icon = Style.getIconSurely(null);
+        }
+
+        Font font = FontLib.getFont(fontFamily, bold, italic, fontSize);
+        m_previewLabel.setFont(font);
+        m_previewLabel.setForeground(ColorLib.getColor(textColor | 0xFF000000));
+        m_previewLabel.setBackground(ColorLib.getColor(nodeColor | 0xFF000000));
+        m_previewLabel.setOpaque(true);
+        m_previewLabel.setIcon(Style.getImageIcon(icon));
+    }
 
     ActionListener m_okActionListener = new ActionListener() {
         @Override
@@ -92,16 +173,16 @@ public class StyleEditorDialog extends JDialog {
         {
             m_retStyle = new Style(m_nameTextField.getText());
 
-            m_retStyle.m_fontFamily = m_fontFamilyCombbox.getValue();
-            m_retStyle.m_fontSize = m_fontSizeCombbox.getValue();
+            m_retStyle.m_fontFamily = m_fontFamilyCombobox.getMindPropertyValue();
+            m_retStyle.m_fontSize = m_fontSizeCombobox.getMindPropertyValue();
 
-            m_retStyle.m_italic = m_italicCombobox.getValue();
-            m_retStyle.m_italic = m_italicCombobox.getValue();
+            m_retStyle.m_bold = m_boldCombobox.getMindPropertyValue();
+            m_retStyle.m_italic = m_italicCombobox.getMindPropertyValue();
 
-            m_retStyle.m_textColor = m_textColorCombobox.getValue();
-            m_retStyle.m_nodeColor = m_nodeColorCombobox.getValue();
+            m_retStyle.m_textColor = m_textColorCombobox.getMindPropertyValue();
+            m_retStyle.m_nodeColor = m_nodeColorCombobox.getMindPropertyValue();
 
-            m_retStyle.m_icon = m_iconButton.getValue();
+            m_retStyle.m_icon = m_iconButton.getMindPropertyValue();
 
             setVisible(false);
         }
@@ -122,4 +203,21 @@ public class StyleEditorDialog extends JDialog {
         dialog.setVisible(true);
         return dialog.m_retStyle;
     }
+
+    private void addListenerForUpdatePreview(MindPropertyComponent component)
+    {
+        String fakeMindPropertyName = MindPropertyComponent.MIND_PROPERTY_PREFIX + "fakeProperty";
+        component.setMindPropertyName(fakeMindPropertyName);
+        component.addPropertyChangeListener(fakeMindPropertyName, m_listenerForUpdatePreview);
+    }
+
+
+    PropertyChangeListener m_listenerForUpdatePreview = new PropertyChangeListener() {
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt)
+        {
+            updatePreviewLabel();
+        }
+    };
 }

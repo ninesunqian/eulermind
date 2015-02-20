@@ -82,16 +82,16 @@ public class MainFrame  extends JFrame {
         m_favoriteMenu.addMenuListener(m_favoriteMenuListener);
         m_ancestorMenu.addMenuListener(m_ancestorMenuListener);
 
-        m_mindController.connectPropertyComponent(MindModel.sm_fontFamilyPropName, m_fontFamilyCombobox);
-        m_mindController.connectPropertyComponent(MindModel.sm_fontSizePropName, m_fontSizeCombobox);
-        m_mindController.connectPropertyComponent(MindModel.sm_italicPropName, m_italicCombobox);
-        m_mindController.connectPropertyComponent(MindModel.sm_boldPropName, m_boldCombobox);
-        m_mindController.connectPropertyComponent(MindModel.sm_textColorPropName, m_textColorCombobox);
-        m_mindController.connectPropertyComponent(MindModel.sm_nodeColorPropName, m_nodeColorCombobox);
-        m_mindController.connectPropertyComponent(MindModel.sm_iconPropName, m_iconButton);
-        m_mindController.connectPropertyComponent(MindModel.sm_stylePropName, m_styleList);
+        m_mindController.addMindPropertyComponent(MindModel.sm_fontFamilyPropName, m_fontFamilyCombobox);
+        m_mindController.addMindPropertyComponent(MindModel.sm_fontSizePropName, m_fontSizeCombobox);
+        m_mindController.addMindPropertyComponent(MindModel.sm_italicPropName, m_italicCombobox);
+        m_mindController.addMindPropertyComponent(MindModel.sm_boldPropName, m_boldCombobox);
+        m_mindController.addMindPropertyComponent(MindModel.sm_textColorPropName, m_textColorCombobox);
+        m_mindController.addMindPropertyComponent(MindModel.sm_nodeColorPropName, m_nodeColorCombobox);
+        m_mindController.addMindPropertyComponent(MindModel.sm_iconPropName, m_iconButton);
+        m_mindController.addMindPropertyComponent(MindModel.sm_stylePropName, m_styleList);
 
-        m_mindController.connectPropertyComponent(MindModel.sm_stylePropName, m_styleList);
+        m_mindController.addMindPropertyComponent(MindModel.sm_stylePropName, m_styleList);
 
         m_nodeColorCombobox.setForBackground(true);
         m_textColorCombobox.setForBackground(false);

@@ -93,7 +93,7 @@ public class TreeCursor extends NodeControl {
         m_mindView.renderTree();
 
         //FIXME: 放在这里合适吗
-        m_mindView.m_mindController.updateNodePropertyComponent(node);
+        m_mindView.m_mindController.updateMindPropertyComponents(node);
     }
 
     private void buildXYAxis(NodeItem originCursor)

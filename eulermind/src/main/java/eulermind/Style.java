@@ -321,6 +321,9 @@ public class Style {
     }
 
     public static Icon getImageIcon(String name) {
+        if (name == null || name.isEmpty()) {
+            return null;
+        }
         return new ImageIcon(Style.getIconPath(name));
     }
 

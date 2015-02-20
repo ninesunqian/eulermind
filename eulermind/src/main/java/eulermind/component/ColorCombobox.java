@@ -5,9 +5,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.event.EventListenerList;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 /*
 The MIT License (MIT)
@@ -31,12 +34,13 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public class ColorCombobox extends JComboBox implements PropertyComponent {
+public class ColorCombobox extends JComboBox implements MindPropertyComponent {
 
     final Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
     boolean m_forBackground = false;
     Color m_anotherColor;
+    String m_mindPropertyName;
 
     public ColorCombobox()
     {
@@ -68,9 +72,7 @@ public class ColorCombobox extends JComboBox implements PropertyComponent {
                 }
 
             } else {
-                if (m_propertyComponentConnector != null) {
-                    m_propertyComponentConnector.updateMindNode(getValue());
-                }
+                firePropertyChange(m_mindPropertyName, null, getMindPropertyValue());
             }
         }
     };
@@ -125,22 +127,26 @@ public class ColorCombobox extends JComboBox implements PropertyComponent {
     }
 
     @Override
-    public void setValue(Object value)
+    public void setMindPropertyName(String propertyName)
+    {
+        m_mindPropertyName = propertyName;
+    }
+
+    @Override
+    public String getMindPropertyName()
+    {
+        return m_mindPropertyName;
+    }
+
+    @Override
+    public void setMindPropertyValue(Object value)
     {
         setSelectedItem(value);
     }
 
     @Override
-    public Integer getValue()
+    public Integer getMindPropertyValue()
     {
         return (Integer)getSelectedItem() ;
     }
-
-    @Override
-    public void setPropertyComponentConnector(PropertyComponentConnector propertyComponentConnector)
-    {
-        m_propertyComponentConnector = propertyComponentConnector;
-    }
-
-    PropertyComponentConnector m_propertyComponentConnector;
 }
