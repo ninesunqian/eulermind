@@ -36,6 +36,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 public class MainFrame  extends JFrame {
     static Logger m_logger = LoggerFactory.getLogger(EulerMind.class);
 
+    JMenu m_mindMapMenu;
+    JMenu m_importMenu;
+
+    JMenu m_ancestorMenu;
+    JMenu m_favoriteMenu;
+
     MindModel m_mindModel;
     MindController m_mindController;
     StyleList m_styleList;
@@ -54,8 +60,6 @@ public class MainFrame  extends JFrame {
 
     IconButton m_iconButton;
 
-    JCheckBox m_checkboxForEnableStyleList;
-
     JButton m_styleNewButton;
     JButton m_styleDeletingButton;
     JButton m_styleEditingButton;
@@ -63,9 +67,6 @@ public class MainFrame  extends JFrame {
     JButton m_styleDownButton;
 
     MindEditor m_searchInputer;
-
-    JMenu m_ancestorMenu;
-    JMenu m_favoriteMenu;
 
     public MainFrame(String dbUrl)
     {
@@ -75,35 +76,6 @@ public class MainFrame  extends JFrame {
         } catch (Exception e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
-
-        m_mindModel = new MindModel(dbUrl);
-        m_mindController = new MindController(m_mindModel, m_tabbedPane);
-
-        m_favoriteMenu.addMenuListener(m_favoriteMenuListener);
-        m_ancestorMenu.addMenuListener(m_ancestorMenuListener);
-
-        m_mindController.addMindPropertyComponent(MindModel.sm_fontFamilyPropName, m_fontFamilyCombobox);
-        m_mindController.addMindPropertyComponent(MindModel.sm_fontSizePropName, m_fontSizeCombobox);
-        m_mindController.addMindPropertyComponent(MindModel.sm_italicPropName, m_italicCombobox);
-        m_mindController.addMindPropertyComponent(MindModel.sm_boldPropName, m_boldCombobox);
-        m_mindController.addMindPropertyComponent(MindModel.sm_textColorPropName, m_textColorCombobox);
-        m_mindController.addMindPropertyComponent(MindModel.sm_nodeColorPropName, m_nodeColorCombobox);
-        m_mindController.addMindPropertyComponent(MindModel.sm_iconPropName, m_iconButton);
-        m_mindController.addMindPropertyComponent(MindModel.sm_stylePropName, m_styleList);
-
-        m_mindController.addMindPropertyComponent(MindModel.sm_stylePropName, m_styleList);
-
-        m_nodeColorCombobox.setForBackground(true);
-        m_textColorCombobox.setForBackground(false);
-
-        m_searchInputer.init(m_mindController.m_mindModel.m_mindDb);
-        m_searchInputer.setHasPromptList(true);
-        m_searchInputer.setMindEditorListener(new MindEditor.MindEditorListener() {
-            public void promptListOk(Object dbId, String text, Object parentDBId, String parentText)
-            {
-                m_mindController.findOrAddMindView(dbId);
-            }
-        });
 
         InputMap map;
         map = (InputMap)UIManager.get("TabbedPane.ancestorInputMap");
@@ -115,7 +87,7 @@ public class MainFrame  extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                m_mindModel.m_mindDb.shutdown();
+                closeMindDb();
                 MainFrame.this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             }
         });
@@ -127,21 +99,111 @@ public class MainFrame  extends JFrame {
             }
         });
 
+        m_favoriteMenu.addMenuListener(m_favoriteMenuListener);
+        m_ancestorMenu.addMenuListener(m_ancestorMenuListener);
+        m_searchInputer.setMindEditorListener(searchInputerListener);
+
+        m_nodeColorCombobox.setForBackground(true);
+        m_textColorCombobox.setForBackground(false);
+
         m_styleNewButton.addActionListener(m_styleNewAction);
         m_styleDeletingButton.addActionListener(m_styleDeletingAction);
         m_styleEditingButton.addActionListener(m_styleEditingAction);
         m_styleUpButton.addActionListener(m_styleUpAction);
         m_styleDownButton.addActionListener(m_styleDownAction);
 
-        m_checkboxForEnableStyleList.addActionListener( new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                //m_styleList.setUpdatingMindNodeEnabled(m_checkboxForEnableStyleList.isSelected());
-            }
-        });
+        openMindDb(dbUrl);
+    }
 
-        m_checkboxForEnableStyleList.setSelected(true);
+    MindEditor.MindEditorListener searchInputerListener = new MindEditor.MindEditorListener() {
+        public void promptListOk(Object dbId, String text, Object parentDBId, String parentText)
+        {
+            m_mindController.findOrAddMindView(dbId);
+        }
+    };
+
+    public void openMindDb(String url)
+    {
+        m_mindModel = new MindModel(url);
+        m_mindController = new MindController(m_mindModel, m_tabbedPane);
+
+        bindComponents();
+        setComponentEnabled(true);
+    }
+
+    public void closeMindDb()
+    {
+        setComponentEnabled(false);
+        unbindComponents();
+
+        m_mindModel.close();
+        m_mindModel = null;
+        m_mindController = null;
+    }
+
+    private void bindComponents()
+    {
+        m_mindController.addMindPropertyComponent(MindModel.sm_fontFamilyPropName, m_fontFamilyCombobox);
+        m_mindController.addMindPropertyComponent(MindModel.sm_fontSizePropName, m_fontSizeCombobox);
+        m_mindController.addMindPropertyComponent(MindModel.sm_italicPropName, m_italicCombobox);
+        m_mindController.addMindPropertyComponent(MindModel.sm_boldPropName, m_boldCombobox);
+        m_mindController.addMindPropertyComponent(MindModel.sm_textColorPropName, m_textColorCombobox);
+        m_mindController.addMindPropertyComponent(MindModel.sm_nodeColorPropName, m_nodeColorCombobox);
+        m_mindController.addMindPropertyComponent(MindModel.sm_iconPropName, m_iconButton);
+        m_mindController.addMindPropertyComponent(MindModel.sm_stylePropName, m_styleList);
+
+        m_mindController.addMindPropertyComponent(MindModel.sm_stylePropName, m_styleList);
+
+        m_searchInputer.setMindDb(m_mindModel.m_mindDb);
+        m_searchInputer.setHasPromptList(true);
+    }
+
+    private void unbindComponents()
+    {
+        m_tabbedPane.removeAll();
+
+        m_mindController.removeMindPropertyComponent(MindModel.sm_fontFamilyPropName, m_fontFamilyCombobox);
+        m_mindController.removeMindPropertyComponent(MindModel.sm_fontSizePropName, m_fontSizeCombobox);
+
+        m_mindController.removeMindPropertyComponent(MindModel.sm_italicPropName, m_italicCombobox);
+        m_mindController.removeMindPropertyComponent(MindModel.sm_boldPropName, m_boldCombobox);
+
+        m_mindController.removeMindPropertyComponent(MindModel.sm_textColorPropName, m_textColorCombobox);
+        m_mindController.removeMindPropertyComponent(MindModel.sm_nodeColorPropName, m_nodeColorCombobox);
+
+        m_mindController.removeMindPropertyComponent(MindModel.sm_iconPropName, m_iconButton);
+        m_mindController.removeMindPropertyComponent(MindModel.sm_stylePropName, m_styleList);
+
+        m_mindController.removeMindPropertyComponent(MindModel.sm_stylePropName, m_styleList);
+    }
+
+    private void setComponentEnabled(boolean enabled)
+    {
+        m_ancestorMenu.setEnabled(enabled);
+        m_favoriteMenu.setEnabled(enabled);
+        m_importMenu.setEnabled(enabled);
+
+        m_fontFamilyCombobox.setEnabled(enabled);
+        m_fontSizeCombobox.setEnabled(enabled);
+
+        m_italicCombobox.setEnabled(enabled);
+        m_boldCombobox.setEnabled(enabled);
+
+        m_textColorCombobox.setEnabled(enabled);
+        m_nodeColorCombobox.setEnabled(enabled);
+
+        m_iconButton.setEnabled(enabled);
+
+        m_styleList.setEnabled(enabled);
+        m_tabbedPane.setEnabled(enabled);
+
+        m_styleNewButton.setEnabled(enabled);
+        m_styleDeletingButton.setEnabled(enabled);
+        m_styleEditingButton.setEnabled(enabled);
+        m_styleUpButton.setEnabled(enabled);
+        m_styleDownButton.setEnabled(enabled);
+
+        m_searchInputer.setEnabled(enabled);
     }
 
     public Action m_importAction = new AbstractAction() {

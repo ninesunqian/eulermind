@@ -66,13 +66,14 @@ public class MindController extends UndoManager {
 
         m_tabbedPane.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
-                Component comp = m_tabbedPane.getSelectedComponent();
-                comp.requestFocusInWindow();
+                if (m_tabbedPane.getSelectedComponent() != null) {
+                    Component comp = m_tabbedPane.getSelectedComponent();
+                    comp.requestFocusInWindow();
+                }
             }
         });
 
         findOrAddMindView(m_mindModel.m_mindDb.getRootId());
-
 
         //防止切换tab时，焦点被切换到工具栏
         m_tabbedPane.setFocusCycleRoot(true);
@@ -290,6 +291,13 @@ public class MindController extends UndoManager {
         mindPropertyComponent.setMindPropertyName(propertyNameInComponent);
         mindPropertyComponent.addPropertyChangeListener(propertyNameInComponent, m_listenerForSettingNodeProperty);
         m_mindPropertyComponents.add(mindPropertyComponent);
+    }
+
+    public void removeMindPropertyComponent(String propertyName, MindPropertyComponent mindPropertyComponent) {
+        String propertyNameInComponent = MindPropertyComponent.MIND_PROPERTY_PREFIX + propertyName;
+        mindPropertyComponent.setMindPropertyName(null);
+        mindPropertyComponent.removePropertyChangeListener(propertyNameInComponent, m_listenerForSettingNodeProperty);
+        m_mindPropertyComponents.remove(mindPropertyComponent);
     }
 
     public void updateMindPropertyComponents(Node node)

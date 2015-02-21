@@ -58,7 +58,7 @@ public class MindEditor extends JTextField {
         super();
     }
 
-    public void init(MindDB mindDb) {
+    public void setMindDb(MindDB mindDb) {
         m_mindDb = mindDb;
         setHasPromptList(false);
 

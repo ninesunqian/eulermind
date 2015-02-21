@@ -5,6 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.EventListenerList;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -57,6 +59,31 @@ public class ColorCombobox extends JComboBox implements MindPropertyComponent {
         addItem(0);
 
         addActionListener(m_updateMindNodeAction);
+
+        /*FIXME: how to change background of editor
+        JTextField editor = (JTextField)getEditor().getEditorComponent();
+        editor.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e)
+            {
+                int debug = 1;
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e)
+            {
+                int debug = 1;
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e)
+            {
+                int debug = 1;
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+        }); */
     }
 
     ActionListener m_updateMindNodeAction = new ActionListener() {

@@ -181,6 +181,12 @@ public class MindModel {
         for (Vertex vertex : m_favoriteIndex.get(FAVORITE_KEY_NAME, FAVORITE_KEY_NAME))  {
             m_favoriteInfoes.add(new VertexBasicInfo(vertex));
         }
+    }
+
+    public void close()
+    {
+        m_mindDb.shutdown();
+        //TODO: 添加保存最后打开的函数
 
     }
 

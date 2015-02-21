@@ -40,10 +40,6 @@ public class EulerMind {
 
     public static void main(String argv[]) {
 
-        /*
-        testJava();
-        testXML();
-        */
         SwingTagLibrary.getInstance().registerTag("fontFamilyCombobox", FontFamilyCombobox.class);
         SwingTagLibrary.getInstance().registerTag("fontSizeCombobox", FontSizeCombobox.class);
         SwingTagLibrary.getInstance().registerTag("booleanCombobox", BooleanCombobox.class);

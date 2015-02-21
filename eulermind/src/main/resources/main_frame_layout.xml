@@ -1,12 +1,16 @@
 <frame name="mainframe" title="EulerMind" layout="BorderLayout" size="800,600"  >
 
     <menubar name="menubar">
+        <!--
         <menu name="filemenu" text="File" mnemonic="VK_F" >
             <menuitem id="mi_open" text="Open" mnemonic="VK_O" />
             <menuitem id="mi_import" text="Import" mnemonic="VK_I" Action="m_importAction"/>
         </menu>
-        <menu text="Favorite" id="m_favoriteMenu"/>
-        <menu text="Ancestor" id="m_ancestorMenu"/>
+        -->
+        <menu text="Mindmap" id="m_mindMapMenu" mnemonic="VK_M"/>
+        <menu text="Import" id="m_importMenu" mnemonic="VK_I"/>
+        <menu text="Favorite" id="m_favoriteMenu" mnemonic="VK_F"/>
+        <menu text="Ancestor" id="m_ancestorMenu" mnemonic="VK_A"/>
 
     </menubar>
 
