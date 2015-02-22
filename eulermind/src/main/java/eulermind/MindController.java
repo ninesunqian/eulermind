@@ -73,7 +73,15 @@ public class MindController extends UndoManager {
             }
         });
 
-        findOrAddMindView(m_mindModel.m_mindDb.getRootId());
+        ArrayList<Object> lastOpenedRootId = m_mindModel.getLastOpenedRootId();
+
+        if (lastOpenedRootId.size() > 0) {
+            for (Object rootId : lastOpenedRootId) {
+                findOrAddMindView(rootId);
+            }
+        } else {
+            findOrAddMindView(m_mindModel.m_mindDb.getRootId());
+        }
 
         //防止切换tab时，焦点被切换到工具栏
         m_tabbedPane.setFocusCycleRoot(true);
@@ -123,6 +131,7 @@ public class MindController extends UndoManager {
         MindView mindView = m_mindViews.get(rootDBId);
         m_tabbedPane.remove(mindView);
         m_mindViews.remove(rootDBId);
+        m_mindModel.removeTree(rootDBId);
     }
 
     public MindView exposeMindView(Object rootDBId) {

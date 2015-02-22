@@ -4,6 +4,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 
 import eulermind.component.*;
 import eulermind.view.MindEditor;
@@ -68,7 +69,9 @@ public class MainFrame  extends JFrame {
 
     MindEditor m_searchInputer;
 
-    public MainFrame(String dbUrl)
+    String m_currentMapName;
+
+    public MainFrame()
     {
         try {
             m_swingEngine = new SwingEngine(this);
@@ -95,10 +98,13 @@ public class MainFrame  extends JFrame {
         addWindowFocusListener(new WindowAdapter() {
             public void windowGainedFocus(WindowEvent e) {
                 Component comp = m_tabbedPane.getSelectedComponent();
-                comp.requestFocusInWindow();
+                if (comp != null) {
+                    comp.requestFocusInWindow();
+                }
             }
         });
 
+        m_mindMapMenu.addMenuListener(m_mapMenuListener);
         m_favoriteMenu.addMenuListener(m_favoriteMenuListener);
         m_ancestorMenu.addMenuListener(m_ancestorMenuListener);
         m_searchInputer.setMindEditorListener(searchInputerListener);
@@ -112,7 +118,10 @@ public class MainFrame  extends JFrame {
         m_styleUpButton.addActionListener(m_styleUpAction);
         m_styleDownButton.addActionListener(m_styleDownAction);
 
-        openMindDb(dbUrl);
+        String lastOpenedMap = Utils.getLastOpenedMap();
+        if (lastOpenedMap != null) {
+            openMindDb(lastOpenedMap);
+        }
     }
 
     MindEditor.MindEditorListener searchInputerListener = new MindEditor.MindEditorListener() {
@@ -122,23 +131,37 @@ public class MainFrame  extends JFrame {
         }
     };
 
-    public void openMindDb(String url)
+    public void openMindDb(String name)
     {
+        if (m_currentMapName != null) {
+            m_logger.error("must close current map, before open another");
+            return;
+        }
+
+        String url = Utils.mindMapNameToUrl(name);
         m_mindModel = new MindModel(url);
         m_mindController = new MindController(m_mindModel, m_tabbedPane);
 
         bindComponents();
         setComponentEnabled(true);
+
+        m_currentMapName = name;
+        Utils.recordLastOpenedMap(name);
     }
 
     public void closeMindDb()
     {
+        if (m_currentMapName == null) {
+            return;
+        }
+
         setComponentEnabled(false);
         unbindComponents();
 
         m_mindModel.close();
         m_mindModel = null;
         m_mindController = null;
+        m_currentMapName = null;
     }
 
     private void bindComponents()
@@ -213,6 +236,83 @@ public class MainFrame  extends JFrame {
             m_mindController.getCurrentView().importFile();
         }
 
+    };
+
+    MenuListener m_mapMenuListener = new MenuListener() {
+        @Override
+        public void menuSelected(MenuEvent e)
+        {
+            JMenuItem addingMenuItem = new JMenuItem("new map ...");
+            addingMenuItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent)
+                {
+                    closeMindDb();
+                    String name;
+                    while(true) {
+                    name = JOptionPane.showInputDialog("input a map name, must alphabet, number or '_'", null);
+                        if (name.matches("[a-zA-Z0-9_]+")) {
+                            break;
+                        } else {
+                            JOptionPane.showMessageDialog(null, "name format error", null, JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                    openMindDb(name);
+                }
+            });
+            m_mindMapMenu.add(addingMenuItem);
+
+            JMenuItem removingMenuItem = new JMenuItem("remove current map");
+            removingMenuItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent)
+                {
+                    String inputedName = JOptionPane.showInputDialog("to confirm removing, please input the map name", null);
+                    if (!inputedName.equals(m_currentMapName)) {
+                        JOptionPane.showMessageDialog(null, "map name error, cancel removing", null,
+                                JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        int ret = JOptionPane.showConfirmDialog(null, "Do you confirm removing the map?  can't come back !!!", null,
+                                JOptionPane.YES_NO_OPTION);
+                        if (ret == JOptionPane.YES_OPTION) {
+                            String map = m_currentMapName;
+                            closeMindDb();
+                            Utils.removeMap(map);
+                        }
+                    }
+                }
+            });
+            m_mindMapMenu.add(removingMenuItem);
+
+            m_mindMapMenu.addSeparator();
+
+            for (final String mapName : Utils.getAllMapNames()) {
+                JMenuItem menuItem = new JMenuItem(mapName);
+                menuItem.setEnabled(! mapName.equals(m_currentMapName));
+                menuItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent actionEvent)
+                    {
+                        closeMindDb();
+                        openMindDb(mapName);
+                    }
+                });
+
+                m_mindMapMenu.add(menuItem);
+            }
+        }
+
+        @Override
+        public void menuDeselected(MenuEvent e)
+        {
+            m_mindMapMenu.removeAll();
+        }
+
+        @Override
+        public void menuCanceled(MenuEvent e)
+        {
+            m_mindMapMenu.removeAll();
+        }
     };
 
     MenuListener m_favoriteMenuListener = new MenuListener() {

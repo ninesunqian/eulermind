@@ -1,5 +1,6 @@
 package eulermind;
 
+import java.io.File;
 import java.util.Properties;
 
 /*
@@ -25,41 +26,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 public class Config {
-    static boolean m_isLoaded;
-    static Properties m_properties;
-    final static String sm_split_regex = "[ ]";
+    static final String TOP_DIR = System.getProperty("user.home") + File.separator + ".eulermind";
+    static final String MAPS_DIR = TOP_DIR + File.separator + "maps";
+    static final String STYLE_FILE = TOP_DIR + File.separator + "styles.xml";
+    static final String LAST_OPENED_MAP_RECORD_FILE = TOP_DIR + File.separator + "last_opened_map";
 
-    private Config() {
-
-    }
-
-    static void load() {
-        if (m_isLoaded)
-            return;
-        //TODO
-        m_isLoaded = true;
-    }
-
-    static String[] getIcons()
-    {
-        String icons = m_properties.getProperty("icons");
-        return icons.split(sm_split_regex);
-    }
-
-    static int[] getFramePosition()
-    {
-        String position_str = m_properties.getProperty("window.location");
-        String strs [] = position_str.split(sm_split_regex);
-        int position[] = new int[4];
-
-        for (int i=0; i<4; i++) {
-            position[i] = Integer.parseInt(strs[i]);
-        }
-        return position;
-    }
-
-    static void setFramePosition(int x, int y, int w, int h)
-    {
-
-    }
 }

@@ -110,11 +110,6 @@ public class MindDB {
         m_rootId = root.getId();
 	}
 
-    protected void finalize() throws Throwable
-    {
-        m_graph.commit();
-    }
-
     int m_vertexCount = 0;
 	private Vertex addVertex(Object arg0) {
         Vertex vertex =  m_graph.addVertex(null, MindModel.sm_textPropName, "a");
@@ -152,7 +147,13 @@ public class MindDB {
 
         return index;
 	}
-	
+
+    public void dropIndex(String indexName)
+    {
+        //FIXME: dropIndex后马上 createIndex, 会有bug，提示该index已经存在
+        m_graph.dropIndex(indexName);
+    }
+
 	public Object getRootId ()
 	{
 		return m_rootId;

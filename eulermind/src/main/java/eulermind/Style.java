@@ -207,8 +207,7 @@ public class Style {
     }
 
     public static void load() {
-        String userStylesPath = System.getProperty("user.home") + "/.eulermind/styles.xml";
-        File userStylesFile = new File(userStylesPath);
+        File userStylesFile = new File(Config.STYLE_FILE);
 
         if (!userStylesFile.exists()) {
 
@@ -233,8 +232,7 @@ public class Style {
 
     public static void save() {
 
-        String userStylesPath = System.getProperty("user.home") + "/.eulermind/styles.xml";
-        File userStylesFile = new File(userStylesPath);
+        File userStylesFile = new File(Config.STYLE_FILE);
 
         XStream xstream = createXStream();
         String xml = xstream.toXML(sm_styles);

@@ -70,6 +70,9 @@ public class MindModel {
     private final static String FAVORITE_INDEX_NAME = "favoriteIndex";
     private final static String FAVORITE_KEY_NAME = "favorite";
 
+    private final static String LAST_OPENED_INDEX_NAME = "lastOpenedIndex";
+    private final static String LAST_OPENED_KEY_NAME = "lastOpened";
+
     private Index<Vertex> m_favoriteIndex;
 
     class VertexBasicInfo {
@@ -181,13 +184,38 @@ public class MindModel {
         for (Vertex vertex : m_favoriteIndex.get(FAVORITE_KEY_NAME, FAVORITE_KEY_NAME))  {
             m_favoriteInfoes.add(new VertexBasicInfo(vertex));
         }
+
+    }
+
+    ArrayList<Object> getLastOpenedRootId()
+    {
+        Index<Vertex> lastOpenedIndex = m_mindDb.getOrCreateIndex(LAST_OPENED_INDEX_NAME);
+
+        ArrayList<Object> lastOpenedRootId = new ArrayList<Object>();
+        for (int i=0; lastOpenedIndex.get(LAST_OPENED_KEY_NAME, i).iterator().hasNext(); i++) {
+            Vertex vertex = lastOpenedIndex.get(LAST_OPENED_KEY_NAME, i).iterator().next();
+            lastOpenedRootId.add(vertex.getId());
+        }
+        return lastOpenedRootId;
     }
 
     public void close()
     {
-        m_mindDb.shutdown();
-        //TODO: 添加保存最后打开的函数
+        Index<Vertex> lastOpenedIndex = m_mindDb.getOrCreateIndex(LAST_OPENED_INDEX_NAME);
 
+        //FIXME: 此处不能用 dropIndex来代替
+        for (int i=0; lastOpenedIndex.get(LAST_OPENED_KEY_NAME, i).iterator().hasNext(); i++) {
+            Vertex vertex = lastOpenedIndex.get(LAST_OPENED_KEY_NAME, i).iterator().next();
+            lastOpenedIndex.remove(LAST_OPENED_KEY_NAME, i, vertex);
+        }
+
+        for (int i=0; i<m_trees.size(); i++) {
+            Tree tree = m_trees.get(i);
+            Vertex vertex = m_mindDb.getVertex(tree.getRoot().get(sm_dbIdColumnName));
+            lastOpenedIndex.put(LAST_OPENED_KEY_NAME, i, vertex);
+        }
+
+        m_mindDb.shutdown();
     }
 
     public Tree findTree(Object rootId)
@@ -240,6 +268,14 @@ public class MindModel {
 
 
         return tree;
+    }
+
+    public void removeTree(Object rootId)
+    {
+        Tree tree = findTree(rootId);
+        if (tree != null) {
+            m_trees.remove(tree);
+        }
     }
 
 	private void loadElementProperties(com.tinkerpop.blueprints.Element dbElement, Tuple tuple, String keys[])

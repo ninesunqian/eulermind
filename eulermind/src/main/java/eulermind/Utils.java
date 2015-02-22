@@ -6,6 +6,8 @@ import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 import com.tinkerpop.blueprints.impls.orient.OrientTransactionalGraph;
 import com.tinkerpop.blueprints.impls.orient.OrientVertexType;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.DirectoryFileFilter;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +15,9 @@ import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -60,7 +65,12 @@ public class Utils {
 
     static void testJava()
     {
-        deleteDir("/tmp/test/aaa");
+        File file = new File("/tmp/test/aaa");
+        try {
+            FileUtils.deleteDirectory(file);
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
         String pathToDatabase = "plocal:/tmp/test/aaa";
 
         OrientTransactionalGraph graph = new OrientGraph(pathToDatabase, false);
@@ -153,8 +163,87 @@ public class Utils {
         return parent;
     }
 
-    static public Vertex createTree (MindDB mindDb, int maxLevel) {
+    public static Vertex createTree (MindDB mindDb, int maxLevel) {
         return createTree(mindDb, null, "", 0, maxLevel);
 
     }
+
+    public static void mkdir(String path) throws IOException
+    {
+        File file = new File(path);
+        FileUtils.forceMkdir(file);
+    }
+
+    public static String mindMapNameToUrl(String name)
+    {
+        String path = Config.MAPS_DIR + File.separator + name;
+        return "local:" +  path.replace(File.separatorChar, '/');
+    }
+
+    public static boolean mapExist(String name)
+    {
+        String path = Config.MAPS_DIR + File.separator + name;
+        File file = new File(path);
+        return file.exists();
+    }
+
+    public static String[] getAllMapNames()
+    {
+        File mapsDir = new File(Config.MAPS_DIR);
+        String maps[] = mapsDir.list(DirectoryFileFilter.INSTANCE);
+        return maps;
+    }
+
+
+    public static String getLastOpenedMap()
+    {
+        File file = new File(Config.LAST_OPENED_MAP_RECORD_FILE);
+        if (file.isFile()) {
+            try {
+                String name = FileUtils.readFileToString(file);
+                if (mapExist(name)) {
+                    return name;
+                } else {
+                    return null;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+        return null;
+    }
+
+    public static void removeMap(String name) {
+        String path = Config.MAPS_DIR + File.separator + name;
+        File mapDir = new File(path);
+        try {
+            FileUtils.deleteDirectory(mapDir);
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+    }
+
+    public static void recordLastOpenedMap(String name)
+    {
+        if (!mapExist(name)) {
+            return;
+        }
+
+        File file = new File(Config.LAST_OPENED_MAP_RECORD_FILE);
+        try {
+            FileUtils.writeStringToFile(file, name);
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+    }
+
+    public static void initFiles() throws IOException
+    {
+        Utils.mkdir(Config.MAPS_DIR);
+        Style.load();
+        Style.save();
+    }
+
 }

@@ -7,11 +7,10 @@ import eulermind.view.MindEditor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.swing.*;
-import javax.swing.plaf.ColorUIResource;
 
 import org.swixml.SwingTagLibrary;
 
-import java.io.File;
+import java.io.IOException;
 
 /*
 The MIT License (MIT)
@@ -60,34 +59,42 @@ public class EulerMind {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
-        Style.load();
-        Style.save();
-
-        String dbPath = System.getProperty("user.home") + "/.eulermind/mind_db";
-        //TODO: for debug
-
-        final String dbUrl = "local:" + dbPath.replace(File.separatorChar, '/');
-        m_logger.info ("dbUrl = " + dbUrl);
-
-        boolean newDb = false;
-        if (newDb) {
-            Utils.deleteDir(dbPath);
-
-            MindDB mindDb = new MindDB(dbUrl);
-            //Utils.createTree(mindDb, 2);
-
-            Crawler.sm_mindDb = mindDb;
-            Crawler crawler = new Crawler();
-            crawler.start();
-            mindDb = null;
+        try {
+            Utils.initFiles();
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            return;
         }
 
+        //TODO: for debug
+        {
+            String exampleMap = "example";
+            if (! Utils.mapExist(exampleMap)) {
+                final String dbUrl = Utils.mindMapNameToUrl(exampleMap);
+                MindDB mindDb = new MindDB(dbUrl);
+                //Utils.createTree(mindDb, 2);
+                mindDb.commit();
+            }
+
+            /*
+            String netCrawlerMap = "netCrawler";
+            if (! Utils.mapExist(netCrawlerMap)) {
+                final String dbUrl = Utils.mindMapNameToUrl(netCrawlerMap);
+                MindDB mindDb = new MindDB(dbUrl);
+
+                Crawler.sm_mindDb = mindDb;
+                Crawler crawler = new Crawler();
+                crawler.start();
+                mindDb.commit();
+            }
+            */
+        }
 
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
 
-                JFrame frame = new MainFrame(dbUrl);
+                JFrame frame = new MainFrame();
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame.setVisible(true);
                 KeyboardFocusManager.getCurrentKeyboardFocusManager().clearGlobalFocusOwner();
