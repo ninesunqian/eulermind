@@ -347,10 +347,12 @@ public class MindView extends Display {
 
         renderTree(new Runnable() {
             @Override
-            public void run() {
+            public void run()
+            {
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
-                    public void run() {
+                    public void run()
+                    {
                         m_logger.warn("++++++++++++++ show Editor");
                         //TODO
                         //listener 内部，调用endInstering (重绘，设置重绘后的hander是 恢复状态)
@@ -364,12 +366,12 @@ public class MindView extends Display {
         });
     }
 
-    public void importFile()
+    public void importFileOrDirectory()
     {
         beginChanging();
         JFileChooser chooser = new JFileChooser();
         chooser.setMultiSelectionEnabled(false);
-        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
         String path;
 
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {

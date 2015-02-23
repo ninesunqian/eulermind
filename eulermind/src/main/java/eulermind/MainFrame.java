@@ -4,7 +4,6 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
 
 import eulermind.component.*;
 import eulermind.view.MindEditor;
@@ -233,9 +232,8 @@ public class MainFrame  extends JFrame {
         @Override
         public void actionPerformed(ActionEvent actionEvent)
         {
-            m_mindController.getCurrentView().importFile();
+            m_mindController.getCurrentView().importFileOrDirectory();
         }
-
     };
 
     MenuListener m_mapMenuListener = new MenuListener() {

@@ -1,5 +1,6 @@
 package eulermind;
 
+import eulermind.component.ButtonTabComponent;
 import eulermind.component.MindPropertyComponent;
 import eulermind.component.PropertyComponentConnector;
 import eulermind.operator.Removing;
@@ -110,6 +111,7 @@ public class MindController extends UndoManager {
         Node root = mindView.m_tree.getRoot();
 
         m_tabbedPane.addTab(m_mindModel.getText(root), mindView);
+        m_tabbedPane.setTabComponentAt(m_tabbedPane.getTabCount() - 1, new ButtonTabComponent(m_tabbedPane));
 
         for(NodeControl controller : m_externalMouseContollers) {
             mindView.addControlListener(controller);

@@ -3,6 +3,7 @@ package eulermind;
 import com.tinkerpop.blueprints.*;
 import eulermind.MindDB.EdgeVertex;
 import eulermind.MindDB.RefLinkInfo;
+import eulermind.importer.DirectoryImporter;
 import eulermind.importer.FreemindImporter;
 import eulermind.importer.Importer;
 import eulermind.importer.TikaPlainTextImporter;
@@ -19,6 +20,7 @@ import prefuse.visual.VisualTable;
 import prefuse.visual.VisualTree;
 
 import java.awt.*;
+import java.io.File;
 import java.util.*;
 import java.util.List;
 
@@ -694,11 +696,18 @@ public class MindModel {
 
     public Importer getImporter(String path)
     {
+        File file = new File(path);
+        if (file.isDirectory()) {
+            return new DirectoryImporter(m_mindDb);
 
-        if (path.endsWith(".mm")) {
-            return new FreemindImporter(m_mindDb);
+        } else if (file.isFile()) {
+            if (path.endsWith(".mm")) {
+                return new FreemindImporter(m_mindDb);
+            } else {
+                return new TikaPlainTextImporter(m_mindDb);
+            }
         } else {
-            return new TikaPlainTextImporter(m_mindDb);
+            return null;
         }
     }
 
@@ -713,6 +722,11 @@ public class MindModel {
 
         Object parentDbId = getDbId(parent);
         Importer importer = getImporter(path);
+
+        if (importer == null) {
+            return new ArrayList();
+        }
+
         List newChildren = importer.importFile(getDbId(parent), pos, path);
 
         Vertex dbParent = m_mindDb.getVertex(parentDbId);

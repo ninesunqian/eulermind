@@ -2,7 +2,6 @@ package eulermind.view;
 
 import eulermind.MindController;
 import eulermind.MindModel;
-import eulermind.view.MindView;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -93,7 +92,7 @@ public class MindKeyView extends MindView {
     AbstractAction m_importAction = new AbstractAction()  {
         @Override
         public void actionPerformed(ActionEvent e) {
-            importFile();
+            importFileOrDirectory();
         }
     };
 
