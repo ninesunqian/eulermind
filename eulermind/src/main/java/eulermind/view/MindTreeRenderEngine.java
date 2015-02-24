@@ -433,25 +433,27 @@ public class MindTreeRenderEngine {
             Node node = m_mindView.toSource((NodeItem)item);
             Node cursorNode = m_mindView.getCursorSourceNode();
 
+            if (node == cursorNode) {
+                BasicStroke stroke = StrokeLib.getStroke(3.0f);
+                paintCursorBoundary(g, item, stroke);
 
-            if (m_mindView.m_mindModel.isSelfInDB(node, cursorNode)) {
-                BasicStroke stroke;
-                Rectangle2D bounds = (Rectangle2D)item.getBounds().clone();
-
-                GraphicsLib.expand(bounds, m_cursorBorderExpand);
-
-                RoundRectangle2D borderShape = new RoundRectangle2D.Double(
-                        bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight(), m_cursorBorderExpand, m_cursorBorderExpand);
-
-                if (node == cursorNode) {
-                    stroke = StrokeLib.getStroke(3.0f);
-                } else {
-                    float dash [] = {10f, 3f};
-                    stroke = StrokeLib.getStroke(3.0f, dash);
-                }
-
-                GraphicsLib.paint(g, borderShape, stroke, Color.blue, null, RENDER_TYPE_DRAW);
+            } else if (!m_mindView.isPlaceholder(cursorNode) && m_mindView.m_mindModel.isSelfInDB(node, cursorNode)) {
+                float dash [] = {10f};
+                BasicStroke stroke = StrokeLib.getStroke(3.0f, dash);
+                paintCursorBoundary(g, item, stroke);
             }
+        }
+
+        private void paintCursorBoundary(Graphics2D g, VisualItem item, BasicStroke stroke)
+        {
+            Rectangle2D bounds = (Rectangle2D)item.getBounds().clone();
+
+            GraphicsLib.expand(bounds, m_cursorBorderExpand);
+
+            RoundRectangle2D borderShape = new RoundRectangle2D.Double(
+                    bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight(), m_cursorBorderExpand, m_cursorBorderExpand);
+
+            GraphicsLib.paint(g, borderShape, stroke, Color.blue, null, RENDER_TYPE_DRAW);
         }
     }
 }
