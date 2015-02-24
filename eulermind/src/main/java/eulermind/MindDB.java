@@ -209,6 +209,9 @@ public class MindDB {
 
     private EdgeVertex getParentSkipCache(Vertex vertex)
     {
+        if (vertex.getId().toString().equals("#9:2")) {
+            int debug = 1;
+        }
         Iterator<Edge> edgeIterator = vertex.getEdges(Direction.IN).iterator();
         Edge parentToVertex = null;
 
@@ -555,6 +558,9 @@ public class MindDB {
         removeEdge (fromParent, fromPos, EdgeType.INCLUDE);
         Edge edge = addEdge(toParent, child, toPos, EdgeType.INCLUDE);
 
+        //新的父节点，不能是子节点的后代
+        assert ! isVertexIdDescendant(child.getId(), toParent.getId());
+
         m_parentDbIdCache.put(child.getId(), toParent.getId());
 
         verifyVertex(fromParent);
@@ -841,7 +847,12 @@ public class MindDB {
 	private void cleanTrash ()
 	{
         for (Vertex vertex: m_trashIndex.get(TRASH_KEY_NAME, TRASH_KEY_NAME)) {
-            removeSubTree(vertex);
+            try {
+                removeSubTree(vertex);
+            } catch (Exception e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                m_logger.error("RemoveSubTree: {}: {}", vertex.getId(), vertex.getProperty(MindModel.sm_textPropName));
+            }
         }
 	}
 	

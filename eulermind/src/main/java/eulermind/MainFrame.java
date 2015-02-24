@@ -343,16 +343,19 @@ public class MainFrame  extends JFrame {
             m_favoriteMenu.addSeparator();
 
             for (final MindModel.VertexBasicInfo vertexBasicInfo : m_mindModel.m_favoriteInfoes) {
-                JMenuItem menuItem = new JMenuItem(vertexBasicInfo.m_contextText);
-                menuItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent actionEvent)
-                    {
-                        m_mindController.findOrAddMindView(vertexBasicInfo.m_dbId);
-                    }
-                });
+                if (! m_mindModel.isVertexTrashed(vertexBasicInfo.m_dbId)) {
 
-                m_favoriteMenu.add(menuItem);
+                    JMenuItem menuItem = new JMenuItem(vertexBasicInfo.m_contextText);
+                    menuItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent actionEvent)
+                        {
+                            m_mindController.findOrAddMindView(vertexBasicInfo.m_dbId);
+                        }
+                    });
+                    m_favoriteMenu.add(menuItem);
+                }
+
             }
         }
 

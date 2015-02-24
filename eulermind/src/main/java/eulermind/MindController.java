@@ -18,6 +18,8 @@ import javax.swing.event.ChangeListener;
 import javax.swing.undo.UndoManager;
 import javax.swing.undo.UndoableEdit;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -78,7 +80,9 @@ public class MindController extends UndoManager {
 
         if (lastOpenedRootId.size() > 0) {
             for (Object rootId : lastOpenedRootId) {
-                findOrAddMindView(rootId);
+                if (! m_mindModel.isVertexTrashed(rootId)) {
+                    findOrAddMindView(rootId);
+                }
             }
         } else {
             findOrAddMindView(m_mindModel.m_mindDb.getRootId());
@@ -111,7 +115,10 @@ public class MindController extends UndoManager {
         Node root = mindView.m_tree.getRoot();
 
         m_tabbedPane.addTab(m_mindModel.getText(root), mindView);
-        m_tabbedPane.setTabComponentAt(m_tabbedPane.getTabCount() - 1, new ButtonTabComponent(m_tabbedPane));
+
+        final ButtonTabComponent buttonTabComponent = new ButtonTabComponent(m_tabbedPane);
+        buttonTabComponent.getButton().addActionListener(m_tabCloseButtonListener);
+        m_tabbedPane.setTabComponentAt(m_tabbedPane.getTabCount() - 1, buttonTabComponent);
 
         for(NodeControl controller : m_externalMouseContollers) {
             mindView.addControlListener(controller);
@@ -128,6 +135,24 @@ public class MindController extends UndoManager {
 
         return  mindView;
     }
+
+    ActionListener m_tabCloseButtonListener = new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e)
+        {
+            ButtonTabComponent buttonTabComponent = ((ButtonTabComponent.TabButton)e.getSource()).getButtonTabComponent();
+            int pos = m_tabbedPane.indexOfTabComponent(buttonTabComponent);
+            MindView removedMindView = (MindView)m_tabbedPane.getComponentAt(pos);
+
+            if (pos != -1) {
+                for (Object key: m_mindViews.keySet()) {
+                    if (m_mindViews.get(key) == removedMindView) {
+                        removeMindView(key);
+                    }
+                }
+            }
+        }
+    };
 
     public void removeMindView(Object rootDBId) {
         MindView mindView = m_mindViews.get(rootDBId);

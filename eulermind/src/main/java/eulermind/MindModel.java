@@ -752,9 +752,17 @@ public class MindModel {
 
         hideModelRelation(parentDbId, pos);
 
+        removeFromFavorite(removedDbId);
+
         return removedDbId;
 	}
-	
+
+    public boolean isVertexTrashed(Object dbId)
+    {
+        Vertex vertex = m_mindDb.getVertex(dbId);
+        return m_mindDb.isVertexTrashed(vertex);
+    }
+
 	public void restoreNodeFromTrash(Node parent, final Object dbId)
 	{
         if (! childrenAttached(parent)) {

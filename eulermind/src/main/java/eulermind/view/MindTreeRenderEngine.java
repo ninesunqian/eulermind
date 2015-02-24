@@ -428,23 +428,20 @@ public class MindTreeRenderEngine {
                 return;
             }
 
-            //用一个大的边框表示焦点节点
-
             Node node = m_mindView.toSource((NodeItem)item);
             Node cursorNode = m_mindView.getCursorSourceNode();
 
             if (node == cursorNode) {
-                BasicStroke stroke = StrokeLib.getStroke(3.0f);
-                paintCursorBoundary(g, item, stroke);
+                Color color = ColorLib.getColor(0, 0, 255, 255);
+                paintCursorBoundary(g, item, color);
 
             } else if (!m_mindView.isPlaceholder(cursorNode) && m_mindView.m_mindModel.isSelfInDB(node, cursorNode)) {
-                float dash [] = {10f};
-                BasicStroke stroke = StrokeLib.getStroke(3.0f, dash);
-                paintCursorBoundary(g, item, stroke);
+                Color color = ColorLib.getColor(0, 0, 255, 128);
+                paintCursorBoundary(g, item, color);
             }
         }
 
-        private void paintCursorBoundary(Graphics2D g, VisualItem item, BasicStroke stroke)
+        private void paintCursorBoundary(Graphics2D g, VisualItem item, Color color)
         {
             Rectangle2D bounds = (Rectangle2D)item.getBounds().clone();
 
@@ -453,7 +450,8 @@ public class MindTreeRenderEngine {
             RoundRectangle2D borderShape = new RoundRectangle2D.Double(
                     bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight(), m_cursorBorderExpand, m_cursorBorderExpand);
 
-            GraphicsLib.paint(g, borderShape, stroke, Color.blue, null, RENDER_TYPE_DRAW);
+            BasicStroke stroke = StrokeLib.getStroke(3.0f);
+            GraphicsLib.paint(g, borderShape, stroke, color, null, RENDER_TYPE_DRAW);
         }
     }
 }

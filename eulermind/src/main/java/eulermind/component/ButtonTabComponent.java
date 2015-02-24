@@ -44,6 +44,8 @@ import java.awt.event.*;
 public class ButtonTabComponent extends JPanel {
     private final JTabbedPane pane;
 
+    private final TabButton button;
+
     public ButtonTabComponent(final JTabbedPane pane) {
         //unset default FlowLayout' gaps
         super(new FlowLayout(FlowLayout.LEFT, 0, 0));
@@ -68,14 +70,21 @@ public class ButtonTabComponent extends JPanel {
         //add more space between the label and the button
         label.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
         //tab button
-        JButton button = new TabButton();
+        button = new TabButton(this);
         add(button);
         //add more space to the top of the component
         setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
     }
 
-    private class TabButton extends JButton implements ActionListener {
-        public TabButton() {
+    public TabButton getButton()
+    {
+        return button;
+    }
+
+    public static class TabButton extends JButton {
+        ButtonTabComponent buttonTabComponent;
+        public TabButton(ButtonTabComponent buttonTabComponent) {
+            this.buttonTabComponent = buttonTabComponent;
             int size = 17;
             setPreferredSize(new Dimension(size, size));
             setToolTipText("close this tab");
@@ -91,16 +100,16 @@ public class ButtonTabComponent extends JPanel {
             //we use the same listener for all buttons
             addMouseListener(buttonMouseListener);
             setRolloverEnabled(true);
+
             //Close the proper tab by clicking the button
-            addActionListener(this);
+            //addActionListener(this);
         }
 
-        public void actionPerformed(ActionEvent e) {
-            int i = pane.indexOfTabComponent(ButtonTabComponent.this);
-            if (i != -1) {
-                pane.remove(i);
-            }
+        public ButtonTabComponent getButtonTabComponent()
+        {
+            return buttonTabComponent;
         }
+
 
         //we don't want to update UI for this button
         public void updateUI() {
