@@ -2,6 +2,7 @@ package eulermind;
 
 import javax.swing.*;
 import javax.swing.event.*;
+import javax.swing.plaf.IconUIResource;
 import java.awt.*;
 import java.awt.event.*;
 
@@ -281,8 +282,6 @@ public class MainFrame  extends JFrame {
                 }
             });
             m_mindMapMenu.add(removingMenuItem);
-
-            m_mindMapMenu.addSeparator();
 
             for (final String mapName : Utils.getAllMapNames()) {
                 JMenuItem menuItem = new JMenuItem(mapName);

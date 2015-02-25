@@ -1,5 +1,6 @@
 package eulermind.view;
 
+import com.orientechnologies.orient.core.db.ODatabaseRecordThreadLocal;
 import com.tinkerpop.blueprints.Vertex;
 
 import javax.swing.*;
@@ -72,6 +73,9 @@ public class MindEditor extends JTextField {
         m_promptList.setPrototypeCellValue("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
         m_promptList.setVisibleRowCount(10);
         m_promptList.setFocusable(false);
+        m_promptScrollPane.setFocusable(false);
+        m_promptScrollPane.getVerticalScrollBar().setFocusable(false);
+        m_promptScrollPane.getHorizontalScrollBar().setFocusable(false);
 
         addKeyListener(m_editorKeyListener);
         m_promptList.addMouseListener(m_prompterMouseListener);
@@ -100,7 +104,7 @@ public class MindEditor extends JTextField {
 
     protected FocusListener m_focusListener = new FocusAdapter() {
         public void focusGained(FocusEvent e) {
-            if (e.isTemporary()) {
+            if (e.isTemporary() || e.getOppositeComponent() == m_promptList) {
                 return;
             }
 
@@ -109,11 +113,13 @@ public class MindEditor extends JTextField {
             //清空list放在focusGained，而不是focusLost, 防止focusLost与list的点击事件的处理冲突
             DefaultListModel listModel = (DefaultListModel) m_promptList.getModel();
             listModel.clear();
+            m_promptedNodes.clear();
             m_logger.info("MindEditor: focusGained");
         }
 
         public void focusLost(FocusEvent e) {
-            if (e.isTemporary()) {
+            m_logger.info("MindEditor: FFFFFFFFFFFFLLLLLLLLLLLLLLl");
+            if (e.isTemporary() || e.getOppositeComponent() == m_promptList) {
                 return;
             }
 
@@ -133,6 +139,11 @@ public class MindEditor extends JTextField {
 
     private void startQueryWorker()
     {
+        ((DefaultListModel) m_promptList.getModel()).removeAllElements();
+
+        m_logger.info("SSSSSSSSSSSSSSSSS: m_promperedNodes.clear()");
+        m_promptedNodes.clear();
+
         //SwingWorker 被设计为只执行一次。多次执行 SwingWorker 将不会调用两次 doInBackground 方法。
         //所以每次要 new一个新对象
         m_queryWorker = new QueryWorker();
@@ -170,10 +181,12 @@ public class MindEditor extends JTextField {
     };
 
     private class QueryWorker extends SwingWorker<Boolean, PromptedNode> {
+        //doInBackground是在一个单独线程中运行的函数， 结果放在m_promptNodes中。 这里不能添加ListModel
         @Override
         protected Boolean doInBackground()
         {
-            ((DefaultListModel) m_promptList.getModel()).removeAllElements();
+            //整个数据库查找, 如果打开orientdb的线程与操作数据库的线程不是同一个, 需要调用:
+            ODatabaseRecordThreadLocal.INSTANCE.set(m_mindDb.m_graph.getRawGraph());
 
             String inputed = getText();
 
@@ -207,7 +220,7 @@ public class MindEditor extends JTextField {
                 m_logger.info("get promptedNode " + promptedNode.m_dbId);
 
                 if (promptedNode.m_parentText != null) {
-                    listModel.addElement(promptedNode.m_parentText + " -> " + promptedNode.m_text);
+                    listModel.addElement(promptedNode.m_text + " @ " + promptedNode.m_parentText);
                 } else  {
                     listModel.addElement("root: " + promptedNode.m_text);
                 }
@@ -225,16 +238,16 @@ public class MindEditor extends JTextField {
         m_logger.info("promper local pos {}, {}", popupLocation.x, popupLocation.y);
         SwingUtilities.convertPointToScreen(popupLocation, this.getParent());
         m_logger.info("promper global pos {}, {}", popupLocation.x, popupLocation.y);
-        m_promptPopup = factory.getPopup(getParent(), m_promptScrollPane, popupLocation.x, popupLocation.y);
 
+        m_promptPopup = factory.getPopup(getParent(), m_promptScrollPane, popupLocation.x, popupLocation.y);
         m_promptPopup.show();
     }
 
     void hidePrompter() {
         if (m_promptPopup != null) {
             m_promptPopup.hide();
-            m_promptPopup = null;
         }
+        m_promptPopup = null;
     }
 
     public class PromptedNode {
@@ -324,6 +337,7 @@ public class MindEditor extends JTextField {
     }
     void firePromptListOk(Object dbId, String text, Object parentDBId, String parentText) {
         if (m_mindEditorListener != null) {
+            m_logger.info("LLLLLLLLLLLLL: {}: {},  {}: {}", dbId, text, parentDBId, parentText);
             m_mindEditorListener.promptListOk(dbId, text, parentDBId, parentText);
         }
     }

@@ -106,6 +106,7 @@ public class MindController extends UndoManager {
     public MindView findOrAddMindView(Object rootDBId) {
         MindView mindView = m_mindViews.get(rootDBId);
         if (mindView != null) {
+            m_tabbedPane.setSelectedComponent(mindView);
             return mindView;
         }
 
@@ -116,7 +117,7 @@ public class MindController extends UndoManager {
 
         m_tabbedPane.addTab(m_mindModel.getText(root), mindView);
 
-        final ButtonTabComponent buttonTabComponent = new ButtonTabComponent(m_tabbedPane);
+        ButtonTabComponent buttonTabComponent = new ButtonTabComponent(m_tabbedPane);
         buttonTabComponent.getButton().addActionListener(m_tabCloseButtonListener);
         m_tabbedPane.setTabComponentAt(m_tabbedPane.getTabCount() - 1, buttonTabComponent);
 
@@ -132,6 +133,8 @@ public class MindController extends UndoManager {
         } else {
             //not setMnemonicAt
         }
+
+        m_tabbedPane.setSelectedComponent(mindView);
 
         return  mindView;
     }
