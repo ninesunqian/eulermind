@@ -4,6 +4,7 @@ import com.orientechnologies.orient.core.db.ODatabaseRecordThreadLocal;
 import com.tinkerpop.blueprints.Vertex;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
@@ -46,27 +47,19 @@ public class MindEditor extends JTextField {
 
     Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
-    private Popup m_promptPopup;
     private JList m_promptList = new JList(new DefaultListModel());
     private JScrollPane m_promptScrollPane = new JScrollPane(m_promptList);
+    JPopupMenu m_popupMenu = new JPopupMenu();
 
     private MindDB m_mindDb;
 
-    private ArrayList<PromptedNode> m_promptedNodes = new ArrayList<PromptedNode>();
+    private ArrayList<PromptedNode> m_promptedNodes = new ArrayList<>();
     private SwingWorker<Boolean, PromptedNode> m_queryWorker;
 
     public MindEditor() {
         super();
-    }
-
-    public void setMindDb(MindDB mindDb) {
-        m_mindDb = mindDb;
-        setHasPromptList(false);
-
-        m_promptList = new JList(new DefaultListModel());
-        m_promptScrollPane = new JScrollPane(m_promptList);
-
-        m_promptScrollPane.setVisible(false);
+        m_popupMenu.setLayout(new BorderLayout());
+        m_popupMenu.add(m_promptScrollPane);
 
         m_promptList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         m_promptList.setLayoutOrientation(JList.VERTICAL);
@@ -77,55 +70,85 @@ public class MindEditor extends JTextField {
         m_promptScrollPane.getVerticalScrollBar().setFocusable(false);
         m_promptScrollPane.getHorizontalScrollBar().setFocusable(false);
 
+        //FIXME: here or after show ?
+        m_popupMenu.setFocusable(false);
+
         addKeyListener(m_editorKeyListener);
+        addMouseListener(m_editorMouseListener);
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e)
+            {
+                if (m_hasPromptList) {
+                    showPrompt();
+                }
+            }
+            @Override
+            public void componentHidden(ComponentEvent e)
+            {
+                m_popupMenu.setVisible(false);
+            }
+        });
+
         m_promptList.addMouseListener(m_prompterMouseListener);
 
-        m_hasPromptList = false;
-
+        getDocument().addDocumentListener(m_editTextListener);
     }
 
-    public void setHasPromptList(boolean hasPromptList) {
-        if (m_hasPromptList == hasPromptList) {
-            return;
-        }
+    public void setMindDb(MindDB mindDb) {
+        m_mindDb = mindDb;
+    }
 
+    public void setHasPromptList(boolean hasPromptList)
+    {
         m_hasPromptList = hasPromptList;
-
-        if (m_hasPromptList) {
-            getDocument().addDocumentListener(m_editTextListener);
-            //addHierarchyListener(m_hierarchyListener);
-            addFocusListener(m_focusListener);
-        } else {
-            getDocument().removeDocumentListener(m_editTextListener);
-            //removeHierarchyListener(m_hierarchyListener);
-            removeFocusListener(m_focusListener);
-        }
     }
 
-    protected FocusListener m_focusListener = new FocusAdapter() {
-        public void focusGained(FocusEvent e) {
-            if (e.isTemporary() || e.getOppositeComponent() == m_promptList) {
-                return;
-            }
 
-            showPrompter();
+    Point computePopupPoint(int px,int py,int pw,int ph) {
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        Rectangle screenBounds;
 
-            //清空list放在focusGained，而不是focusLost, 防止focusLost与list的点击事件的处理冲突
-            DefaultListModel listModel = (DefaultListModel) m_promptList.getModel();
-            listModel.clear();
-            m_promptedNodes.clear();
-            m_logger.info("MindEditor: focusGained");
+        // Calculate the desktop dimensions relative to the combo box.
+        GraphicsConfiguration gc = getGraphicsConfiguration();
+        Point p = new Point();
+        SwingUtilities.convertPointFromScreen(p, this);
+        if (gc != null) {
+            Insets screenInsets = toolkit.getScreenInsets(gc);
+            screenBounds = gc.getBounds();
+            screenBounds.width -= (screenInsets.left + screenInsets.right);
+            screenBounds.height -= (screenInsets.top + screenInsets.bottom);
+            screenBounds.x += (p.x + screenInsets.left);
+            screenBounds.y += (p.y + screenInsets.top);
+        }
+        else {
+            screenBounds = new Rectangle(p, toolkit.getScreenSize());
         }
 
-        public void focusLost(FocusEvent e) {
-            m_logger.info("MindEditor: FFFFFFFFFFFFLLLLLLLLLLLLLLl");
-            if (e.isTemporary() || e.getOppositeComponent() == m_promptList) {
-                return;
-            }
+        Rectangle rect = new Rectangle(px,py,pw,ph);
+        if (py+ph > screenBounds.y+screenBounds.height
+            && ph < screenBounds.height) {
+            rect.y = -rect.height;
+        }
+        return rect.getLocation();
+    }
 
-            hidePrompter();
-            stopQueryWorker();
-            m_logger.info("MindEditor: focusLost");
+    void showPrompt() {
+        Point popupLocation = computePopupPoint(0, MindEditor.this.getBounds().height,
+                m_promptScrollPane.getWidth(),
+                m_promptScrollPane.getHeight());
+
+        m_popupMenu.show(MindEditor.this, popupLocation.x, popupLocation.y);
+    }
+
+
+    MouseListener m_editorMouseListener = new MouseAdapter() {
+        @Override
+        public void mousePressed(MouseEvent e)
+        {
+            if (m_hasPromptList) {
+                showPrompt();
+            }
         }
     };
 
@@ -140,8 +163,6 @@ public class MindEditor extends JTextField {
     private void startQueryWorker()
     {
         ((DefaultListModel) m_promptList.getModel()).removeAllElements();
-
-        m_logger.info("SSSSSSSSSSSSSSSSS: m_promperedNodes.clear()");
         m_promptedNodes.clear();
 
         //SwingWorker 被设计为只执行一次。多次执行 SwingWorker 将不会调用两次 doInBackground 方法。
@@ -150,12 +171,37 @@ public class MindEditor extends JTextField {
         m_queryWorker.execute();
     }
 
-    private void restartQueryWorker()
+    private Timer m_queryDelayTimer;
+
+    private void startDelayedQuery()
     {
-        stopQueryWorker();
-        startQueryWorker();
+        m_queryDelayTimer = new Timer(500, new ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent actionEvent) {
+                startQueryWorker();
+            }
+        });
+        m_queryDelayTimer.setRepeats(false);
+        m_queryDelayTimer.setCoalesce(true);
+        m_queryDelayTimer.start();
     }
 
+    private void updatePromptList()
+    {
+        if (m_queryDelayTimer != null) {
+            m_queryDelayTimer.stop();
+            m_queryDelayTimer = null;
+        }
+
+        stopQueryWorker();
+
+        if (getText().isEmpty()) {
+            ((DefaultListModel) m_promptList.getModel()).removeAllElements();
+            m_promptedNodes.clear();
+
+        } else {
+            startDelayedQuery();
+        }
+    }
 
     private DocumentListener m_editTextListener = new DocumentListener() {
 
@@ -163,14 +209,18 @@ public class MindEditor extends JTextField {
         public void insertUpdate(DocumentEvent documentEvent)
         {
             m_logger.info("insert update");
-            restartQueryWorker();
+            if (m_hasPromptList) {
+                updatePromptList();
+            }
         }
 
         @Override
         public void removeUpdate(DocumentEvent documentEvent)
         {
             m_logger.info("remove update");
-            restartQueryWorker();
+            if (m_hasPromptList) {
+                updatePromptList();
+            }
         }
 
         @Override
@@ -179,6 +229,91 @@ public class MindEditor extends JTextField {
             //do nothing
         }
     };
+
+    KeyListener m_editorKeyListener = new KeyAdapter() {
+
+        @Override
+        public void keyPressed(KeyEvent e)
+        {
+            int keyCode = e.getKeyCode();
+            switch (keyCode) {
+                case KeyEvent.VK_ENTER:
+                    if (e.isShiftDown()) {
+                        int selectedIndex = m_promptList.getSelectedIndex();
+                        PromptedNode selected = m_promptedNodes.get(selectedIndex);
+                        firePromptListOk(selected.m_dbId, selected.m_text, selected.m_parentDBId, selected.m_parentText);
+                    } else {
+                        fireEditorOk(getText());
+                    }
+                    break;
+
+                case KeyEvent.VK_ESCAPE:
+                    fireCancel();
+                    break;
+
+                case KeyEvent.VK_KP_UP:
+                case KeyEvent.VK_UP:
+                case KeyEvent.VK_KP_DOWN:
+                case KeyEvent.VK_DOWN:
+                    //TODO:
+                    break;
+            }
+        }
+    };
+
+    MouseListener m_prompterMouseListener = new MouseAdapter() {
+        public void mouseClicked(MouseEvent mouseEvent) {
+            int selectedIndex = m_promptList.getSelectedIndex();
+            PromptedNode selected = m_promptedNodes.get(selectedIndex);
+            firePromptListOk(selected.m_dbId, selected.m_text, selected.m_parentDBId, selected.m_parentText);
+        }
+    };
+
+    public void setMindEditorListener(MindEditorListener listener)
+    {
+        m_mindEditorListener = listener;
+    }
+
+    void fireEditorOk(String text) {
+        if (m_mindEditorListener != null) {
+            m_mindEditorListener.editorOk(text);
+        }
+    }
+
+    void fireCancel() {
+        if (m_mindEditorListener != null) {
+            m_mindEditorListener.cancel();
+        }
+    }
+    void firePromptListOk(Object dbId, String text, Object parentDBId, String parentText) {
+        if (m_mindEditorListener != null) {
+            m_logger.info("LLLLLLLLLLLLL: {}: {},  {}: {}", dbId, text, parentDBId, parentText);
+            m_mindEditorListener.promptListOk(dbId, text, parentDBId, parentText);
+        }
+    }
+
+    public class PromptedNode {
+        final public Object m_dbId;
+        final public String m_text;
+        final public Object m_parentDBId;
+        final public String m_parentText;
+
+        PromptedNode(Vertex vertex)
+        {
+            m_dbId = vertex.getId();
+            m_text = vertex.getProperty(MindModel.sm_textPropName);
+
+            Vertex parent = m_mindDb.getParent(vertex);
+            if (parent == null) {
+                m_parentDBId = null;
+                m_parentText = null;
+            } else {
+                m_parentDBId = parent.getId();
+                m_parentText = parent.getProperty(MindModel.sm_textPropName);
+            }
+        }
+    }
+
 
     private class QueryWorker extends SwingWorker<Boolean, PromptedNode> {
         //doInBackground是在一个单独线程中运行的函数， 结果放在m_promptNodes中。 这里不能添加ListModel
@@ -228,82 +363,6 @@ public class MindEditor extends JTextField {
         }
     };
 
-    void showPrompter()
-    {
-        PopupFactory factory = PopupFactory.getSharedInstance();
-        m_promptScrollPane.setSize(400, 100);
-        m_promptScrollPane.setVisible(true);
-
-        Point popupLocation = new Point(getX(),  getY() + getHeight());
-        m_logger.info("promper local pos {}, {}", popupLocation.x, popupLocation.y);
-        SwingUtilities.convertPointToScreen(popupLocation, this.getParent());
-        m_logger.info("promper global pos {}, {}", popupLocation.x, popupLocation.y);
-
-        m_promptPopup = factory.getPopup(getParent(), m_promptScrollPane, popupLocation.x, popupLocation.y);
-        m_promptPopup.show();
-    }
-
-    void hidePrompter() {
-        if (m_promptPopup != null) {
-            m_promptPopup.hide();
-        }
-        m_promptPopup = null;
-    }
-
-    public class PromptedNode {
-        final public Object m_dbId;
-        final public String m_text;
-        final public Object m_parentDBId;
-        final public String m_parentText;
-
-        PromptedNode(Vertex vertex)
-        {
-            m_dbId = vertex.getId();
-            m_text = vertex.getProperty(MindModel.sm_textPropName);
-
-            Vertex parent = m_mindDb.getParent(vertex);
-            if (parent == null) {
-                m_parentDBId = null;
-                m_parentText = null;
-            } else {
-                m_parentDBId = parent.getId();
-                m_parentText = parent.getProperty(MindModel.sm_textPropName);
-            }
-        }
-    }
-
-    KeyListener m_editorKeyListener = new KeyAdapter() {
-
-        @Override
-        public void keyPressed(KeyEvent e)
-        {
-
-            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                if (e.isShiftDown()) {
-                    int selectedIndex = m_promptList.getSelectedIndex();
-                    PromptedNode selected = m_promptedNodes.get(selectedIndex);
-                    firePromptListOk(selected.m_dbId, selected.m_text, selected.m_parentDBId, selected.m_parentText);
-                } else {
-                    m_logger.info("MindEditor: get enter key");
-                    fireEditorOk(getText());
-                }
-            }
-
-            else if (e.getKeyCode() == KeyEvent.VK_ESCAPE)  {
-                fireCancel();
-            }
-        }
-    };
-
-
-    MouseListener m_prompterMouseListener = new MouseAdapter() {
-        public void mouseClicked(MouseEvent mouseEvent) {
-            int selectedIndex = m_promptList.getSelectedIndex();
-            PromptedNode selected = m_promptedNodes.get(selectedIndex);
-            firePromptListOk(selected.m_dbId, selected.m_text, selected.m_parentDBId, selected.m_parentText);
-        }
-    };
-
     static public class MindEditorListener {
         public void editorOk(String text) {
 
@@ -319,26 +378,4 @@ public class MindEditor extends JTextField {
     }
 
 
-    public void setMindEditorListener(MindEditorListener listener)
-    {
-        m_mindEditorListener = listener;
-    }
-
-    void fireEditorOk(String text) {
-        if (m_mindEditorListener != null) {
-            m_mindEditorListener.editorOk(text);
-        }
-    }
-
-    void fireCancel() {
-        if (m_mindEditorListener != null) {
-            m_mindEditorListener.cancel();
-        }
-    }
-    void firePromptListOk(Object dbId, String text, Object parentDBId, String parentText) {
-        if (m_mindEditorListener != null) {
-            m_logger.info("LLLLLLLLLLLLL: {}: {},  {}: {}", dbId, text, parentDBId, parentText);
-            m_mindEditorListener.promptListOk(dbId, text, parentDBId, parentText);
-        }
-    }
 }

@@ -104,47 +104,54 @@ public class ColorCombobox extends JComboBox implements MindPropertyComponent {
         }
     };
 
-    class ColorCellRenderer implements ListCellRenderer {
-        protected DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
+    class ColorCellRenderer extends JLabel implements ListCellRenderer {
+
+        public ColorCellRenderer() {
+            setOpaque(true);
+            //setHorizontalAlignment(CENTER);
+            //setVerticalAlignment(CENTER);
+        }
 
         public Component getListCellRendererComponent(JList list, Object value, int index,
                                                       boolean isSelected, boolean cellHasFocus) {
-            JLabel colorCellComponent = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index,
-                    isSelected, cellHasFocus);
 
             Integer colorValue = (Integer) value;
             String text;
 
+            if (isSelected) {
+                setBorder(BorderFactory.createLineBorder(Color.blue, 3));
+            } else {
+                setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
+            }
+
             if (index == getItemCount() - 1) {
-                colorCellComponent.setText("add color");
-                return colorCellComponent;
+                setText("add color");
+                return this;
             }
 
             if (colorValue == null) {
-                colorCellComponent.setText("default");
-                return colorCellComponent;
+                setText("default");
+                return this;
             }
 
             Color color = new Color(colorValue);
 
             if (!m_forBackground) {
-                colorCellComponent.setForeground(color);
+                setForeground(color);
                 if (m_anotherColor != null) {
-                    colorCellComponent.setBackground(color);
-                    colorCellComponent.setOpaque(true);
+                    setBackground(color);
                 }
             } else {
-                colorCellComponent.setBackground(color);
-                colorCellComponent.setOpaque(true);
+                setBackground(color);
 
                 if (m_anotherColor != null) {
-                    colorCellComponent.setForeground(m_anotherColor);
+                    setForeground(m_anotherColor);
                 }
             }
 
             text = String.format("#%06x", colorValue & 0xFFFFFF);
-            colorCellComponent.setText(text);
-            return colorCellComponent;
+            setText(text);
+            return this;
         }
     }
 
