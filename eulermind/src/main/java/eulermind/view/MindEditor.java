@@ -14,6 +14,7 @@ import java.util.List;
 
 import eulermind.MindDB;
 import eulermind.MindModel;
+import eulermind.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,42 +106,55 @@ public class MindEditor extends JTextField {
     }
 
 
-    Point computePopupPoint(int px,int py,int pw,int ph) {
-        Toolkit toolkit = Toolkit.getDefaultToolkit();
-        Rectangle screenBounds;
+    Point computePopupScreenPoint(Rectangle editorBounds,
+                                  int popupWidth, int popupHeight,
+                                  Rectangle screenBounds)
+    {
+        int editorLeft = editorBounds.x;
+        int editorRight = editorBounds.x + editorBounds.width;
+        int editorTop = editorBounds.y;
+        int editorBottom = editorBounds.y + editorBounds.height;
 
-        // Calculate the desktop dimensions relative to the combo box.
-        GraphicsConfiguration gc = getGraphicsConfiguration();
-        Point p = new Point();
-        SwingUtilities.convertPointFromScreen(p, this);
-        if (gc != null) {
-            Insets screenInsets = toolkit.getScreenInsets(gc);
-            screenBounds = gc.getBounds();
-            screenBounds.width -= (screenInsets.left + screenInsets.right);
-            screenBounds.height -= (screenInsets.top + screenInsets.bottom);
-            screenBounds.x += (p.x + screenInsets.left);
-            screenBounds.y += (p.y + screenInsets.top);
-        }
-        else {
-            screenBounds = new Rectangle(p, toolkit.getScreenSize());
+        int popupLeft;
+        int popupRight;
+
+        int popupTop;
+        int popupBottom;
+
+        int screenRight = screenBounds.x + screenBounds.width;
+        int screenBottom = screenBounds.y + screenBounds.height;
+
+        if (editorLeft + popupWidth <= screenRight) {
+            popupLeft = editorLeft;
+            popupRight = popupLeft + popupWidth;
+        } else {
+            popupRight = screenRight;
+            popupLeft = popupRight - popupWidth;
         }
 
-        Rectangle rect = new Rectangle(px,py,pw,ph);
-        if (py+ph > screenBounds.y+screenBounds.height
-            && ph < screenBounds.height) {
-            rect.y = -rect.height;
+        if (editorBottom + popupHeight <= screenBottom) {
+            popupTop = editorBottom;
+            popupBottom = popupTop + popupHeight;
+        } else {
+            popupBottom = editorTop;
+            popupTop = popupBottom - popupHeight;
         }
-        return rect.getLocation();
+        this.getSize();
+
+        return new Point(popupLeft, popupTop);
     }
 
     void showPrompt() {
-        Point popupLocation = computePopupPoint(0, MindEditor.this.getBounds().height,
-                m_promptScrollPane.getWidth(),
-                m_promptScrollPane.getHeight());
+        Point p = new Point();
+        SwingUtilities.convertPointToScreen(p, this);
 
-        m_popupMenu.show(MindEditor.this, popupLocation.x, popupLocation.y);
+        Rectangle editorBounds = new Rectangle(p.x, p.y, getWidth(), getHeight());
+        Rectangle screenBounds = Utils.getScreenBounds(this);
+        p = computePopupScreenPoint(editorBounds, m_popupMenu.getWidth(), m_popupMenu.getHeight(), screenBounds);
+
+        SwingUtilities.convertPointFromScreen(p, this);
+        m_popupMenu.show(MindEditor.this, p.x, p.y);
     }
-
 
     MouseListener m_editorMouseListener = new MouseAdapter() {
         @Override

@@ -9,6 +9,8 @@ import com.tinkerpop.blueprints.impls.orient.OrientVertexType;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryNotEmptyException;
@@ -244,6 +246,27 @@ public class Utils {
         Utils.mkdir(Config.MAPS_DIR);
         Style.load();
         Style.save();
+    }
+
+    public static Rectangle getScreenBounds(JComponent component) {
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        GraphicsConfiguration gc = component.getGraphicsConfiguration();
+        Rectangle screenBounds;
+
+        if (gc != null) {
+            screenBounds = gc.getBounds();
+            Insets screenInsets = toolkit.getScreenInsets(gc);
+
+            screenBounds.width -= (screenInsets.left + screenInsets.right);
+            screenBounds.height -= (screenInsets.top + screenInsets.bottom);
+            screenBounds.x += screenInsets.left;
+            screenBounds.y += screenInsets.top;
+        }
+        else {
+            screenBounds = new Rectangle(new Point(0, 0), toolkit.getScreenSize());
+        }
+
+        return screenBounds;
     }
 
 }
