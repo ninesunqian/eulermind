@@ -39,6 +39,9 @@ public class MindKeyView extends MindView {
     final static String sm_undoActionName = "undo";
     final static String sm_redoActionName = "redo";
     final static String sm_saveActionName = "save";
+    final static String sm_copyActionName = "copy";
+    final static String sm_pasteActionName = "paste";
+    final static String sm_linkActionName = "link";
 
     final static String sm_addChildActionName = "addChild";
     final static String sm_addSiblingActionName = "addSibling";
@@ -62,6 +65,9 @@ public class MindKeyView extends MindView {
         m_mindActionMap.put(sm_undoActionName, m_undoAction);
         m_mindActionMap.put(sm_redoActionName, m_redoAction);
         m_mindActionMap.put(sm_saveActionName, m_saveAction);
+        m_mindActionMap.put(sm_copyActionName, m_copyAction);
+        m_mindActionMap.put(sm_pasteActionName, m_pasteAction);
+        m_mindActionMap.put(sm_linkActionName, m_linkAction);
 
         m_mindActionMap.put(sm_cursorMoveUpActionName, m_cursorMoveUpAction);
         m_mindActionMap.put(sm_cursorMoveDownActionName, m_cursorMoveDownAction);
@@ -80,6 +86,10 @@ public class MindKeyView extends MindView {
         inputMap.put(KeyStroke.getKeyStroke("ctrl Y"), sm_redoActionName);
         inputMap.put(KeyStroke.getKeyStroke("ctrl S"), sm_saveActionName);
 
+        inputMap.put(KeyStroke.getKeyStroke("ctrl C"), sm_copyActionName);
+        inputMap.put(KeyStroke.getKeyStroke("ctrl V"), sm_pasteActionName);
+        inputMap.put(KeyStroke.getKeyStroke("ctrl L"), sm_linkActionName);
+
         inputMap.put(KeyStroke.getKeyStroke("UP"), sm_cursorMoveUpActionName);
         inputMap.put(KeyStroke.getKeyStroke("DOWN"), sm_cursorMoveDownActionName);
         inputMap.put(KeyStroke.getKeyStroke("LEFT"), sm_cursorMoveLeftActionName);
@@ -88,13 +98,6 @@ public class MindKeyView extends MindView {
         inputMap.put(KeyStroke.getKeyStroke("SPACE"), sm_toggleFoldNodeName);
 
     }
-
-    AbstractAction m_importAction = new AbstractAction()  {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            importFileOrDirectory();
-        }
-    };
 
     AbstractAction m_undoAction = new AbstractAction() {
         @Override
@@ -117,6 +120,27 @@ public class MindKeyView extends MindView {
         }
     };
 
+    AbstractAction m_pasteAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            importSystemClipboard();
+        }
+    };
+
+    AbstractAction m_linkAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            linkExtractedVertexToCursor();
+        }
+    };
+
+    AbstractAction m_copyAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            copySubTree();
+        }
+    };
+
     AbstractAction m_removeAction = new AbstractAction()  {
 
         @Override
@@ -126,6 +150,7 @@ public class MindKeyView extends MindView {
     };
 
     public AbstractAction m_addChildAction = new AbstractAction() {
+
         @Override
         public void actionPerformed(ActionEvent e) {
             addChild();

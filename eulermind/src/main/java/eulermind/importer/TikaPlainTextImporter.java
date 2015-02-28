@@ -476,8 +476,7 @@ public class TikaPlainTextImporter extends Importer{
         return dbId;
     }
 
-    //TODO: return List -> return dbId
-    public List importPlainText(Object parentDBId, int pos, String text, String rootText)
+    public List importString(Object parentDBId, int pos, String text)
     {
         List<LineNode> lines = splitTextToLines(text);
 
@@ -525,7 +524,7 @@ public class TikaPlainTextImporter extends Importer{
 
         String plainText = getPlainTextByTika(file);
         if (plainText != null && !plainText.isEmpty()) {
-            return importPlainText(parentDBId, pos, plainText, file.getName());
+            return importString(parentDBId, pos, plainText);
         }
         return new ArrayList();
     }

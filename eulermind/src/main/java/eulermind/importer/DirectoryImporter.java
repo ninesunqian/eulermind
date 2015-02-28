@@ -87,4 +87,11 @@ public class DirectoryImporter extends Importer{
         newChildren.add(newChild);
         return newChildren;
     }
+
+    public List importString(Object parentDBId, int pos, final String path)
+            throws Exception
+    {
+        assert false;
+        return null;
+    }
 }

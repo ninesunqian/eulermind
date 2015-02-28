@@ -77,6 +77,8 @@ public class MindModel {
 
     private Index<Vertex> m_favoriteIndex;
 
+    public Object m_extractedDbId;
+
     class VertexBasicInfo {
         Object m_dbId;
 
@@ -694,8 +696,12 @@ public class MindModel {
         return edgeVertex.m_vertex.getId();
 	}
 
-    public Importer getImporter(String path)
+    private Importer getImporter(String path)
     {
+        if (path == null) {
+            return new TikaPlainTextImporter(m_mindDb);
+        }
+
         File file = new File(path);
         if (file.isDirectory()) {
             return new DirectoryImporter(m_mindDb);
@@ -727,7 +733,19 @@ public class MindModel {
             return new ArrayList();
         }
 
-        List newChildren = importer.importFile(getDbId(parent), pos, path);
+        List newChildren;
+
+        if (path == null) {
+            String text = Utils.getSystemClipboardText();
+            if (text != null && !text.isEmpty()) {
+                newChildren = importer.importString(getDbId(parent), pos, text);
+            } else {
+                newChildren = new ArrayList();
+            }
+
+        } else {
+            newChildren = importer.importFile(getDbId(parent), pos, path);
+        }
 
         Vertex dbParent = m_mindDb.getVertex(parentDbId);
         ArrayList<EdgeVertex> newToTargets = new ArrayList<EdgeVertex>();

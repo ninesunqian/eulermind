@@ -11,6 +11,10 @@ import org.apache.commons.io.filefilter.DirectoryFileFilter;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryNotEmptyException;
@@ -267,6 +271,32 @@ public class Utils {
         }
 
         return screenBounds;
+    }
+
+    public static String getSystemClipboardText()
+    {
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        DataFlavor flavor = DataFlavor.stringFlavor;
+        if (clipboard.isDataFlavorAvailable(flavor)) {
+            try {
+                return (String) clipboard.getData(flavor);
+            } catch (UnsupportedFlavorException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                return null;
+            } catch (IOException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    public static void copyStringToSystemClipboard(String str)
+    {
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        StringSelection selection = new StringSelection(str);
+        clipboard.setContents(selection, null);
     }
 
 }

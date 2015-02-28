@@ -46,4 +46,6 @@ public abstract class Importer {
 
     abstract public List importFile(Object parentDBId, int pos, final String path) throws Exception;
 
+    abstract public List importString(Object parentDBId, int pos, final String path) throws Exception;
+
 }

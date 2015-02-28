@@ -36,6 +36,7 @@ public class ImportingFile extends MindOperator{
     ArrayList<Integer> m_parentPath;
     ArrayList<Integer> m_parentPathAfterDoing;
 
+    //如果path为null， 从系统剪切板导入plain text 数据
     public ImportingFile(MindModel mindModel, Node formerCursor,  String path) {
         super(mindModel, formerCursor);
         m_importedFilePath = path;

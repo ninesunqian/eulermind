@@ -74,7 +74,6 @@ public class MindView extends Display {
         //该函数会重绘所有的MindView
         m_mindController.does(operator);
         hideEditor();
-
     }
 
     void endInserting(Object dbId, String text, Object parentDbId, String parentText)
@@ -382,6 +381,28 @@ public class MindView extends Display {
         endChanging();
     }
 
+    public void importSystemClipboard()
+    {
+        String text = Utils.getSystemClipboardText();
+        if (text != null) {
+            beginChanging();
+            MindOperator operator = new ImportingFile(m_mindModel, getCursorSourceNode(), null);
+            m_mindController.does(operator);
+            endChanging();
+        }
+
+    }
+
+    public void copySubTree()
+    {
+        m_mindModel.m_extractedDbId = m_mindModel.getDbId(getCursorSourceNode());
+        //TODO: now only one node
+        String text = m_mindModel.getText(getCursorSourceNode());
+        Utils.copyStringToSystemClipboard(text);
+        //TODO subtree text to clipboard
+        //TODO subtree text to clipboard
+    }
+
     private void alert(String msg)
     {
         JOptionPane.showMessageDialog(null, msg);
@@ -498,12 +519,24 @@ public class MindView extends Display {
         beginAdding(false);
     }
 
-
     public void edit() {
         beginChanging();
         m_mindEditor.setMindEditorListener(m_editorListenerForEditing);
         m_mindEditor.setHasPromptList(false);
         showEditor();
+    }
+
+    public void linkExtractedVertexToCursor()
+    {
+        if (m_mindModel.m_extractedDbId != null && ! m_mindModel.isVertexTrashed(m_mindModel.m_extractedDbId)) {
+            beginChanging();
+
+            MindOperator operator = new AddingReference(m_mindModel, getCursorSourceNode(),
+                    m_mindModel.m_extractedDbId, getCursorSourceNode().getChildCount());
+            m_mindController.does(operator);
+
+            endChanging();
+        }
     }
 
     public void cursorMoveUp() {

@@ -2,6 +2,7 @@ package eulermind.importer;
 
 import eulermind.MindDB;
 import com.tinkerpop.blueprints.Vertex;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,7 +10,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -17,6 +18,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -88,10 +90,9 @@ public class FreemindImporter extends Importer{
         return dbId;
     }
 
-    public List importFile(Object parentDBId, int pos, String path)
+    private List importFromInputStream(Object parentDBId, int pos, InputStream inputStream)
             throws IOException, SAXException, ParserConfigurationException
     {
-        File file = new File(path);
 
         ArrayList newChildren = new ArrayList();
 
@@ -101,7 +102,7 @@ public class FreemindImporter extends Importer{
         //DOM parser instance
         DocumentBuilder builder = builderFactory.newDocumentBuilder();
         //parse an XML file into a DOM tree
-        document = builder.parse(file);
+        document = builder.parse(inputStream);
 
 
         //get root element
@@ -139,5 +140,20 @@ public class FreemindImporter extends Importer{
         }
 
         return newChildren;
+    }
+
+    public List importFile(Object parentDBId, int pos, String path)
+            throws IOException, SAXException, ParserConfigurationException
+    {
+        FileInputStream inputStream = new FileInputStream(path);
+        return importFromInputStream(parentDBId, pos, inputStream);
+
+    }
+
+    public List importString(Object parentDBId, int pos, final String str)
+            throws Exception
+    {
+        InputStream inputStream = IOUtils.toInputStream(str, "UTF-8");
+        return importFromInputStream(parentDBId, pos, inputStream);
     }
 }
