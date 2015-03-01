@@ -1,11 +1,12 @@
 package prefuse.data;
 
 import java.util.Iterator;
-import java.util.Stack;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import prefuse.data.event.TreeRootChangeListener;
+import prefuse.data.expression.Predicate;
 import prefuse.util.PrefuseConfig;
 import prefuse.util.collections.CopyOnWriteArrayList;
 import prefuse.util.collections.IntIterator;
@@ -699,27 +700,27 @@ public class Tree extends Graph {
         return super.outNeighbors(n);
     }
 
-    public static  interface Processor
+    public static interface TraverseProcessor
     {
         //return: true: continue deeper, false stop
-        abstract public boolean run (Node node, int level);
+        abstract public boolean run(Node parent, Node node, int level);
     }
 
-    public void deepTraverse (Node node, Processor proc, int level)
+    private void deepTraverse (Node parent, Node node, int level, TraverseProcessor proc)
     {
-        if (proc.run(node, level))
+        if (proc.run(parent, node, level))
         {
             Iterator children_iter = children(node);
             while (children_iter.hasNext())
             {
-                deepTraverse((Node)children_iter.next(), proc, level+1);
+                deepTraverse(node, (Node)children_iter.next(), level+1, proc);
             }
         }
     }
 
-    public void deepTraverse (Node node, Processor proc)
+    public void deepTraverse (Node node, TraverseProcessor proc)
     {
-        deepTraverse(node, proc, 1);
+        deepTraverse(null, node, 0, proc);
     }
 
     // ------------------------------------------------------------------------
@@ -840,7 +841,76 @@ public class Tree extends Graph {
         }
         return m_spanning;
     }
-    
+
+    private static void copyNodeEdgeRecursively(Node sourceNode, Node targetNode, Predicate filter)
+    {
+        Tree sourceTree = (Tree)sourceNode.getGraph();
+        Tree targetTree = (Tree)targetNode.getGraph();
+
+        Object nodeId = targetNode.get(targetTree.getNodeKeyField());
+        Table.copyTuple(sourceNode, targetNode);
+        targetNode.set(targetTree.getNodeKeyField(), nodeId);
+
+        for(int i=0; i<sourceNode.getChildCount(); i++) {
+            Node sourceChild = sourceNode.getChild(i);
+
+            if (filter != null && !filter.getBoolean(sourceChild)) {
+                continue;
+            }
+
+            Node targetChild = targetTree.addChild(sourceNode);
+
+            Edge sourceEdge = sourceChild.getParentEdge();
+            Edge targetEdge = targetChild.getParentEdge();
+
+            Object targetEdgeSource = targetEdge.get(targetTree.getEdgeSourceField());
+            Object targetEdgeTarget = targetEdge.get(targetTree.getEdgeTargetField());
+
+            Table.copyTuple(sourceEdge, targetEdge);
+
+            targetEdge.set(targetTree.getEdgeSourceField(), targetEdgeSource);
+            targetEdge.set(targetTree.getEdgeTargetField(), targetEdgeTarget);
+
+            copyNodeEdgeRecursively(sourceChild, targetChild, filter);
+        }
+    }
+
+    public Tree copySubTree(Node subTreeRoot, Predicate filter) {
+
+        if (filter != null && !filter.getBoolean(subTreeRoot)) {
+            return null;
+        }
+
+        Table nodeTable = getNodeTable();
+        Table edgeTable = getEdgeTable();
+
+        Table newNodeTable = nodeTable.getSchema().instantiate();
+        Table newEdgeTable = edgeTable.getSchema().instantiate();
+        Tree newTree = new Tree(newNodeTable, newEdgeTable, m_nkey, m_skey, m_tkey);
+
+        Node newTreeRoot = newTree.addRoot();
+
+        copyNodeEdgeRecursively(subTreeRoot, newTreeRoot, filter);
+        return newTree;
+    }
+
+    public Tree copySubTree(Node subTreeRoot) {
+        copySubTree(subTreeRoot, null);
+    }
+
+    public void pasteSubTree(Node parent, int pos, Tree subTree, Predicate filter) {
+        if (filter != null && filter.getBoolean(subTree.getRoot())) {
+            return;
+        }
+
+        Node subTreeMountPoint = addChild(parent, pos);
+        copyNodeEdgeRecursively(subTree.getRoot(), subTreeMountPoint, filter);
+    }
+
+    public void pasteSubTree(Node parent, int pos, Tree subTree) {
+        pasteSubTree(parent, pos, subTree, null);
+    }
+
     public void addRootChangeListener(TreeRootChangeListener listnr) {
         if ( !m_rootChangeListeners.contains(listnr) )
             m_rootChangeListeners.add(listnr);

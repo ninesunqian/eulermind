@@ -794,7 +794,21 @@ public class Table extends AbstractTupleSet implements ColumnListener {
             }
         }
     }
-    
+
+    //不管schema, 尽力去拷贝
+    public static void copyTuple(Tuple s, Tuple t) {
+        Table sTable = s.getTable();
+        Table tTable = t.getTable();
+
+        int row = t.getRow();
+        for ( int i=0; i<s.getColumnCount(); ++i ) {
+            String field = s.getColumnName(i);
+            if (tTable.hasColumn(field)) {
+                tTable.set(row, field, t.get(i));
+            }
+        }
+    }
+
     /**
      * Clears the contents of this table and then attempts to add the given
      * Tuple instance.

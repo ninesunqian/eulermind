@@ -4,8 +4,6 @@ import java.awt.event.MouseEvent;
 import java.util.*;
 
 import eulermind.MindModel;
-import eulermind.view.MindView;
-import eulermind.view.NodeControl;
 import prefuse.Visualization;
 import prefuse.data.*;
 
@@ -68,8 +66,9 @@ public class TreeFolder extends NodeControl {
         final String group = node.getGroup();
 
         //unfold descendants deeply, to the folded descendants
-        m_tree.deepTraverse(node,new Tree.Processor() {
-            public boolean run(Node node, int level) {
+        m_tree.deepTraverse(node, new Tree.TraverseProcessor() {
+            @Override
+            public boolean run(Node parent, Node node, int level) {
 
                 if (node == unfoldTreeRoot) {
                     return true;
@@ -88,7 +87,7 @@ public class TreeFolder extends NodeControl {
                     return true;
                 }
             }
-        }, 0);
+        });
 
         node.setExpanded(true);
     }
@@ -108,8 +107,8 @@ public class TreeFolder extends NodeControl {
         final Node foldTreeRoot = node;
 
         //set descendants unvisible deeply, to the folded descendants
-        m_tree.deepTraverse(node, new Tree.Processor() {
-            public boolean run(Node node, int level) {
+        m_tree.deepTraverse(node, new Tree.TraverseProcessor() {
+            public boolean run(Node parent, Node node, int level) {
                 if (node == foldTreeRoot)
                 {
                     return true;
@@ -128,7 +127,7 @@ public class TreeFolder extends NodeControl {
                     return true;
                 }
             }
-        }, 0);
+        });
 
 
         node.setExpanded(false);

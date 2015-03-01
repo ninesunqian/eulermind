@@ -263,8 +263,8 @@ public class MindModel {
         loadNodeProperties(m_mindDb.getVertex(rootId), root);
 
         final int initialLevel = depth;
-        tree.deepTraverse(root, new Tree.Processor() {
-            public boolean run(Node node, int level) {
+        tree.deepTraverse(root, new Tree.TraverseProcessor() {
+            public boolean run(Node parent, Node node, int level) {
                 attachChildren(node);
                 return level < initialLevel;
             }
