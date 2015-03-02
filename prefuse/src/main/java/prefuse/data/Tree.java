@@ -895,10 +895,10 @@ public class Tree extends Graph {
     }
 
     public Tree copySubTree(Node subTreeRoot) {
-        copySubTree(subTreeRoot, null);
+        return copySubTree(subTreeRoot, null);
     }
 
-    public void pasteSubTree(Node parent, int pos, Tree subTree, Predicate filter) {
+    public void pasteTree(Node parent, int pos, Tree subTree, Predicate filter) {
         if (filter != null && filter.getBoolean(subTree.getRoot())) {
             return;
         }
@@ -907,8 +907,8 @@ public class Tree extends Graph {
         copyNodeEdgeRecursively(subTree.getRoot(), subTreeMountPoint, filter);
     }
 
-    public void pasteSubTree(Node parent, int pos, Tree subTree) {
-        pasteSubTree(parent, pos, subTree, null);
+    public void pasteTree(Node parent, int pos, Tree subTree) {
+        pasteTree(parent, pos, subTree, null);
     }
 
     public void addRootChangeListener(TreeRootChangeListener listnr) {

@@ -3,6 +3,7 @@ package eulermind.operator;
 import eulermind.MindModel;
 import eulermind.MindOperator;
 import prefuse.data.Node;
+import prefuse.data.Tree;
 
 import java.util.ArrayList;
 
@@ -28,41 +29,40 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public class AddingChild extends MindOperator{
-
+public class PastingExternalTree extends MindOperator {
     ArrayList<Integer> m_parentPath;
-    int pos;
-    String m_text;
-    Object m_childDbId;
+    int m_pos;
+    Tree m_externalTree;
+    Object m_newSubTreeRootDbId;
 
     ArrayList<Integer> m_parentPathAfterDoing;
-
-    public AddingChild(MindModel mindModel, Node formerCursor, int pos, String text) {
+    public PastingExternalTree(MindModel mindModel, Node formerCursor, Tree externalTree)
+    {
         super(mindModel, formerCursor);
-        this.pos = pos;
-        m_text = text;
+        this.m_pos = formerCursor.getChildCount();
+        m_externalTree = externalTree;
     }
 
     public void does() {
         Node parent = getNodeByPath(m_formerCursorPath);
         m_parentPath = (ArrayList)m_formerCursorPath.clone();
 
-        Node child = m_mindModel.addChild(parent, pos, m_text);
-        m_childDbId = m_mindModel.getDbId(child);
+        Node newSubTreeRoot = m_mindModel.pasteTree(parent, m_pos, m_externalTree);
+        m_newSubTreeRootDbId = m_mindModel.getDbId(newSubTreeRoot);
 
         //重新取parent的路径
         m_parentPathAfterDoing = getNodePath(parent);
         m_laterCursorPath = (ArrayList)m_parentPathAfterDoing.clone();
-        m_laterCursorPath.add(pos);
+        m_laterCursorPath.add(m_pos);
     }
 
     public void undo() {
         Node parent = getNodeByPath(m_parentPathAfterDoing);
-        m_mindModel.trashNode(MindModel.getDbId(parent), pos);
+        m_mindModel.trashNode(MindModel.getDbId(parent), m_pos);
     }
 
     public void redo() {
         Node parent = getNodeByPath(m_parentPath);
-        m_mindModel.restoreNodeFromTrash(parent, m_childDbId);
+        m_mindModel.restoreNodeFromTrash(parent, m_newSubTreeRootDbId);
     }
 }

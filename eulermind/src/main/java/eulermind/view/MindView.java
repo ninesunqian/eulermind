@@ -20,6 +20,7 @@ import prefuse.util.PrefuseLib;
 import prefuse.visual.EdgeItem;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualTree;
+import prefuse.visual.expression.VisiblePredicate;
 import prefuse.visual.sort.TreeDepthItemSorter;
 
 /*
@@ -381,26 +382,36 @@ public class MindView extends Display {
         endChanging();
     }
 
-    public void importSystemClipboard()
+    public void markToBeLinkedDbId()
     {
-        String text = Utils.getSystemClipboardText();
-        if (text != null) {
-            beginChanging();
-            MindOperator operator = new ImportingFile(m_mindModel, getCursorSourceNode(), null);
-            m_mindController.does(operator);
-            endChanging();
-        }
-
+        m_mindController.m_toBeLinkedDbId = m_mindModel.getDbId(getCursorSourceNode());
     }
 
     public void copySubTree()
     {
-        m_mindModel.m_extractedDbId = m_mindModel.getDbId(getCursorSourceNode());
-        //TODO: now only one node
-        String text = m_mindModel.getText(getCursorSourceNode());
+        m_mindController.m_copiedSubTree = m_visualTree.copySubTree(getCursorNodeItem(), VisiblePredicate.TRUE);
+
+        String text = m_mindModel.getSubTreeText(getCursorSourceNode());
         Utils.copyStringToSystemClipboard(text);
-        //TODO subtree text to clipboard
-        //TODO subtree text to clipboard
+    }
+
+    public void pasteAsSubTree()
+    {
+        if (m_mindController.m_copiedSubTree != null) {
+            beginChanging();
+            MindOperator operator = new PastingExternalTree(m_mindModel, getCursorSourceNode(), m_mindController.m_copiedSubTree);
+            m_mindController.does(operator);
+            endChanging();
+
+        } else {
+            String text = Utils.getSystemClipboardText();
+            if (text != null) {
+                beginChanging();
+                MindOperator operator = new ImportingFile(m_mindModel, getCursorSourceNode(), null);
+                m_mindController.does(operator);
+                endChanging();
+            }
+        }
     }
 
     private void alert(String msg)
@@ -526,13 +537,14 @@ public class MindView extends Display {
         showEditor();
     }
 
-    public void linkExtractedVertexToCursor()
+    public void linkMarkedVertexToCursor()
     {
-        if (m_mindModel.m_extractedDbId != null && ! m_mindModel.isVertexTrashed(m_mindModel.m_extractedDbId)) {
+        if (m_mindController.m_toBeLinkedDbId != null
+                && ! m_mindModel.isVertexTrashed(m_mindController.m_toBeLinkedDbId)) {
             beginChanging();
 
             MindOperator operator = new AddingReference(m_mindModel, getCursorSourceNode(),
-                    m_mindModel.m_extractedDbId, getCursorSourceNode().getChildCount());
+                    m_mindController.m_toBeLinkedDbId, getCursorSourceNode().getChildCount());
             m_mindController.does(operator);
 
             endChanging();

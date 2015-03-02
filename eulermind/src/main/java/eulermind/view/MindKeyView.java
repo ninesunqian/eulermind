@@ -39,8 +39,11 @@ public class MindKeyView extends MindView {
     final static String sm_undoActionName = "undo";
     final static String sm_redoActionName = "redo";
     final static String sm_saveActionName = "save";
+
     final static String sm_copyActionName = "copy";
     final static String sm_pasteActionName = "paste";
+
+    final static String sm_markToBeLinkedActionName = "markToBeLinked";
     final static String sm_linkActionName = "link";
 
     final static String sm_addChildActionName = "addChild";
@@ -65,8 +68,11 @@ public class MindKeyView extends MindView {
         m_mindActionMap.put(sm_undoActionName, m_undoAction);
         m_mindActionMap.put(sm_redoActionName, m_redoAction);
         m_mindActionMap.put(sm_saveActionName, m_saveAction);
+
         m_mindActionMap.put(sm_copyActionName, m_copyAction);
         m_mindActionMap.put(sm_pasteActionName, m_pasteAction);
+
+        m_mindActionMap.put(sm_markToBeLinkedActionName, m_markToBeLinkedAction);
         m_mindActionMap.put(sm_linkActionName, m_linkAction);
 
         m_mindActionMap.put(sm_cursorMoveUpActionName, m_cursorMoveUpAction);
@@ -123,14 +129,21 @@ public class MindKeyView extends MindView {
     AbstractAction m_pasteAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            importSystemClipboard();
+            pasteAsSubTree();
+        }
+    };
+
+    AbstractAction m_markToBeLinkedAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            markToBeLinkedDbId();
         }
     };
 
     AbstractAction m_linkAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            linkExtractedVertexToCursor();
+            linkMarkedVertexToCursor();
         }
     };
 

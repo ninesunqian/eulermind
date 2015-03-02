@@ -55,7 +55,7 @@ public class MindModel {
 	final static String sm_dbIdColumnName = "dbElementId";
 
     private final static String sm_outEdgeInnerIdsPropName = MindDB.OUT_EDGES_PROP_NAME;
-    private final static String sm_outEdgeInnerIdPropName = MindDB.OUT_EDGE_INNER_ID_PROP_NAME;
+    private final static String sm_edgeInnerIdPropName = MindDB.EDGE_INNER_ID_PROP_NAME;
 
     public final static String sm_iconPropName = "icon";
     public final static String sm_textColorPropName = "textColor";
@@ -77,8 +77,6 @@ public class MindModel {
 
     private Index<Vertex> m_favoriteIndex;
 
-    public Object m_extractedDbId;
-
     class VertexBasicInfo {
         Object m_dbId;
 
@@ -98,7 +96,6 @@ public class MindModel {
 
     public final static String sm_nodePropNames [] = {
             sm_textPropName,
-            sm_outEdgeInnerIdsPropName,
             sm_stylePropName,
 
             sm_iconPropName,
@@ -112,7 +109,6 @@ public class MindModel {
 
             sm_nodeColorPropName,
             sm_textColorPropName,
-
     };
 
     private static Hashtable<String, Class> sm_propertyClassMap = new Hashtable<String, Class>();
@@ -121,22 +117,38 @@ public class MindModel {
 
     public final static String sm_edgePropNames [] = {
             sm_edgeTypePropName,
-            sm_outEdgeInnerIdPropName
+            sm_edgeInnerIdPropName
     };
 
 	public MindDB m_mindDb;
     ArrayList<Tree> m_trees = new ArrayList<Tree>();
 
 	//return sorted copy of propName
-	private void addTableProperties(String[] propNames, Table t)
+	private void addNodeTableProperties(Table t)
 	{
 		t.addColumn(sm_dbIdColumnName, Object.class, null);
 
-		for (String propName : propNames)
+        t.addColumn(sm_outEdgeInnerIdsPropName, Object.class, null);
+
+		for (String propName : sm_nodePropNames)
 		{
 			t.addColumn(propName, Object.class, null);
 		}
 	}
+
+    private void addEdgeTableProperties(Table t)
+    {
+        t.addColumn(sm_dbIdColumnName, Object.class, null);
+
+        t.addColumn(sm_edgeTypePropName, Object.class, null);
+        t.addColumn(sm_edgeInnerIdPropName, Object.class, null);
+
+        for (String propName : sm_nodePropNames)
+        {
+            t.addColumn(propName, Object.class, null);
+        }
+
+    }
 
     private static void fillPropertyClassMap()
     {
@@ -246,8 +258,8 @@ public class MindModel {
         Table displayNodeTable = tree.getNodeTable();
         Table displayEdgeTable = tree.getEdgeTable();
 
-        addTableProperties(sm_nodePropNames, displayNodeTable);
-        addTableProperties(sm_edgePropNames, displayEdgeTable);
+        addNodeTableProperties(displayNodeTable);
+        addEdgeTableProperties(displayEdgeTable);
 
         displayNodeTable.setTupleToStringHandler(new Table.TupleToStringHandler() {
             @Override
@@ -284,32 +296,24 @@ public class MindModel {
 
 	private void loadElementProperties(com.tinkerpop.blueprints.Element dbElement, Tuple tuple, String keys[])
 	{
-        assert(dbElement != null && dbElement.getId() != null);
-
-		tuple.set(sm_dbIdColumnName, dbElement.getId());
+        assert (keys == sm_edgePropNames || keys == sm_edgePropNames);
 		for (String key : keys)
 		{
-            Object value;
-            if (key == sm_outEdgeInnerIdsPropName) {
-                value = m_mindDb.getContainerProperty((Vertex)dbElement, key);
-            } else {
-                value = dbElement.getProperty(key);
-            }
-            tuple.set(key, value);
+            tuple.set(key, dbElement.getProperty(key));
 		}
 	}
 
     private void storeElementProperties(com.tinkerpop.blueprints.Element dbElement, Tuple tuple, String keys[])
     {
+        assert (keys == sm_edgePropNames || keys == sm_edgePropNames);
+
         for (String key : keys)
         {
-            if (key != sm_dbIdColumnName) {
-                Object value = tuple.get(key);
-                if (value == null) {
-                    dbElement.removeProperty(key);
-                } else {
-                    dbElement.setProperty(key, value);
-                }
+            Object value = tuple.get(key);
+            if (value == null) {
+                dbElement.removeProperty(key);
+            } else {
+                dbElement.setProperty(key, value);
             }
         }
     }
@@ -335,12 +339,23 @@ public class MindModel {
 
 	private void loadNodeProperties (Vertex vertex, Node node)
 	{
-		loadElementProperties(vertex, node, sm_nodePropNames);
+        assert(vertex != null && vertex.getId() != null);
+
+        node.set(sm_dbIdColumnName, vertex.getId());
+        node.set(sm_outEdgeInnerIdsPropName, m_mindDb.getContainerProperty(vertex, MindDB.OUT_EDGES_PROP_NAME));
+
+        loadElementProperties(vertex, node, sm_nodePropNames);
 	}
 	
 	private void loadEdgeProperties (com.tinkerpop.blueprints.Edge dbEdge, Edge edge)
 	{
+        assert(dbEdge != null && dbEdge.getId() != null);
+
+        edge.set(sm_dbIdColumnName, dbEdge.getId());
+        edge.set(sm_edgeInnerIdPropName, dbEdge.getProperty(MindDB.EDGE_INNER_ID_PROP_NAME));
+
 		loadElementProperties(dbEdge, edge, sm_edgePropNames);
+
 	}
 
     protected void storeNodeProperties(Vertex vertex, Node node)
@@ -677,7 +692,7 @@ public class MindModel {
     }
 
     //return new child node
-	public Object addChild(Node parent, int pos, String text)
+	public Node addChild(Node parent, int pos, String text)
     {
         /*FIXME: 为什么这里会出错
         if (! childrenAttached(parent)) {
@@ -693,7 +708,7 @@ public class MindModel {
 
         exposeModelRelation(parent, pos, edgeVertex);
 
-        return edgeVertex.m_vertex.getId();
+        return parent.getChild(pos);
 	}
 
     private Importer getImporter(String path)
@@ -907,7 +922,7 @@ public class MindModel {
 
     static public Short getOutEdgeInnerId(Edge edge)
     {
-        return (Short)edge.get(sm_outEdgeInnerIdPropName);
+        return (Short)edge.get(sm_edgeInnerIdPropName);
     }
 
     static public int getDBChildCount(Node node)
@@ -1427,5 +1442,50 @@ public class MindModel {
         }
 
         return Style.getIconSurely(tuple.getString(sm_stylePropName));
+    }
+
+    public String getSubTreeText(Node subTreeRoot)
+    {
+        Tree tree = (Tree)subTreeRoot.getGraph();
+        final StringBuilder stringBuilder = new StringBuilder();
+
+        Tree.TraverseProcessor appendTextProc = new Tree.TraverseProcessor() {
+            public boolean run(Node parent, Node node, int level) {
+                for (int i=0; i<level; i++) {
+                    stringBuilder.append("    ");
+                }
+                stringBuilder.append(getText(node));
+                return true;
+            }
+        };
+
+        tree.deepTraverse(subTreeRoot, appendTextProc);
+        return stringBuilder.toString();
+    }
+
+    private void pasteNodeRecursively(Node externalNode, Node newNode)
+    {
+        Table.copyTuple(externalNode, newNode, sm_nodePropNames);
+        storeNodeProperties(getDBVertex(newNode), newNode);
+
+        Edge externalEdgeToParent = externalNode.getParentEdge();
+        if (externalEdgeToParent != null) {
+            Edge newEdgeToParent = newNode.getParentEdge();
+
+            Table.copyTuple(externalEdgeToParent, newEdgeToParent, sm_edgePropNames);
+            storeEdgeProperties(getDBEdge(newEdgeToParent), newEdgeToParent);
+        }
+
+        for(int i=0; i<externalNode.getChildCount(); i++) {
+            Node newChild = addChild(newNode, i, "");
+            pasteNodeRecursively(externalNode.getChild(i), newChild);
+        }
+    }
+
+    public Node pasteTree(Node pastePoint, int position, Tree externalTree)
+    {
+        Node subTreeRoot = addChild(pastePoint, position, "");
+        pasteNodeRecursively(externalTree.getRoot(), subTreeRoot);
+        return subTreeRoot;
     }
 }

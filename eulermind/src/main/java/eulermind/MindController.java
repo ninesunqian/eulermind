@@ -62,6 +62,10 @@ public class MindController extends UndoManager {
     ArrayList<NodeControl> m_externalMouseContollers =
             new ArrayList<NodeControl>();
 
+    public Object m_toBeLinkedDbId;
+
+    public Tree m_copiedSubTree;
+
     MindController(MindModel mindModel, JTabbedPane tabbedPane) {
         super();
         m_mindModel = mindModel;

@@ -43,7 +43,7 @@ public class MindDB {
     Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
 	public final static String EDGE_TYPE_PROP_NAME = PrefuseLib.FIELD_PREFIX + "edgeType";
-    public final static String OUT_EDGE_INNER_ID_PROP_NAME = PrefuseLib.FIELD_PREFIX + "outEdgeInnerId";
+    public final static String EDGE_INNER_ID_PROP_NAME = PrefuseLib.FIELD_PREFIX + "outEdgeInnerId";
 	public final static String OUT_EDGES_PROP_NAME = PrefuseLib.FIELD_PREFIX + "childEdges";
 
 	private final static String ROOT_INDEX_NAME = PrefuseLib.FIELD_PREFIX + "rootIndex";
@@ -204,7 +204,7 @@ public class MindDB {
 
     public Short getOutEdgeInnerId(Edge edge)
     {
-        return edge.getProperty(OUT_EDGE_INNER_ID_PROP_NAME);
+        return edge.getProperty(EDGE_INNER_ID_PROP_NAME);
     }
 
     private EdgeVertex getParentSkipCache(Vertex vertex)
@@ -366,7 +366,7 @@ public class MindDB {
         setContainerProperty(source, OUT_EDGES_PROP_NAME, outEdgeInnerIds);
 
 		edge.setProperty(EDGE_TYPE_PROP_NAME, edgeType.ordinal());
-        edge.setProperty(OUT_EDGE_INNER_ID_PROP_NAME, outEdgeInnerId);
+        edge.setProperty(EDGE_INNER_ID_PROP_NAME, outEdgeInnerId);
 		
 		return edge;
 	}
@@ -429,7 +429,7 @@ public class MindDB {
         while (outEdgeIterator.hasNext())
         {
             Edge outEdge = outEdgeIterator.next();
-            if (outEdge.getProperty(OUT_EDGE_INNER_ID_PROP_NAME).equals(outEdgeInnerId)) {
+            if (outEdge.getProperty(EDGE_INNER_ID_PROP_NAME).equals(outEdgeInnerId)) {
                 return outEdge;
             }
         }
