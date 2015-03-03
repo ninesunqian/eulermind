@@ -247,7 +247,77 @@ public class Graph extends CompositeTupleSet {
     {
         init(nodes, edges, directed, nodeKey, sourceKey, targetKey);
     }
-    
+
+    private String [] m_nodeCustomFields;
+
+    public String[] getNodeCustomFields () {
+        if (m_nodeCustomFields != null) {
+            return m_nodeCustomFields;
+        }
+
+        String nodeKeyField = getNodeKeyField();
+        Table nodeTable = getNodeTable();
+        CopyOnWriteArrayList customKeyList = new CopyOnWriteArrayList();
+
+        for (Iterator itr = nodeTable.getColumnNames(); itr.hasNext(); ) {
+            String field = (String)itr.next();
+            if (!field.equals(OUTDEGREE) && !field.equals(INDEGREE) && !field.equals(OUTLINKS) && !field.equals(INLINKS)
+                    && !field.equals(nodeKeyField)) {
+
+                m_logger.info("add field: {}", field);
+
+                if (field != null) {
+                    customKeyList.add(field);
+                }
+            }
+        }
+
+        m_nodeCustomFields = new String [customKeyList.size()];
+
+        int i = 0;
+        for (Object field : customKeyList) {
+            m_nodeCustomFields[i] = (String)field;
+            i++;
+        }
+
+        return m_nodeCustomFields;
+    }
+
+    private String [] m_edgeCustomFields;
+
+    public String[] getEdgeCustomFields () {
+        if (m_edgeCustomFields != null) {
+            return m_edgeCustomFields;
+        }
+
+        String edgeSourceField = getEdgeSourceField();
+        String edgeTargetField = getEdgeTargetField();
+
+        Table edgeTable = getEdgeTable();
+        CopyOnWriteArrayList customKeyList = new CopyOnWriteArrayList();
+
+        for (Iterator itr = edgeTable.getColumnNames(); itr.hasNext(); ) {
+            String field = (String)itr.next();
+            if (field.equals(edgeSourceField) || field.equals(edgeTargetField)) {
+                break;
+            }
+
+            if (field != null) {
+                customKeyList.add(field);
+            }
+        }
+
+        m_edgeCustomFields = new String [customKeyList.size()];
+
+        int i = 0;
+        for (Object field : customKeyList) {
+            m_edgeCustomFields[i] = (String)field;
+            i++;
+        }
+
+        return m_edgeCustomFields;
+    }
+
     // ------------------------------------------------------------------------
     // Initialization
     

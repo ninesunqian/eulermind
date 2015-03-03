@@ -451,7 +451,8 @@ public class CascadedTable extends Table {
      */
     protected boolean hasColumn(String name) {
         int idx = getColumnNumber(name);
-        return idx >= 0 && idx < getLocalColumnCount();
+        // wxg changed return idx >= 0 && idx < getLocalColumnCount();
+        return idx >= 0;
     }
     
     /**

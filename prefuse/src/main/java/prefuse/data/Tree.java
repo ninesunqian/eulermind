@@ -1,5 +1,6 @@
 package prefuse.data;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.slf4j.Logger;
@@ -847,9 +848,7 @@ public class Tree extends Graph {
         Tree sourceTree = (Tree)sourceNode.getGraph();
         Tree targetTree = (Tree)targetNode.getGraph();
 
-        Object nodeId = targetNode.get(targetTree.getNodeKeyField());
-        Table.copyTuple(sourceNode, targetNode);
-        targetNode.set(targetTree.getNodeKeyField(), nodeId);
+        Table.copyTuple(sourceNode, targetNode, sourceTree.getNodeCustomFields());
 
         for(int i=0; i<sourceNode.getChildCount(); i++) {
             Node sourceChild = sourceNode.getChild(i);
@@ -858,18 +857,12 @@ public class Tree extends Graph {
                 continue;
             }
 
-            Node targetChild = targetTree.addChild(sourceNode);
+            Node targetChild = targetTree.addChild(targetNode);
 
             Edge sourceEdge = sourceChild.getParentEdge();
             Edge targetEdge = targetChild.getParentEdge();
 
-            Object targetEdgeSource = targetEdge.get(targetTree.getEdgeSourceField());
-            Object targetEdgeTarget = targetEdge.get(targetTree.getEdgeTargetField());
-
-            Table.copyTuple(sourceEdge, targetEdge);
-
-            targetEdge.set(targetTree.getEdgeSourceField(), targetEdgeSource);
-            targetEdge.set(targetTree.getEdgeTargetField(), targetEdgeTarget);
+            Table.copyTuple(sourceEdge, targetEdge, sourceTree.getEdgeCustomFields());
 
             copyNodeEdgeRecursively(sourceChild, targetChild, filter);
         }

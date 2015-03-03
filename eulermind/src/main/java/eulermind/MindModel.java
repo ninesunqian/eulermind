@@ -296,7 +296,7 @@ public class MindModel {
 
 	private void loadElementProperties(com.tinkerpop.blueprints.Element dbElement, Tuple tuple, String keys[])
 	{
-        assert (keys == sm_edgePropNames || keys == sm_edgePropNames);
+        assert (keys == sm_nodePropNames || keys == sm_edgePropNames);
 		for (String key : keys)
 		{
             tuple.set(key, dbElement.getProperty(key));
@@ -305,7 +305,7 @@ public class MindModel {
 
     private void storeElementProperties(com.tinkerpop.blueprints.Element dbElement, Tuple tuple, String keys[])
     {
-        assert (keys == sm_edgePropNames || keys == sm_edgePropNames);
+        assert (keys == sm_nodePropNames || keys == sm_edgePropNames);
 
         for (String key : keys)
         {
