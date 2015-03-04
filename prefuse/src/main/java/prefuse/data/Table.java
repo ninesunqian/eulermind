@@ -89,6 +89,7 @@ import prefuse.util.collections.IntIterator;
  */
 public class Table extends AbstractTupleSet implements ColumnListener {
     final Logger m_logger = LoggerFactory.getLogger(this.getClass());
+    static final Logger s_logger = LoggerFactory.getLogger(Table.class);
 
     /** Listeners for changes to this table */
     protected CopyOnWriteArrayList m_listeners;
@@ -816,6 +817,8 @@ public class Table extends AbstractTupleSet implements ColumnListener {
 
         for (String field: fields ) {
             if (sTable.hasColumn(field) && tTable.hasColumn(field)) {
+                Object v = s.get(field);
+                s_logger.info("tuple copy {}: {}", field, v);
                 t.set(field, s.get(field));
             }
         }

@@ -843,12 +843,21 @@ public class Tree extends Graph {
         return m_spanning;
     }
 
-    private static void copyNodeEdgeRecursively(Node sourceNode, Node targetNode, Predicate filter)
+    private static void copyNodeEdgeRecursively(Node sourceNode, Node targetNode, Predicate filter,
+                                                String[] nodeFields, String[] edgeFields)
     {
         Tree sourceTree = (Tree)sourceNode.getGraph();
         Tree targetTree = (Tree)targetNode.getGraph();
 
-        Table.copyTuple(sourceNode, targetNode, sourceTree.getNodeCustomFields());
+        if (nodeFields == null) {
+            nodeFields = sourceTree.getNodeCustomFields();
+        }
+
+        if (edgeFields == null) {
+            edgeFields = sourceTree.getEdgeCustomFields();
+        }
+
+        Table.copyTuple(sourceNode, targetNode, nodeFields);
 
         for(int i=0; i<sourceNode.getChildCount(); i++) {
             Node sourceChild = sourceNode.getChild(i);
@@ -857,18 +866,18 @@ public class Tree extends Graph {
                 continue;
             }
 
-            Node targetChild = targetTree.addChild(targetNode);
-
             Edge sourceEdge = sourceChild.getParentEdge();
+
+            Node targetChild = targetTree.addChild(targetNode);
             Edge targetEdge = targetChild.getParentEdge();
 
-            Table.copyTuple(sourceEdge, targetEdge, sourceTree.getEdgeCustomFields());
+            Table.copyTuple(sourceEdge, targetEdge, edgeFields);
 
-            copyNodeEdgeRecursively(sourceChild, targetChild, filter);
+            copyNodeEdgeRecursively(sourceChild, targetChild, filter, nodeFields, edgeFields);
         }
     }
 
-    public Tree copySubTree(Node subTreeRoot, Predicate filter) {
+    public Tree copySubTree(Node subTreeRoot, Predicate filter, String[] nodeFields, String[] edgeFields) {
 
         if (filter != null && !filter.getBoolean(subTreeRoot)) {
             return null;
@@ -879,29 +888,37 @@ public class Tree extends Graph {
 
         Table newNodeTable = nodeTable.getSchema().instantiate();
         Table newEdgeTable = edgeTable.getSchema().instantiate();
+
+        //需要去掉这4列，tree才会正确初始化
+        newNodeTable.removeColumn(OUTDEGREE);
+        newNodeTable.removeColumn(INDEGREE);
+        newNodeTable.removeColumn(OUTLINKS);
+        newNodeTable.removeColumn(INLINKS);
+
         Tree newTree = new Tree(newNodeTable, newEdgeTable, m_nkey, m_skey, m_tkey);
 
         Node newTreeRoot = newTree.addRoot();
 
-        copyNodeEdgeRecursively(subTreeRoot, newTreeRoot, filter);
+        copyNodeEdgeRecursively(subTreeRoot, newTreeRoot, filter, nodeFields, edgeFields);
         return newTree;
     }
 
-    public Tree copySubTree(Node subTreeRoot) {
-        return copySubTree(subTreeRoot, null);
+    public Tree copySubTree(Node subTreeRoot, String[] nodeFields, String[] edgeFields) {
+        return copySubTree(subTreeRoot, null, nodeFields, edgeFields);
     }
 
-    public void pasteTree(Node parent, int pos, Tree subTree, Predicate filter) {
+    public void pasteTree(Node parent, int pos, Tree subTree, Predicate filter,
+                          String[] nodeFields, String[] edgeFields) {
         if (filter != null && filter.getBoolean(subTree.getRoot())) {
             return;
         }
 
         Node subTreeMountPoint = addChild(parent, pos);
-        copyNodeEdgeRecursively(subTree.getRoot(), subTreeMountPoint, filter);
+        copyNodeEdgeRecursively(subTree.getRoot(), subTreeMountPoint, filter, nodeFields, edgeFields);
     }
 
     public void pasteTree(Node parent, int pos, Tree subTree) {
-        pasteTree(parent, pos, subTree, null);
+        pasteTree(parent, pos, subTree, null, null, null);
     }
 
     public void addRootChangeListener(TreeRootChangeListener listnr) {

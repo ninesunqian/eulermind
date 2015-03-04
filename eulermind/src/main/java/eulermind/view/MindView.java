@@ -389,7 +389,8 @@ public class MindView extends Display {
 
     public void copySubTree()
     {
-        m_mindController.m_copiedSubTree = m_visualTree.copySubTree(getCursorNodeItem(), VisiblePredicate.TRUE);
+        m_mindController.m_copiedSubTree = m_visualTree.copySubTree(getCursorNodeItem(), VisiblePredicate.TRUE,
+                MindModel.sm_nodePropNames, MindModel.sm_edgePropNames);
 
         String text = m_mindModel.getSubTreeText(getCursorSourceNode());
         Utils.copyStringToSystemClipboard(text);

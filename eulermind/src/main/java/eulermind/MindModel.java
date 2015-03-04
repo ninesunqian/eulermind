@@ -116,8 +116,6 @@ public class MindModel {
 	public final static String sm_edgeTypePropName = MindDB.EDGE_TYPE_PROP_NAME;
 
     public final static String sm_edgePropNames [] = {
-            sm_edgeTypePropName,
-            sm_edgeInnerIdPropName
     };
 
 	public MindDB m_mindDb;
@@ -127,7 +125,6 @@ public class MindModel {
 	private void addNodeTableProperties(Table t)
 	{
 		t.addColumn(sm_dbIdColumnName, Object.class, null);
-
         t.addColumn(sm_outEdgeInnerIdsPropName, Object.class, null);
 
 		for (String propName : sm_nodePropNames)
@@ -139,7 +136,6 @@ public class MindModel {
     private void addEdgeTableProperties(Table t)
     {
         t.addColumn(sm_dbIdColumnName, Object.class, null);
-
         t.addColumn(sm_edgeTypePropName, Object.class, null);
         t.addColumn(sm_edgeInnerIdPropName, Object.class, null);
 
@@ -149,6 +145,40 @@ public class MindModel {
         }
 
     }
+
+    private void loadNodeProperties (Vertex vertex, Node node)
+    {
+        assert(vertex != null && vertex.getId() != null);
+
+        node.set(sm_dbIdColumnName, vertex.getId());
+        node.set(sm_outEdgeInnerIdsPropName, m_mindDb.getContainerProperty(vertex, MindDB.OUT_EDGES_PROP_NAME));
+
+        loadElementProperties(vertex, node, sm_nodePropNames);
+    }
+
+    private void loadEdgeProperties (com.tinkerpop.blueprints.Edge dbEdge, Edge edge)
+    {
+        assert(dbEdge != null && dbEdge.getId() != null);
+
+        edge.set(sm_dbIdColumnName, dbEdge.getId());
+        edge.set(sm_edgeTypePropName, dbEdge.getProperty(MindDB.EDGE_TYPE_PROP_NAME));
+        edge.set(sm_edgeInnerIdPropName, dbEdge.getProperty(MindDB.EDGE_INNER_ID_PROP_NAME));
+
+        loadElementProperties(dbEdge, edge, sm_edgePropNames);
+
+    }
+
+    //store 仅仅保存与图无关的属性
+    protected void storeNodeProperties(Vertex vertex, Node node)
+    {
+        storeElementProperties(vertex, node, sm_nodePropNames);
+    }
+
+    private void storeEdgeProperties (com.tinkerpop.blueprints.Edge dbEdge, Edge edge)
+    {
+        storeElementProperties(dbEdge, edge, sm_edgePropNames);
+    }
+
 
     private static void fillPropertyClassMap()
     {
@@ -336,38 +366,6 @@ public class MindModel {
             }
         }
     }
-
-	private void loadNodeProperties (Vertex vertex, Node node)
-	{
-        assert(vertex != null && vertex.getId() != null);
-
-        node.set(sm_dbIdColumnName, vertex.getId());
-        node.set(sm_outEdgeInnerIdsPropName, m_mindDb.getContainerProperty(vertex, MindDB.OUT_EDGES_PROP_NAME));
-
-        loadElementProperties(vertex, node, sm_nodePropNames);
-	}
-	
-	private void loadEdgeProperties (com.tinkerpop.blueprints.Edge dbEdge, Edge edge)
-	{
-        assert(dbEdge != null && dbEdge.getId() != null);
-
-        edge.set(sm_dbIdColumnName, dbEdge.getId());
-        edge.set(sm_edgeInnerIdPropName, dbEdge.getProperty(MindDB.EDGE_INNER_ID_PROP_NAME));
-
-		loadElementProperties(dbEdge, edge, sm_edgePropNames);
-
-	}
-
-    protected void storeNodeProperties(Vertex vertex, Node node)
-    {
-        storeElementProperties(vertex, node, sm_nodePropNames);
-    }
-
-    private void storeEdgeProperties (com.tinkerpop.blueprints.Edge dbEdge, Edge edge)
-    {
-        storeElementProperties(dbEdge, edge, sm_edgePropNames);
-    }
-
 	private Vertex getDBVertex(Node node)
 	{
 		Object dbId = node.get(sm_dbIdColumnName);
@@ -1448,6 +1446,7 @@ public class MindModel {
     {
         Tree tree = (Tree)subTreeRoot.getGraph();
         final StringBuilder stringBuilder = new StringBuilder();
+        final String newline  = System.getProperty("line.separator");
 
         Tree.TraverseProcessor appendTextProc = new Tree.TraverseProcessor() {
             public boolean run(Node parent, Node node, int level) {
@@ -1455,6 +1454,7 @@ public class MindModel {
                     stringBuilder.append("    ");
                 }
                 stringBuilder.append(getText(node));
+                stringBuilder.append(newline);
                 return true;
             }
         };
