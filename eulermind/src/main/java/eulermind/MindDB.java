@@ -457,15 +457,16 @@ public class MindDB {
         m_logger.debug("MindDB insert at {}", pos);
 
 		Vertex child = addVertex(null);
-        parent = getVertex(parent.getId());
+        ORecordId childId = (ORecordId) child.getId();
+
+        //文档上说新建的节点id都是临时，经过测试id不是临时的，所以加入了判断
+        if (childId.isTemporary()) {
+            commit();
+            child = getVertex(child.getId());
+            parent = getVertex(parent.getId());
+        }
+
         Edge edge = addEdge(parent, child, pos, EdgeType.INCLUDE);
-
-        //must commit to get path
-        commit();
-
-        child = getVertex(child.getId());
-        edge = getEdge(edge.getId());
-
         m_parentDbIdCache.put(child.getId(), parent.getId());
 
         verifyVertex(parent);

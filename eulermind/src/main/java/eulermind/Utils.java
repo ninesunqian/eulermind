@@ -170,7 +170,7 @@ public class Utils {
     }
 
     public static Vertex createTree (MindDB mindDb, int maxLevel) {
-        return createTree(mindDb, null, "", 0, maxLevel);
+        return createTree(mindDb, null, "Utils.createTree", 0, maxLevel);
 
     }
 

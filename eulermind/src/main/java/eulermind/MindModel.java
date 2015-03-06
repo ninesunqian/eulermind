@@ -351,6 +351,10 @@ public class MindModel {
     private void verifyElementProperties(com.tinkerpop.blueprints.Element dbElement,
                                                    Tuple tuple, String keys[])
     {
+        if (true) {
+            return;
+        }
+
         assert dbElement.getId().equals(tuple.get(sm_dbIdColumnName));
 
         for (String key : keys)
@@ -362,6 +366,9 @@ public class MindModel {
                 assert tupleValue == dbElementValue || tupleValue.equals(dbElementValue);
             } else {
                 Object dbElementValue = dbElement.getProperty(key);
+                if (!(tupleValue == dbElementValue || tupleValue.equals(dbElementValue))) {
+                    int debug = 1;
+                }
                 assert tupleValue == dbElementValue || tupleValue.equals(dbElementValue);
             }
         }
@@ -1066,6 +1073,27 @@ public class MindModel {
         return node;
     }
 
+    public Node getNodeByPath(Tree tree, int[] path)
+    {
+        Node node = tree.getRoot();
+
+        for (int i=0; i<path.length; i++) {
+
+            if (node.getChildCount() == 0 && getDBChildCount(node) > 0) {
+                attachChildren(node);
+            }
+
+            int pos = path[i];
+            node = node.getChild(pos);
+
+            if (node == null) {
+                return null;
+            }
+        }
+
+        return node;
+    }
+
     public boolean isInFavorite(Object dbId) {
         for (VertexBasicInfo info: m_favoriteInfoes) {
             if (info.m_dbId.equals(dbId)) {
@@ -1463,28 +1491,42 @@ public class MindModel {
         return stringBuilder.toString();
     }
 
-    private void pasteNodeRecursively(Node externalNode, Node newNode)
+    private void pasteNodeRecursively(final Node externalNode, final Node newNode)
     {
-        Table.copyTuple(externalNode, newNode, sm_nodePropNames);
-        storeNodeProperties(getDBVertex(newNode), newNode);
+        visitNodeAvatars((Tree)newNode.getGraph(), getDbId(newNode), new Visitor() {
+            @Override
+            public void visit(Node newNodeAvatar)
+            {
+                Table.copyTuple(externalNode, newNodeAvatar, sm_nodePropNames);
+                if (newNodeAvatar == newNode) {
+                    storeNodeProperties(getDBVertex(newNodeAvatar), newNodeAvatar);
+                }
 
-        Edge externalEdgeToParent = externalNode.getParentEdge();
-        if (externalEdgeToParent != null) {
-            Edge newEdgeToParent = newNode.getParentEdge();
+                Edge externalEdgeToParent = externalNode.getParentEdge();
+                if (externalEdgeToParent != null) {
+                    Edge newAvatarEdgeToParent = newNodeAvatar.getParentEdge();
 
-            Table.copyTuple(externalEdgeToParent, newEdgeToParent, sm_edgePropNames);
-            storeEdgeProperties(getDBEdge(newEdgeToParent), newEdgeToParent);
-        }
+                    Table.copyTuple(externalEdgeToParent, newAvatarEdgeToParent, sm_edgePropNames);
+                    if (newNodeAvatar == newNode) {
+                        storeEdgeProperties(getDBEdge(newAvatarEdgeToParent), newAvatarEdgeToParent);
+                    }
+                }
+            }
+        });
 
         for(int i=0; i<externalNode.getChildCount(); i++) {
-            Node newChild = addChild(newNode, i, "");
+            Node newChild = addChild(newNode, i, "pasteNodeRecursively");
             pasteNodeRecursively(externalNode.getChild(i), newChild);
         }
     }
 
     public Node pasteTree(Node pastePoint, int position, Tree externalTree)
     {
-        Node subTreeRoot = addChild(pastePoint, position, "");
+        if (externalTree == null || externalTree.getRoot() == null) {
+            return null;
+        }
+
+        Node subTreeRoot = addChild(pastePoint, position, "pasteTree");
         pasteNodeRecursively(externalTree.getRoot(), subTreeRoot);
         return subTreeRoot;
     }

@@ -105,6 +105,8 @@ public class MainFrame  extends JFrame {
         });
 
         m_mindMapMenu.addMenuListener(m_mapMenuListener);
+        m_mindMapMenu.setBorder(BorderFactory.createLineBorder(Color.blue, 3));
+        m_mindMapMenu.setBorderPainted(true);
         m_favoriteMenu.addMenuListener(m_favoriteMenuListener);
         m_ancestorMenu.addMenuListener(m_ancestorMenuListener);
         m_searchInputer.setMindEditorListener(searchInputerListener);

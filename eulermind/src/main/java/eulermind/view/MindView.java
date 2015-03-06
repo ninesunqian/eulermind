@@ -66,26 +66,51 @@ public class MindView extends Display {
     boolean m_isChanging = false;
 
     //提出这个函数是为了单元测试
-    void endInserting(String text)
+    void endInserting(final String text)
     {
-        MindOperator operator = new AddingChild(m_mindModel, getCursorSourceNode().getParent(), getCursorSourceNode().getIndex(), text);
-        m_logger.info("MindView fire OK, insert at {}", getCursorSourceNode().getIndex());
-        removePlaceholderCursor();
-
-        //该函数会重绘所有的MindView
-        m_mindController.does(operator);
         hideEditor();
+
+        //由于事件处理机制，此时输入框不会立即消失。用invokeLater，在下面代码设置断点后，输入焦点才能切换到IDE中
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run()
+            {
+                m_logger.warn("++++++++++++++ hide Editor");
+                //TODO
+                MindOperator operator = new AddingChild(m_mindModel, getCursorSourceNode().getParent(),
+                        getCursorSourceNode().getIndex(),  text);
+                m_logger.info("MindView fire OK, insert at {}", getCursorSourceNode().getIndex());
+                removePlaceholderCursor();
+
+                //该函数会重绘所有的MindView
+                m_mindController.does(operator);
+                m_logger.warn("--------------- after hide Editor");
+            }
+        });
     }
 
-    void endInserting(Object dbId, String text, Object parentDbId, String parentText)
+    void endInserting(final Object dbId, final String text, final Object parentDbId, final String parentText)
     {
-        MindOperator operator = new AddingReference(m_mindModel, getCursorSourceNode().getParent(),
-                dbId, getCursorSourceNode().getIndex());
-        removePlaceholderCursor();
-
-        //该函数会重绘所有的MindView
-        m_mindController.does(operator);
         hideEditor();
+
+        //由于事件处理机制，此时输入框不会立即消失。用invokeLater，在下面代码设置断点后，输入焦点才能切换到IDE中
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run()
+            {
+                m_logger.warn("++++++++++++++ hide Editor");
+                //TODO
+                MindOperator operator = new AddingReference(m_mindModel, getCursorSourceNode().getParent(),
+                        dbId, getCursorSourceNode().getIndex());
+                removePlaceholderCursor();
+
+                //该函数会重绘所有的MindView
+                m_mindController.does(operator);
+                m_logger.warn("--------------- after hide Editor");
+            }
+        });
+
 
     }
 
@@ -112,15 +137,20 @@ public class MindView extends Display {
         }
     };
 
-    void endEditing(String text)
+    void endEditing(final String text)
     {
-        MindOperator operator;
-
-        operator = new SettingProperty(m_mindModel, getCursorSourceNode(), MindModel.sm_textPropName, text);
-
-        m_mindController.does(operator);
         hideEditor();
 
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run()
+            {
+                MindOperator operator;
+                operator = new SettingProperty(m_mindModel,
+                        getCursorSourceNode(), MindModel.sm_textPropName, text);
+                m_mindController.does(operator);
+            }
+        });
     }
 
     void cancelEditing()
@@ -438,7 +468,7 @@ public class MindView extends Display {
 
         //NOTE: newNode.setString(MindModel.sm_textPropName, "") error
 
-        newNode.set(MindModel.sm_textPropName, "");
+        newNode.set(MindModel.sm_textPropName, "placeHolder mark");
 
         m_cursor.setCursorNodeItem(toVisual(newNode));
     }
