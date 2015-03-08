@@ -17,49 +17,58 @@
     </menubar>
 
     <vbox constraints="BorderLayout.NORTH" >
-    <toolBar floatable="false" autoscrolls="true"  preferredSize="0, 30" orientation="HORIZONTAL">
-        <label labelfor="m_fontFamilyCombobox" text="字体"/>
-        <fontFamilyCombobox id="m_fontFamilyCombobox"/>
+        <toolBar floatable="false" autoscrolls="true"  preferredSize="0, 30" orientation="HORIZONTAL">
+            <label labelfor="m_fontFamilyCombobox" text="字体"/>
+            <fontFamilyCombobox id="m_fontFamilyCombobox"/>
 
-        <separator/>
+            <separator/>
 
-        <label labelfor="m_fontSizeCombobox" text="字号"/>
-        <fontSizeCombobox id="m_fontSizeCombobox"/>
+            <label labelfor="m_fontSizeCombobox" text="字号"/>
+            <fontSizeCombobox id="m_fontSizeCombobox"/>
 
-        <separator/>
+            <separator/>
 
-        <label labelfor="m_italicCombobox" text="斜体"/>
-        <booleanCombobox id="m_italicCombobox"/>
+            <label labelfor="m_italicCombobox" text="斜体"/>
+            <booleanCombobox id="m_italicCombobox"/>
 
-        <separator/>
+            <separator/>
 
-        <label labelfor="m_boldCombobox" text="粗体"/>
-        <booleanCombobox id="m_boldCombobox"/>
+            <label labelfor="m_boldCombobox" text="粗体"/>
+            <booleanCombobox id="m_boldCombobox"/>
 
-        <separator/>
+            <separator/>
 
-        <label labelfor="m_textColorCombobox" text="字体色"/>
-        <colorCombobox id="m_textColorCombobox" text="T" Font="COURIER-BOLD-14"/>
+            <label labelfor="m_textColorCombobox" text="字体色"/>
+            <colorCombobox id="m_textColorCombobox" text="T" Font="COURIER-BOLD-14"/>
 
-        <separator/>
+            <separator/>
 
-        <label labelfor="m_nodeColorCombobox" text="节点色"/>
-        <colorCombobox id="m_nodeColorCombobox" text="T" Font="COURIER-BOLD-14"/>
+            <label labelfor="m_nodeColorCombobox" text="节点色"/>
+            <colorCombobox id="m_nodeColorCombobox" text="T" Font="COURIER-BOLD-14"/>
 
-        <separator/>
 
-        <label labelfor="m_iconButton" text="图标"/>
-        <iconbutton id="m_iconButton" />
+            <label labelfor="m_iconButton" text="图标"/>
+            <iconbutton id="m_iconButton" />
 
-    </toolBar>
+        </toolBar>
 
-    <toolBar floatable="false" autoscrolls="true"  preferredSize="0, 30" orientation="HORIZONTAL">
-        <label labelfor="m_searchInputer" text="搜索"/>
-        <mindEditor id="m_searchInputer" columns="10"/>
-        <checkbox text="enable style list" id="m_checkboxForEnableStyleList"
-                  horizontalTextPosition="SwingConstants.LEFT"/>
+        <toolBar floatable="false" autoscrolls="true"  preferredSize="0, 30" orientation="HORIZONTAL">
+            <label labelfor="m_searchInputer" text="搜索"/>
+            <mindEditor id="m_searchInputer" columns="10"/>
 
-    </toolBar>
+            <separator/>
+
+            <checkbox text="实时搜索" id="m_checkboxForEnableStyleList"
+                      HorizontalTextPosition="LEFT"/>
+
+            <separator/>
+
+            <checkbox text="节点属性"
+                      HorizontalTextPosition="LEFT"/>
+
+        </toolBar>
+
+
     </vbox>
 
     <vbox constraints="BorderLayout.EAST"  preferredSize="100, 0">
