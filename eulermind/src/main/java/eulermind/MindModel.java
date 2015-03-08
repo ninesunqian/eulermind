@@ -1121,6 +1121,7 @@ public class MindModel {
         }
     }
 
+    //TODO: add cached
     public VertexBasicInfo getVertexBasicInfo(Object dbId) {
         return new VertexBasicInfo(m_mindDb.getVertex(dbId));
     }

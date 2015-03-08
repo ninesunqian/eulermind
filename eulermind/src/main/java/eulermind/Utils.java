@@ -21,9 +21,7 @@ import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.HashMap;
 
 /**
  * Created with IntelliJ IDEA.
@@ -299,4 +297,14 @@ public class Utils {
         clipboard.setContents(selection, null);
     }
 
+    private static String s_appIconBaseDir = Utils.class.getClassLoader().getResource("app_icons").getPath();
+    private static HashMap<String, Icon> s_appIcons = new HashMap<>();
+    public static Icon getAppIcon(String name) {
+        Icon icon = null;
+        if ( (icon=s_appIcons.get(name)) == null ) {
+            icon = new ImageIcon(s_appIconBaseDir + "/" + name);
+            s_appIcons.put(name, icon);
+        }
+        return icon;
+    }
 }

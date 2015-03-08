@@ -169,8 +169,6 @@ public abstract class NodeControl extends ControlAdapter {
         return e.isControlDown() ? DragAction.LINK : DragAction.MOVE;
     }
 
-
-
     public void itemDragged(VisualItem item, MouseEvent e) {
         if (!(item instanceof NodeItem)) {
             return;

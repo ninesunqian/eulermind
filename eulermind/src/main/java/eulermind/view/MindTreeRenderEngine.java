@@ -436,7 +436,7 @@ public class MindTreeRenderEngine {
                 paintCursorBoundary(g, item, color);
 
             } else if (!m_mindView.isPlaceholder(cursorNode) && m_mindView.m_mindModel.isSelfInDB(node, cursorNode)) {
-                Color color = ColorLib.getColor(0, 0, 255, 128);
+                Color color = ColorLib.getColor(0, 0, 255, 80);
                 paintCursorBoundary(g, item, color);
             }
         }

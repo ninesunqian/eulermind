@@ -15,7 +15,6 @@ public class FontLib {
     private static final IntObjectHashMap fontMap = new IntObjectHashMap();
     private static int misses = 0;
     private static int lookups = 0;
-    
     /**
      * Get a Font instance with the given font family name and size. A
      * plain font style is assumed.

@@ -2,9 +2,9 @@ package eulermind;
 
 import javax.swing.*;
 import javax.swing.event.*;
-import javax.swing.plaf.IconUIResource;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 
 import eulermind.component.*;
 import eulermind.view.MindEditor;
@@ -239,11 +239,20 @@ public class MainFrame  extends JFrame {
         }
     };
 
+    private void addMenuSeparator(JMenu menu) {
+        JSeparator sep = new JSeparator();
+        sep.setPreferredSize(new Dimension(0, 3));
+        sep.setBorder(BorderFactory.createLineBorder(Color.blue, 3));
+
+        menu.add(sep);
+    }
+
     MenuListener m_mapMenuListener = new MenuListener() {
         @Override
         public void menuSelected(MenuEvent e)
         {
             JMenuItem addingMenuItem = new JMenuItem("new map ...");
+            addingMenuItem.setIcon(Utils.getAppIcon("new.png"));
             addingMenuItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent actionEvent)
@@ -264,6 +273,7 @@ public class MainFrame  extends JFrame {
             m_mindMapMenu.add(addingMenuItem);
 
             JMenuItem removingMenuItem = new JMenuItem("remove current map");
+            removingMenuItem.setIcon(Utils.getAppIcon("delete.png"));
             removingMenuItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent actionEvent)
@@ -285,17 +295,23 @@ public class MainFrame  extends JFrame {
             });
             m_mindMapMenu.add(removingMenuItem);
 
+            addMenuSeparator(m_mindMapMenu);
+
             for (final String mapName : Utils.getAllMapNames()) {
                 JMenuItem menuItem = new JMenuItem(mapName);
-                menuItem.setEnabled(! mapName.equals(m_currentMapName));
-                menuItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent actionEvent)
-                    {
-                        closeMindDb();
-                        openMindDb(mapName);
-                    }
-                });
+                if (mapName.equals(m_currentMapName)) {
+                    menuItem.setIcon(Utils.getAppIcon("current.png"));
+                }
+                else {
+                    menuItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent actionEvent)
+                        {
+                            closeMindDb();
+                            openMindDb(mapName);
+                        }
+                    });
+                }
 
                 m_mindMapMenu.add(menuItem);
             }
@@ -321,6 +337,7 @@ public class MainFrame  extends JFrame {
             final Object currentVertexId = m_mindController.getCurrentVertexId();
             JMenuItem addingMenuItem = new JMenuItem("add to favorite");
             addingMenuItem.setEnabled(currentVertexId != null && ! m_mindModel.isInFavorite(currentVertexId));
+            addingMenuItem.setIcon(Utils.getAppIcon("new.png"));
             addingMenuItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent actionEvent)
@@ -332,6 +349,7 @@ public class MainFrame  extends JFrame {
 
             JMenuItem removingMenuItem = new JMenuItem("remove from favorite");
             removingMenuItem.setEnabled(currentVertexId != null && m_mindModel.isInFavorite(currentVertexId));
+            removingMenuItem.setIcon(Utils.getAppIcon("delete.png"));
             removingMenuItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent actionEvent)
@@ -341,19 +359,25 @@ public class MainFrame  extends JFrame {
             });
             m_favoriteMenu.add(removingMenuItem);
 
-            m_favoriteMenu.addSeparator();
+            addMenuSeparator(m_favoriteMenu);
 
             for (final MindModel.VertexBasicInfo vertexBasicInfo : m_mindModel.m_favoriteInfoes) {
                 if (! m_mindModel.isVertexTrashed(vertexBasicInfo.m_dbId)) {
 
                     JMenuItem menuItem = new JMenuItem(vertexBasicInfo.m_contextText);
-                    menuItem.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent actionEvent)
-                        {
-                            m_mindController.findOrAddMindView(vertexBasicInfo.m_dbId);
-                        }
-                    });
+
+                    if (vertexBasicInfo.m_dbId.equals(currentVertexId)) {
+                        menuItem.setIcon(Utils.getAppIcon("current.png"));
+                    } else {
+                        menuItem.addActionListener(new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent actionEvent)
+                            {
+                                m_mindController.findOrAddMindView(vertexBasicInfo.m_dbId);
+                            }
+                        });
+                    }
+
                     m_favoriteMenu.add(menuItem);
                 }
 
@@ -380,7 +404,10 @@ public class MainFrame  extends JFrame {
             final Object currentVertexId = m_mindController.getCurrentVertexId();
             MindModel.VertexBasicInfo vertexBasicInfo =  m_mindModel.getVertexBasicInfo(currentVertexId);
 
-            for (Object ancestor : vertexBasicInfo.m_inheritPath) {
+            ArrayList<Object>  ancestorAndSelf = new ArrayList<Object>(vertexBasicInfo.m_inheritPath);
+            ancestorAndSelf.add(currentVertexId);
+
+            for (Object ancestor : ancestorAndSelf) {
                 final MindModel.VertexBasicInfo ancestorBasicInfo = m_mindModel.getVertexBasicInfo(ancestor);
                 JMenuItem menuItem = new JMenuItem(ancestorBasicInfo.m_contextText);
                 menuItem.addActionListener(new ActionListener() {
