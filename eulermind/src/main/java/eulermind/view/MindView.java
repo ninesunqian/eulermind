@@ -387,7 +387,7 @@ public class MindView extends Display {
                         //TODO
                         //listener 内部，调用endInstering (重绘，设置重绘后的hander是 恢复状态)
                         m_mindEditor.setMindEditorListener(m_editorListenerForInserting);
-                        m_mindEditor.setHasPromptList(true);
+                        m_mindEditor.setHasPromptList(m_mindController.m_searchWhileAddingNode);
                         showEditor();
                         m_logger.warn("--------------- after show Editor");
                     }
@@ -468,7 +468,7 @@ public class MindView extends Display {
 
         //NOTE: newNode.setString(MindModel.sm_textPropName, "") error
 
-        newNode.set(MindModel.sm_textPropName, "placeHolder mark");
+        newNode.set(MindModel.sm_textPropName, "");
 
         m_cursor.setCursorNodeItem(toVisual(newNode));
     }

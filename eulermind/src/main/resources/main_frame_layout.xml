@@ -1,12 +1,6 @@
 <frame name="mainframe" title="EulerMind" layout="BorderLayout" size="800,600"  >
 
     <menubar name="menubar">
-        <!--
-        <menu name="filemenu" text="File" mnemonic="VK_F" >
-            <menuitem id="mi_open" text="Open" mnemonic="VK_O" />
-            <menuitem id="mi_import" text="Import" mnemonic="VK_I" Action="m_importAction"/>
-        </menu>
-        -->
         <menu text="导图" id="m_mindMapMenu" mnemonic="VK_M"/>
         <menu text="导入" id="m_importMenu" mnemonic="VK_I">
             <menuitem id="mi_import" text="Import ..." Action="m_importAction"/>
@@ -14,10 +8,16 @@
         <menu text="收藏" id="m_favoriteMenu" mnemonic="VK_F"/>
         <menu text="归属" id="m_ancestorMenu" mnemonic="VK_A"/>
 
+        <menu text="选项" mnemonic="VK_O" >
+            <checkboxmenuitem id="m_searchWhileAddingNodeCheckMenu" text="实时搜索" Selected="true"/>
+            <separator/>
+            <checkboxmenuitem id="m_propertyToolBarVisibleCheckMenu" text="属性工具栏"  Selected="true"/>
+        </menu>
+
     </menubar>
 
     <vbox constraints="BorderLayout.NORTH" >
-        <toolBar floatable="false" autoscrolls="true"  preferredSize="0, 30" orientation="HORIZONTAL">
+        <toolBar floatable="false" autoscrolls="true"  id="m_propertyToolBar" preferredSize="0, 30" orientation="HORIZONTAL">
             <label labelfor="m_fontFamilyCombobox" text="字体"/>
             <fontFamilyCombobox id="m_fontFamilyCombobox"/>
 
@@ -55,24 +55,12 @@
         <toolBar floatable="false" autoscrolls="true"  preferredSize="0, 30" orientation="HORIZONTAL">
             <label labelfor="m_searchInputer" text="搜索"/>
             <mindEditor id="m_searchInputer" columns="10"/>
-
-            <separator/>
-
-            <checkbox text="实时搜索" id="m_checkboxForEnableStyleList"
-                      HorizontalTextPosition="LEFT"/>
-
-            <separator/>
-
-            <checkbox text="节点属性"
-                      HorizontalTextPosition="LEFT"/>
-
         </toolBar>
 
 
     </vbox>
 
     <vbox constraints="BorderLayout.EAST"  preferredSize="100, 0">
-
         <label text="样式"/>
 
         <scrollPane  preferredSize="100, 10000">

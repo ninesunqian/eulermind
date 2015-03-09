@@ -116,9 +116,8 @@ public abstract class NodeControl extends ControlAdapter {
     final public void itemPressed(VisualItem item, MouseEvent e) {
         if (item instanceof NodeItem) {
             nodeItemPressed((NodeItem) item, e);
+            m_mousePressPoint = e.getPoint();
         }
-
-        m_mousePressPoint = e.getPoint();
     }
 
     public void nodeItemPressed(NodeItem item, MouseEvent e) {
@@ -128,6 +127,7 @@ public abstract class NodeControl extends ControlAdapter {
     final public void itemClicked(VisualItem item, MouseEvent e) {
         if (item instanceof NodeItem) {
             nodeItemClicked((NodeItem) item, e);
+            m_mousePressPoint = null;
         }
     }
 
@@ -175,7 +175,7 @@ public abstract class NodeControl extends ControlAdapter {
         }
 
         Point point = e.getPoint();
-        if (point.distance(m_mousePressPoint) < 10) {
+        if (m_mousePressPoint == null || point.distance(m_mousePressPoint) < 10) {
             return;
         }
 
@@ -230,6 +230,8 @@ public abstract class NodeControl extends ControlAdapter {
         if (!(item instanceof NodeItem)) {
             return;
         }
+
+        m_mousePressPoint = null;
 
         NodeItem draggedNode = (NodeItem)item;
         nodeItemReleased(draggedNode, e);

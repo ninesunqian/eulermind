@@ -176,8 +176,7 @@ public class MindEditor extends JTextField {
 
     private void startQueryWorker()
     {
-        ((DefaultListModel) m_promptList.getModel()).removeAllElements();
-        m_promptedNodes.clear();
+        clearSearchResults();
 
         //SwingWorker 被设计为只执行一次。多次执行 SwingWorker 将不会调用两次 doInBackground 方法。
         //所以每次要 new一个新对象
@@ -199,6 +198,13 @@ public class MindEditor extends JTextField {
         m_queryDelayTimer.start();
     }
 
+    public void clearSearchResults()
+    {
+        ((DefaultListModel) m_promptList.getModel()).removeAllElements();
+        m_promptedNodes.clear();
+
+    }
+
     private void updatePromptList()
     {
         if (m_queryDelayTimer != null) {
@@ -209,8 +215,7 @@ public class MindEditor extends JTextField {
         stopQueryWorker();
 
         if (getText().isEmpty()) {
-            ((DefaultListModel) m_promptList.getModel()).removeAllElements();
-            m_promptedNodes.clear();
+            clearSearchResults();
 
         } else {
             startDelayedQuery();

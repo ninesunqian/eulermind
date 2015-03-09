@@ -66,6 +66,8 @@ public class MindController extends UndoManager {
 
     public Tree m_copiedSubTree;
 
+    public boolean m_searchWhileAddingNode = true;
+
     MindController(MindModel mindModel, JTabbedPane tabbedPane) {
         super();
         m_mindModel = mindModel;

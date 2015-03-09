@@ -69,6 +69,10 @@ public class MainFrame  extends JFrame {
 
     MindEditor m_searchInputer;
 
+    JToolBar m_propertyToolBar;
+    JCheckBoxMenuItem m_propertyToolBarVisibleCheckMenu;
+    JCheckBoxMenuItem m_searchWhileAddingNodeCheckMenu;
+
     String m_currentMapName;
 
     public MainFrame()
@@ -120,6 +124,9 @@ public class MainFrame  extends JFrame {
         m_styleUpButton.addActionListener(m_styleUpAction);
         m_styleDownButton.addActionListener(m_styleDownAction);
 
+        m_propertyToolBarVisibleCheckMenu.addActionListener(m_propertyToolBarVisibleAction);
+        m_searchWhileAddingNodeCheckMenu.addActionListener(m_searchWhileAddingNodeAction);
+
         String lastOpenedMap = Utils.getLastOpenedMap();
         if (lastOpenedMap != null) {
             openMindDb(lastOpenedMap);
@@ -153,6 +160,9 @@ public class MainFrame  extends JFrame {
 
     public void closeMindDb()
     {
+        m_searchInputer.clearSearchResults();
+        m_searchInputer.setText("");
+
         if (m_currentMapName == null) {
             return;
         }
@@ -480,6 +490,25 @@ public class MainFrame  extends JFrame {
             m_styleList.setUpdatingMindNodeEnabled(false);
             m_styleList.downSelectedStyle();
             m_styleList.setUpdatingMindNodeEnabled(true);
+        }
+    };
+
+    public Action m_propertyToolBarVisibleAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e)
+        {
+            boolean visible = m_propertyToolBarVisibleCheckMenu.isSelected();
+            m_propertyToolBar.setVisible(visible);
+        }
+    };
+
+
+    public Action m_searchWhileAddingNodeAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e)
+        {
+            boolean selected = m_searchWhileAddingNodeCheckMenu.isSelected();
+            m_mindController.m_searchWhileAddingNode = selected;
         }
     };
 }
