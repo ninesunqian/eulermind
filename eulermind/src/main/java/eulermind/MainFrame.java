@@ -5,12 +5,16 @@ import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.List;
 
 import eulermind.component.*;
+import eulermind.operator.AddingReference;
 import eulermind.view.MindEditor;
+import eulermind.view.MindView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.swixml.SwingEngine;
+import prefuse.data.Node;
 
 /*
 The MIT License (MIT)
@@ -109,8 +113,6 @@ public class MainFrame  extends JFrame {
         });
 
         m_mindMapMenu.addMenuListener(m_mapMenuListener);
-        m_mindMapMenu.setBorder(BorderFactory.createLineBorder(Color.blue, 3));
-        m_mindMapMenu.setBorderPainted(true);
         m_favoriteMenu.addMenuListener(m_favoriteMenuListener);
         m_ancestorMenu.addMenuListener(m_ancestorMenuListener);
         m_searchInputer.setMindEditorListener(searchInputerListener);
@@ -373,24 +375,8 @@ public class MainFrame  extends JFrame {
 
             for (final MindModel.VertexBasicInfo vertexBasicInfo : m_mindModel.m_favoriteInfoes) {
                 if (! m_mindModel.isVertexTrashed(vertexBasicInfo.m_dbId)) {
-
-                    JMenuItem menuItem = new JMenuItem(vertexBasicInfo.m_contextText);
-
-                    if (vertexBasicInfo.m_dbId.equals(currentVertexId)) {
-                        menuItem.setIcon(Utils.getAppIcon("current.png"));
-                    } else {
-                        menuItem.addActionListener(new ActionListener() {
-                            @Override
-                            public void actionPerformed(ActionEvent actionEvent)
-                            {
-                                m_mindController.findOrAddMindView(vertexBasicInfo.m_dbId);
-                            }
-                        });
-                    }
-
-                    m_favoriteMenu.add(menuItem);
+                    addVertexSubMenu(m_favoriteMenu, vertexBasicInfo, true);
                 }
-
             }
         }
 
@@ -407,6 +393,63 @@ public class MainFrame  extends JFrame {
         }
     };
 
+    private void addVertexSubMenu(JMenu menu, final MindModel.VertexBasicInfo vertexBasicInfo, boolean hasParentInfo)
+    {
+        JMenu subMenu = new JMenu();
+        if (hasParentInfo)
+            subMenu.setText(vertexBasicInfo.m_contextText);
+        else
+            subMenu.setText(vertexBasicInfo.m_text);
+
+        JMenuItem menuItem = new JMenuItem("新标签页打开");
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent)
+            {
+                m_mindController.findOrAddMindView(vertexBasicInfo.m_dbId);
+            }
+        });
+        subMenu.add(menuItem);
+
+        menuItem = new JMenuItem("链接为子节点");
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent)
+            {
+                MindView mindView = m_mindController.getCurrentView();
+                Node cursorSourceNode = mindView.getCursorSourceNode();
+                MindOperator operator = new AddingReference(m_mindModel, cursorSourceNode,
+                        vertexBasicInfo.m_dbId, cursorSourceNode.getChildCount());
+
+                //该函数会重绘所有的MindView
+                m_mindController.does(operator);
+            }
+        });
+        subMenu.add(menuItem);
+
+        menuItem = new JMenuItem("链接为兄弟节点");
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent)
+            {
+                MindView mindView = m_mindController.getCurrentView();
+                Node cursorSourceNode = mindView.getCursorSourceNode();
+                if (cursorSourceNode.getParent() == null) {
+                    return;
+                }
+
+                MindOperator operator = new AddingReference(m_mindModel, cursorSourceNode.getParent(),
+                        vertexBasicInfo.m_dbId, cursorSourceNode.getIndex() + 1);
+
+                //该函数会重绘所有的MindView
+                m_mindController.does(operator);
+            }
+        });
+        subMenu.add(menuItem);
+
+        menu.add(subMenu);
+    }
+
     MenuListener m_ancestorMenuListener = new MenuListener() {
         @Override
         public void menuSelected(MenuEvent menuEvent)
@@ -414,21 +457,12 @@ public class MainFrame  extends JFrame {
             final Object currentVertexId = m_mindController.getCurrentVertexId();
             MindModel.VertexBasicInfo vertexBasicInfo =  m_mindModel.getVertexBasicInfo(currentVertexId);
 
-            ArrayList<Object>  ancestorAndSelf = new ArrayList<Object>(vertexBasicInfo.m_inheritPath);
+            List ancestorAndSelf = m_mindModel.m_mindDb.getInheritPath(currentVertexId);
             ancestorAndSelf.add(currentVertexId);
 
             for (Object ancestor : ancestorAndSelf) {
                 final MindModel.VertexBasicInfo ancestorBasicInfo = m_mindModel.getVertexBasicInfo(ancestor);
-                JMenuItem menuItem = new JMenuItem(ancestorBasicInfo.m_contextText);
-                menuItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent actionEvent)
-                    {
-                        m_mindController.findOrAddMindView(ancestorBasicInfo.m_dbId);
-                    }
-                });
-
-                m_ancestorMenu.add(menuItem);
+                addVertexSubMenu(m_ancestorMenu, ancestorBasicInfo, false);
             }
         }
 

@@ -5,8 +5,8 @@
         <menu text="导入" id="m_importMenu" mnemonic="VK_I">
             <menuitem id="mi_import" text="Import ..." Action="m_importAction"/>
         </menu>
-        <menu text="收藏" id="m_favoriteMenu" mnemonic="VK_F"/>
-        <menu text="归属" id="m_ancestorMenu" mnemonic="VK_A"/>
+        <menu text="收藏夹" id="m_favoriteMenu" mnemonic="VK_F"/>
+        <menu text="祖先" id="m_ancestorMenu" mnemonic="VK_A"/>
 
         <menu text="选项" mnemonic="VK_O" >
             <checkboxmenuitem id="m_searchWhileAddingNodeCheckMenu" text="实时搜索" Selected="true"/>
@@ -46,6 +46,7 @@
             <label labelfor="m_nodeColorCombobox" text="节点色"/>
             <colorCombobox id="m_nodeColorCombobox" text="T" Font="COURIER-BOLD-14"/>
 
+            <separator/>
 
             <label labelfor="m_iconButton" text="图标"/>
             <iconbutton id="m_iconButton" />

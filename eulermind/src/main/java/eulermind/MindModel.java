@@ -79,16 +79,27 @@ public class MindModel {
 
     class VertexBasicInfo {
         Object m_dbId;
+        String m_text;
 
-        //TODO: remove this
-        List m_inheritPath;
-        //TODO: remove this
+        Object m_parentDbId;
+        String m_parentText;
+
         String m_contextText;
 
         VertexBasicInfo(Vertex vertex) {
             m_dbId = vertex.getId();
-            m_inheritPath = m_mindDb.getInheritPath(vertex.getId());
-            m_contextText = getContextText(m_dbId);
+            m_text = vertex.getProperty(sm_textPropName);
+            Vertex parent = m_mindDb.getParent(vertex);
+
+            if (parent == null) {
+                m_parentText = null;
+                m_parentDbId = null;
+            } else {
+                m_parentDbId = parent.getId();
+                m_parentText = parent.getProperty(sm_textPropName);
+            }
+
+            m_contextText = m_text + " @ " + m_parentText;
         }
     }
 

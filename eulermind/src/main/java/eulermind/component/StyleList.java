@@ -154,6 +154,7 @@ public class StyleList extends JList implements MindPropertyComponent {
 
         Style.removeStyle(styleName);
         m_listMode.removeElement(styleName);
+        Style.save();
     }
 
     static void copyStyle(Style from, Style to)
@@ -192,6 +193,7 @@ public class StyleList extends JList implements MindPropertyComponent {
         }
 
         m_listMode.set(index, style.m_name);
+        Style.save();
     }
 
     public void upSelectedStyle() {
@@ -206,6 +208,7 @@ public class StyleList extends JList implements MindPropertyComponent {
         String upperStyleName = m_listMode.get(index - 1);
         m_listMode.set(index - 1, styleName);
         m_listMode.set(index, upperStyleName);
+        Style.save();
     }
 
     public void downSelectedStyle() {
@@ -220,6 +223,7 @@ public class StyleList extends JList implements MindPropertyComponent {
         String downerStyleName = m_listMode.get(index + 1);
         m_listMode.set(index + 1, styleName);
         m_listMode.set(index, downerStyleName);
+        Style.save();
     }
 
     public void newStyle() {
@@ -243,6 +247,7 @@ public class StyleList extends JList implements MindPropertyComponent {
             Style.addStyle(retStyle);
             m_listMode.addElement(retStyle.m_name);
         }
+        Style.save();
     }
 
     @Override
