@@ -22,9 +22,6 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import java.awt.event.ActionListener;
-import java.awt.event.MouseListener;
-import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 public interface MindPropertyComponent {
@@ -37,8 +34,5 @@ public interface MindPropertyComponent {
     public Object getMindPropertyValue();
 
     public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener);
-    public void addPropertyChangeListener(PropertyChangeListener listener);
-
     public void removePropertyChangeListener(String propertyName, PropertyChangeListener listener);
-    public void removePropertyChangeListener(PropertyChangeListener listener);
 }

@@ -42,7 +42,7 @@ import java.awt.event.*;
  * a JButton to close the tab it belongs to 
  */ 
 public class ButtonTabComponent extends JPanel {
-    private final JTabbedPane pane;
+    private final JTabbedPane m_pane;
 
     private final TabButton button;
 
@@ -52,11 +52,21 @@ public class ButtonTabComponent extends JPanel {
         if (pane == null) {
             throw new NullPointerException("TabbedPane is null");
         }
-        this.pane = pane;
+        m_pane = pane;
         setOpaque(false);
         
         //make JLabel read titles from JTabbedPane
         JLabel label = new JLabel() {
+
+            //压缩过长的title
+            public Dimension getPreferredSize() {
+                Dimension dimension = (Dimension)super.getPreferredSize().clone();
+                if (dimension.getWidth() > 200) {
+                    dimension.width = 200;
+                }
+                return dimension;
+            }
+
             public String getText() {
                 int i = pane.indexOfTabComponent(ButtonTabComponent.this);
                 if (i != -1) {

@@ -145,6 +145,25 @@ public class StyleList extends JList implements MindPropertyComponent {
         return (String)getSelectedValue();
     }
 
+    private void updateList(String selectedName)
+    {
+        int prevSelectedIndex = getSelectedIndex();
+        m_listMode.clear();
+        for (String styleName : Style.getStyleNames()) {
+            m_listMode.addElement(styleName);
+        }
+
+        if (selectedName == null) {
+            if (prevSelectedIndex >= m_listMode.size() - 1) {
+                setSelectedIndex(m_listMode.size() - 1);
+            } else {
+                setSelectedIndex(prevSelectedIndex);
+            }
+        } else {
+            setSelectedValue(selectedName, true);
+        }
+    }
+
     public void removeSelectedStyle() {
         String styleName = getValueInList();
 
@@ -153,46 +172,16 @@ public class StyleList extends JList implements MindPropertyComponent {
         }
 
         Style.removeStyle(styleName);
-        m_listMode.removeElement(styleName);
+        updateList(null);
         Style.save();
-    }
-
-    static void copyStyle(Style from, Style to)
-    {
-        to.m_fontFamily = from.m_fontFamily;
-        to.m_fontSize = from.m_fontSize;
-        to.m_bold = from.m_bold;
-        to.m_italic = from.m_italic;
-        to.m_nodeColor = from.m_nodeColor;
-        to.m_textColor = from.m_textColor;
-        to.m_icon = from.m_icon;
-        to.m_name = from.m_name;
     }
 
     public void editSelectedStyle() {
         String styleName = getValueInList();
         Style style = Style.getStyle(styleName);
-        int index = Style.getStyleIndex(style);
 
-        Style retStyle = StyleEditorDialog.showDialog(this, style);
-
-        if (retStyle == null) {
-            return;
-        }
-
-        if (!retStyle.m_name.equals(style.m_name) && Style.hasStyle(retStyle.m_name)) {
-            JOptionPane.showMessageDialog(this, "style name is same as other style");
-            return;
-        }
-
-        if (style.m_name == "default") {
-            copyStyle(retStyle, style);
-            style.m_name = "default";
-        } else {
-            copyStyle(retStyle, style);
-        }
-
-        m_listMode.set(index, style.m_name);
+        StyleEditorDialog.editStyle(this, style);
+        updateList(style.m_name);
         Style.save();
     }
 
@@ -204,10 +193,7 @@ public class StyleList extends JList implements MindPropertyComponent {
 
         String styleName = getValueInList();
         Style.moveStyle(styleName, -1);
-
-        String upperStyleName = m_listMode.get(index - 1);
-        m_listMode.set(index - 1, styleName);
-        m_listMode.set(index, upperStyleName);
+        updateList(styleName);
         Style.save();
     }
 
@@ -219,34 +205,14 @@ public class StyleList extends JList implements MindPropertyComponent {
 
         String styleName = getValueInList();
         Style.moveStyle(styleName, 1);
-
-        String downerStyleName = m_listMode.get(index + 1);
-        m_listMode.set(index + 1, styleName);
-        m_listMode.set(index, downerStyleName);
+        updateList(styleName);
         Style.save();
     }
 
     public void newStyle() {
-        Integer name_postfix = 0;
-        String name = "new Style";
-        while (Style.hasStyle(name)) {
-            name = "new style" + name_postfix.toString();
-            name_postfix++;
-        }
-
-        Style style = new Style(name);
-        Style retStyle = StyleEditorDialog.showDialog(this, style);
-
-        if (retStyle == null) {
-            return;
-        }
-
-        if (Style.hasStyle(retStyle.m_name)) {
-            JOptionPane.showMessageDialog(this, "style name is same as other style");
-        } else {
-            Style.addStyle(retStyle);
-            m_listMode.addElement(retStyle.m_name);
-        }
+        Style style = Style.newStyle();
+        StyleEditorDialog.editStyle(this, style);
+        updateList(style.m_name);
         Style.save();
     }
 

@@ -99,6 +99,7 @@ public class MindModel {
                 m_parentText = parent.getProperty(sm_textPropName);
             }
 
+            //如果m_parentText在前面，需要考虑m_parentText可能过长，总长度过可能长，m_text可能过短等问题
             m_contextText = m_text + " @ " + m_parentText;
         }
     }

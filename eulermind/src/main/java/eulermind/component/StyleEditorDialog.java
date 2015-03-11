@@ -58,6 +58,8 @@ public class StyleEditorDialog extends JDialog {
     JButton m_okButton;
     JButton m_cancelButton;
 
+    Style m_style;
+
     public StyleEditorDialog(Component parent, Style style)
     {
         super(JOptionPane.getFrameForComponent(parent), true);
@@ -68,7 +70,12 @@ public class StyleEditorDialog extends JDialog {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
+        m_style = style;
+
         m_nameTextField.setText(style.m_name);
+        if (style.m_name.equals(Style.DEFAULT_STYLE_NAME)) {
+            m_nameTextField.setEditable(false);
+        }
 
         m_fontFamilyCombobox.setMindPropertyValue(style.m_fontFamily);
         m_fontSizeCombobox.setMindPropertyValue(style.m_fontSize);
@@ -83,16 +90,6 @@ public class StyleEditorDialog extends JDialog {
 
         m_iconButton.setMindPropertyValue(style.m_icon);
 
-        /*
-        m_fontFamilyCombobox.addActionListener(updatePreviewLabelActionListener);
-        m_fontSizeCombobox.addActionListener(updatePreviewLabelActionListener);
-
-        m_italicCombobox.addActionListener(updatePreviewLabelActionListener);
-        m_boldCombobox.addActionListener(updatePreviewLabelActionListener);
-
-        m_textColorCombobox.addActionListener(updatePreviewLabelActionListener);
-        m_nodeColorCombobox.addActionListener(updatePreviewLabelActionListener);
-        */
         addListenerForUpdatePreview(m_fontFamilyCombobox);
         addListenerForUpdatePreview(m_fontSizeCombobox);
 
@@ -113,7 +110,6 @@ public class StyleEditorDialog extends JDialog {
         updatePreviewLabel();
     }
 
-    Style m_retStyle;
 
     ActionListener updatePreviewLabelActionListener = new ActionListener() {
         @Override
@@ -171,18 +167,24 @@ public class StyleEditorDialog extends JDialog {
         @Override
         public void actionPerformed(ActionEvent e)
         {
-            m_retStyle = new Style(m_nameTextField.getText());
+            String newStyleName = m_nameTextField.getText();
+            if (Style.getStyle(newStyleName) != null && Style.getStyle(newStyleName) != m_style) {
+                JOptionPane.showMessageDialog(null, "跟其他Style重名了!", null, JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-            m_retStyle.m_fontFamily = m_fontFamilyCombobox.getMindPropertyValue();
-            m_retStyle.m_fontSize = m_fontSizeCombobox.getMindPropertyValue();
+            m_style.m_name = newStyleName;
 
-            m_retStyle.m_bold = m_boldCombobox.getMindPropertyValue();
-            m_retStyle.m_italic = m_italicCombobox.getMindPropertyValue();
+            m_style.m_fontFamily = m_fontFamilyCombobox.getMindPropertyValue();
+            m_style.m_fontSize = m_fontSizeCombobox.getMindPropertyValue();
 
-            m_retStyle.m_textColor = m_textColorCombobox.getMindPropertyValue();
-            m_retStyle.m_nodeColor = m_nodeColorCombobox.getMindPropertyValue();
+            m_style.m_bold = m_boldCombobox.getMindPropertyValue();
+            m_style.m_italic = m_italicCombobox.getMindPropertyValue();
 
-            m_retStyle.m_icon = m_iconButton.getMindPropertyValue();
+            m_style.m_textColor = m_textColorCombobox.getMindPropertyValue();
+            m_style.m_nodeColor = m_nodeColorCombobox.getMindPropertyValue();
+
+            m_style.m_icon = m_iconButton.getMindPropertyValue();
 
             setVisible(false);
         }
@@ -192,16 +194,15 @@ public class StyleEditorDialog extends JDialog {
         @Override
         public void actionPerformed(ActionEvent e)
         {
-            m_retStyle = null;
+            m_style = null;
             setVisible(false);
         }
     };
 
-    public static Style showDialog(Component component, Style style)
+    public static void editStyle(Component parent, Style style)
     {
-        StyleEditorDialog dialog = new StyleEditorDialog(component, style);
+        StyleEditorDialog dialog = new StyleEditorDialog(parent, style);
         dialog.setVisible(true);
-        return dialog.m_retStyle;
     }
 
     private void addListenerForUpdatePreview(MindPropertyComponent component)
@@ -210,7 +211,6 @@ public class StyleEditorDialog extends JDialog {
         component.setMindPropertyName(fakeMindPropertyName);
         component.addPropertyChangeListener(fakeMindPropertyName, m_listenerForUpdatePreview);
     }
-
 
     PropertyChangeListener m_listenerForUpdatePreview = new PropertyChangeListener() {
 

@@ -116,7 +116,7 @@ public class Style {
         }
 
         if (sm_defaultStyle.m_textColor == null) {
-            sm_defaultStyle.m_textColor = ColorLib.rgb(255, 0, 0);
+            sm_defaultStyle.m_textColor = ColorLib.rgb(0, 0, 0);
         }
 
         if (sm_defaultStyle.m_nodeColor == null) {
@@ -164,6 +164,19 @@ public class Style {
 
     public static boolean addStyle(Style newStyle) {
         return addStyle(sm_styles.size(), newStyle);
+    }
+
+    public static Style newStyle() {
+        Integer name_postfix = 0;
+        String name = "new Style";
+        while (Style.hasStyle(name)) {
+            name = "new style" + name_postfix.toString();
+            name_postfix++;
+        }
+
+        Style style = new Style(name);
+        Style.addStyle(style);
+        return style;
     }
 
     public static void removeStyle(String name) {
@@ -221,11 +234,8 @@ public class Style {
             }
         }
 
-        /*
         XStream xstream = createXStream();
         sm_styles = (ArrayList)xstream.fromXML(userStylesFile);
-        */
-        sm_styles = new ArrayList<Style>();
 
         initDefaultStyle();
     }
