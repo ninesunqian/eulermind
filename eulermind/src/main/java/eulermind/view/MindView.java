@@ -168,19 +168,6 @@ public class MindView extends Display {
         }
     };
 
-    protected FocusListener m_mindEditorFocusListener = new FocusAdapter() {
-
-            @Override
-            public void focusLost(FocusEvent e) {
-                /*
-                if (isEditing()) {
-                    String text = getTextEditor().getText();
-                    m_mindEditorListener.editorOk(text);
-                }
-                */
-            }
-    };
-
     VisualTree m_visualTree;
 
 	public MindView(MindModel mindModel, MindController undoManager, Object rootId) {
@@ -216,7 +203,6 @@ public class MindView extends Display {
         setTextEditor(m_mindEditor);
         this.requestFocusInWindow();
 
-        m_mindEditor.addFocusListener(m_mindEditorFocusListener);
         this.setFocusCycleRoot(true);
 
 	}
@@ -352,10 +338,12 @@ public class MindView extends Display {
             return;
         }
 
-        if (getCursorSourceNode() == m_tree.getRoot()) {
-            alert("you must open the root parent, before add a sibling of the root");
-            endChanging();
-            return;
+        if (asChild == false) {
+            if (getCursorSourceNode() == m_tree.getRoot()) {
+                alert("you must open the root parent, before add a sibling of the root");
+                endChanging();
+                return;
+            }
         }
 
         m_logger.info("beginAdding---------------");

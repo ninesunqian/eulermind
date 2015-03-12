@@ -54,7 +54,7 @@
         </toolBar>
 
         <toolBar floatable="false" autoscrolls="true"  preferredSize="0, 30" orientation="HORIZONTAL">
-            <label labelfor="m_searchInputer" text="搜索"/>
+            <label labelfor="m_searchInputer" text="搜索" Focusable="true"/>
             <mindEditor id="m_searchInputer" columns="10"/>
         </toolBar>
 

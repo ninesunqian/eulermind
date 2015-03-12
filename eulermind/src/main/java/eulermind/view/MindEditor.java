@@ -66,16 +66,23 @@ public class MindEditor extends JTextField {
         m_promptList.setLayoutOrientation(JList.VERTICAL);
         m_promptList.setPrototypeCellValue("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
         m_promptList.setVisibleRowCount(10);
-        m_promptList.setFocusable(false);
-        m_promptScrollPane.setFocusable(false);
+        m_promptList.setFocusable(true);
+
+        //FIXME：以下也要有，否则焦点切换不灵敏
+        m_promptScrollPane.setFocusable(true);
         m_promptScrollPane.getVerticalScrollBar().setFocusable(false);
         m_promptScrollPane.getHorizontalScrollBar().setFocusable(false);
 
-        //FIXME: here or after show ?
+        //m_popupMenu只能setFocusable(false), 否则弹出后会i抢去焦点，导致编辑框无法编辑
         m_popupMenu.setFocusable(false);
 
+        this.addFocusListener(focusPointer);
+
         addKeyListener(m_editorKeyListener);
+
+        //FIXME:
         addMouseListener(m_editorMouseListener);
+
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e)
@@ -92,9 +99,32 @@ public class MindEditor extends JTextField {
         });
 
         m_promptList.addMouseListener(m_prompterMouseListener);
+        m_promptList.addKeyListener(m_prompterKeyListener);
 
         getDocument().addDocumentListener(m_editTextListener);
+
+        m_promptList.addFocusListener(focusPointer);
     }
+
+    FocusListener focusPointer = new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e)
+            {
+                super.focusGained(e);    //To change body of overridden methods use File | Settings | File Templates.
+                ((JComponent)e.getComponent()).setBorder(BorderFactory.createLineBorder(Color.blue, 3));
+            }
+
+            @Override
+            public void focusLost(FocusEvent e)
+            {
+                super.focusLost(e);    //To change body of overridden methods use File | Settings | File Templates.
+                ((JComponent)e.getComponent()).setBorder(BorderFactory.createLineBorder(Color.black, 3));
+                if (e.getComponent() == m_promptList) {
+                    m_logger.info("focusLost {}->{}", e.getComponent(), e.getOppositeComponent());
+                    Utils.printStackTrace(MindEditor.class);
+                }
+            }
+    };
 
     public void setMindDb(MindDB mindDb) {
         m_mindDb = mindDb;
@@ -153,6 +183,7 @@ public class MindEditor extends JTextField {
         p = computePopupScreenPoint(editorBounds, m_popupMenu.getWidth(), m_popupMenu.getHeight(), screenBounds);
 
         SwingUtilities.convertPointFromScreen(p, this);
+        m_logger.info("ppppppppppppp, show");
         m_popupMenu.show(MindEditor.this, p.x, p.y);
     }
 
@@ -160,6 +191,7 @@ public class MindEditor extends JTextField {
         @Override
         public void mousePressed(MouseEvent e)
         {
+            m_logger.info("ppppppppppppp, show");
             if (m_hasPromptList) {
                 showPrompt();
             }
@@ -257,13 +289,7 @@ public class MindEditor extends JTextField {
             int keyCode = e.getKeyCode();
             switch (keyCode) {
                 case KeyEvent.VK_ENTER:
-                    if (e.isShiftDown()) {
-                        int selectedIndex = m_promptList.getSelectedIndex();
-                        PromptedNode selected = m_promptedNodes.get(selectedIndex);
-                        firePromptListOk(selected.m_dbId, selected.m_text, selected.m_parentDBId, selected.m_parentText);
-                    } else {
-                        fireEditorOk(getText());
-                    }
+                    fireEditorOk(getText());
                     break;
 
                 case KeyEvent.VK_ESCAPE:
@@ -274,7 +300,12 @@ public class MindEditor extends JTextField {
                 case KeyEvent.VK_UP:
                 case KeyEvent.VK_KP_DOWN:
                 case KeyEvent.VK_DOWN:
-                    //TODO:
+                    if (m_hasPromptList) {
+                        m_promptList.requestFocusInWindow();
+                        if (m_promptList.getSelectedIndex() == -1) {
+                            m_promptList.setSelectedIndex(0);
+                        }
+                    }
                     break;
             }
         }
@@ -285,6 +316,27 @@ public class MindEditor extends JTextField {
             int selectedIndex = m_promptList.getSelectedIndex();
             PromptedNode selected = m_promptedNodes.get(selectedIndex);
             firePromptListOk(selected.m_dbId, selected.m_text, selected.m_parentDBId, selected.m_parentText);
+            m_popupMenu.setVisible(false);
+        }
+    };
+
+    KeyListener m_prompterKeyListener = new KeyAdapter() {
+        @Override
+        public void keyPressed(KeyEvent e)
+        {
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_ENTER:
+                    int selectedIndex = m_promptList.getSelectedIndex();
+                    PromptedNode selected = m_promptedNodes.get(selectedIndex);
+                    firePromptListOk(selected.m_dbId, selected.m_text, selected.m_parentDBId, selected.m_parentText);
+                    m_popupMenu.setVisible(false);
+                    break;
+
+                case KeyEvent.VK_ESCAPE:
+                    MindEditor.this.requestFocusInWindow();
+                    break;
+
+            }
         }
     };
 
@@ -371,8 +423,6 @@ public class MindEditor extends JTextField {
             DefaultListModel listModel = (DefaultListModel) m_promptList.getModel();
 
             for (PromptedNode promptedNode : promptedNodes) {
-                m_logger.info("get promptedNode " + promptedNode.m_dbId);
-
                 if (promptedNode.m_parentText != null) {
                     listModel.addElement(promptedNode.m_text + " @ " + promptedNode.m_parentText);
                 } else  {
