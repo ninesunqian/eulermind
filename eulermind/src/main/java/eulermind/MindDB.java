@@ -42,20 +42,20 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 public class MindDB {
     Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
-	public final static String EDGE_TYPE_PROP_NAME = PrefuseLib.FIELD_PREFIX + "edgeType";
-    public final static String EDGE_INNER_ID_PROP_NAME = PrefuseLib.FIELD_PREFIX + "outEdgeInnerId";
-	public final static String OUT_EDGES_PROP_NAME = PrefuseLib.FIELD_PREFIX + "childEdges";
+	public final static String EDGE_TYPE_PROP_NAME = "t"; //type
+    public final static String EDGE_INNER_ID_PROP_NAME = "i"; //EdgeInnerId
+	public final static String OUT_EDGES_INNER_IDS_PROP_NAME = "o";
 
-	private final static String ROOT_INDEX_NAME = PrefuseLib.FIELD_PREFIX + "rootIndex";
-	private final static String ROOT_KEY_NAME = PrefuseLib.FIELD_PREFIX + "root";
+	private final static String ROOT_INDEX_NAME = "rootIndex";
+	private final static String ROOT_KEY_NAME = "root";
 
-	private final static String TRASH_INDEX_NAME = PrefuseLib.FIELD_PREFIX + "trashIndex";
-	private final static String TRASH_KEY_NAME = PrefuseLib.FIELD_PREFIX + "trash";
+	private final static String TRASH_INDEX_NAME = "trashIndex";
+	private final static String TRASH_KEY_NAME = "trash";
 
-	private final static String SAVED_PARENT_ID_PROP_NAME = PrefuseLib.FIELD_PREFIX + "parent";
-	private final static String SAVED_POS_PROP_NAME = PrefuseLib.FIELD_PREFIX + "pos";
-	public final static String SAVED_REFERRER_INFO_PROP_NAME = PrefuseLib.FIELD_PREFIX + "referrers";
-
+    //这几个属性使用频率不高，属性名可以长点
+	private final static String SAVED_PARENT_ID_PROP_NAME = "th_parent";
+	private final static String SAVED_POS_PROP_NAME = "th_pos";
+	public final static String SAVED_REFERRER_INFO_PROP_NAME = "th_referrers";
     public final static String IS_TRASHED_PROP_NAME = PrefuseLib.FIELD_PREFIX + "isTrashed";
 
     public final static String VERTEX_CLASS = "mind_node";
@@ -199,7 +199,7 @@ public class MindDB {
 
 	public ArrayList<Short> getOutEdgeInnerIds(Vertex source)
 	{
-		return getContainerProperty(source, OUT_EDGES_PROP_NAME);
+		return getContainerProperty(source, OUT_EDGES_INNER_IDS_PROP_NAME);
 	}
 
     public Short getOutEdgeInnerId(Edge edge)
@@ -363,7 +363,7 @@ public class MindDB {
         //NOTICE: the container property must be reset to Vertex.
         //If not, the last item will not be save to db.
         //it is the bug of blueprints or orientdb
-        setContainerProperty(source, OUT_EDGES_PROP_NAME, outEdgeInnerIds);
+        setContainerProperty(source, OUT_EDGES_INNER_IDS_PROP_NAME, outEdgeInnerIds);
 
 		edge.setProperty(EDGE_TYPE_PROP_NAME, edgeType.ordinal());
         edge.setProperty(EDGE_INNER_ID_PROP_NAME, outEdgeInnerId);
@@ -398,7 +398,7 @@ public class MindDB {
 
         outEdgeInnerIds.remove(pos);
 
-        setContainerProperty(source, OUT_EDGES_PROP_NAME, outEdgeInnerIds);
+        setContainerProperty(source, OUT_EDGES_INNER_IDS_PROP_NAME, outEdgeInnerIds);
     }
 
     private void removeRefEdgeImpl(Vertex source, int pos)
@@ -594,7 +594,7 @@ public class MindDB {
         Short edgeInnerId = outEdgeInnerIds.remove(oldPos);
         outEdgeInnerIds.add(newPos, edgeInnerId);
 
-        setContainerProperty(parent, OUT_EDGES_PROP_NAME, outEdgeInnerIds);
+        setContainerProperty(parent, OUT_EDGES_INNER_IDS_PROP_NAME, outEdgeInnerIds);
 
         parent = m_graph.getVertex(parent.getId());
         verifyVertex(parent);
@@ -862,7 +862,7 @@ public class MindDB {
         assert from.getClass() == to.getClass();
 		for (String key : from.getPropertyKeys())
 		{
-			if (key != OUT_EDGES_PROP_NAME)
+			if (key != OUT_EDGES_INNER_IDS_PROP_NAME)
 			{
 				to.setProperty(key, from.getProperty(key));
 			}

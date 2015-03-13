@@ -47,6 +47,7 @@ public class StyleList extends JList implements MindPropertyComponent {
             m_listMode.addElement(styleName);
         }
         this.setModel(m_listMode);
+        setUpdatingMindNodeEnabled(true);
     }
 
     MouseListener mouseListenerForUpdatingMindNode = new MouseAdapter() {

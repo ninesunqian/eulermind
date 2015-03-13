@@ -221,6 +221,7 @@ public class Utils {
     public static void removeMap(String name) {
         String path = Config.MAPS_DIR + File.separator + name;
         File mapDir = new File(path);
+        recordLastOpenedMap("");
         try {
             FileUtils.deleteDirectory(mapDir);
         } catch (IOException e) {

@@ -54,20 +54,20 @@ public class MindModel {
 
 	final static String sm_dbIdColumnName = "dbElementId";
 
-    private final static String sm_outEdgeInnerIdsPropName = MindDB.OUT_EDGES_PROP_NAME;
+    private final static String sm_outEdgeInnerIdsPropName = MindDB.OUT_EDGES_INNER_IDS_PROP_NAME;
     private final static String sm_edgeInnerIdPropName = MindDB.EDGE_INNER_ID_PROP_NAME;
 
-    public final static String sm_iconPropName = "icon";
-    public final static String sm_textColorPropName = "textColor";
-    public final static String sm_nodeColorPropName = "nodeColor";
-    public final static String sm_underlinedPropName = "underlined";
-    public final static String sm_italicPropName = "italic";
-    public final static String sm_boldPropName = "bold";
-    public final static String sm_fontSizePropName = "fontSize";
-    public final static String sm_fontFamilyPropName = "fontFamily";
+    //这两个属性应用频繁
+    public final static String sm_textPropName = "x"; //"t" 已经占用了
+    public final static String sm_stylePropName = "s";
 
-    public final static String sm_stylePropName = "style";
-	public final static String sm_textPropName = "text";
+    public final static String sm_iconPropName = "ic";
+    public final static String sm_textColorPropName = "tc";
+    public final static String sm_nodeColorPropName = "nc";
+    public final static String sm_italicPropName = "it";
+    public final static String sm_boldPropName = "bd";
+    public final static String sm_fontSizePropName = "sz";
+    public final static String sm_fontFamilyPropName = "ft";
 
     private final static String FAVORITE_INDEX_NAME = "favoriteIndex";
     private final static String FAVORITE_KEY_NAME = "favorite";
@@ -117,7 +117,6 @@ public class MindModel {
 
             sm_boldPropName,
             sm_italicPropName,
-            sm_underlinedPropName,
 
             sm_nodeColorPropName,
             sm_textColorPropName,
@@ -163,7 +162,7 @@ public class MindModel {
         assert(vertex != null && vertex.getId() != null);
 
         node.set(sm_dbIdColumnName, vertex.getId());
-        node.set(sm_outEdgeInnerIdsPropName, m_mindDb.getContainerProperty(vertex, MindDB.OUT_EDGES_PROP_NAME));
+        node.set(sm_outEdgeInnerIdsPropName, m_mindDb.getContainerProperty(vertex, MindDB.OUT_EDGES_INNER_IDS_PROP_NAME));
 
         loadElementProperties(vertex, node, sm_nodePropNames);
     }
@@ -209,7 +208,6 @@ public class MindModel {
 
         sm_propertyClassMap.put(sm_boldPropName, Boolean.class);
         sm_propertyClassMap.put(sm_italicPropName, Boolean.class);
-        sm_propertyClassMap.put(sm_underlinedPropName, Boolean.class);
 
         sm_propertyClassMap.put(sm_nodeColorPropName, Integer.class);
         sm_propertyClassMap.put(sm_textColorPropName, Integer.class);

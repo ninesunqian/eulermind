@@ -273,7 +273,7 @@ public class MainFrame  extends JFrame {
                     String name;
                     while(true) {
                     name = JOptionPane.showInputDialog("input a map name, must alphabet, number or '_'", null);
-                        if (name.matches("[a-zA-Z0-9_]+")) {
+                        if (name != null && name.matches("[a-zA-Z0-9_]+")) {
                             break;
                         } else {
                             JOptionPane.showMessageDialog(null, "name format error", null, JOptionPane.ERROR_MESSAGE);
