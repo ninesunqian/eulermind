@@ -68,19 +68,16 @@ public class MindEditor extends JTextField {
         m_promptList.setLayoutOrientation(JList.VERTICAL);
         m_promptList.setPrototypeCellValue("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
         m_promptList.setVisibleRowCount(10);
-        m_promptList.setFocusable(false);
 
-        //FIXME：以下也要有，否则焦点切换不灵敏
+        //下拉菜单不能有输入焦点，否则会有焦点切换问题
+        m_promptList.setFocusable(false);
         m_promptScrollPane.setFocusable(false);
         m_promptScrollPane.getVerticalScrollBar().setFocusable(false);
         m_promptScrollPane.getHorizontalScrollBar().setFocusable(false);
-
-        //m_popupMenu只能setFocusable(false), 否则弹出后会i抢去焦点，导致编辑框无法编辑
         m_popupMenu.setFocusable(false);
 
         addKeyListener(m_editorKeyListener);
 
-        //FIXME:
         addMouseListener(m_editorMouseListener);
 
         addComponentListener(new ComponentAdapter() {
@@ -106,13 +103,13 @@ public class MindEditor extends JTextField {
     private void innerFocusEditor()
     {
         m_innerFocus = this;
-        getCaret().setVisible(true);
+        this.setForeground(new Color(0, 0, 0));
     }
 
     private void innerFocusPromptList()
     {
         m_innerFocus = m_promptList;
-        getCaret().setVisible(false);
+        this.setForeground(new Color(128, 128, 128));
     }
 
     public void setMindDb(MindDB mindDb) {
@@ -123,7 +120,6 @@ public class MindEditor extends JTextField {
     {
         m_hasPromptList = hasPromptList;
     }
-
 
     Point computePopupScreenPoint(Rectangle editorBounds,
                                   int popupWidth, int popupHeight,
@@ -180,6 +176,7 @@ public class MindEditor extends JTextField {
         @Override
         public void mousePressed(MouseEvent e)
         {
+            innerFocusEditor();
             m_logger.info("ppppppppppppp, show");
             if (m_hasPromptList) {
                 showPrompt();
@@ -311,7 +308,6 @@ public class MindEditor extends JTextField {
                 case KeyEvent.VK_DOWN:
                 case KeyEvent.VK_PAGE_UP:
                 case KeyEvent.VK_PAGE_DOWN:
-                    Utils.printStackTrace(MindEditor.class);
                     if (m_hasPromptList) {
                         if (m_innerFocus != m_promptList) {
                             innerFocusPromptList();
