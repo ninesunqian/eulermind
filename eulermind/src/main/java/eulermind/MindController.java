@@ -66,6 +66,10 @@ public class MindController extends UndoManager {
 
     public Tree m_copiedSubTree;
 
+    //用于记录eulermind生成的剪切板数据。
+    //如果当前剪切板数据与m_clipboardTextFromHere不一致时，说明用户从其他地方复制了信息，粘贴时不能用m_copiedSubTree
+    public String m_clipboardTextFormHere;
+
     public boolean m_searchWhileAddingNode = true;
 
     MindController(MindModel mindModel, JTabbedPane tabbedPane) {

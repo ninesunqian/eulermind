@@ -411,12 +411,14 @@ public class MindView extends Display {
                 MindModel.sm_nodePropNames, MindModel.sm_edgePropNames);
 
         String text = m_mindModel.getSubTreeText(getCursorSourceNode());
+        m_mindController.m_clipboardTextFormHere = text;
         Utils.copyStringToSystemClipboard(text);
     }
 
     public void pasteAsSubTree()
     {
-        if (m_mindController.m_copiedSubTree != null) {
+        if (m_mindController.m_copiedSubTree != null &&
+                m_mindController.m_clipboardTextFormHere == Utils.getSystemClipboardText()) {
             beginChanging();
             MindOperator operator = new PastingExternalTree(m_mindModel, getCursorSourceNode(), m_mindController.m_copiedSubTree);
             m_mindController.does(operator);

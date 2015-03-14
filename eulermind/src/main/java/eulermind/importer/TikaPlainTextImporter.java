@@ -48,8 +48,8 @@ public class TikaPlainTextImporter extends Importer{
 
     static Logger s_logger = LoggerFactory.getLogger(Importer.class);
 
-    //7个节点是人处理信息的上限，我们以10个为限。超出此范围，添加树的层次
-    static final int MAX_CHILD_COUNT = 10;
+    //7个节点是人处理信息的上限，我们以20个为限。超出此范围，添加树的层次
+    static final int MAX_CHILD_COUNT = 20;
 
     public TikaPlainTextImporter(MindDB mindDB)
     {
@@ -57,6 +57,11 @@ public class TikaPlainTextImporter extends Importer{
     }
 
     static class LineNode extends DefaultMutableTreeNode{
+        int m_indent;
+        int m_tail;
+        String m_trimLine;
+        int m_blankLines;
+
         LineNode(String line) {
             super();
 
@@ -72,6 +77,7 @@ public class TikaPlainTextImporter extends Importer{
         }
 
         LineNode(int blankLines) {
+            assert blankLines > 0;
             m_indent = 0;
             m_tail = 0;
             m_trimLine = "";
@@ -105,21 +111,12 @@ public class TikaPlainTextImporter extends Importer{
         {
             return m_blankLines > 0;
         }
-
-        int m_indent;
-        int m_tail;
-        String m_trimLine;
-
-        int m_blankLines;
     }
 
     //把相邻连续空行压缩成一个，并记录下连续空行数。 以后利用空行对文章分章节
     private List<LineNode> splitTextToLines(String text)
     {
-        //String lines[] = StringUtils.splitPreserveAllTokens(text, '\n');
-
-        //为了爬虫测试，去掉空行处理
-        String lines[] = StringUtils.split(text, '\n');
+        String lines[] = StringUtils.splitPreserveAllTokens(text, '\n');
 
         ArrayList<LineNode> compressedLines = new ArrayList<LineNode>();
 
@@ -127,7 +124,6 @@ public class TikaPlainTextImporter extends Importer{
             LineNode curNode = new LineNode(line);
 
             if (curNode.isBlank()) {
-                /*
                 if (compressedLines.size() == 0) {
                     continue;
                 }
@@ -138,7 +134,6 @@ public class TikaPlainTextImporter extends Importer{
                 } else {
                     compressedLines.add(curNode);
                 }
-                */
 
             } else {
                 compressedLines.add(curNode);
@@ -161,26 +156,33 @@ public class TikaPlainTextImporter extends Importer{
     }
 
 
-    private LineNode reduceLineToTree(List<LineNode> lineNodes)
+    private LineNode reduceToChapterTreeByBlankLine(List<LineNode> lineNodes)
     {
         LinkedList<LineNode> newlineNodes = new LinkedList<LineNode>();
         Iterator<LineNode> iterator = lineNodes.iterator();
         newlineNodes.add(iterator.next());
 
         //给lineNode 添加节点，使之变成深度有限的递归向上的搜索路径：newLineNodes
-        int maxBlankLines = 0;
-        while (iterator.hasNext()) {
-            LineNode lineNode = iterator.next();
-            maxBlankLines = Math.max(maxBlankLines, lineNode.m_blankLines);
+        //以空白行作为文章层次分割i标记。连续空行越多，表示分割层次越高
 
-            for (int i = newlineNodes.peekLast().m_blankLines + 1; i < lineNode.m_blankLines; i++) {
+        //建立一个树的递归向上搜索路径，并保证每一级的空行分割节点都存在。
+        {
+            int maxBlankLines = 0;
+            while (iterator.hasNext()) {
+                LineNode lineNode = iterator.next();
+                maxBlankLines = Math.max(maxBlankLines, lineNode.m_blankLines);
+
+                //如果空行分割跨级了，补足中间级别的空行分割节点。
+                for (int i = newlineNodes.peekLast().m_blankLines + 1; i < lineNode.m_blankLines; i++) {
+                    newlineNodes.add(new LineNode(i));
+                }
+                newlineNodes.add(lineNode);
+            }
+
+            //如果空行分割跨级了，补足中间级别的空行分割节点。
+            for (int i = newlineNodes.peekLast().m_blankLines + 1; i <= maxBlankLines + 1; i++) {
                 newlineNodes.add(new LineNode(i));
             }
-            newlineNodes.add(lineNode);
-        }
-
-        for (int i = newlineNodes.peekLast().m_blankLines + 1; i <= maxBlankLines + 1; i++) {
-            newlineNodes.add(new LineNode(i));
         }
 
         //组织成树
@@ -203,6 +205,7 @@ public class TikaPlainTextImporter extends Importer{
         return  stack.peekFirst();
     }
 
+    /*
     static void handoverChildren(LineNode from, LineNode to)
     {
         while (from.getChildCount() > 0) {
@@ -210,6 +213,7 @@ public class TikaPlainTextImporter extends Importer{
             to.add(from.getFirstChild());
         }
     }
+    */
 
     static void moveChildrenToList(LineNode from, List list)
     {
@@ -219,10 +223,10 @@ public class TikaPlainTextImporter extends Importer{
         from.removeAllChildren();
     }
 
-    private LineNode removeNodeWithSingleChild(LineNode lineNode)
+    private LineNode removeBlankNodeWithSingleChild(LineNode lineNode)
     {
-        if (lineNode.getChildCount() == 1) {
-            return removeNodeWithSingleChild(lineNode.getFirstChild());
+        if (lineNode.getChildCount() == 1 && lineNode.m_blankLines > 0) {
+            return removeBlankNodeWithSingleChild(lineNode.getFirstChild());
         }
 
         if (lineNode.getChildCount() == 0) {
@@ -233,13 +237,14 @@ public class TikaPlainTextImporter extends Importer{
         moveChildrenToList(lineNode, oldChildren);
 
         for (LineNode oldChild : oldChildren) {
-            lineNode.add(removeNodeWithSingleChild(oldChild));
+            lineNode.add(removeBlankNodeWithSingleChild(oldChild));
         }
 
         return lineNode;
     }
 
-    private LineNode manyChildToSubTree(LineNode root)
+    //整理树，方法是如果某个节点的子节点太多，加入新的节点层次。
+    private LineNode tooManySiblingsToSubTree(LineNode root)
     {
         if (root.getChildCount() == 0) {
             return root;
@@ -268,7 +273,7 @@ public class TikaPlainTextImporter extends Importer{
         }
 
         for (LineNode child : children) {
-            root.add(manyChildToSubTree(child));
+            root.add(tooManySiblingsToSubTree(child));
         }
 
         return root;
@@ -352,16 +357,15 @@ public class TikaPlainTextImporter extends Importer{
         return parent;
     }
 
-    private void rebuildContinuousLinesByIndent(LineNode root)
+    private void reduceTextLineSiblingsToSubTree(LineNode root)
     {
-
         if (root.getChildCount() == 0) {
             return;
         }
 
         if ((root.getChildAt(0)).isBlank()) {
             for (int i = 0; i < root.getChildCount(); i++) {
-                rebuildContinuousLinesByIndent(root.getChildAt(i));
+                reduceTextLineSiblingsToSubTree(root.getChildAt(i));
             }
             return;
         }
@@ -374,7 +378,7 @@ public class TikaPlainTextImporter extends Importer{
         Map.Entry<Integer, Integer> indentCounts[] = (Map.Entry<Integer, Integer>[])indentStatistics[2];
 
         //如果概率最高的缩进是最小缩进，那么是“首行缩进”；否则是“按照缩进划分层次”
-        if (indentCounts[indentCounts.length - 1].getKey() == minIndent) {
+        if (indentCounts[indentCounts.length - 1].getKey() == minIndent && root.getChildAt(0).m_indent > minIndent) {
 
             int firstLineIndent;
             if (indentCounts.length >= 2) {
@@ -434,8 +438,6 @@ public class TikaPlainTextImporter extends Importer{
 
     private Object importLineNode(Object parentDBId, int pos, LineNode root)
     {
-        //OGlobalConfiguration.FILE_MMAP_AUTOFLUSH_UNUSED_TIME.setMindPropertyValue(100);
-
         BreakIterator boundary = BreakIterator.getSentenceInstance();
         boundary.setText(root.m_trimLine);
 
@@ -480,14 +482,14 @@ public class TikaPlainTextImporter extends Importer{
     {
         List<LineNode> lines = splitTextToLines(text);
 
-        LineNode root = reduceLineToTree(lines);
+        //返回的树，非叶子节点都是空行，叶子节点都是文字
+        LineNode root = reduceToChapterTreeByBlankLine(lines);
 
-        rebuildContinuousLinesByIndent(root);
+        //该函数的前置条件：同一个节点的子节点必须都是空行或都是文字节点
+        reduceTextLineSiblingsToSubTree(root);
 
-        //root = manyChildToSubTree(root);
-
-        //root = removeNodeWithSingleChild(root);
-
+        root = tooManySiblingsToSubTree(root);
+        root = removeBlankNodeWithSingleChild(root);
 
         Object dbId = importLineNode(parentDBId, pos, root);
         List list = new ArrayList();
