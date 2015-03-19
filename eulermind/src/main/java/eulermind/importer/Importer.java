@@ -31,6 +31,8 @@ public abstract class Importer {
 
     protected MindDB m_mindDb;
 
+    protected
+
     Importer(MindDB mindDB)
     {
         m_mindDb = mindDB;

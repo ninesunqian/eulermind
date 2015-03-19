@@ -8,6 +8,7 @@ import com.tinkerpop.blueprints.impls.orient.OrientTransactionalGraph;
 import com.tinkerpop.blueprints.impls.orient.OrientVertexType;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
+import org.apache.tika.parser.CompositeParser;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,7 +22,7 @@ import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -308,6 +309,7 @@ public class Utils {
         }
         return icon;
     }
+
      public static void printStackTrace(Class cls) {
         StackTraceElement[] elements = (new Throwable()).getStackTrace();
         StringBuffer buf = new StringBuffer();
@@ -324,5 +326,58 @@ public class Utils {
            + ")");
         }
         System.out.println(buf.toString());
- }
+     }
+
+
+    public static <T> LinkedHashMap<T, Integer> count(Collection<T> list)
+    {
+        HashMap<T, Integer> distribution = new HashMap<T, Integer>();
+
+        for (T item : list) {
+            Integer count = distribution.get(item);
+            if (count == null) {
+                count = 0;
+            }
+            distribution.put(item, count + 1);
+        }
+
+        Map.Entry<T, Integer>[] itemCounts = distribution.entrySet().toArray(new Map.Entry[0]);
+        Arrays.sort(itemCounts, new Comparator() {
+            public int compare(Object arg0, Object arg1)
+            {
+                Integer count0 = ((Map.Entry<T, Integer>) arg0).getValue();
+                Integer count1 = ((Map.Entry<T, Integer>) arg1).getValue();
+                return count0.compareTo(count1);
+            }
+        });
+
+        LinkedHashMap<T, Integer> linkedHashMap = new LinkedHashMap<>();
+        for (Map.Entry<T, Integer> entry : itemCounts) {
+            linkedHashMap.put(entry.getKey(), entry.getValue());
+        }
+
+        return linkedHashMap;
+    }
+
+    public static <T> T getMinimumItem(Collection<T> collection)
+    {
+        T ret = null;
+        for (T item : collection) {
+            if (ret == null || ((Comparable)item).compareTo((Comparable)ret) < 0) {
+                ret = item;
+            }
+        }
+        return ret;
+    }
+
+    public static <T> T getMaximumItem(Collection<T> collection)
+    {
+        T ret = null;
+        for (T item : collection) {
+            if (ret == null || ((Comparable)item).compareTo((Comparable) ret) > 0) {
+                ret = item;
+            }
+        }
+        return ret;
+    }
 }

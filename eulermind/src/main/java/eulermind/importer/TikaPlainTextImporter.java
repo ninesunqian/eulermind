@@ -1,7 +1,22 @@
 package eulermind.importer;
 
+import com.ibm.icu.lang.UCharacter;
+import com.ibm.icu.lang.UProperty;
 import com.ibm.icu.text.BreakIterator;
+import com.ibm.icu.text.CharsetDetector;
+import com.ibm.icu.text.CharsetMatch;
+import com.ibm.icu.util.ULocale;
+import com.optimaize.langdetect.DetectedLanguage;
+import com.optimaize.langdetect.LanguageDetector;
+import com.optimaize.langdetect.LanguageDetectorBuilder;
+import com.optimaize.langdetect.ngram.NgramExtractors;
+import com.optimaize.langdetect.profiles.LanguageProfile;
+import com.optimaize.langdetect.profiles.LanguageProfileReader;
+import com.optimaize.langdetect.text.CommonTextObjectFactories;
+import com.optimaize.langdetect.text.TextObject;
+import com.optimaize.langdetect.text.TextObjectFactory;
 import eulermind.MindDB;
+import eulermind.Utils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tika.exception.TikaException;
 import org.slf4j.Logger;
@@ -9,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import javax.swing.tree.DefaultMutableTreeNode;
+
 import org.xml.sax.SAXException;
 import org.apache.tika.detect.DefaultDetector;
 import org.apache.tika.detect.Detector;
@@ -54,6 +70,10 @@ public class TikaPlainTextImporter extends Importer{
     public TikaPlainTextImporter(MindDB mindDB)
     {
         super(mindDB);
+
+        if (s_languageDetector == null) {
+            initLanguageDetector();
+        }
     }
 
     static class LineNode extends DefaultMutableTreeNode{
@@ -142,6 +162,38 @@ public class TikaPlainTextImporter extends Importer{
 
         return compressedLines;
     }
+
+    private void removeRedundantBlankLines(LineNode root)
+    {
+        int childCount = root.getChildCount();
+        for (int i=0; i<childCount; i++) {
+            removeRedundantBlankLines(root.getChildAt(i));
+        }
+
+        //所有的子节点都满足这个条件：1 都有唯一的子节点，2这个唯一子节点是一个非空行
+        boolean anyChildHasOneLeaf = true;
+        for (int i=0; i<childCount; i++) {
+            LineNode child = root.getChildAt(i);
+            if (!(child.getChildCount() == 1 && child.getChildAt(0).isBlank() == false)) {
+                anyChildHasOneLeaf = false;
+            }
+        }
+
+        //所有叶子节点，都变成自己的子节点
+        if (root.getChildCount() > 0 && anyChildHasOneLeaf) {
+            ArrayList<LineNode> leaves = new ArrayList<>();
+            for (int i=0; i<childCount; i++) {
+                leaves.add(root.getChildAt(i).getChildAt(0));
+            }
+
+            root.removeAllChildren();
+
+            for (LineNode leaf : leaves) {
+                root.add(leaf);
+            }
+        }
+    }
+
 
     private LinkedList<LineNode> pollLastSameLineNodes(LinkedList<LineNode> stack)
     {
@@ -280,35 +332,18 @@ public class TikaPlainTextImporter extends Importer{
     }
 
     private Object[] getIndentStatistics(LineNode parent) {
-        int minIndent = Integer.MAX_VALUE;
-        int maxIndent = 0;
-        HashMap<Integer, Integer> indentDistribution = new HashMap<Integer, Integer>();
 
+        ArrayList<Integer> indents = new ArrayList<>();
         for (int i = 0; i < parent.getChildCount(); i++) {
             LineNode line = parent.getChildAt(i);
             assert ! line.isBlank();
-
-            int indent = line.m_indent;
-
-            minIndent = Math.min(minIndent, indent);
-            maxIndent = Math.max(maxIndent, indent);
-
-            Integer count = indentDistribution.get(indent);
-            if (count == null) {
-                count = 0;
-            }
-            indentDistribution.put(indent, count + 1);
+            indents.add(line.m_indent);
         }
 
+        int minIndent = Utils.getMinimumItem(indents);
+        int maxIndent = Utils.getMaximumItem(indents);
 
-        Map.Entry<Integer, Integer>[] indentCounts = indentDistribution.entrySet().toArray(new Map.Entry[0]);
-        Arrays.sort(indentCounts, new Comparator() {
-            public int compare(Object arg0, Object arg1) {
-                Integer count0 = ((Map.Entry<Integer, Integer>) arg0).getValue();
-                Integer count1 = ((Map.Entry<Integer, Integer>) arg1).getValue();
-                return count0.compareTo(count1);
-            }
-        });
+        LinkedHashMap<Integer, Integer> indentCounts = Utils.count(indents);
 
         Object ret [] =  {minIndent, maxIndent, indentCounts};
         return ret;
@@ -341,7 +376,7 @@ public class TikaPlainTextImporter extends Importer{
     {
         LineNode parent = new LineNode(1);
 
-        BreakIterator boundary = BreakIterator.getSentenceInstance();
+        BreakIterator boundary = BreakIterator.getSentenceInstance(getStringULocale(paragraph));
         boundary.setText(paragraph);
 
         int start = boundary.first();
@@ -370,15 +405,33 @@ public class TikaPlainTextImporter extends Importer{
             return;
         }
 
-        //仅处理叶子节点的父节点
-
         Object[] indentStatistics = getIndentStatistics(root);
         int minIndent = (Integer)indentStatistics[0];
         int maxIndent = (Integer)indentStatistics[1];
-        Map.Entry<Integer, Integer> indentCounts[] = (Map.Entry<Integer, Integer>[])indentStatistics[2];
+        LinkedHashMap<Integer, Integer> indentCountMap = (LinkedHashMap<Integer, Integer>)indentStatistics[2];
+        Map.Entry<Integer, Integer> indentCounts[] = indentCountMap.entrySet().toArray(new Map.Entry[0]);
 
-        //如果概率最高的缩进是最小缩进，那么是“首行缩进”；否则是“按照缩进划分层次”
-        if (indentCounts[indentCounts.length - 1].getKey() == minIndent && root.getChildAt(0).m_indent > minIndent) {
+        //如果概率最高的缩进是最小缩进，那么这个一篇被自动断行的文章
+        if (indentCounts[indentCounts.length - 1].getKey() == minIndent) {
+
+
+            int sentenceBreakCount = 0;
+            for (int i=0; i<root.getChildCount(); i++) {
+                String line = root.getChildAt(i).m_trimLine;
+                if (UCharacter.getIntPropertyValue(line.codePointAt(line.length() - 1), UProperty.SENTENCE_BREAK) == 0) {
+                    sentenceBreakCount++;
+                }
+            }
+
+            //如果中途有非句号的断行。 TODO:暂时不考虑首行缩进
+            if (sentenceBreakCount > 0 && sentenceBreakCount < root.getChildCount() - 1) {
+                LineNode firstChild = root.getFirstChild();
+                for (int i=1; i<root.getChildCount(); i++) {
+                    firstChild.m_trimLine.concat(root.getChildAt(i).m_trimLine);
+                }
+                root.removeAllChildren();
+                root.add(firstChild);
+            }
 
             int firstLineIndent;
             if (indentCounts.length >= 2) {
@@ -438,7 +491,7 @@ public class TikaPlainTextImporter extends Importer{
 
     private Object importLineNode(Object parentDBId, int pos, LineNode root)
     {
-        BreakIterator boundary = BreakIterator.getSentenceInstance();
+        BreakIterator boundary = BreakIterator.getSentenceInstance(getStringULocale(root.m_trimLine));
         boundary.setText(root.m_trimLine);
 
         int start = boundary.first();
@@ -482,8 +535,12 @@ public class TikaPlainTextImporter extends Importer{
     {
         List<LineNode> lines = splitTextToLines(text);
 
+
         //返回的树，非叶子节点都是空行，叶子节点都是文字
         LineNode root = reduceToChapterTreeByBlankLine(lines);
+
+        //保持相对逻辑层次不变的情况下，去掉变成链的空白行节点
+        removeRedundantBlankLines(root);
 
         //该函数的前置条件：同一个节点的子节点必须都是空行或都是文字节点
         reduceTextLineSiblingsToSubTree(root);
@@ -529,6 +586,63 @@ public class TikaPlainTextImporter extends Importer{
             return importString(parentDBId, pos, plainText);
         }
         return new ArrayList();
+    }
+
+    public static String getLanguage(String data)
+    {
+       CharsetDetector detector = new CharsetDetector();
+       detector.setText(data.getBytes());
+       CharsetMatch match = detector.detect();
+       String encoding = match.getName();
+       String language = match.getLanguage();
+       return encoding;
+    }
+
+    static List<LanguageProfile> s_languageProfiles = null;
+    static LanguageDetector s_languageDetector = null;
+    static TextObjectFactory s_textObjectFactory = null;
+
+    static void initLanguageDetector() {
+        try {
+            s_languageProfiles = new LanguageProfileReader().readAll();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //build language detector:
+        s_languageDetector = LanguageDetectorBuilder.create(NgramExtractors.standard())
+                .withProfiles(s_languageProfiles)
+                .build();
+
+        //create a text object factory
+        s_textObjectFactory = CommonTextObjectFactories.forDetectingOnLargeText();
+    }
+
+    static ULocale getStringULocale(String str) {
+        TextObject textObject = s_textObjectFactory.forText(str);
+        //不能用这个函数：s_languageDetector.detect(textObject); 因为这个函数相当严格，有可能找不到匹配的语言
+        List<DetectedLanguage> languages = s_languageDetector.getProbabilities(textObject);
+        return ULocale.forLanguageTag(languages.get(0).getLanguage());
+    }
+
+    public static void main(String argv[]) {
+        //String ch = "英文句号.中文句号。英文句号.中文句号。";
+        String ch = "太阳当空照，我去上学校。学校有老师，下课有作业。";
+
+        initLanguageDetector();
+        ULocale uLocale = getStringULocale(ch);
+
+
+
+        BreakIterator boundary = BreakIterator.getSentenceInstance(uLocale);
+        boundary.setText(ch);
+
+        int start = boundary.first();
+        int end = boundary.next();
+
+        String sub = ch.substring(start, end);
+        System.out.println(sub);
+
     }
 
 }
