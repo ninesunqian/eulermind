@@ -361,38 +361,57 @@ class LineNode extends DefaultMutableTreeNode {
         return property != 0;
     }
 
-    private static void combineBrokenSentence(LineNode root) {
-        //根据句号查找，作为句子开头的节点
-        ArrayList<Integer> sentenceStart = new ArrayList<>();
-        sentenceStart.add(0);
+    private static void combineBrokenSentence(LineNode root, int newIndent) {
+
+        //合并子节点的文字，并记录每行在大字符串中的位置
+        ArrayList<Integer> lineStarts = new ArrayList<>();
+        String combinedLine = "";
         for (int i=0; i<root.getChildCount() - 1 ; i++) {
-            if (isLineEndBySentenceBreaker(root.getChildAt(i))) {
-                sentenceStart.add(i+1);
+            lineStarts.add(combinedLine.length());
+            combinedLine += root.getChildAt(i).m_trimLine + " ";
+        }
+
+        //重新划分句子
+        BreakIterator boundary = BreakIterator.getSentenceInstance(getStringULocale(combinedLine));
+        boundary.setText(combinedLine);
+
+        ArrayList<Integer> icuSentenceStarts = new ArrayList<>();
+        for (int icuSentenceStart = boundary.first();
+             icuSentenceStart != combinedLine.length();
+             icuSentenceStart = boundary.next()) {
+
+            icuSentenceStarts.add(icuSentenceStart);
+        }
+
+        //去掉不在句子末尾的断行
+        Iterator<Integer> lineStartIter = lineStarts.iterator();
+        while (lineStartIter.hasNext()) {
+           Integer lineStart = lineStartIter.next();
+            if (!(icuSentenceStarts.contains(lineStart - 1) || icuSentenceStarts.contains(lineStart))) {
+                lineStartIter.remove();
             }
         }
 
-        boolean goodBreaker =
-                sentenceStart.size() == 1 && isLineEndBySentenceBreaker(root.getChildAt(root.getChildCount() - 1))
-                || sentenceStart.size() == root.getChildCount();
 
-        if (! goodBreaker) {
-            //合并被断行的句子
-            ArrayList<LineNode> sentences = new ArrayList<>();
-            sentences.add(root.getChildAt(0));
-
-            for (int i=1; i<root.getChildCount(); i++) {
-                LineNode child = root.getChildAt(i);
-                if (sentenceStart.contains(i)) {
-                    sentences.add(child);
-                } else {
-                    sentences.get(sentences.size() - 1).m_trimLine += child.m_trimLine;
-                }
-            }
-            root.removeAllChildren();
-            for (LineNode newChild : sentences) {
-                root.add(newChild);
-            }
+        //以下情况不需要整理：
+        //1 排列整齐，但每行末尾都没有句号, 这种情况肯定多于两行。linsStarts.size == 1 && root.getChildCount >= 2
+        //2 每个断行的位置都是断句的位置。
+        if (lineStarts.size() == 1 && root.getChildCount() >= 2 || lineStarts.size() == root.getChildCount()) {
+            return;
         }
+
+        assert(lineStarts.size() < root.getChildCount());
+
+        root.removeAllChildren();
+
+        for (int i=0; i<lineStarts.size()-1; i++) {
+            String newLine = combinedLine.substring(lineStarts.get(i), lineStarts.get(i+1));
+            root.add(new LineNode(newLine));
+        }
+        String newLine = combinedLine.substring(lineStarts.get(lineStarts.size() - 1), combinedLine.length()-1);
+        root.add(new LineNode(newLine));
+
+        s_logger.info("ccccccccccc: {}", lineTreeToString(root));
     }
 
     private static LineNode breakParagraphToLineTree(String paragraph)
@@ -508,7 +527,7 @@ class LineNode extends DefaultMutableTreeNode {
         //如果概率最高的缩进是最小缩进，那么这个一篇被自动断行的文章
         if (indentCounts[indentCounts.length - 1].getKey() == minIndent) {
 
-            combineBrokenSentence(root);
+            combineBrokenSentence(root, minIndent);
 
             int firstLineIndent;
             if (indentCounts.length >= 2) {
