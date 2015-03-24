@@ -100,6 +100,11 @@ class LineNode extends DefaultMutableTreeNode {
         return (LineNode)super.getFirstChild();
     }
 
+    public LineNode getLastChild()
+    {
+        return (LineNode)super.getLastChild();
+    }
+
     boolean isBlank()
     {
         return m_blankLines > 0;
@@ -354,21 +359,14 @@ class LineNode extends DefaultMutableTreeNode {
         return paragraph;
     }
 
-    private static boolean isLineEndBySentenceBreaker(LineNode lineNode)
-    {
-        String line = lineNode.m_trimLine;
-        int property = UCharacter.getIntPropertyValue(line.codePointAt(line.length() - 1), UProperty.SENTENCE_BREAK);
-        return property != 0;
-    }
-
     private static void combineBrokenSentence(LineNode root, int newIndent) {
 
         //合并子节点的文字，并记录每行在大字符串中的位置
         ArrayList<Integer> lineStarts = new ArrayList<>();
         String combinedLine = "";
-        for (int i=0; i<root.getChildCount() - 1 ; i++) {
+        for (int i=0; i<root.getChildCount() ; i++) {
             lineStarts.add(combinedLine.length());
-            combinedLine += root.getChildAt(i).m_trimLine + " ";
+            combinedLine += root.getChildAt(i).m_trimLine + (i < root.getChildCount() - 1 ? " " : "");
         }
 
         //重新划分句子
@@ -406,7 +404,9 @@ class LineNode extends DefaultMutableTreeNode {
 
         for (int i=0; i<lineStarts.size()-1; i++) {
             String newLine = combinedLine.substring(lineStarts.get(i), lineStarts.get(i+1));
-            root.add(new LineNode(newLine));
+            LineNode newLineNode = new LineNode(newLine);
+            newLineNode.m_indent = newIndent;
+            root.add(newLineNode);
         }
         String newLine = combinedLine.substring(lineStarts.get(lineStarts.size() - 1), combinedLine.length()-1);
         root.add(new LineNode(newLine));
@@ -527,17 +527,10 @@ class LineNode extends DefaultMutableTreeNode {
         //如果概率最高的缩进是最小缩进，那么这个一篇被自动断行的文章
         if (indentCounts[indentCounts.length - 1].getKey() == minIndent) {
 
+            //FIXME: 断在整句的断行，就是一个段落。可以不考虑首行缩进了
             combineBrokenSentence(root, minIndent);
 
-            int firstLineIndent;
-            if (indentCounts.length >= 2) {
-                //第二个最大概率的缩进，就是首行缩进
-                firstLineIndent = indentCounts[indentCounts.length - 2].getKey();
-            } else {
-                firstLineIndent = minIndent + 1;
-            }
-
-            normalArticleToTree(root, firstLineIndent);
+            normalArticleToTree(root, minIndent);
 
         } else {
             nestingListToTree(root, maxIndent, minIndent);
@@ -617,6 +610,19 @@ class LineNode extends DefaultMutableTreeNode {
                 "  缩进1-2\n" +
                 "缩进2\n" +
                 "  缩进2-1\n";
+
+        /*
+        ch1 = "整齐第一行\n" +
+                "整齐第二行\n" +
+                "整齐第三行\n";
+                */
+        /*
+        ch1 = " 自动段行1\n" +
+                "自动段行3。\n" +
+                "自动段行4\n" +
+                "自动段行5。\n" +
+                "\n\n";
+                */
 
         lineTreeToString(textToLineTree(ch1));
     }
