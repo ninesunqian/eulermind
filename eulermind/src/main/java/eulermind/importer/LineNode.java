@@ -1,7 +1,5 @@
 package eulermind.importer;
 
-import com.ibm.icu.lang.UCharacter;
-import com.ibm.icu.lang.UProperty;
 import com.ibm.icu.text.BreakIterator;
 import com.ibm.icu.util.ULocale;
 import com.optimaize.langdetect.DetectedLanguage;
@@ -336,30 +334,7 @@ class LineNode extends DefaultMutableTreeNode {
         return ULocale.forLanguageTag(languages.get(0).getLanguage());
     }
 
-    private static List<String> breakToParagraphs(LineNode root, int firstLineIndent)
-    {
-        ArrayList<String> paragraph = new ArrayList<String>();
-
-        StringBuilder stringBuilder =  new StringBuilder();
-        stringBuilder.append((root.getChildAt(0)).m_trimLine);
-
-        for (int i = 1; i < root.getChildCount(); i++) {
-            LineNode oldChild = root.getChildAt(i);
-
-            if (oldChild.m_indent == firstLineIndent) {
-                paragraph.add(stringBuilder.toString());
-                //清空stringBuilder
-                stringBuilder.setLength(0);
-            }
-
-            stringBuilder.append(oldChild.m_trimLine);
-        }
-
-        paragraph.add(stringBuilder.toString());
-        return paragraph;
-    }
-
-    private static void combineBrokenSentence(LineNode root, int newIndent) {
+    private static void combineBrokenSentence(LineNode root) {
 
         //合并子节点的文字，并记录每行在大字符串中的位置
         ArrayList<Integer> lineStarts = new ArrayList<>();
@@ -368,6 +343,7 @@ class LineNode extends DefaultMutableTreeNode {
             lineStarts.add(combinedLine.length());
             combinedLine += root.getChildAt(i).m_trimLine + (i < root.getChildCount() - 1 ? " " : "");
         }
+        lineStarts.add(combinedLine.length()); //缀上一个结尾
 
         //重新划分句子
         BreakIterator boundary = BreakIterator.getSentenceInstance(getStringULocale(combinedLine));
@@ -375,7 +351,7 @@ class LineNode extends DefaultMutableTreeNode {
 
         ArrayList<Integer> icuSentenceStarts = new ArrayList<>();
         for (int icuSentenceStart = boundary.first();
-             icuSentenceStart != combinedLine.length();
+             icuSentenceStart != BreakIterator.DONE; //icuSentenceStart会缀上combinedLine.length()
              icuSentenceStart = boundary.next()) {
 
             icuSentenceStarts.add(icuSentenceStart);
@@ -390,11 +366,12 @@ class LineNode extends DefaultMutableTreeNode {
             }
         }
 
+        assert(lineStarts.contains(combinedLine.length()));
 
         //以下情况不需要整理：
-        //1 排列整齐，但每行末尾都没有句号, 这种情况肯定多于两行。linsStarts.size == 1 && root.getChildCount >= 2
+        //1 排列整齐，但每行末尾都没有句号, 这种情况肯定多于两行。linsStarts.size == 2 (0和combinedLine.length()) 并且 root.getChildCount >= 2
         //2 每个断行的位置都是断句的位置。
-        if (lineStarts.size() == 1 && root.getChildCount() >= 2 || lineStarts.size() == root.getChildCount()) {
+        if (lineStarts.size() == 2 && root.getChildCount() >= 2 || lineStarts.size() == root.getChildCount()) {
             return;
         }
 
@@ -402,86 +379,83 @@ class LineNode extends DefaultMutableTreeNode {
 
         root.removeAllChildren();
 
-        for (int i=0; i<lineStarts.size()-1; i++) {
-            String newLine = combinedLine.substring(lineStarts.get(i), lineStarts.get(i+1));
-            LineNode newLineNode = new LineNode(newLine);
-            newLineNode.m_indent = newIndent;
-            root.add(newLineNode);
-        }
-        String newLine = combinedLine.substring(lineStarts.get(lineStarts.size() - 1), combinedLine.length()-1);
-        root.add(new LineNode(newLine));
+        //整理成树：
+        // 句尾的断行，就是正确的分段。作为子树分界点
+        // 句子节点就是叶子节点
+        for (int lineIdx=0; lineIdx<lineStarts.size()-1; lineIdx++) {
+            int lineStart = lineStarts.get(lineIdx);
+            int lineEnd = lineStarts.get(lineIdx + 1);
 
-        s_logger.info("ccccccccccc: {}", lineTreeToString(root));
-    }
-
-    private static LineNode breakParagraphToLineTree(String paragraph)
-    {
-        LineNode parent = new LineNode(1);
-
-        BreakIterator boundary = BreakIterator.getSentenceInstance(getStringULocale(paragraph));
-        boundary.setText(paragraph);
-
-        int start = boundary.first();
-        int end = boundary.next();
-
-        for (; end != BreakIterator.DONE; start = end, end = boundary.next()) {
-            LineNode child = new LineNode(paragraph.substring(start, end));
-            if (child.m_trimLine.length() == 0) {
-                continue;
+            ArrayList<Integer> sentencesIdxInThisLine = new ArrayList<>();
+            for (int sentenceIdx=0; sentenceIdx < icuSentenceStarts.size()-1 ; sentenceIdx++)
+            {
+                int sentenceStart = icuSentenceStarts.get(sentenceIdx);
+                if (lineStart <= sentenceStart && sentenceStart <= lineEnd) {
+                    sentencesIdxInThisLine.add(sentenceIdx);
+                }
             }
-            parent.add(child);
+
+            assert sentencesIdxInThisLine.size() >= 1;
+
+            if (sentencesIdxInThisLine.size() == 1) {
+                int sentenceIdx = sentencesIdxInThisLine.get(0);
+                int sentenceStart = icuSentenceStarts.get(sentenceIdx);
+                int sentenceEnd = lineStarts.get(sentenceIdx + 1);
+
+                LineNode lineNode = new LineNode(combinedLine.substring(sentenceStart, sentenceEnd));
+                root.add(lineNode);
+
+            } else {
+                LineNode lineNode = new LineNode("p");
+                for (int sentenceIdx : sentencesIdxInThisLine) {
+                    int sentenceStart = icuSentenceStarts.get(sentenceIdx);
+                    int sentenceEnd = lineStarts.get(sentenceIdx + 1);
+
+                    LineNode sentenceNode = new LineNode(combinedLine.substring(sentenceStart, sentenceEnd));
+                    lineNode.add(sentenceNode);
+                }
+                root.add(lineNode);
+
+            }
         }
-        return parent;
-    }
-
-    private static void normalArticleToTree(LineNode root, int firstLineIndent)
-    {
-        List<String> paragraphs = breakToParagraphs(root, firstLineIndent);
-
-        root.removeAllChildren();
-
-        for (String paragraph : paragraphs) {
-            assert paragraph.length() > 0;
-            LineNode child = breakParagraphToLineTree(paragraph);
-            root.add(child);
-        }
+        s_logger.info("ccccccccccc: {}", lineTreeToString(root));
     }
 
     private static void nestingListToTree(LineNode root, int maxIndent, int minIndent)
     {
-        ArrayList<LineNode> oldChildren = new ArrayList<LineNode>();
+        ArrayList<LineNode> detachedChildren = new ArrayList<LineNode>();
         for (int i = 1; i < root.getChildCount(); i++) {
-            oldChildren.add(root.getChildAt(i));
+            detachedChildren.add(root.getChildAt(i));
         }
         root.removeAllChildren();
 
-        if (oldChildren.get(0).m_indent > minIndent) {
+        if (detachedChildren.get(0).m_indent > minIndent) {
             LineNode fakeFirstLine = new LineNode("fake first node");
             fakeFirstLine.m_indent = minIndent;
-            oldChildren.add(0, fakeFirstLine);
+            detachedChildren.add(0, fakeFirstLine);
         }
 
-        root.add(oldChildren.get(0));
+        root.add(detachedChildren.get(0));
 
-        for (int i=1; i<oldChildren.size(); i++) {
+        for (int i=1; i<detachedChildren.size(); i++) {
 
-            LineNode oldChild = oldChildren.get(i);
+            LineNode detachedChild = detachedChildren.get(i);
 
             //向上找到一行，它的缩进大于或等于当前行
             //等于： 它是当前行的兄弟
             //小于：它是当前行的父亲
             for (int j = i - 1; j >= 0; j--) {
-                LineNode addedChild = oldChildren.get(j);
-                if (addedChild.m_indent < oldChild.m_indent) {
-                    addedChild.add(oldChild);
+                LineNode attachedChild = detachedChildren.get(j);
+                if (detachedChild.m_indent < attachedChild.m_indent) {
+                    attachedChild.add(detachedChild);
                     break;
-                } else if (addedChild.m_indent == oldChild.m_indent) {
-                    addedChild.getParent().add(oldChild);
+                } else if (detachedChild.m_indent == attachedChild.m_indent) {
+                    attachedChild.getParent().add(detachedChild);
                     break;
                 }
             }
 
-            assert(oldChild.getParent() != null);
+            assert(detachedChild.getParent() != null);
         }
 
     }
@@ -528,9 +502,7 @@ class LineNode extends DefaultMutableTreeNode {
         if (indentCounts[indentCounts.length - 1].getKey() == minIndent) {
 
             //FIXME: 断在整句的断行，就是一个段落。可以不考虑首行缩进了
-            combineBrokenSentence(root, minIndent);
-
-            normalArticleToTree(root, minIndent);
+            combineBrokenSentence(root);
 
         } else {
             nestingListToTree(root, maxIndent, minIndent);
@@ -621,6 +593,14 @@ class LineNode extends DefaultMutableTreeNode {
                 "自动段行3。\n" +
                 "自动段行4\n" +
                 "自动段行5。\n" +
+                "\n\n";
+                */
+
+        /*
+        ch1 = " abc def\n" +
+                "ghi jk. \n" +
+                "opq rst\n" +
+                "uvw zyx. \n" +
                 "\n\n";
                 */
 
