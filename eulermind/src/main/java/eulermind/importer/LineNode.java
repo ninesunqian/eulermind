@@ -334,7 +334,7 @@ class LineNode extends DefaultMutableTreeNode {
         return ULocale.forLanguageTag(languages.get(0).getLanguage());
     }
 
-    private static void combineBrokenSentence(LineNode root) {
+    private static void brokenSentencesToTree(LineNode root) {
 
         //合并子节点的文字，并记录每行在大字符串中的位置
         ArrayList<Integer> lineStarts = new ArrayList<>();
@@ -386,36 +386,50 @@ class LineNode extends DefaultMutableTreeNode {
             int lineStart = lineStarts.get(lineIdx);
             int lineEnd = lineStarts.get(lineIdx + 1);
 
-            ArrayList<Integer> sentencesIdxInThisLine = new ArrayList<>();
-            for (int sentenceIdx=0; sentenceIdx < icuSentenceStarts.size()-1 ; sentenceIdx++)
+            int firstSentenceInThisLine = 0;
+            int firstSentenceInNextLine = 0;
+
+            for (firstSentenceInThisLine = 0;
+                 firstSentenceInThisLine < icuSentenceStarts.size()-1 ;
+                 firstSentenceInThisLine++)
             {
-                int sentenceStart = icuSentenceStarts.get(sentenceIdx);
-                if (lineStart <= sentenceStart && sentenceStart <= lineEnd) {
-                    sentencesIdxInThisLine.add(sentenceIdx);
+                int sentenceStart = icuSentenceStarts.get(firstSentenceInThisLine);
+                if (lineStart <= sentenceStart && sentenceStart < lineEnd) {
+                    break;
                 }
             }
 
-            assert sentencesIdxInThisLine.size() >= 1;
+            for (firstSentenceInNextLine = firstSentenceInThisLine + 1;
+                 firstSentenceInNextLine < icuSentenceStarts.size() - 1;
+                 firstSentenceInNextLine++)
+            {
+                int sentenceStart = icuSentenceStarts.get(firstSentenceInNextLine);
+                if (sentenceStart >= lineEnd) {
+                    break;
+                }
+            }
 
-            if (sentencesIdxInThisLine.size() == 1) {
-                int sentenceIdx = sentencesIdxInThisLine.get(0);
-                int sentenceStart = icuSentenceStarts.get(sentenceIdx);
-                int sentenceEnd = lineStarts.get(sentenceIdx + 1);
+            assert firstSentenceInNextLine - firstSentenceInThisLine >= 1;
+
+            if (firstSentenceInNextLine - firstSentenceInThisLine == 1) {
+                int sentenceStart = icuSentenceStarts.get(firstSentenceInThisLine);
+                int sentenceEnd = icuSentenceStarts.get(firstSentenceInNextLine);
 
                 LineNode lineNode = new LineNode(combinedLine.substring(sentenceStart, sentenceEnd));
                 root.add(lineNode);
 
             } else {
                 LineNode lineNode = new LineNode("p");
-                for (int sentenceIdx : sentencesIdxInThisLine) {
-                    int sentenceStart = icuSentenceStarts.get(sentenceIdx);
-                    int sentenceEnd = lineStarts.get(sentenceIdx + 1);
+                for (int sentence = firstSentenceInThisLine;
+                    sentence < firstSentenceInNextLine;
+                    sentence++) {
+                    int sentenceStart = icuSentenceStarts.get(sentence);
+                    int sentenceEnd = icuSentenceStarts.get(sentence + 1);
 
                     LineNode sentenceNode = new LineNode(combinedLine.substring(sentenceStart, sentenceEnd));
                     lineNode.add(sentenceNode);
                 }
                 root.add(lineNode);
-
             }
         }
         s_logger.info("ccccccccccc: {}", lineTreeToString(root));
@@ -424,10 +438,7 @@ class LineNode extends DefaultMutableTreeNode {
     private static void nestingListToTree(LineNode root, int maxIndent, int minIndent)
     {
         ArrayList<LineNode> detachedChildren = new ArrayList<LineNode>();
-        for (int i = 1; i < root.getChildCount(); i++) {
-            detachedChildren.add(root.getChildAt(i));
-        }
-        root.removeAllChildren();
+        moveChildrenToList(root, detachedChildren);
 
         if (detachedChildren.get(0).m_indent > minIndent) {
             LineNode fakeFirstLine = new LineNode("fake first node");
@@ -446,10 +457,10 @@ class LineNode extends DefaultMutableTreeNode {
             //小于：它是当前行的父亲
             for (int j = i - 1; j >= 0; j--) {
                 LineNode attachedChild = detachedChildren.get(j);
-                if (detachedChild.m_indent < attachedChild.m_indent) {
+                if (attachedChild.m_indent < detachedChild.m_indent) {
                     attachedChild.add(detachedChild);
                     break;
-                } else if (detachedChild.m_indent == attachedChild.m_indent) {
+                } else if (attachedChild.m_indent == detachedChild.m_indent) {
                     attachedChild.getParent().add(detachedChild);
                     break;
                 }
@@ -500,9 +511,7 @@ class LineNode extends DefaultMutableTreeNode {
 
         //如果概率最高的缩进是最小缩进，那么这个一篇被自动断行的文章
         if (indentCounts[indentCounts.length - 1].getKey() == minIndent) {
-
-            //FIXME: 断在整句的断行，就是一个段落。可以不考虑首行缩进了
-            combineBrokenSentence(root);
+            brokenSentencesToTree(root);
 
         } else {
             nestingListToTree(root, maxIndent, minIndent);
@@ -573,9 +582,9 @@ class LineNode extends DefaultMutableTreeNode {
                 "整齐第三行\n" +
                 "\n\n" +
                 " 自动段行1\n" +
-                "自动段行3。\n" +
-                "自动段行4\n" +
-                "自动段行5。\n" +
+                "自动段行2。\n" +
+                "自动段行3\n" +
+                "自动段行4。\n" +
                 "\n\n" +
                 "缩进1\n" +
                 "  缩进1-1\n" +
@@ -584,26 +593,26 @@ class LineNode extends DefaultMutableTreeNode {
                 "  缩进2-1\n";
 
         /*
-        ch1 = "整齐第一行\n" +
-                "整齐第二行\n" +
-                "整齐第三行\n";
-                */
-        /*
         ch1 = " 自动段行1\n" +
-                "自动段行3。\n" +
-                "自动段行4\n" +
-                "自动段行5。\n" +
+                "自动段行2。\n" +
+                "自动段行3\n" +
+                "自动段行4。\n" +
                 "\n\n";
                 */
+
+        ch1 = " How are \n" +
+                "you. \n" +
+                "Thank you\n" +
+                "very much.    We will\n" +
+                "\n\n";
 
         /*
-        ch1 = " abc def\n" +
-                "ghi jk. \n" +
-                "opq rst\n" +
-                "uvw zyx. \n" +
-                "\n\n";
+        ch1 = "缩进1\n" +
+                "  缩进1-1\n" +
+                "  缩进1-2\n" +
+                "缩进2\n" +
+                "  缩进2-1\n";
                 */
-
         lineTreeToString(textToLineTree(ch1));
     }
 }
