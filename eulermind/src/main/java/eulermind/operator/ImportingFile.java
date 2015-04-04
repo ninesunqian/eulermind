@@ -2,8 +2,10 @@ package eulermind.operator;
 
 import eulermind.MindModel;
 import eulermind.MindOperator;
+import eulermind.view.MindView;
 import prefuse.data.Node;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,17 +38,21 @@ public class ImportingFile extends MindOperator{
     ArrayList<Integer> m_parentPath;
     ArrayList<Integer> m_parentPathAfterDoing;
 
+    Component m_progressMonitorParent;
+
     //如果path为null， 从系统剪切板导入plain text 数据
-    public ImportingFile(MindModel mindModel, Node formerCursor,  String path) {
+    public ImportingFile(MindModel mindModel, Node formerCursor,  String path, Component progressMonitorParent) {
         super(mindModel, formerCursor);
         m_importedFilePath = path;
         m_parentPath = getNodePath(formerCursor);
+        m_progressMonitorParent = progressMonitorParent;
+
     }
 
     public void does() throws Exception
     {
         Node parent = getNodeByPath(m_parentPath);
-        m_newChildren = m_mindModel.importFile(parent, m_importedFilePath);
+        m_newChildren = m_mindModel.importFile(parent, m_importedFilePath, m_progressMonitorParent);
 
         //importFIle之后，parent的路径可能会改变，所以要重新取一次路径
         m_parentPathAfterDoing = getNodePath(parent);

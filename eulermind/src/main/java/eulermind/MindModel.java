@@ -3,10 +3,12 @@ package eulermind;
 import com.tinkerpop.blueprints.*;
 import eulermind.MindDB.EdgeVertex;
 import eulermind.MindDB.RefLinkInfo;
+import eulermind.component.SwingWorkerDialog;
 import eulermind.importer.DirectoryImporter;
 import eulermind.importer.FreemindImporter;
 import eulermind.importer.Importer;
 import eulermind.importer.TikaPlainTextImporter;
+import eulermind.view.MindView;
 import prefuse.data.*;
 import prefuse.data.Edge;
 import prefuse.data.Graph;
@@ -26,6 +28,8 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
 
 /*
 The MIT License (MIT)
@@ -748,16 +752,16 @@ public class MindModel {
     }
 
     //return new child node
-    public List importFile(Node parent, String path) throws Exception
+    public List importFile(final Node parent, final String path, final Component progressMonitorParent) throws Exception
     {
         if (! childrenAttached(parent)) {
             attachChildren(parent);
         }
 
-        int pos = parent.getChildCount();
+        final int pos = parent.getChildCount();
 
         Object parentDbId = getDbId(parent);
-        Importer importer = getImporter(path);
+        final Importer importer = getImporter(path);
 
         if (importer == null) {
             return new ArrayList();
@@ -774,7 +778,24 @@ public class MindModel {
             }
 
         } else {
-            newChildren = importer.importFile(getDbId(parent), pos, path);
+            Thread.sleep(5000);
+            SwingWorkerDialog swingWorkerDialog = new SwingWorkerDialog(progressMonitorParent, "import :" + path) {
+                @Override
+                protected Object doInBackground() throws Exception {
+                    importer.setProgressListener(new Importer.ProgressListener() {
+                        @Override
+                        public void notifyProgress(int progress, int maxProgress, String message) {
+                            notifyProgressA(progress, maxProgress, message);
+                            if (isCancelButtonPressed()) {
+                                importer.cancel();
+                            }
+                        }
+                    });
+                    return importer.importFile(getDbId(parent), pos, path);
+                }
+            };
+
+            newChildren = (List)swingWorkerDialog.executeInProgressDialog();
         }
 
         Vertex dbParent = m_mindDb.getVertex(parentDbId);

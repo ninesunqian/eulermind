@@ -394,7 +394,7 @@ public class MindView extends Display {
 
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             path = chooser.getSelectedFile().getPath();
-            MindOperator operator = new ImportingFile(m_mindModel, getCursorSourceNode(), path);
+            MindOperator operator = new ImportingFile(m_mindModel, getCursorSourceNode(), path, this);
             m_mindController.does(operator);
         }
         endChanging();
@@ -428,7 +428,7 @@ public class MindView extends Display {
             String text = Utils.getSystemClipboardText();
             if (text != null) {
                 beginChanging();
-                MindOperator operator = new ImportingFile(m_mindModel, getCursorSourceNode(), null);
+                MindOperator operator = new ImportingFile(m_mindModel, getCursorSourceNode(), null, null);
                 m_mindController.does(operator);
                 endChanging();
             }

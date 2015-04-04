@@ -6,6 +6,8 @@ import org.apache.tika.exception.TikaException;
 import java.io.File;
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 import org.apache.tika.detect.DefaultDetector;
 import org.apache.tika.detect.Detector;
@@ -42,6 +44,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 public class TikaPlainTextImporter extends Importer{
+    Logger m_logger = LoggerFactory.getLogger(TikaPlainTextImporter.class);
 
     public TikaPlainTextImporter(MindDB mindDB)
     {
@@ -51,8 +54,9 @@ public class TikaPlainTextImporter extends Importer{
     private Object importLineNode(Object parentDBId, int pos, LineNode root)
     {
         Object dbId = addTextDBChild(parentDBId, pos, root.toString());
+        progressStep(root.toString());
 
-        for (int i=0; i<root.getChildCount(); i++) {
+        for (int i=0; i<root.getChildCount() && m_canceled == false; i++) {
             importLineNode(dbId, i, root.getChildAt(i));
         }
         return dbId;
@@ -62,6 +66,10 @@ public class TikaPlainTextImporter extends Importer{
     public List importString(Object parentDBId, int pos, String text)
     {
         LineNode root = LineNode.textToLineTree(text);
+
+        int nodeCount = LineNode.getLineTreeNodeCount(root);
+        resetProgress(nodeCount);
+
         Object dbId = importLineNode(parentDBId, pos, root);
         List list = new ArrayList();
         list.add(dbId);
@@ -95,7 +103,13 @@ public class TikaPlainTextImporter extends Importer{
     {
         File file = new File(path);
 
+        m_logger.info("import File by tika: {}", path);
         String plainText = getPlainTextByTika(file);
+
+        if (m_canceled) {
+            return new ArrayList();
+        }
+
         if (plainText != null && !plainText.isEmpty()) {
             return importString(parentDBId, pos, plainText);
         }

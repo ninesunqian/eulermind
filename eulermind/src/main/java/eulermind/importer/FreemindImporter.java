@@ -47,7 +47,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 public class FreemindImporter extends Importer{
 
-    static Logger s_logger = LoggerFactory.getLogger(Importer.class);
+    static Logger s_logger = LoggerFactory.getLogger(FreemindImporter.class);
 
     public FreemindImporter(MindDB mindDB)
     {
@@ -61,9 +61,9 @@ public class FreemindImporter extends Importer{
         String mmId = element.getAttribute("ID");
         String text = element.getAttribute("TEXT");
 
-        s_logger.info("import freemind Nod {} : {}", mmId, text);
 
         Object dbId = addTextDBChild(parentDBId, pos, text);
+        progressStep(text);
 
         mmId2dbIdMap.put(mmId, dbId);
 
@@ -75,7 +75,7 @@ public class FreemindImporter extends Importer{
         NodeList nodes = element.getChildNodes();
         int childPos = 0;
 
-        for (int i=0; i < nodes.getLength(); i++)
+        for (int i=0; i < nodes.getLength() && m_canceled == false; i++)
         {
             org.w3c.dom.Node node = nodes.item(i);
             if (node.getNodeName().equals("node")) {
@@ -104,6 +104,8 @@ public class FreemindImporter extends Importer{
         //parse an XML file into a DOM tree
         document = builder.parse(inputStream);
 
+        NodeList nodeList = document.getElementsByTagName("node");
+        resetProgress(nodeList.getLength());
 
         //get root element
         Element rootElement = document.getDocumentElement();

@@ -156,6 +156,13 @@ class LineNode extends DefaultMutableTreeNode {
     private static LineNode reduceToChapterTreeByBlankLine(List<LineNode> lineNodes)
     {
         LinkedList<LineNode> newlineNodes = new LinkedList<LineNode>();
+
+        //防止大量的连续空行导致递归后的树层次太多, 导致递归函数栈溢出
+        for (LineNode lineNode : lineNodes) {
+            if (lineNode.m_blankLines > 200) {
+                lineNode.m_blankLines = 200;
+            }
+        }
         Iterator<LineNode> iterator = lineNodes.iterator();
         newlineNodes.add(iterator.next());
 
@@ -312,7 +319,12 @@ class LineNode extends DefaultMutableTreeNode {
         //IBM ICU 的CharsetDetector 不能检查unicode字符串的语言，tika不支持中文检测.
         //只能用language-detector
         try {
-            s_languageProfiles = new LanguageProfileReader().readAll();
+            //s_languageProfiles = new LanguageProfileReader().readAll();
+            ArrayList<String> languages = new ArrayList<>();
+            languages.add("en");
+            languages.add("zh-cn");
+            languages.add("zh-tw");
+            s_languageProfiles = new LanguageProfileReader().read(languages);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -331,7 +343,11 @@ class LineNode extends DefaultMutableTreeNode {
         TextObject textObject = s_textObjectFactory.forText(str);
         //不能用这个函数：s_languageDetector.detect(textObject); 因为这个函数相当严格，有可能找不到匹配的语言
         List<DetectedLanguage> languages = s_languageDetector.getProbabilities(textObject);
-        return ULocale.forLanguageTag(languages.get(0).getLanguage());
+        if (languages.size() > 0) {
+            return ULocale.forLanguageTag(languages.get(0).getLanguage());
+        } else {
+            return ULocale.getDefault();
+        }
     }
 
     private static void brokenSentencesToTree(LineNode root) {
@@ -371,11 +387,11 @@ class LineNode extends DefaultMutableTreeNode {
         //以下情况不需要整理：
         //1 排列整齐，但每行末尾都没有句号, 这种情况肯定多于两行。linsStarts.size == 2 (0和combinedLine.length()) 并且 root.getChildCount >= 2
         //2 每个断行的位置都是断句的位置。
-        if (lineStarts.size() == 2 && root.getChildCount() >= 2 || lineStarts.size() == root.getChildCount()) {
+        if (lineStarts.size() == 2 && root.getChildCount() >= 2 || lineStarts.size() - 1 == root.getChildCount()) {
             return;
         }
 
-        assert(lineStarts.size() < root.getChildCount());
+        assert(lineStarts.size() - 1 < root.getChildCount());
 
         root.removeAllChildren();
 
@@ -432,7 +448,7 @@ class LineNode extends DefaultMutableTreeNode {
                 root.add(lineNode);
             }
         }
-        s_logger.info("ccccccccccc: {}", lineTreeToString(root));
+        //s_logger.info("ccccccccccc: {}", lineTreeToString(root));
     }
 
     private static void nestingListToTree(LineNode root, int maxIndent, int minIndent)
@@ -521,22 +537,22 @@ class LineNode extends DefaultMutableTreeNode {
     public static LineNode textToLineTree(String text)
     {
         List<LineNode> lines = splitTextToLines(text);
-        s_logger.info("split to  : [{}]", lineListToString(lines));
+        //s_logger.info("split to  : [{}]", lineListToString(lines));
 
         LineNode root = reduceToChapterTreeByBlankLine(lines);
-        s_logger.info("reduced to  : [{}]", lineTreeToString(root));
+        //s_logger.info("reduced to  : [{}]", lineTreeToString(root));
 
         removeRedundantBlankLineNodes(root);
-        s_logger.info("removeRedundantBlankLineNodes to  : [{}]", lineTreeToString(root));
+        //s_logger.info("removeRedundantBlankLineNodes to  : [{}]", lineTreeToString(root));
 
         reduceTextLineSiblingsToSubTree(root);
-        s_logger.info("reduceTextLineSiblingsToSubTree to  : [{}]", lineTreeToString(root));
+        //s_logger.info("reduceTextLineSiblingsToSubTree to  : [{}]", lineTreeToString(root));
 
         root = tooManySiblingsToSubTree(root);
-        s_logger.info("tooManySiblingsToSubTree to  : [{}]", lineTreeToString(root));
+        //s_logger.info("tooManySiblingsToSubTree to  : [{}]", lineTreeToString(root));
 
         root = removeBlankNodeWithSingleChild(root);
-        s_logger.info("removeBlankNodeWithSingleChild to  : [{}]", lineTreeToString(root));
+        //s_logger.info("removeBlankNodeWithSingleChild to  : [{}]", lineTreeToString(root));
         return root;
     }
 
@@ -569,6 +585,15 @@ class LineNode extends DefaultMutableTreeNode {
     private static String lineTreeToString(LineNode root)
     {
         return "\n" + lineTreeToString(root, 0);
+    }
+
+    public static int getLineTreeNodeCount(LineNode root)
+    {
+        int count = 1;
+        for (int i=0; i<root.getChildCount(); i++) {
+            count += getLineTreeNodeCount(root.getChildAt(i));
+        }
+        return count;
     }
 
     public static void main(String argv[]) {

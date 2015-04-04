@@ -51,8 +51,11 @@ public class DirectoryImporter extends Importer{
 
     private Object importFile(Object parentDBId, int pos, File file)
     {
-
         Object dbId = addTextDBChild(parentDBId, pos, file.getName());
+
+        if (m_canceled) {
+            return dbId;
+        }
 
         if (file.isFile()) {
             Importer importer;
@@ -64,6 +67,7 @@ public class DirectoryImporter extends Importer{
 
             try {
                 importer.importFile(dbId, 0, file.getAbsolutePath());
+                progressStep(file.getAbsolutePath());
             } catch (Exception e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
