@@ -196,7 +196,7 @@ public abstract class NodeControl extends ControlAdapter {
         if (curHitNode == null || curHitNode != m_hitNode || curHitNode == draggedNode) {
             assert (m_hitNode != draggedNode);
             if (m_hitNode != null) {
-                m_logger.info("itemMissed : " + m_hitNode.getString(MindModel.sm_textPropName));
+                m_logger.info("itemMissed : " + m_hitNode.getString(MindModel.TEXT_PROP_NAME));
                 dragMiss(draggedNode, m_hitNode, dragAction);
             }
             clearHitNode();
@@ -211,7 +211,7 @@ public abstract class NodeControl extends ControlAdapter {
                 m_hitNode = curHitNode;
                 m_hitPosition = hitPosition;
 
-                m_logger.info("itemHit : " + curHitNode.getString(MindModel.sm_textPropName) + " - " + m_hitPosition.toString());
+                m_logger.info("itemHit : " + curHitNode.getString(MindModel.TEXT_PROP_NAME) + " - " + m_hitPosition.toString());
                 dragHit(draggedNode, curHitNode, hitPosition, dragAction);
             }
         }
@@ -247,7 +247,7 @@ public abstract class NodeControl extends ControlAdapter {
             if (curHitNode != null) {
                 HitPosition hitPosition = getHitPosition(curHitNode, mousePoint);
                 dragEnd(draggedNode, curHitNode, hitPosition, dragAction);
-                m_logger.info("itemDropped : " + curHitNode.getString(MindModel.sm_textPropName));
+                m_logger.info("itemDropped : " + curHitNode.getString(MindModel.TEXT_PROP_NAME));
             } else {
                 m_logger.info("itemDropped : null");
                 dragEnd(draggedNode, null, HitPosition.OUTSIDE, dragAction);

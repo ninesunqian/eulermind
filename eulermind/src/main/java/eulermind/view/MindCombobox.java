@@ -232,7 +232,7 @@ public class MindCombobox extends JComboBox {
         PromptedNode(Vertex vertex)
         {
             m_dbId = vertex.getId();
-            m_text = vertex.getProperty(MindModel.sm_textPropName);
+            m_text = vertex.getProperty(MindModel.TEXT_PROP_NAME);
 
             Vertex parent = m_mindDb.getParent(vertex);
             if (parent == null) {
@@ -240,7 +240,7 @@ public class MindCombobox extends JComboBox {
                 m_parentText = null;
             } else {
                 m_parentDBId = parent.getId();
-                m_parentText = parent.getProperty(MindModel.sm_textPropName);
+                m_parentText = parent.getProperty(MindModel.TEXT_PROP_NAME);
             }
         }
     }
@@ -257,7 +257,7 @@ public class MindCombobox extends JComboBox {
 
             m_logger.info("query vertex: " + inputed);
 
-            for (Vertex vertex : m_mindDb.getVertices("V", new String[]{MindModel.sm_textPropName},
+            for (Vertex vertex : m_mindDb.getVertices("V", new String[]{MindModel.TEXT_PROP_NAME},
                     new String[]{inputed}))  {
 
                 if (m_mindDb.isVertexTrashed(vertex)) {

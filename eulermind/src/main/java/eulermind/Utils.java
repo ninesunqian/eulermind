@@ -8,7 +8,6 @@ import com.tinkerpop.blueprints.impls.orient.OrientTransactionalGraph;
 import com.tinkerpop.blueprints.impls.orient.OrientVertexType;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
-import org.apache.tika.parser.CompositeParser;
 
 import javax.swing.*;
 import java.awt.*;
@@ -145,18 +144,18 @@ public class Utils {
 
         if (level == 0) {
             Vertex root = mindDb.getVertex(mindDb.getRootId());
-            root.setProperty(MindModel.sm_textPropName, "a");
+            root.setProperty(MindModel.TEXT_PROP_NAME, "a");
             parent = root;
 
         } else {
             MindDB.EdgeVertex edgeVertex = mindDb.addChild(parent, 0);
-            edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, parentText + "a");
+            edgeVertex.m_vertex.setProperty(MindModel.TEXT_PROP_NAME, parentText + "a");
 
             edgeVertex = mindDb.addChild(parent, 1);
-            edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, parentText + "b");
+            edgeVertex.m_vertex.setProperty(MindModel.TEXT_PROP_NAME, parentText + "b");
 
             edgeVertex = mindDb.addChild(parent, 2);
-            edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, parentText + "c");
+            edgeVertex.m_vertex.setProperty(MindModel.TEXT_PROP_NAME, parentText + "c");
 
             mindDb.addRefEdge(parent, parent, 3);
         }

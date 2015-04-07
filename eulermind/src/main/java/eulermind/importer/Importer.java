@@ -6,7 +6,6 @@ import eulermind.MindModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
 import java.util.List;
 
 /*
@@ -48,7 +47,7 @@ public abstract class Importer {
 
         Vertex dbParent = m_mindDb.getVertex(parentDBId);
         MindDB.EdgeVertex edgeVertex = m_mindDb.addChild(dbParent, pos);
-        edgeVertex.m_vertex.setProperty(MindModel.sm_textPropName, text);
+        edgeVertex.m_vertex.setProperty(MindModel.TEXT_PROP_NAME, text);
         return edgeVertex.m_vertex.getId();
     }
 

@@ -157,7 +157,11 @@ public class TableNode extends TableTuple implements Node {
     public Node getChild(int idx) {
         return m_graph.getSpanningTree().getChild(this, idx);
     }
-    
+
+    public Edge getChildEdge(int idx) {
+        return m_graph.getSpanningTree().getChildEdge(this, idx);
+    }
+
     /**
      * @see prefuse.data.Node#getFirstChild()
      */

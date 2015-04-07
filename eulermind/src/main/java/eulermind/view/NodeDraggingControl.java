@@ -59,7 +59,7 @@ class NodeDraggingControl extends NodeControl {
 
         if (droppedNode == m_mindView.m_tree.getRoot()) {
             ret[0] = droppedNode;
-            ret[1] = MindModel.getDBChildCount(droppedNode);
+            ret[1] = m_mindView.m_mindModel.getDBChildCount(droppedNode);
             return ret;
         }
 
@@ -74,7 +74,7 @@ class NodeDraggingControl extends NodeControl {
                 break;
             case RIGHT:
                 ret[0] = droppedNode;
-                ret[1] = MindModel.getDBChildCount(droppedNode);
+                ret[1] = m_mindView.m_mindModel.getDBChildCount(droppedNode);
                 break;
             default:
                 ret[0] = null;

@@ -4,7 +4,6 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
 import java.util.List;
 
 import eulermind.component.*;
@@ -187,9 +186,9 @@ public class MainFrame  extends JFrame {
         m_mindController.addMindPropertyComponent(MindModel.sm_textColorPropName, m_textColorCombobox);
         m_mindController.addMindPropertyComponent(MindModel.sm_nodeColorPropName, m_nodeColorCombobox);
         m_mindController.addMindPropertyComponent(MindModel.sm_iconPropName, m_iconButton);
-        m_mindController.addMindPropertyComponent(MindModel.sm_stylePropName, m_styleList);
+        m_mindController.addMindPropertyComponent(MindModel.STYLE_PROP_NAME, m_styleList);
 
-        m_mindController.addMindPropertyComponent(MindModel.sm_stylePropName, m_styleList);
+        m_mindController.addMindPropertyComponent(MindModel.STYLE_PROP_NAME, m_styleList);
 
         m_searchInputer.setMindDb(m_mindModel.m_mindDb);
         m_searchInputer.setHasPromptList(true);
@@ -209,9 +208,9 @@ public class MainFrame  extends JFrame {
         m_mindController.removeMindPropertyComponent(MindModel.sm_nodeColorPropName, m_nodeColorCombobox);
 
         m_mindController.removeMindPropertyComponent(MindModel.sm_iconPropName, m_iconButton);
-        m_mindController.removeMindPropertyComponent(MindModel.sm_stylePropName, m_styleList);
+        m_mindController.removeMindPropertyComponent(MindModel.STYLE_PROP_NAME, m_styleList);
 
-        m_mindController.removeMindPropertyComponent(MindModel.sm_stylePropName, m_styleList);
+        m_mindController.removeMindPropertyComponent(MindModel.STYLE_PROP_NAME, m_styleList);
     }
 
     private void setComponentEnabled(boolean enabled)

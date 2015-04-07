@@ -1,6 +1,5 @@
 package prefuse.data;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.slf4j.Logger;
@@ -376,13 +375,18 @@ public class Tree extends Graph {
      * @param idx the child index
      * @return the child node id (node table row number)
      */
-    public int getChildRow(int node, int idx) {
-        int cc = getChildCount(node);
-        if ( idx < 0 || idx >= cc ) return -1;
-        int[] outlinks = (int[])getNodeTable().get(node, OUTLINKS);
-        return getTargetNode(outlinks[idx]);
+    public int getChild(int node, int idx) {
+        int outEdge = getChildEdge(node, idx);
+        if (outEdge == -1) {
+            return -1;
+        }
+        return getTargetNode(outEdge);
     }
-    
+
+    public int getChildEdge(int node, int idx) {
+        return getOutEdge(node, idx);
+    }
+
     /**
      * Get the child node at the given index.
      * @param node the parent Node
@@ -390,8 +394,13 @@ public class Tree extends Graph {
      * @return the child Node
      */
     public Node getChild(Node node, int idx) {
-        int c = getChildRow(node.getRow(), idx);
+        int c = getChild(node.getRow(), idx);
         return ( c<0 ? null : getNode(c) );
+    }
+
+    public Edge getChildEdge(Node node, int idx) {
+        int e = getChildEdge(node.getRow(), idx);
+        return ( e<0 ? null : getEdge(e) );
     }
 
     public int getIndexInSiblings(int child)
@@ -500,7 +509,7 @@ public class Tree extends Graph {
      * @return the node id of the first child
      */
     public int getFirstChildRow(int node) {
-        return getChildRow(node, 0);
+        return getChild(node, 0);
     }
 
     /**
@@ -518,7 +527,7 @@ public class Tree extends Graph {
      * @return the node id of the last child
      */
     public int getLastChildRow(int node) {
-        return getChildRow(node, getChildCount(node)-1);
+        return getChild(node, getChildCount(node) - 1);
     }
     
     /**
@@ -554,7 +563,7 @@ public class Tree extends Graph {
         int[] outlinks = (int[])nodeTable.get(p, OUTLINKS);
         
         int idx = getChildIndex(p, node);;
-        return ( idx<=0 ? -1 : getTargetNode(outlinks[idx-1]));
+        return ( idx<=0 ? -1 : getTargetNode(outlinks[idx - 1]));
     }
     
     /**
@@ -622,7 +631,7 @@ public class Tree extends Graph {
     public int getChildCount(int node) {
         return getOutDegree(node);
     }
-    
+
     /**
      * Get the edge id of the edge to the given node's parent.
      * @param node the node id (node table row number)

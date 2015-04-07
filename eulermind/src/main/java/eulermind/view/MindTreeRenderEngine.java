@@ -165,7 +165,7 @@ public class MindTreeRenderEngine {
     
     private DefaultRendererFactory makeItemRendererFactory ()
     {
-	    NodeRenderer nodeRenderer = new NodeRenderer(MindModel.sm_textPropName, MindModel.sm_iconPropName);
+	    NodeRenderer nodeRenderer = new NodeRenderer(MindModel.TEXT_PROP_NAME, MindModel.sm_iconPropName);
     	nodeRenderer.setRenderType(AbstractShapeRenderer.RENDER_TYPE_FILL);
     	nodeRenderer.setHorizontalAlignment(Constants.LEFT);
     	nodeRenderer.setRoundedCorner(10, 10);

@@ -1061,7 +1061,31 @@ public class Graph extends CompositeTupleSet {
         nodeCheck(target, true);
         return getEdge(getEdge(source.getRow(), target.getRow()));
     }
-    
+
+    public int getOutEdge(int node, int idx) {
+        int cc = getOutDegree(node);
+        if ( idx < 0 || idx >= cc ) return -1;
+        int[] outlinks = (int[])getNodeTable().get(node, OUTLINKS);
+        return outlinks[idx];
+    }
+
+    public int getInEdge(int node, int idx) {
+        int cc = getInDegree(node);
+        if ( idx < 0 || idx >= cc ) return -1;
+        int[] inlinks = (int[])getNodeTable().get(node, INLINKS);
+        return inlinks[idx];
+    }
+
+    public Edge getOutEdge(Node node, int idx) {
+        nodeCheck(node, true);
+        return getEdge(getOutEdge(node.getRow(), idx));
+    }
+
+    public Edge getInEdge(Node node, int idx) {
+        nodeCheck(node, true);
+        return getEdge(getInEdge(node.getRow(), idx));
+    }
+
     /**
      * Get the source node id (node table row number) for the given edge
      * id (edge table row number).

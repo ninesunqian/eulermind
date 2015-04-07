@@ -99,6 +99,8 @@ public interface Node extends Tuple {
      * @return the edge between this node and its parent
      */
     public Edge getParentEdge();
+
+    public Edge getChildEdge(int idx);
     
     /**
      * Get the tree depth of this node.

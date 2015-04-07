@@ -49,7 +49,7 @@ public class TreeFolder extends NodeControl {
 
     void unfoldNode(NodeItem node)
     {
-        if (! MindModel.childrenAttached(m_mindView.toSource(node))) {
+        if (! m_mindView.m_mindModel.childrenAttached(m_mindView.toSource(node))) {
             m_mindView.m_mindModel.attachChildren(m_mindView.toSource(node));
         }
 
@@ -138,7 +138,7 @@ public class TreeFolder extends NodeControl {
         if (node.getChildCount() > 0) {
             return ! node.isExpanded();
         } else {
-            return MindModel.getDBChildCount(node) > 0;
+            return m_mindView.m_mindModel.getDBChildCount(node) > 0;
         }
     }
 

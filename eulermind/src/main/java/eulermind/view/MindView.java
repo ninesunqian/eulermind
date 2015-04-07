@@ -1,7 +1,5 @@
 package eulermind.view;
 
-import java.awt.event.*;
-
 import java.util.ArrayList;
 
 import eulermind.*;
@@ -147,7 +145,7 @@ public class MindView extends Display {
             {
                 MindOperator operator;
                 operator = new SettingProperty(m_mindModel,
-                        getCursorSourceNode(), MindModel.sm_textPropName, text);
+                        getCursorSourceNode(), MindModel.TEXT_PROP_NAME, text);
                 m_mindController.does(operator);
             }
         });
@@ -296,7 +294,7 @@ public class MindView extends Display {
 
     private void showEditor()
     {
-        editText(toVisual(getCursorSourceNode()), MindModel.sm_textPropName) ;
+        editText(toVisual(getCursorSourceNode()), MindModel.TEXT_PROP_NAME) ;
     }
 
     private void hideEditor()
@@ -456,9 +454,9 @@ public class MindView extends Display {
             m_logger.info("add sibling at {}", cursorNode.getIndex() + 1);
         }
 
-        //NOTE: newNode.setString(MindModel.sm_textPropName, "") error
+        //NOTE: newNode.setString(MindModel.TEXT_PROP_NAME, "") error
 
-        newNode.set(MindModel.sm_textPropName, "");
+        newNode.set(MindModel.TEXT_PROP_NAME, "");
 
         m_cursor.setCursorNodeItem(toVisual(newNode));
     }

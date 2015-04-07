@@ -144,7 +144,11 @@ public class TableNodeItem extends TableVisualItem implements NodeItem {
     public Node getChild(int idx) {
         return m_graph.getSpanningTree().getChild(this, idx);
     }
-    
+
+    public Edge getChildEdge(int idx) {
+        return m_graph.getSpanningTree().getChildEdge(this, idx);
+    }
+
     /**
      * @see prefuse.data.Node#getFirstChild()
      */
