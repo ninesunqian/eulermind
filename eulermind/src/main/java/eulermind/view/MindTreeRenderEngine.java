@@ -189,14 +189,20 @@ public class MindTreeRenderEngine {
                     }
 
                 } else {
-                    MindModel mindModel = m_mindView.m_mindModel;
-
-                    int childCount = mindModel.getDBChildCount((NodeItem) item2);
-
-                    if (childCount == 0) {
+                    if (m_mindView.isPlaceholder(item2)) {
                         m_yAlign2 = Constants.BOTTOM;
+
                     } else {
-                        m_yAlign2 = Constants.CENTER;
+
+                        MindModel mindModel = m_mindView.m_mindModel;
+
+                        int childCount = mindModel.getDBChildCount((NodeItem) item2);
+
+                        if (childCount == 0) {
+                            m_yAlign2 = Constants.BOTTOM;
+                        } else {
+                            m_yAlign2 = Constants.CENTER;
+                        }
                     }
                 }
             }
@@ -343,14 +349,19 @@ public class MindTreeRenderEngine {
                 }
 
             } else {
-                MindModel mindModel = m_mindView.m_mindModel;
-
-                int childCount = mindModel.getDBChildCount((NodeItem) item);
-
-                if (childCount == 0) {
+                if (m_mindView.isPlaceholder(item)) {
                     return RENDER_TYPE_FILL;
+
                 } else {
-                    return RENDER_TYPE_DRAW_AND_FILL;
+                    MindModel mindModel = m_mindView.m_mindModel;
+
+                    int childCount = mindModel.getDBChildCount((NodeItem) item);
+
+                    if (childCount == 0) {
+                        return RENDER_TYPE_FILL;
+                    } else {
+                        return RENDER_TYPE_DRAW_AND_FILL;
+                    }
                 }
             }
         }

@@ -1,5 +1,6 @@
 package eulermind.view;
 
+import eulermind.MindModel;
 import prefuse.data.Table;
 import prefuse.util.collections.IntIterator;
 import prefuse.visual.NodeItem;
@@ -143,7 +144,8 @@ public class TreeCursor extends NodeControl {
             upDowner = (NodeItem) m_tree.getNode(row);
             if (overlayInXAxis(upDowner, m_originCursor) || upDowner.isExpanded() == false) {
                 if (overlayInXAxis(upDowner, m_originCursor)) {
-                    m_logger.debug(m_originCursor.getString("text") + ": overlay upDowner: " + upDowner.getString("text"));
+                    m_logger.debug(m_originCursor.getString(MindModel.TEXT_PROP_NAME) + ": overlay upDowner: "
+                            + upDowner.getString(MindModel.TEXT_PROP_NAME));
                 }
                 m_yAxis.add(upDowner);
             }
