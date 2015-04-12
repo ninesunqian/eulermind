@@ -99,6 +99,13 @@ class NodeDraggingControl extends NodeControl {
             return false;
         }
 
+        //拖动到父节点的右半部，视为无效操作
+        if (m_mindView.m_mindModel.isSelfInDB(parentNode, newParentNode)) {
+            if (hitPosition == HitPosition.RIGHT) {
+                return false;
+            }
+        }
+
         switch (dragAction) {
             case LINK:
                 return true;
@@ -187,9 +194,18 @@ class NodeDraggingControl extends NodeControl {
             Node parent = draggedNode.getParent();
 
             if (MindModel.getDbId(newParent).equals(MindModel.getDbId(parent))) {
+                //拖到现在的父节点的右半部，视为无效操作
+                if (hitPosition == HitPosition.RIGHT) {
+                    return null;
+                }
+
                 int oldPosition = draggedNode.getIndex();
                 if (oldPosition < newPosition) {
                     newPosition--;
+                }
+
+                if (oldPosition == newPosition) {
+                    return null;
                 }
 
                 operator = new ChangingPosition(mindModel, draggedNode, newPosition);

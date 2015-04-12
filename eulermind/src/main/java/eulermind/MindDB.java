@@ -85,41 +85,6 @@ public class MindDB {
           }
      };
 
-    static class OutEdgeIdPair implements Comparable<OutEdgeIdPair>{
-        String m_innerId;
-        Object m_dbId;
-
-        OutEdgeIdPair(Object dbId, String innerId) {
-            assert dbId != null;
-            assert innerId != null;
-            m_dbId = dbId;
-            m_innerId = innerId;
-        }
-
-        public String toString() {
-            return "OutEdgeIdPair:[" + m_dbId.toString() + ", " + m_innerId + "]";
-        }
-
-        public int compareTo(OutEdgeIdPair other) {
-            return m_innerId.compareTo(other.m_innerId);
-        }
-
-        public boolean equals(Object other) {
-            if (this == other) {
-                return true;
-            }
-            if (other instanceof OutEdgeIdPair) {
-                OutEdgeIdPair otherIds = (OutEdgeIdPair)other;
-                boolean dbIdEqual = m_dbId == otherIds.m_dbId || m_dbId.equals(otherIds.m_dbId);
-                boolean innerIdEqual = m_innerId == otherIds.m_innerId || m_innerId.equals(otherIds.m_innerId);
-                //return dbIdEqual && innerIdEqual;
-                return innerIdEqual;
-            }
-
-            return false;
-        }
-    }
-
     LinkedHashMap<Object, List<OutEdgeIdPair>> m_outEdgeInnerIdCache =
             new LinkedHashMap<Object, List<OutEdgeIdPair>>(256, 0.75f, true) {
 
@@ -240,13 +205,13 @@ public class MindDB {
         }
     }
 
-    public String getOutEdgeInnerId(Edge edge)
+    public static String getOutEdgeInnerId(Edge edge)
     {
         return edge.getProperty(EDGE_INNER_ID_PROP_NAME);
     }
 
-    private OutEdgeIdPair getOutEdgeIdPair(Edge edge) {
-        return new OutEdgeIdPair(edge.getId(), getOutEdgeInnerId(edge));
+    public OutEdgeIdPair getOutEdgeIdPair(Edge edge) {
+        return new OutEdgeIdPair(this, edge.getId(), getOutEdgeInnerId(edge));
     }
 
     private List<OutEdgeIdPair> getOutEdgeIdPairsSkipCache(Vertex source)
@@ -260,7 +225,7 @@ public class MindDB {
             Edge outEdge = outEdgeIterator.next();
             String innerId = getOutEdgeInnerId(outEdge);
             if (innerId != null) {
-                outEdgeIdPair.add(new OutEdgeIdPair(outEdge.getId(), innerId));
+                outEdgeIdPair.add(new OutEdgeIdPair(this, outEdge.getId(), innerId));
             } else {
                 noInnerIdEdges.add(outEdge);
             }
@@ -275,7 +240,7 @@ public class MindDB {
         return outEdgeIdPair;
     }
 
-	public List<OutEdgeIdPair> getOutEdgeIdPairs(Vertex source)
+	private List<OutEdgeIdPair> getOutEdgeIdPairsNoCopy(Vertex source)
 	{
         //TODO mindModel用来判断Node是不是更新过了，应该不需要
         List<OutEdgeIdPair> outEdgeIdPairs = m_outEdgeInnerIdCache.get(source.getId());
@@ -285,6 +250,13 @@ public class MindDB {
         }
         return outEdgeIdPairs;
 	}
+
+    public List<OutEdgeIdPair> getOutEdgeIdPairs(Vertex source)
+    {
+        ArrayList<OutEdgeIdPair> outEdgeIdPairs = (ArrayList<OutEdgeIdPair>)getOutEdgeIdPairsNoCopy(source);
+        //return (ArrayList<OutEdgeIdPair>)outEdgeIdPairs.clone();
+        return Collections.unmodifiableList(outEdgeIdPairs);
+    }
 
     private EdgeVertex getParentSkipCache(Vertex vertex)
     {
@@ -430,7 +402,7 @@ public class MindDB {
         }
 
         edge.setProperty(EDGE_INNER_ID_PROP_NAME, newInnerId);
-        outEdgeIdPairs.add(pos, new OutEdgeIdPair(edge.getId(), newInnerId));
+        outEdgeIdPairs.add(pos, new OutEdgeIdPair(this, edge.getId(), newInnerId));
 
         return newInnerId;
     }
@@ -438,7 +410,7 @@ public class MindDB {
 	private Edge addEdge(Vertex source, Vertex target, int pos, EdgeType edgeType)
 	{
         //必须先取出outEdgeIds。否则，由于cache中没有而从数据库中刷新，新加的边就在其中了
-        List<OutEdgeIdPair> outEdgeIds = getOutEdgeIdPairs(source);
+        List<OutEdgeIdPair> outEdgeIds = getOutEdgeIdPairsNoCopy(source);
 
 		Edge edge = m_graph.addEdge(null, source, target, "E");
 
@@ -501,7 +473,7 @@ public class MindDB {
 
     public Edge getEdge(Vertex source, int pos)
 	{
-		List<OutEdgeIdPair> outEdgeIds = getOutEdgeIdPairs(source);
+		List<OutEdgeIdPair> outEdgeIds = getOutEdgeIdPairsNoCopy(source);
 
         if (outEdgeIds == null) {
             assert source.getEdges(Direction.OUT).iterator().hasNext() == false;
@@ -551,7 +523,7 @@ public class MindDB {
 
     public int getChildOrReferentCount(Vertex vertex)
     {
-        return getOutEdgeIdPairs(vertex).size();
+        return getOutEdgeIdPairsNoCopy(vertex).size();
     }
 
 	public EdgeVertex getChildOrReferent(Vertex parent, int pos)
@@ -570,7 +542,7 @@ public class MindDB {
 	
 	public ArrayList<EdgeVertex> getChildrenAndReferents(Vertex parent)
 	{
-		List<OutEdgeIdPair> outEdgeIdPairs = getOutEdgeIdPairs(parent);
+		List<OutEdgeIdPair> outEdgeIdPairs = getOutEdgeIdPairsNoCopy(parent);
 		if (outEdgeIdPairs == null)
 			return null;
 		
@@ -662,7 +634,7 @@ public class MindDB {
         if (oldPos == newPos)
             return;
 
-        List<OutEdgeIdPair> outEdgeIds = getOutEdgeIdPairs(parent);
+        List<OutEdgeIdPair> outEdgeIds = getOutEdgeIdPairsNoCopy(parent);
         Object edgeDbId = outEdgeIds.get(oldPos).m_dbId;
 
         outEdgeIds.remove(oldPos);
@@ -986,7 +958,7 @@ public class MindDB {
 
     private void verifyOutEdges(Vertex vertex)
     {
-        List<OutEdgeIdPair> outEdgeIdPairs = getOutEdgeIdPairs(vertex);
+        List<OutEdgeIdPair> outEdgeIdPairs = getOutEdgeIdPairsNoCopy(vertex);
         Map<String, Integer> outEdgeIdPairExists = new HashMap<>();
 
         for(OutEdgeIdPair outEdgeIdPair : outEdgeIdPairs) {
@@ -1026,7 +998,7 @@ public class MindDB {
         for (Edge inEdge : vertex.getEdges(Direction.IN)) {
             Vertex parentOrReferrerVertex = getEdgeSource(inEdge);
 
-            List<OutEdgeIdPair> parentOrReferrerOutEdgeIdPairs = getOutEdgeIdPairs(parentOrReferrerVertex);
+            List<OutEdgeIdPair> parentOrReferrerOutEdgeIdPairs = getOutEdgeIdPairsNoCopy(parentOrReferrerVertex);
             assert parentOrReferrerOutEdgeIdPairs.contains(getOutEdgeIdPair(inEdge));
 
             if (getEdgeType(inEdge) == EdgeType.INCLUDE) {
@@ -1125,4 +1097,64 @@ public class MindDB {
         });
     }
 
+    static class OutEdgeIdPair implements Comparable<OutEdgeIdPair>{
+        //final成员，保证不被修改。这样OutEdgeIdPair的容器不需要深层拷贝了。
+        final String m_innerId;
+        Object m_dbId;
+        final MindDB m_mindDB;
+
+        OutEdgeIdPair(MindDB mindDb, Object dbId, String innerId) {
+            assert mindDb != null;
+            assert dbId != null;
+            assert innerId != null;
+
+            m_mindDB = mindDb;
+            m_dbId = dbId;
+            m_innerId = innerId;
+        }
+
+        public String toString() {
+            return "OutEdgeIdPair:[" + m_dbId.toString() + ", " + m_innerId + "]";
+        }
+
+        public int compareTo(OutEdgeIdPair other) {
+            return m_innerId.compareTo(other.m_innerId);
+        }
+
+        public boolean equals(Object other) {
+            if (this == other) {
+                return true;
+            }
+
+            if (! (other instanceof OutEdgeIdPair)) {
+                return false;
+            }
+
+            OutEdgeIdPair otherIdPair = (OutEdgeIdPair)other;
+            if (m_mindDB != otherIdPair.m_mindDB) {
+                return false;
+            }
+
+            if (! m_innerId.equals(otherIdPair.m_innerId)) {
+                return false;
+            }
+
+            if (m_dbId.equals(otherIdPair.m_dbId)) {
+                return true;
+            }
+
+            //TODO 更新边的id
+
+            return false;
+        }
+
+        public boolean belongTo(Edge edge) {
+            if (m_dbId.equals(edge.getId())) {
+                String edgeInnerId = getOutEdgeInnerId(edge);
+                assert m_innerId.equals(edgeInnerId);
+                return true;
+            }
+            return false;
+        }
+    }
 }

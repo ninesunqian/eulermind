@@ -330,6 +330,7 @@ public class MindTreeRenderEngine {
         protected String getText(VisualItem item) {
             //return m_mindView.m_mindModel.getText((NodeItem)item) + " " + MindTreeLayout.getLayoutInfo((NodeItem)item);
             return m_mindView.m_mindModel.getText((NodeItem)item);
+            //return m_mindView.m_mindModel.getNodeDebugInfo((NodeItem)item);
         }
 
         protected String getImageLocation(VisualItem item) {

@@ -3,7 +3,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.*;
 
-import eulermind.MindModel;
 import prefuse.Visualization;
 import prefuse.data.*;
 
@@ -49,7 +48,7 @@ public class TreeFolder extends NodeControl {
 
     void unfoldNode(NodeItem node)
     {
-        if (! m_mindView.m_mindModel.childrenAttached(m_mindView.toSource(node))) {
+        if (! m_mindView.m_mindModel.isChildrenAttached(m_mindView.toSource(node))) {
             m_mindView.m_mindModel.attachChildren(m_mindView.toSource(node));
         }
 
