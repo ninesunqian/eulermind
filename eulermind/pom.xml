@@ -24,7 +24,7 @@
         <dependency>
              <groupId>com.orientechnologies</groupId>
              <artifactId>orientdb-lucene</artifactId>
-              <version>1.7.5</version>
+              <version>1.7.8</version>
         </dependency>
 
         <dependency>
@@ -192,6 +192,18 @@
             </plugin>
 
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>eulermind.EulerMind</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+
+            <plugin>
                 <artifactId>exec-maven-plugin</artifactId>
                 <groupId>org.codehaus.mojo</groupId>
                 <version>1.2.1</version>
@@ -213,7 +225,9 @@
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>eulermind.EulerMind</mainClass>
                                 </transformer>
-                            </transformers>
+
+                                <!--orientdb-core, orient-lucene会修改 META-INF/services/下的相同文件-->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>                            </transformers>
 
                             <filters>
                                 <filter>
@@ -235,6 +249,58 @@
                     </execution>
                 </executions>
             </plugin>
+
+
+            <!--
+            <plugin>
+                <groupId>com.github.wvengen</groupId>
+                <artifactId>proguard-maven-plugin</artifactId>
+                <version>2.0.9</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>proguard</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <proguardVersion>5.2.1</proguardVersion>
+                    <libs>
+                        <lib>${java.home}/lib/rt.jar</lib>
+                        <lib>${java.home}/lib/jsse.jar</lib>
+                    </libs>
+                    <injar>eulermind-1.0-SNAPSHOT.jar</injar>
+                    <outjar>${project.build.finalName}-slim.jar</outjar>
+                    <attach>true</attach>
+                    <attachArtifactClassifier>min</attachArtifactClassifier>
+                    <assembly>
+                        <inclusions>
+                            <inclusion>
+                                <groupId>com.eulermind</groupId>
+                                <artifactId>prefuse</artifactId>
+                            </inclusion>
+                            <inclusion>
+                                <groupId>com.orientechnologies</groupId>
+                                <artifactId>orientdb-lucene</artifactId>
+                            </inclusion>
+                        </inclusions>
+                    </assembly>
+
+                    <options>
+                        <option>-keep class eulermind.EulerMind </option>
+                    </options>
+
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>net.sf.proguard</groupId>
+                        <artifactId>proguard-base</artifactId>
+                        <version>5.2.1</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            -->
 
         </plugins>
     </build>

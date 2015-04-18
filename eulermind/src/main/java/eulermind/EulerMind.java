@@ -2,15 +2,20 @@ package eulermind;
 
 import java.awt.*;
 
+import com.orientechnologies.orient.core.index.OIndexFactory;
+import com.orientechnologies.orient.core.index.OIndexes;
 import eulermind.component.*;
 import eulermind.view.MindEditor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.imageio.spi.ServiceRegistry;
 import javax.swing.*;
 
 import org.swixml.SwingTagLibrary;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 /*
 The MIT License (MIT)
@@ -38,6 +43,19 @@ public class EulerMind {
     static Logger m_logger = LoggerFactory.getLogger(EulerMind.class);
 
     public static void main(String argv[]) {
+        {
+
+            ClassLoader orientClassLoader = OIndexes.class.getClassLoader();
+            ClassLoader origClassLoader = Thread.currentThread().getContextClassLoader();
+
+            Thread.currentThread().setContextClassLoader(orientClassLoader);
+            Iterator<OIndexFactory> lookupProviders = ServiceRegistry.lookupProviders(OIndexFactory.class);
+            Thread.currentThread().setContextClassLoader(origClassLoader);
+            while (lookupProviders.hasNext()) {
+                OIndexFactory factroy = lookupProviders.next();
+                m_logger.info("======: get index class: {}", factroy.getClass());
+            }
+        }
 
         SwingTagLibrary.getInstance().registerTag("fontFamilyCombobox", FontFamilyCombobox.class);
         SwingTagLibrary.getInstance().registerTag("fontSizeCombobox", FontSizeCombobox.class);
