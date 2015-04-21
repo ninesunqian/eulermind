@@ -251,11 +251,11 @@
             </plugin>
 
 
-            <!--
             <plugin>
                 <groupId>com.github.wvengen</groupId>
                 <artifactId>proguard-maven-plugin</artifactId>
                 <version>2.0.9</version>
+
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -264,16 +264,43 @@
                         </goals>
                     </execution>
                 </executions>
+
                 <configuration>
+                    <maxMemory>1024m</maxMemory>
+                    <includeDependency>false</includeDependency>
                     <proguardVersion>5.2.1</proguardVersion>
+
+                    <proguardInclude>${basedir}/proguard.conf</proguardInclude>
+
                     <libs>
                         <lib>${java.home}/lib/rt.jar</lib>
-                        <lib>${java.home}/lib/jsse.jar</lib>
+                        <lib>${java.home}/lib/jce.jar</lib>
+                        <lib>${java.home}/lib/ext/sunjce_provider.jar</lib>
+
+                        <lib>/usr/lib/jvm/java-7-openjdk-amd64/lib/dt.jar</lib>
+                        <lib>/usr/lib/jvm/java-7-openjdk-amd64/lib/jconsole.jar</lib>
+                        <lib>/usr/lib/jvm/java-7-openjdk-amd64/lib/sa-jdi.jar</lib>
+                       <lib>/usr/lib/jvm/java-7-openjdk-amd64/lib/tools.jar</lib>
                     </libs>
+
+
                     <injar>eulermind-1.0-SNAPSHOT.jar</injar>
                     <outjar>${project.build.finalName}-slim.jar</outjar>
                     <attach>true</attach>
                     <attachArtifactClassifier>min</attachArtifactClassifier>
+
+                     <exclusions>
+                        <exclusion>
+                            <groupId>com.eulermind</groupId>
+                            <artifactId>prefuse</artifactId>
+                        </exclusion>
+                         <exclusion>
+                             <groupId>com.orientechnologies</groupId>
+                             <artifactId>orientdb-lucene</artifactId>
+                         </exclusion>
+                    </exclusions>
+
+                    <!--
                     <assembly>
                         <inclusions>
                             <inclusion>
@@ -286,6 +313,7 @@
                             </inclusion>
                         </inclusions>
                     </assembly>
+                    -->
 
                     <options>
                         <option>-keep class eulermind.EulerMind </option>
@@ -300,7 +328,6 @@
                     </dependency>
                 </dependencies>
             </plugin>
-            -->
 
         </plugins>
     </build>
