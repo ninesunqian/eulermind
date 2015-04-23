@@ -251,6 +251,8 @@
             </plugin>
 
 
+            <!--
+
             <plugin>
                 <groupId>com.github.wvengen</groupId>
                 <artifactId>proguard-maven-plugin</artifactId>
@@ -300,21 +302,6 @@
                          </exclusion>
                     </exclusions>
 
-                    <!--
-                    <assembly>
-                        <inclusions>
-                            <inclusion>
-                                <groupId>com.eulermind</groupId>
-                                <artifactId>prefuse</artifactId>
-                            </inclusion>
-                            <inclusion>
-                                <groupId>com.orientechnologies</groupId>
-                                <artifactId>orientdb-lucene</artifactId>
-                            </inclusion>
-                        </inclusions>
-                    </assembly>
-                    -->
-
                     <options>
                         <option>-keep class eulermind.EulerMind </option>
                     </options>
@@ -328,6 +315,7 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            -->
 
         </plugins>
     </build>
