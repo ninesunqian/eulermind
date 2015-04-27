@@ -209,6 +209,7 @@
                 <version>1.2.1</version>
             </plugin>
 
+                <!--
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -226,7 +227,6 @@
                                     <mainClass>eulermind.EulerMind</mainClass>
                                 </transformer>
 
-                                <!--orientdb-core, orient-lucene会修改 META-INF/services/下的相同文件-->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>                            </transformers>
 
                             <filters>
@@ -249,9 +249,9 @@
                     </execution>
                 </executions>
             </plugin>
+            -->
 
 
-            <!--
 
             <plugin>
                 <groupId>com.github.wvengen</groupId>
@@ -269,10 +269,10 @@
 
                 <configuration>
                     <maxMemory>1024m</maxMemory>
-                    <includeDependency>false</includeDependency>
+                    <includeDependency>true</includeDependency>
                     <proguardVersion>5.2.1</proguardVersion>
 
-                    <proguardInclude>${basedir}/proguard.conf</proguardInclude>
+                    <proguardInclude>${basedir}/mvn_proguard.conf</proguardInclude>
 
                     <libs>
                         <lib>${java.home}/lib/rt.jar</lib>
@@ -291,6 +291,7 @@
                     <attach>true</attach>
                     <attachArtifactClassifier>min</attachArtifactClassifier>
 
+                    <!--
                      <exclusions>
                         <exclusion>
                             <groupId>com.eulermind</groupId>
@@ -301,6 +302,7 @@
                              <artifactId>orientdb-lucene</artifactId>
                          </exclusion>
                     </exclusions>
+                    -->
 
                     <options>
                         <option>-keep class eulermind.EulerMind </option>
@@ -315,7 +317,6 @@
                     </dependency>
                 </dependencies>
             </plugin>
-            -->
 
         </plugins>
     </build>

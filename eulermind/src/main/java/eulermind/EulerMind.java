@@ -47,6 +47,7 @@ public class EulerMind {
 
             ClassLoader orientClassLoader = OIndexes.class.getClassLoader();
             ClassLoader origClassLoader = Thread.currentThread().getContextClassLoader();
+            Logger alogger = LoggerFactory.getLogger(EulerMind.class);
 
             Thread.currentThread().setContextClassLoader(orientClassLoader);
             Iterator<OIndexFactory> lookupProviders = ServiceRegistry.lookupProviders(OIndexFactory.class);
