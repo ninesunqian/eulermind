@@ -28,12 +28,6 @@
         </dependency>
 
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>prefuse</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.tinkerpop.blueprints</groupId>
             <artifactId>blueprints-core</artifactId>
             <version>2.4.0</version>
@@ -290,19 +284,6 @@
                     <outjar>${project.build.finalName}-slim.jar</outjar>
                     <attach>true</attach>
                     <attachArtifactClassifier>min</attachArtifactClassifier>
-
-                    <!--
-                     <exclusions>
-                        <exclusion>
-                            <groupId>com.eulermind</groupId>
-                            <artifactId>prefuse</artifactId>
-                        </exclusion>
-                         <exclusion>
-                             <groupId>com.orientechnologies</groupId>
-                             <artifactId>orientdb-lucene</artifactId>
-                         </exclusion>
-                    </exclusions>
-                    -->
 
                     <options>
                         <option>-keep class eulermind.EulerMind </option>

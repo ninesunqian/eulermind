@@ -30,7 +30,6 @@
 </properties>
 
 <modules>
-    <module>prefuse</module>
     <module>eulermind</module>
     <module>orientdb-lucene</module>
 </modules>
