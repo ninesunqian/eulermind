@@ -247,7 +247,7 @@
 
 
 
-            <plugin>
+            <!--plugin>
                 <groupId>com.github.wvengen</groupId>
                 <artifactId>proguard-maven-plugin</artifactId>
                 <version>2.0.9</version>
@@ -297,9 +297,61 @@
                         <version>5.2.1</version>
                     </dependency>
                 </dependencies>
-            </plugin>
 
-        </plugins>
-    </build>
+                </plugin-->
 
-</project>
+                <plugin>
+
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>webstart-maven-plugin</artifactId>
+                    <version>1.0-beta-6</version>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>jnlp-inline</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <jnlp>
+                            <mainClass>eulermind.EulerMind</mainClass>
+                        </jnlp>
+
+                       <updateManifestEntries>
+                         <Permissions>all-permissions</Permissions>
+                         <Codebase>*</Codebase>
+                       </updateManifestEntries>
+
+                        <sign>
+                            <keystore>/home/wangxuguang/.keystore</keystore>
+                            <keypass>eulermind</keypass>
+                            <storepass>eulermind</storepass>
+                            <alias>eulermind</alias>
+
+                            <dnameCn>ninesunqian</dnameCn>
+                            <dnameOu>eulermind</dnameOu>
+                            <dnameO>eulermind</dnameO>
+                            <dnameL>Beijing</dnameL>
+                            <dnameSt>Beijing</dnameSt>
+                            <dnameC>CN</dnameC>
+
+                            <verify>true</verify>
+
+                            <keystoreConfig>
+                                <delete>false</delete>
+                                <gen>false</gen>
+                            </keystoreConfig>
+                        </sign>
+
+                        <unsignAlreadySignedJars>true</unsignAlreadySignedJars>
+
+                        <outputJarVersions>true</outputJarVersions>
+                        <verbose>true</verbose>
+                    </configuration>
+                </plugin>
+
+            </plugins>
+        </build>
+
+    </project>
