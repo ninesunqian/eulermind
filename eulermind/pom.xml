@@ -247,7 +247,7 @@
 
 
 
-            <!--plugin>
+            <plugin>
                 <groupId>com.github.wvengen</groupId>
                 <artifactId>proguard-maven-plugin</artifactId>
                 <version>2.0.9</version>
@@ -280,10 +280,13 @@
                     </libs>
 
 
+                    <injar>${project.build.finalName}.jar</injar>
+                    <!--
                     <injar>eulermind-1.0-SNAPSHOT.jar</injar>
                     <outjar>${project.build.finalName}-slim.jar</outjar>
                     <attach>true</attach>
                     <attachArtifactClassifier>min</attachArtifactClassifier>
+                    -->
 
                     <options>
                         <option>-keep class eulermind.EulerMind </option>
@@ -298,7 +301,7 @@
                     </dependency>
                 </dependencies>
 
-                </plugin-->
+                </plugin>
 
                 <plugin>
 
@@ -324,12 +327,12 @@
                        </updateManifestEntries>
 
                         <sign>
-                            <keystore>/home/wangxuguang/.keystore</keystore>
+                            <keystore>${project.basedir}.keystore</keystore>
                             <keypass>eulermind</keypass>
                             <storepass>eulermind</storepass>
                             <alias>eulermind</alias>
 
-                            <dnameCn>ninesunqian</dnameCn>
+                            <dnameCn>WangXuguang</dnameCn>
                             <dnameOu>eulermind</dnameOu>
                             <dnameO>eulermind</dnameO>
                             <dnameL>Beijing</dnameL>
@@ -339,8 +342,8 @@
                             <verify>true</verify>
 
                             <keystoreConfig>
-                                <delete>false</delete>
-                                <gen>false</gen>
+                                <delete>true</delete>
+                                <gen>true</gen>
                             </keystoreConfig>
                         </sign>
 
