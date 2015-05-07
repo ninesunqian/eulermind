@@ -246,7 +246,6 @@
             -->
 
 
-
             <plugin>
                 <groupId>com.github.wvengen</groupId>
                 <artifactId>proguard-maven-plugin</artifactId>
@@ -280,8 +279,8 @@
                     </libs>
 
 
-                    <injar>${project.build.finalName}.jar</injar>
                     <!--
+                    <injar>${project.build.finalName}.jar</injar>
                     <injar>eulermind-1.0-SNAPSHOT.jar</injar>
                     <outjar>${project.build.finalName}-slim.jar</outjar>
                     <attach>true</attach>
@@ -339,7 +338,8 @@
                             <dnameSt>Beijing</dnameSt>
                             <dnameC>CN</dnameC>
 
-                            <verify>true</verify>
+                            <!--verify>true</verify-->
+                            <verify>false</verify>
 
                             <keystoreConfig>
                                 <delete>true</delete>
