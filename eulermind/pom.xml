@@ -279,12 +279,12 @@
                     </libs>
 
 
-                    <!--
                     <injar>${project.build.finalName}.jar</injar>
-                    <injar>eulermind-1.0-SNAPSHOT.jar</injar>
+                    <!--
                     <outjar>${project.build.finalName}-slim.jar</outjar>
                     <attach>true</attach>
                     <attachArtifactClassifier>min</attachArtifactClassifier>
+                    <injar>eulermind-1.0-SNAPSHOT.jar</injar>
                     -->
 
                     <options>
@@ -342,8 +342,8 @@
                             <verify>false</verify>
 
                             <keystoreConfig>
-                                <delete>true</delete>
-                                <gen>true</gen>
+                                <delete>false</delete>
+                                <gen>false</gen>
                             </keystoreConfig>
                         </sign>
 
