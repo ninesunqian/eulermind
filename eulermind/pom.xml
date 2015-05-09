@@ -318,6 +318,7 @@
                     <configuration>
                         <jnlp>
                             <mainClass>eulermind.EulerMind</mainClass>
+                            <offlineAllowed>true</offlineAllowed>
                         </jnlp>
 
                        <updateManifestEntries>
@@ -327,23 +328,23 @@
 
                         <sign>
                             <keystore>${project.basedir}.keystore</keystore>
-                            <keypass>eulermind</keypass>
-                            <storepass>eulermind</storepass>
-                            <alias>eulermind</alias>
+                            <keypass>eulermind2011</keypass>
+                            <storepass>eulermind2011</storepass>
+                            <alias>everyone</alias>
 
-                            <dnameCn>WangXuguang</dnameCn>
+                            <dnameCn>Wang Xuguang</dnameCn>
                             <dnameOu>eulermind</dnameOu>
                             <dnameO>eulermind</dnameO>
                             <dnameL>Beijing</dnameL>
                             <dnameSt>Beijing</dnameSt>
                             <dnameC>CN</dnameC>
 
-                            <!--verify>true</verify-->
+                            <validity>3650</validity>
                             <verify>false</verify>
 
                             <keystoreConfig>
-                                <delete>false</delete>
-                                <gen>false</gen>
+                                <delete>true</delete>
+                                <gen>true</gen>
                             </keystoreConfig>
                         </sign>
 
