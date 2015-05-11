@@ -1,60 +1,60 @@
 <frame name="mainframe" title="EulerMind" layout="BorderLayout" size="800,600"  >
 
     <menubar name="menubar">
-        <menu text="导图" id="m_mindMapMenu" mnemonic="VK_M"/>
-        <menu text="导入" id="m_importMenu" mnemonic="VK_I">
+        <menu text="Map" id="m_mindMapMenu" mnemonic="VK_M"/>
+        <menu text="Import" id="m_importMenu" mnemonic="VK_I">
             <menuitem id="mi_import" text="Import ..." Action="m_importAction"/>
         </menu>
-        <menu text="收藏夹" id="m_favoriteMenu" mnemonic="VK_F"/>
-        <menu text="祖先" id="m_ancestorMenu" mnemonic="VK_A"/>
+        <menu text="Favoraite" id="m_favoriteMenu" mnemonic="VK_F"/>
+        <menu text="WhoAmI" id="m_ancestorMenu" mnemonic="VK_A"/>
 
-        <menu text="选项" mnemonic="VK_O" >
-            <checkboxmenuitem id="m_searchWhileAddingNodeCheckMenu" text="实时搜索" Selected="true"/>
+        <menu text="Option" mnemonic="VK_O" >
+            <checkboxmenuitem id="m_searchWhileAddingNodeCheckMenu" text="SearchInputting" Selected="true"/>
             <separator/>
-            <checkboxmenuitem id="m_propertyToolBarVisibleCheckMenu" text="属性工具栏"  Selected="true"/>
+            <checkboxmenuitem id="m_propertyToolBarVisibleCheckMenu" text="PropertyVisible"  Selected="true"/>
         </menu>
 
     </menubar>
 
     <vbox constraints="BorderLayout.NORTH" >
         <toolBar floatable="false" autoscrolls="true"  id="m_propertyToolBar" preferredSize="0, 30" orientation="HORIZONTAL">
-            <label labelfor="m_fontFamilyCombobox" text="字体"/>
+            <label labelfor="m_fontFamilyCombobox" text="Font"/>
             <fontFamilyCombobox id="m_fontFamilyCombobox"/>
 
             <separator/>
 
-            <label labelfor="m_fontSizeCombobox" text="字号"/>
+            <label labelfor="m_fontSizeCombobox" text="Size"/>
             <fontSizeCombobox id="m_fontSizeCombobox"/>
 
             <separator/>
 
-            <label labelfor="m_italicCombobox" text="斜体"/>
+            <label labelfor="m_italicCombobox" text="Italic"/>
             <booleanCombobox id="m_italicCombobox"/>
 
             <separator/>
 
-            <label labelfor="m_boldCombobox" text="粗体"/>
+            <label labelfor="m_boldCombobox" text="Bold"/>
             <booleanCombobox id="m_boldCombobox"/>
 
             <separator/>
 
-            <label labelfor="m_textColorCombobox" text="字体色"/>
+            <label labelfor="m_textColorCombobox" text="TextColor"/>
             <colorCombobox id="m_textColorCombobox" text="T" Font="COURIER-BOLD-14"/>
 
             <separator/>
 
-            <label labelfor="m_nodeColorCombobox" text="节点色"/>
+            <label labelfor="m_nodeColorCombobox" text="NodeColor"/>
             <colorCombobox id="m_nodeColorCombobox" text="T" Font="COURIER-BOLD-14"/>
 
             <separator/>
 
-            <label labelfor="m_iconButton" text="图标"/>
+            <label labelfor="m_iconButton" text="Icon"/>
             <iconbutton id="m_iconButton" />
 
         </toolBar>
 
         <toolBar floatable="false" autoscrolls="true"  preferredSize="0, 30" orientation="HORIZONTAL">
-            <label labelfor="m_searchInputer" text="搜索" Focusable="true"/>
+            <label labelfor="m_searchInputer" text="Search" Focusable="true"/>
             <mindEditor id="m_searchInputer" columns="10"/>
         </toolBar>
 
@@ -62,7 +62,7 @@
     </vbox>
 
     <vbox constraints="BorderLayout.EAST"  preferredSize="100, 0">
-        <label text="样式"/>
+        <label text="Style"/>
 
         <scrollPane  preferredSize="100, 10000">
             <styleList id="m_styleList"/>
@@ -70,14 +70,14 @@
 
 
         <panel Layout="GridLayout(0,2)"  preferredSize="100, 10">
-        <button text="新建" id="m_styleNewButton"/>
-        <button text="删除" id="m_styleDeletingButton"/>
-        <button text="编辑" id="m_styleEditingButton"/>
+        <button text="New" id="m_styleNewButton"/>
+        <button text="Delete" id="m_styleDeletingButton"/>
+        <button text="Edit" id="m_styleEditingButton"/>
         </panel>
 
         <panel Layout="GridLayout(0,2)"   preferredSize="100, 10">
-            <button text="上移" id="m_styleUpButton"/>
-            <button text="下移" id="m_styleDownButton"/>
+            <button text="Up" id="m_styleUpButton"/>
+            <button text="Down" id="m_styleDownButton"/>
         </panel>
     </vbox>
 

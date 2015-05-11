@@ -108,8 +108,6 @@ public class MindView extends Display {
                 m_logger.warn("--------------- after hide Editor");
             }
         });
-
-
     }
 
     void cancelInserting()
