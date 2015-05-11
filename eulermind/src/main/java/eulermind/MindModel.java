@@ -1371,13 +1371,16 @@ public class MindModel {
         handoverNode(oldReferrer, oldPos, newReferrer, newPos, edgeVertex, oldEdgeId);
 
         s_logger.info("ret:");
-
     }
 
     public boolean m_verifyNodeEnabled = true;
 
     void verifyNode(Node node, boolean forceChildAttached)
     {
+        if (true) {
+            return;
+        }
+
         if (m_verifyNodeEnabled == false) {
             return;
         }

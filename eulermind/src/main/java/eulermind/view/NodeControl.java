@@ -243,15 +243,13 @@ public abstract class NodeControl extends ControlAdapter {
 
         DragAction dragAction = getDragAction(e);
 
-        if (curHitNode != draggedNode) {
-            if (curHitNode != null) {
-                HitPosition hitPosition = getHitPosition(curHitNode, mousePoint);
-                dragEnd(draggedNode, curHitNode, hitPosition, dragAction);
-                m_logger.info("itemDropped : " + curHitNode.getString(MindModel.TEXT_PROP_NAME));
-            } else {
-                m_logger.info("itemDropped : null");
-                dragEnd(draggedNode, null, HitPosition.OUTSIDE, dragAction);
-            }
+        if (curHitNode != null && curHitNode != draggedNode) {
+            HitPosition hitPosition = getHitPosition(curHitNode, mousePoint);
+            dragEnd(draggedNode, curHitNode, hitPosition, dragAction);
+            m_logger.info("itemDropped : " + curHitNode.getString(MindModel.TEXT_PROP_NAME));
+        } else {
+            m_logger.info("itemDropped : null");
+            dragEnd(draggedNode, null, HitPosition.OUTSIDE, dragAction);
         }
 
         clearHitNode();
