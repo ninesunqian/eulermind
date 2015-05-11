@@ -328,7 +328,7 @@ public class MindView extends Display {
         m_isChanging = false;
     }
 
-    void beginAdding(boolean asChild)
+    void beginAdding(final boolean asChild, final boolean hasPrompt)
     {
         if (! beginChanging()) {
             return;
@@ -371,7 +371,7 @@ public class MindView extends Display {
                         //TODO
                         //listener 内部，调用endInstering (重绘，设置重绘后的hander是 恢复状态)
                         m_mindEditor.setMindEditorListener(m_editorListenerForInserting);
-                        m_mindEditor.setHasPromptList(m_mindController.m_searchWhileAddingNode);
+                        m_mindEditor.setHasPromptList(hasPrompt);
                         showEditor();
                         m_logger.warn("--------------- after show Editor");
                     }
@@ -541,11 +541,19 @@ public class MindView extends Display {
     }
 
     public void addChild() {
-        beginAdding(true);
+        beginAdding(true, false);
     }
 
     public void addSibling() {
-        beginAdding(false);
+        beginAdding(false, false);
+    }
+
+    public void addChildWithPrompt() {
+        beginAdding(true, true);
+    }
+
+    public void addSiblingWithPrompt() {
+        beginAdding(false, true);
     }
 
     public void edit() {

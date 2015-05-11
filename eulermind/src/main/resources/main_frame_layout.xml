@@ -9,8 +9,6 @@
         <menu text="WhoAmI" id="m_ancestorMenu" mnemonic="VK_A"/>
 
         <menu text="Option" mnemonic="VK_O" >
-            <checkboxmenuitem id="m_searchWhileAddingNodeCheckMenu" text="SearchInputting" Selected="true"/>
-            <separator/>
             <checkboxmenuitem id="m_propertyToolBarVisibleCheckMenu" text="PropertyVisible"  Selected="true"/>
         </menu>
 

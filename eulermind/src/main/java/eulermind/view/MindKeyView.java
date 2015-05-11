@@ -48,6 +48,10 @@ public class MindKeyView extends MindView {
 
     final static String sm_addChildActionName = "addChild";
     final static String sm_addSiblingActionName = "addSibling";
+
+    final static String sm_addChildWithPromptActionName = "addChildWithPrompt";
+    final static String sm_addSiblingWithPromptActionName = "addSiblingWithPrompt";
+
     final static String sm_removeActionName = "remove";
 
     final static String sm_cursorMoveUpActionName = "cursorMoveUp";
@@ -64,6 +68,8 @@ public class MindKeyView extends MindView {
         m_mindActionMap.put(sm_removeActionName, m_removeAction);
         m_mindActionMap.put(sm_addChildActionName, m_addChildAction);
         m_mindActionMap.put(sm_addSiblingActionName, m_addSiblingAction);
+        m_mindActionMap.put(sm_addChildWithPromptActionName, m_addChildWithPromptAction);
+        m_mindActionMap.put(sm_addSiblingWithPromptActionName, m_addSiblingWithPromptAction);
 
         m_mindActionMap.put(sm_undoActionName, m_undoAction);
         m_mindActionMap.put(sm_redoActionName, m_redoAction);
@@ -87,6 +93,9 @@ public class MindKeyView extends MindView {
         inputMap.put(KeyStroke.getKeyStroke("DELETE"), sm_removeActionName);
         inputMap.put(KeyStroke.getKeyStroke("INSERT"), sm_addChildActionName);
         inputMap.put(KeyStroke.getKeyStroke("ENTER"), sm_addSiblingActionName);
+
+        inputMap.put(KeyStroke.getKeyStroke("shift INSERT"), sm_addChildWithPromptActionName);
+        inputMap.put(KeyStroke.getKeyStroke("shift ENTER"), sm_addSiblingWithPromptActionName);
 
         inputMap.put(KeyStroke.getKeyStroke("ctrl Z"), sm_undoActionName);
         inputMap.put(KeyStroke.getKeyStroke("ctrl Y"), sm_redoActionName);
@@ -174,6 +183,21 @@ public class MindKeyView extends MindView {
         @Override
         public void actionPerformed(ActionEvent e) {
             addSibling();
+        }
+    };
+
+    public AbstractAction m_addChildWithPromptAction = new AbstractAction() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            addChildWithPrompt();
+        }
+    };
+
+    public AbstractAction m_addSiblingWithPromptAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            addSiblingWithPrompt();
         }
     };
 

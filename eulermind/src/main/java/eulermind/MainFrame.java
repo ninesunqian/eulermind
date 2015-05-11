@@ -74,7 +74,6 @@ public class MainFrame  extends JFrame {
 
     JToolBar m_propertyToolBar;
     JCheckBoxMenuItem m_propertyToolBarVisibleCheckMenu;
-    JCheckBoxMenuItem m_searchWhileAddingNodeCheckMenu;
 
     String m_currentMapName;
 
@@ -126,7 +125,6 @@ public class MainFrame  extends JFrame {
         m_styleDownButton.addActionListener(m_styleDownAction);
 
         m_propertyToolBarVisibleCheckMenu.addActionListener(m_propertyToolBarVisibleAction);
-        m_searchWhileAddingNodeCheckMenu.addActionListener(m_searchWhileAddingNodeAction);
 
         String lastOpenedMap = Utils.getLastOpenedMap();
         if (lastOpenedMap != null) {
@@ -532,16 +530,6 @@ public class MainFrame  extends JFrame {
         {
             boolean visible = m_propertyToolBarVisibleCheckMenu.isSelected();
             m_propertyToolBar.setVisible(visible);
-        }
-    };
-
-
-    public Action m_searchWhileAddingNodeAction = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e)
-        {
-            boolean selected = m_searchWhileAddingNodeCheckMenu.isSelected();
-            m_mindController.m_searchWhileAddingNode = selected;
         }
     };
 }
