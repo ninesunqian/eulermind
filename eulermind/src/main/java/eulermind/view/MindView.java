@@ -305,6 +305,7 @@ public class MindView extends Display {
         m_cursor.setCursorNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, path)));
     }
 
+    //防止用户重复操作
     boolean beginChanging() {
         if (m_isChanging) {
             return false;

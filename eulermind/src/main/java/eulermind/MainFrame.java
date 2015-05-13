@@ -266,17 +266,19 @@ public class MainFrame  extends JFrame {
                 @Override
                 public void actionPerformed(ActionEvent actionEvent)
                 {
-                    closeMindDb();
-                    String name;
+                    String name = null;
                     while(true) {
-                    name = JOptionPane.showInputDialog("input a map name, must alphabet, number or '_'", null);
+                        name = JOptionPane.showInputDialog("input a map name, must alphabet, number or '_'", null);
                         if (name != null && name.matches("[a-zA-Z0-9_]+")) {
-                            break;
-                        } else {
                             JOptionPane.showMessageDialog(null, "name format error", null, JOptionPane.ERROR_MESSAGE);
+                        } else {
+                            break;
                         }
                     }
-                    openMindDb(name);
+                    if (name != null && name != m_currentMapName) {
+                        closeMindDb();
+                        openMindDb(name);
+                    }
                 }
             });
             m_mindMapMenu.add(addingMenuItem);

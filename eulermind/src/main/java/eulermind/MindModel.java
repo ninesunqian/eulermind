@@ -538,7 +538,7 @@ public class MindModel {
 
     private int getPositionInOutEdgeIdPairs(List<MindDB.OutEdgeIdPair> outEdgeIdPairs, Object edgeDbId) {
         for (int i=0; i<outEdgeIdPairs.size(); i++) {
-            if (outEdgeIdPairs.get(i).equals(edgeDbId)) {
+            if (outEdgeIdPairs.get(i).m_dbId.equals(edgeDbId)) {
                 return i;
             }
         }

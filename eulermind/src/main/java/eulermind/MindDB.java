@@ -1064,8 +1064,6 @@ public class MindDB {
         assert pos != null;
         assert refLinkInfos == null || !refLinkInfos.isEmpty();
 
-        verifyCachedInheritPathValid(parentId, root.getId());
-
         if (refLinkInfos != null) {
             for (RefLinkInfo refLinkInfo : refLinkInfos) {
                 assert root.getId().equals(refLinkInfo.m_referent) ||
@@ -1084,7 +1082,7 @@ public class MindDB {
 
                 verifyVertex(vertex);
 
-                //only has one inEdge
+                //回收站里的节点只有一个入边，因为所有的引用边都删除了
                 Iterable<Edge> inEdges = vertex.getEdges(Direction.IN);
 
                 Iterator iterator = inEdges.iterator();
