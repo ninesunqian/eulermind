@@ -332,7 +332,7 @@ public class Style {
         if (name == null || name.isEmpty()) {
             return null;
         }
-        return new ImageIcon(Style.getIconPath(name));
+        return Utils.getImageIcon("icons/" + name + ".png");
     }
 
     static private Style getStyleSurely(String name)

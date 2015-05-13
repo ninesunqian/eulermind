@@ -2,6 +2,7 @@ package eulermind.component;
 
 import eulermind.MindController;
 import eulermind.MindModel;
+import eulermind.Utils;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -31,7 +32,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 public class MindIconToolBar extends JToolBar {
     private MindController m_mindController;
 
-    private static String sm_iconDir = MindIconToolBar.class.getClassLoader().getResource("icons/").getPath();
 
     private static String sm_iconsList = "remove;idea;help;yes;messagebox_warning;stop-sign;closed;info;button_ok;button_cancel;"
             + "full-1;full-2;full-3;full-4;full-5;full-6;full-7;full-8;full-9;full-0;"
@@ -41,11 +41,6 @@ public class MindIconToolBar extends JToolBar {
             + "penguin;licq;freemind_butterfly;broken-line;calendar;clock;hourglass;launch;"
             + "flag-black;flag-blue;flag-green;flag-orange;flag-pink;flag;flag-yellow;family;"
             + "female1;female2;male1;male2;fema;group";
-
-    public static String getIconPath(String name)
-    {
-        return name == null ? null : sm_iconDir + "/" + name;
-    }
 
     public MindIconToolBar()
     {
@@ -66,7 +61,7 @@ public class MindIconToolBar extends JToolBar {
 
     private void addIcon(final String name)
     {
-        ImageIcon imageIcon = new ImageIcon(getIconPath(name));
+        ImageIcon imageIcon = Utils.getImageIcon("icons/" + name);
         AbstractAction action = new AbstractAction(name, imageIcon) {
             public void actionPerformed(ActionEvent event) {
                 m_mindController.getCurrentView().setCursorProperty(

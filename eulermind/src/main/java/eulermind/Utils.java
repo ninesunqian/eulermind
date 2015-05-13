@@ -298,15 +298,8 @@ public class Utils {
         clipboard.setContents(selection, null);
     }
 
-    private static String s_appIconBaseDir = Utils.class.getClassLoader().getResource("app_icons").getPath();
-    private static HashMap<String, Icon> s_appIcons = new HashMap<>();
     public static Icon getAppIcon(String name) {
-        Icon icon = null;
-        if ( (icon=s_appIcons.get(name)) == null ) {
-            icon = new ImageIcon(s_appIconBaseDir + "/" + name);
-            s_appIcons.put(name, icon);
-        }
-        return icon;
+        return getImageIcon("app_icons/" + name);
     }
 
      public static void printStackTrace(Class cls) {
@@ -379,4 +372,25 @@ public class Utils {
         }
         return ret;
     }
+
+    static private HashMap<String, ImageIcon> s_iconMap = new HashMap<>();
+    public static ImageIcon getImageIcon(String path) {
+
+        //见 https://docs.oracle.com/javase/tutorial/uiswing/components/icon.html
+        //这种方式支持 jnlp
+
+        ImageIcon icon = s_iconMap.get(path);
+
+        if (icon != null) {
+            return icon;
+        }
+
+        java.net.URL imageURL = Utils.class.getClassLoader().getResource(path);
+        if (imageURL != null) {
+            icon = new ImageIcon(imageURL);
+            s_iconMap.put(path, icon);
+        }
+
+        return icon;
+    };
 }
