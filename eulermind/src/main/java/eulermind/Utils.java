@@ -15,12 +15,8 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.UnsupportedFlavorException;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.DirectoryNotEmptyException;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Paths;
+import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 
 /**
@@ -393,4 +389,47 @@ public class Utils {
 
         return icon;
     };
+
+    static public void copyResourceToFile(String resourceName, String fileName)
+    {
+        InputStream streamIn = null;
+        OutputStream streamOut = null;
+
+        try {
+            streamIn = Utils.class.getClassLoader().getResourceAsStream(resourceName);
+            if(streamIn == null) {
+                throw new Exception("Cannot get resource \"" + resourceName + "\" from Jar file.");
+            }
+
+            Path path = Paths.get(fileName).toAbsolutePath();
+            Path parent = path.getParent();
+            mkdir(parent.toString());
+
+            int readBytes;
+            byte[] buffer = new byte[4096];
+
+            streamOut = new FileOutputStream(fileName);
+
+            while ((readBytes = streamIn.read(buffer)) > 0) {
+                streamOut.write(buffer, 0, readBytes);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (Exception e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } finally {
+            assert streamIn != null;
+            try {
+                streamIn.close();
+            } catch (IOException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+            assert streamOut != null;
+            try {
+                streamOut.close();
+            } catch (IOException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+        }
+    }
 }

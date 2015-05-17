@@ -224,12 +224,9 @@ public class Style {
 
         if (!userStylesFile.exists()) {
 
-            String defaultStylesPath = Style.class.getClassLoader().getResource("styles.xml").getPath();
-            File defaultStylesFile = new File(defaultStylesPath);
-
             try {
-                FileUtils.copyFile(defaultStylesFile, userStylesFile);
-            } catch (IOException e) {
+                Utils.copyResourceToFile("styles.xml", Config.STYLE_FILE);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
