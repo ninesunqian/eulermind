@@ -356,9 +356,83 @@ public class MindDB {
 		return EdgeType.values()[edgeTypeValue];
 	}
 
+    private char[] stringIdToCharArray(String id, int arraySize, char padding) {
+        assert id.length() < arraySize;
+
+        char chars[] = new char[arraySize];
+
+        int i, j;
+
+        for (i=0; i<id.length(); i++) {
+            chars[i] = id.charAt(i);
+        }
+
+        for (j=i; j<arraySize; j++) {
+            chars[j] = padding;
+        }
+
+        return chars;
+    }
+
+    private String getMiddleString(String lower, String upper)
+    {
+        //字符串比较类似纯小数的比较 "ab" < "ac" 类似  0.01 < 0.03
+        //  a看作0，  z看作9
+
+        assert lower != null;
+        assert upper != null;
+
+        if (lower.length() == 0 && upper.length() == 0) {
+            return  "h"; // "h" = 0.2, 根据二八定律，用户很有可能在后面追加节点
+        }
+
+        assert lower.compareTo(upper) < 0 || upper.length() == 0;
+
+        int charCount = lower.length() > upper.length() ? lower.length() : upper.length();
+        charCount += 2; //补上两位用户扩展
+
+        char lowerChars[] = stringIdToCharArray(lower, charCount, 'a');
+        char upperChars[] =  upper.length() == 0 ?
+                stringIdToCharArray("", charCount, 'z') :  stringIdToCharArray(upper, charCount, 'a');
+
+        int i = 0;
+
+        while(lowerChars[i] == upperChars[i]) {
+            i++;
+        }
+
+        if (lowerChars[i] + 1 == upperChars[i]) {
+            //0.19994 , 0.2 中间有一个 0.19995
+
+            i++;
+
+            //跳过中间的999
+            while (lowerChars[i] == 'z') {
+                i++;
+            }
+
+            if (lowerChars[i] == 'a') {
+                //如果是 0.19990, 返回 0.19992
+                lowerChars[i] = 'h';
+            } else {
+                //如果是 0.19993, 返回 0.19994
+                lowerChars[i]++;
+            }
+
+        } else {
+            //0.19999,  0.4123 之间有一个0.2
+            lowerChars[i]++;
+        }
+
+        return new String(lowerChars, 0, i+1);
+    }
+
+
     private String allocateOutEdgeInnerId(List<OutEdgeIdPair> outEdgeIdPairs, int pos, Edge edge)
     {
         String newInnerId;
+        String upper;
+        String lower;
 
         if (pos == ADDING_EDGE_END) {
             pos = outEdgeIdPairs.size();
@@ -366,40 +440,19 @@ public class MindDB {
 
         assert pos <= outEdgeIdPairs.size();
 
-        if (outEdgeIdPairs.size() == 0) {
-            newInnerId = "b"; // 'a' + 1
-            m_logger.info("newInnerId: [\"{}\"]", newInnerId);
-        } else {
-            if (pos == 0) {
-                String next = outEdgeIdPairs.get(pos).m_innerId;
-                char nextLastChar = next.charAt(next.length() - 1);
-
-                // bb c d e
-                if ('b' < nextLastChar) {
-                    newInnerId = next.substring(0, next.length() - 1) + (char)(nextLastChar - 1);
-                } else {
-                    newInnerId = next.substring(0, next.length() - 1) + (char)(nextLastChar - 1) + 'b';
-                }
-                m_logger.info("newInnerId: [\"{}\", {}]", newInnerId, next);
-            }  else {
-                String prev = outEdgeIdPairs.get(pos - 1).m_innerId;
-                char prevLastChar = prev.charAt(prev.length() - 1);
-
-                if (prevLastChar < 'z') {
-                    newInnerId = prev.substring(0, prev.length() - 1) + (char)(prevLastChar + 1);
-
-                    if (pos < outEdgeIdPairs.size()) {
-                        String next = outEdgeIdPairs.get(pos).m_innerId;
-                        if (newInnerId.compareTo(next) >= 0) {
-                            newInnerId = prev + 'b';
-                        }
-                    }
-                } else {
-                    newInnerId = prev + 'b';
-                }
-                m_logger.info("newInnerId: [{}, \"{}\"]", prev, newInnerId);
-            }
+        if (pos == 0) {
+            lower = "";
+        } else  {
+            lower = outEdgeIdPairs.get(pos - 1).m_innerId;
         }
+
+        if (pos == outEdgeIdPairs.size()) {
+            upper = "";
+        } else {
+            upper = outEdgeIdPairs.get(pos).m_innerId;
+        }
+
+        newInnerId = getMiddleString(lower, upper);
 
         edge.setProperty(EDGE_INNER_ID_PROP_NAME, newInnerId);
         outEdgeIdPairs.add(pos, new OutEdgeIdPair(this, edge.getId(), newInnerId));
