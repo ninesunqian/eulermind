@@ -1,37 +1,50 @@
 <list>
   <style>
-    <fontSize>14</fontSize>
-    <italic>true</italic>
-    <nodeColor>-16711936</nodeColor>
-    <textColor>-2354116</textColor>
-    <icon>forward</icon>
-    <name>todo1</name>
-  </style>
-  <style>
     <fontFamily>SansSerif</fontFamily>
     <fontSize>16</fontSize>
     <bold>false</bold>
     <italic>false</italic>
     <nodeColor>-1</nodeColor>
-    <textColor>-5658199</textColor>
+    <textColor>-16777216</textColor>
     <name>default</name>
   </style>
   <style>
-    <name>new Style</name>
+    <fontSize>14</fontSize>
+    <italic>true</italic>
+    <textColor>-2354116</textColor>
+    <icon>forward</icon>
+    <name>todo</name>
   </style>
   <style>
-    <name>new style0</name>
+    <textColor>-2354116</textColor>
+    <icon>button_ok</icon>
+    <name>done</name>
   </style>
   <style>
-    <fontFamily>AR PL UKai TW</fontFamily>
-    <bold>true</bold>
-    <name>new style1</name>
+    <textColor>-2354116</textColor>
+    <icon>stop-sign</icon>
+    <name>stop</name>
   </style>
   <style>
-    <name>new style2</name>
+    <bold>false</bold>
+    <textColor>-16777216</textColor>
+    <icon>messagebox_warning</icon>
+    <name>important</name>
   </style>
   <style>
-    <icon>prepare</icon>
-    <name>new style3</name>
+    <icon>closed</icon>
+    <name>forbidden</name>
+  </style>
+  <style>
+    <icon>button_cancel</icon>
+    <name>error</name>
+  </style>
+  <style>
+    <icon>info</icon>
+    <name>infomation</name>
+  </style>
+  <style>
+    <icon>idea</icon>
+    <name>inspiration</name>
   </style>
 </list>

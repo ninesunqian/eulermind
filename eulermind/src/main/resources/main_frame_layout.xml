@@ -16,37 +16,37 @@
 
     <vbox constraints="BorderLayout.NORTH" >
         <toolBar floatable="false" autoscrolls="true"  id="m_propertyToolBar" preferredSize="0, 30" orientation="HORIZONTAL">
-            <label labelfor="m_fontFamilyCombobox" text="Font"/>
+            <label labelfor="m_fontFamilyCombobox" text=" Font"/>
             <fontFamilyCombobox id="m_fontFamilyCombobox"/>
 
             <separator/>
 
-            <label labelfor="m_fontSizeCombobox" text="Size"/>
+            <label labelfor="m_fontSizeCombobox" text=" Size"/>
             <fontSizeCombobox id="m_fontSizeCombobox"/>
 
             <separator/>
 
-            <label labelfor="m_italicCombobox" text="Italic"/>
+            <label labelfor="m_italicCombobox" text=" Italic"/>
             <booleanCombobox id="m_italicCombobox"/>
 
             <separator/>
 
-            <label labelfor="m_boldCombobox" text="Bold"/>
+            <label labelfor="m_boldCombobox" text=" Bold"/>
             <booleanCombobox id="m_boldCombobox"/>
 
             <separator/>
 
-            <label labelfor="m_textColorCombobox" text="TextColor"/>
+            <label labelfor="m_textColorCombobox" text=" TextColor"/>
             <colorCombobox id="m_textColorCombobox" text="T" Font="COURIER-BOLD-14"/>
 
             <separator/>
 
-            <label labelfor="m_nodeColorCombobox" text="NodeColor"/>
+            <label labelfor="m_nodeColorCombobox" text=" NodeColor"/>
             <colorCombobox id="m_nodeColorCombobox" text="T" Font="COURIER-BOLD-14"/>
 
             <separator/>
 
-            <label labelfor="m_iconButton" text="Icon"/>
+            <label labelfor="m_iconButton" text=" Icon"/>
             <iconbutton id="m_iconButton" />
 
         </toolBar>
@@ -59,21 +59,21 @@
 
     </vbox>
 
-    <vbox constraints="BorderLayout.EAST"  preferredSize="100, 0">
+    <vbox constraints="BorderLayout.EAST"  preferredSize="150, 0">
         <label text="Style"/>
 
-        <scrollPane  preferredSize="100, 10000">
+        <scrollPane  preferredSize="150, 10000">
             <styleList id="m_styleList"/>
         </scrollPane>
 
 
-        <panel Layout="GridLayout(0,2)"  preferredSize="100, 10">
+        <panel Layout="GridLayout(0,2)"  preferredSize="150, 10">
         <button text="New" id="m_styleNewButton"/>
         <button text="Delete" id="m_styleDeletingButton"/>
         <button text="Edit" id="m_styleEditingButton"/>
         </panel>
 
-        <panel Layout="GridLayout(0,2)"   preferredSize="100, 10">
+        <panel Layout="GridLayout(0,2)"   preferredSize="150, 10">
             <button text="Up" id="m_styleUpButton"/>
             <button text="Down" id="m_styleDownButton"/>
         </panel>

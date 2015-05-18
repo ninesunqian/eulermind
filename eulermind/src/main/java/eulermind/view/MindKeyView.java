@@ -94,8 +94,8 @@ public class MindKeyView extends MindView {
         inputMap.put(KeyStroke.getKeyStroke("INSERT"), sm_addChildActionName);
         inputMap.put(KeyStroke.getKeyStroke("ENTER"), sm_addSiblingActionName);
 
-        inputMap.put(KeyStroke.getKeyStroke("shift INSERT"), sm_addChildWithPromptActionName);
-        inputMap.put(KeyStroke.getKeyStroke("shift ENTER"), sm_addSiblingWithPromptActionName);
+        inputMap.put(KeyStroke.getKeyStroke("ctrl INSERT"), sm_addChildWithPromptActionName);
+        inputMap.put(KeyStroke.getKeyStroke("ctrl ENTER"), sm_addSiblingWithPromptActionName);
 
         inputMap.put(KeyStroke.getKeyStroke("ctrl Z"), sm_undoActionName);
         inputMap.put(KeyStroke.getKeyStroke("ctrl Y"), sm_redoActionName);
