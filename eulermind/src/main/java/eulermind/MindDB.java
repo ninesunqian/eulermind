@@ -614,7 +614,7 @@ public class MindDB {
 	
     public Object getParentDbId(Object dbId)
     {
-        if (dbId.equals(m_rootId)) {
+        if (dbId.equals(m_rootId) || isInTrashIndex(dbId)) {
             return null;
         }
 
@@ -951,6 +951,15 @@ public class MindDB {
         m_graph.removeVertex(root);
     }
 
+    private boolean isInTrashIndex(Object dbId) {
+        for (Vertex trashedRoot : m_trashIndex.get(TRASH_KEY_NAME, TRASH_KEY_NAME)) {
+            if (dbId.equals(trashedRoot.getId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 	private void cleanTrash ()
 	{
         for (Vertex vertex: m_trashIndex.get(TRASH_KEY_NAME, TRASH_KEY_NAME)) {
@@ -1093,13 +1102,7 @@ public class MindDB {
 
     public void verifyTrashedTree(final Vertex root)
     {
-        boolean trashIndexContained = false;
-        for (Vertex trashedRoot : m_trashIndex.get(TRASH_KEY_NAME, TRASH_KEY_NAME)) {
-            if (root.getId().equals(trashedRoot.getId())) {
-                trashIndexContained = true;
-            }
-        }
-        assert trashIndexContained == true;
+        assert isInTrashIndex(root.getId());
 
         Iterable<Edge> inEdges = root.getEdges(Direction.IN);
         assert inEdges.iterator().hasNext() == false;
