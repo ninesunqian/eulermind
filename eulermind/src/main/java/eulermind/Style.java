@@ -325,7 +325,7 @@ public class Style {
         return name == null ? null : sm_iconDir + "/" + name + ".png";
     }
 
-    public static Icon getImageIcon(String name) {
+    public static ImageIcon getImageIcon(String name) {
         if (name == null || name.isEmpty()) {
             return null;
         }

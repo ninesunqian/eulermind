@@ -158,8 +158,10 @@ public class Crawler extends WebCrawler {
         CrawlController controller = null;
 
         try {
-            //controller = new CrawlController(m_config, pageFetcher, robotstxtServer);
-            controller = new CrawlController(m_config, pageFetcher);
+            controller = new CrawlController(m_config, pageFetcher, robotstxtServer);
+
+            //下面的是改过的crawler4j调用的函数，去掉了robotstxtServer
+            //controller = new CrawlController(m_config, pageFetcher);
         } catch (Exception e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }

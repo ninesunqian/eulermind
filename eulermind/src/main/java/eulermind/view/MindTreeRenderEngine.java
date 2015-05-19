@@ -8,6 +8,7 @@ import java.awt.geom.RoundRectangle2D;
 
 import eulermind.MindModel;
 import eulermind.Style;
+import eulermind.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -333,9 +334,12 @@ public class MindTreeRenderEngine {
             //return m_mindView.m_mindModel.getNodeDebugInfo((NodeItem)item);
         }
 
-        protected String getImageLocation(VisualItem item) {
-            //return MindIconToolBar.getIconPath(MindModel.getNodeIcon(item) + ".png");
-            return Style.getIconPath(MindModel.getNodeIcon(item));
+        protected Image getImage(VisualItem item) {
+            String iconName = MindModel.getNodeIcon(item);
+            if (iconName == null) {
+                return null;
+            }
+            return Style.getImageIcon(iconName).getImage();
         }
 
         public int getRenderType(VisualItem item) {

@@ -169,6 +169,31 @@ public class MindEditor extends JTextField {
 
         SwingUtilities.convertPointFromScreen(p, this);
         m_logger.info("ppppppppppppp, show");
+
+        //去除被删除的搜索结果
+        {
+            boolean hasTrashedNode = false;
+            Iterator<PromptedNode> iter = m_promptedNodes.iterator();
+            while(iter.hasNext()){
+                PromptedNode promptedNode = iter.next();
+                if(m_mindDb.isVertexTrashed(m_mindDb.getVertex(promptedNode.m_dbId))) {
+                    iter.remove();
+                    hasTrashedNode = true;
+                }
+            }
+            if (hasTrashedNode) {
+                DefaultListModel listModel = (DefaultListModel)m_promptList.getModel();
+                listModel.removeAllElements();
+                for (PromptedNode promptedNode : m_promptedNodes) {
+                    if (promptedNode.m_parentText != null) {
+                        listModel.addElement(promptedNode.m_text + " @ " + promptedNode.m_parentText);
+                    } else  {
+                        listModel.addElement("root: " + promptedNode.m_text);
+                    }
+                }
+            }
+        }
+
         m_popupMenu.show(MindEditor.this, p.x, p.y);
     }
 
