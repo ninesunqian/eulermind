@@ -318,7 +318,7 @@
                     </executions>
                 </plugin>
 
-                <plugin>
+                <!--plugin>
 
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>webstart-maven-plugin</artifactId>
@@ -369,7 +369,7 @@
                         <outputJarVersions>true</outputJarVersions>
                         <verbose>true</verbose>
                     </configuration>
-                </plugin>
+                </plugin-->
 
             </plugins>
         </build>
