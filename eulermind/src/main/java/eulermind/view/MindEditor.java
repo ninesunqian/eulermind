@@ -66,8 +66,8 @@ public class MindEditor extends JTextField {
 
         m_promptList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         m_promptList.setLayoutOrientation(JList.VERTICAL);
-        m_promptList.setPrototypeCellValue("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
-        m_promptList.setVisibleRowCount(10);
+        m_promptList.setPrototypeCellValue("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
+        m_promptList.setVisibleRowCount(15);
 
         //下拉菜单不能有输入焦点，否则会有焦点切换问题
         m_promptList.setFocusable(false);
