@@ -1,5 +1,6 @@
 package eulermind.view;
 
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 import eulermind.*;
@@ -196,6 +197,8 @@ public class MindView extends Display {
         m_mindEditor.setBorder(null);
         m_mindEditor.setVisible(false);
 
+        addControlListener(m_stopEditControl);
+
         setTextEditor(m_mindEditor);
         this.requestFocusInWindow();
 
@@ -256,6 +259,14 @@ public class MindView extends Display {
     ControlAdapter m_wheelZoomControl;
     ControlAdapter m_panControl;
 
+    ControlAdapter m_stopEditControl = new ControlAdapter() {
+        public void mousePressed(MouseEvent e) {
+            if (m_mindEditor.isVisible()) {
+                m_mindEditor.confirm();
+            }
+        }
+    };
+
     NodeDraggingControl m_dragControl;
 
     public NodeItem getDragHitNode()
@@ -305,6 +316,10 @@ public class MindView extends Display {
         m_cursor.setCursorNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, path)));
     }
 
+    public boolean isChanging() {
+        return m_isChanging;
+    }
+
     //防止用户重复操作
     boolean beginChanging() {
         if (m_isChanging) {
@@ -327,6 +342,7 @@ public class MindView extends Display {
 
         m_logger.info("endChanging----------------------");
         m_isChanging = false;
+        requestFocus();
     }
 
     void beginAdding(final boolean asChild, final boolean hasPrompt)
@@ -354,6 +370,7 @@ public class MindView extends Display {
             //TODO 防止 NodeIem与Node比较
             if (toSource(cursorItem) == m_tree.getRoot()) {
                 assert(false);
+                endChanging();
                 return;
             }
         }
@@ -383,7 +400,9 @@ public class MindView extends Display {
 
     public void importFileOrDirectory()
     {
-        beginChanging();
+        if (! beginChanging()) {
+            return;
+        }
         JFileChooser chooser = new JFileChooser();
         chooser.setMultiSelectionEnabled(false);
         chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
@@ -414,22 +433,24 @@ public class MindView extends Display {
 
     public void pasteAsSubTree()
     {
+        if (! beginChanging()) {
+            return;
+        }
+
         if (m_mindController.m_copiedSubTree != null &&
                 m_mindController.m_clipboardTextFormHere == Utils.getSystemClipboardText()) {
-            beginChanging();
             MindOperator operator = new PastingExternalTree(m_mindModel, getCursorSourceNode(), m_mindController.m_copiedSubTree);
             m_mindController.does(operator);
-            endChanging();
 
         } else {
             String text = Utils.getSystemClipboardText();
             if (text != null) {
-                beginChanging();
                 MindOperator operator = new ImportingFile(m_mindModel, getCursorSourceNode(), null, null);
                 m_mindController.does(operator);
-                endChanging();
             }
         }
+
+        endChanging();
     }
 
     private void alert(String msg)
@@ -496,7 +517,9 @@ public class MindView extends Display {
     public void setCursorProperty(String key, Object value)
     {
         //called by toolbar controls' action listener,
-        beginChanging();
+        if (! beginChanging()) {
+            return;
+        }
 
         m_logger.info("setCursorProperty: {} - {}", key, value);
 
@@ -504,25 +527,33 @@ public class MindView extends Display {
         MindOperator operator = new SettingProperty(m_mindModel, cursorNode, key, value);
 
         m_mindController.does(operator);
+
+        endChanging();
     }
 
 
     void undo() {
-        beginChanging();
+        if (! beginChanging()) {
+            return;
+        }
+
         if (m_mindController.canUndo()) {
             m_mindController.undo();
-        } else {
-            endChanging();
         }
+
+        endChanging();
     }
 
     void redo() {
-        beginChanging();
+        if (! beginChanging()) {
+            return;
+        }
+
         if (m_mindController.canRedo()) {
             m_mindController.redo();
-        } else {
-            endChanging();
         }
+
+        endChanging();
     }
 
     void save() {
@@ -531,14 +562,17 @@ public class MindView extends Display {
 
     public void remove()
     {
-        beginChanging();
+        if (! beginChanging()) {
+            return;
+        }
+
         if (Removing.canDo(m_mindModel, m_tree, getCursorSourceNode())) {
             Node cursorNode = getCursorSourceNode();
             MindOperator operator = new Removing(m_mindModel, cursorNode);
             m_mindController.does(operator);
-        } else {
-            endChanging();
         }
+
+        endChanging();
     }
 
     public void addChild() {
@@ -558,7 +592,10 @@ public class MindView extends Display {
     }
 
     public void edit() {
-        beginChanging();
+        if (! beginChanging()) {
+            return;
+        }
+
         m_mindEditor.setMindEditorListener(m_editorListenerForEditing);
         m_mindEditor.setHasPromptList(false);
         showEditor();
@@ -566,34 +603,62 @@ public class MindView extends Display {
 
     public void linkMarkedVertexToCursor()
     {
+        if (! beginChanging()) {
+            return;
+        }
+
         if (m_mindController.m_toBeLinkedDbId != null
                 && ! m_mindModel.isVertexTrashed(m_mindController.m_toBeLinkedDbId)) {
-            beginChanging();
 
             MindOperator operator = new AddingReference(m_mindModel, getCursorSourceNode(),
                     m_mindController.m_toBeLinkedDbId, getCursorSourceNode().getChildCount());
             m_mindController.does(operator);
 
-            endChanging();
         }
+
+        endChanging();
     }
 
     public void cursorMoveUp() {
+        if (! beginChanging()) {
+            return;
+        }
+
         m_cursor.moveUp();
+
+        endChanging();
     }
 
     public void cursorMoveDown() {
+        if (! beginChanging()) {
+            return;
+        }
+
         m_cursor.moveDown();
+        endChanging();
     }
 
     public void cursorMoveLeft() {
+        if (! beginChanging()) {
+            return;
+        }
         m_cursor.moveLeft();
+        endChanging();
     }
+
     public void cursorMoveRight() {
+        if (! beginChanging()) {
+            return;
+        }
         m_cursor.moveRight();
+        endChanging();
     }
 
     public void toggleFoldNode() {
+        if (! beginChanging()) {
+            return;
+        }
         m_folder.toggleFoldNode(m_cursor.getCursorNodeItem());
+        endChanging();
     }
 } // end of class TreeMap

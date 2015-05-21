@@ -24,6 +24,7 @@ import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Hashtable;
 
 import org.slf4j.Logger;
@@ -195,6 +196,16 @@ public class MindController extends UndoManager {
         return (MindView)m_tabbedPane.getSelectedComponent();
     }
 
+    public boolean isChanging() {
+        MindView currentView = getCurrentView();
+        if (currentView == null) {
+            return false;
+        }
+        return currentView.isChanging();
+
+
+    }
+
     public Object getCurrentVertexId() {
         MindView currentView = getCurrentView();
         if (currentView == null) {
@@ -310,7 +321,7 @@ public class MindController extends UndoManager {
         updateMindViews(operator, true);
     }
 
-    ArrayList<MindPropertyComponent> m_mindPropertyComponents = new ArrayList<MindPropertyComponent>();
+    HashSet<MindPropertyComponent> m_mindPropertyComponents = new HashSet<>();
 
     boolean m_settingNodePropertyEnabled = true;
     PropertyChangeListener m_listenerForSettingNodeProperty = new PropertyChangeListener() {

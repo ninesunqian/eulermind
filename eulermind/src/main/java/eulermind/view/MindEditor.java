@@ -298,6 +298,30 @@ public class MindEditor extends JTextField {
         innerFocusEditor();
     }
 
+    public void confirm()
+    {
+        if (m_innerFocus == MindEditor.this) {
+            fireEditorOk(getText());
+            afterFireMindEditorEvent();
+        }
+        else {
+            int selectedIndex = m_promptList.getSelectedIndex();
+            PromptedNode selected = m_promptedNodes.get(selectedIndex);
+            firePromptListOk(selected.m_dbId, selected.m_text, selected.m_parentDBId, selected.m_parentText);
+            afterFireMindEditorEvent();
+        }
+    }
+
+    public void cancel()
+    {
+        if (m_innerFocus == m_promptList) {
+            innerFocusEditor();
+        } else {
+            fireCancel();
+            afterFireMindEditorEvent();
+        }
+    }
+
     KeyListener m_editorKeyListener = new KeyAdapter() {
 
         @Override
@@ -306,25 +330,11 @@ public class MindEditor extends JTextField {
             int keyCode = e.getKeyCode();
             switch (keyCode) {
                 case KeyEvent.VK_ENTER:
-                    if (m_innerFocus == MindEditor.this) {
-                        fireEditorOk(getText());
-                        afterFireMindEditorEvent();
-                    }
-                    else {
-                        int selectedIndex = m_promptList.getSelectedIndex();
-                        PromptedNode selected = m_promptedNodes.get(selectedIndex);
-                        firePromptListOk(selected.m_dbId, selected.m_text, selected.m_parentDBId, selected.m_parentText);
-                        afterFireMindEditorEvent();
-                    }
+                    confirm();
                     break;
 
                 case KeyEvent.VK_ESCAPE:
-                    if (m_innerFocus == m_promptList) {
-                        innerFocusEditor();
-                    } else {
-                        fireCancel();
-                        afterFireMindEditorEvent();
-                    }
+                    cancel();
                     break;
 
                 case KeyEvent.VK_KP_UP:

@@ -53,11 +53,13 @@ public class StyleList extends JList implements MindPropertyComponent {
     MouseListener mouseListenerForUpdatingMindNode = new MouseAdapter() {
         public void mouseClicked(MouseEvent mouseEvent) {
             int index = locationToIndex(mouseEvent.getPoint());
+            m_logger.info("click a list item");
             if (index >= 0) {
                 Object value = m_listMode.getElementAt(index);
                 if (value == "default") {
                     value = null;
                 }
+                m_logger.info("click a style:  {}", value);
 
                 firePropertyChange(m_mindPropertyName, null, value);
             }

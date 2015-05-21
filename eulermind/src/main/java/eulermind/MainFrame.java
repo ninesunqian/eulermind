@@ -135,6 +135,10 @@ public class MainFrame  extends JFrame {
     MindEditor.MindEditorListener searchInputerListener = new MindEditor.MindEditorListener() {
         public void promptListOk(Object dbId, String text, Object parentDBId, String parentText)
         {
+            if (m_mindController.isChanging()) {
+                return;
+            }
+
             m_mindController.findOrAddMindView(dbId);
         }
     };
@@ -184,7 +188,6 @@ public class MainFrame  extends JFrame {
         m_mindController.addMindPropertyComponent(MindModel.sm_textColorPropName, m_textColorCombobox);
         m_mindController.addMindPropertyComponent(MindModel.sm_nodeColorPropName, m_nodeColorCombobox);
         m_mindController.addMindPropertyComponent(MindModel.sm_iconPropName, m_iconButton);
-        m_mindController.addMindPropertyComponent(MindModel.STYLE_PROP_NAME, m_styleList);
 
         m_mindController.addMindPropertyComponent(MindModel.STYLE_PROP_NAME, m_styleList);
 
@@ -241,9 +244,14 @@ public class MainFrame  extends JFrame {
     }
 
     public Action m_importAction = new AbstractAction() {
+
         @Override
         public void actionPerformed(ActionEvent actionEvent)
         {
+            if (m_mindController.isChanging()) {
+                return;
+            }
+
             m_mindController.getCurrentView().importFileOrDirectory();
         }
     };
@@ -260,6 +268,10 @@ public class MainFrame  extends JFrame {
         @Override
         public void menuSelected(MenuEvent e)
         {
+            if (m_mindController.isChanging()) {
+                return;
+            }
+
             JMenuItem addingMenuItem = new JMenuItem("new map ...");
             addingMenuItem.setIcon(Utils.getAppIcon("new.png"));
             addingMenuItem.addActionListener(new ActionListener() {
@@ -345,6 +357,10 @@ public class MainFrame  extends JFrame {
         @Override
         public void menuSelected(MenuEvent menuEvent)
         {
+            if (m_mindController.isChanging()) {
+                return;
+            }
+
             final Object currentVertexId = m_mindController.getCurrentVertexId();
             JMenuItem addingMenuItem = new JMenuItem("add to favorite");
             addingMenuItem.setEnabled(currentVertexId != null && ! m_mindModel.isInFavorite(currentVertexId));
@@ -453,6 +469,10 @@ public class MainFrame  extends JFrame {
         @Override
         public void menuSelected(MenuEvent menuEvent)
         {
+            if (m_mindController.isChanging()) {
+                return;
+            }
+
             final Object currentVertexId = m_mindController.getCurrentVertexId();
             MindModel.VertexBasicInfo vertexBasicInfo =  m_mindModel.getVertexBasicInfo(currentVertexId);
 
