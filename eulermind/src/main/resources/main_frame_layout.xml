@@ -1,4 +1,4 @@
-<frame name="mainframe" title="EulerMind" layout="BorderLayout" size="800,600"  >
+<frame name="mainframe" title="EulerMind" layout="BorderLayout" size="800,600"  iconImage="app_icons/eulermind.png">
 
     <menubar name="menubar">
         <menu text="Map" id="m_mindMapMenu" mnemonic="VK_M"/>
