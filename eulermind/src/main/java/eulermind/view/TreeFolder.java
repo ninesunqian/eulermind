@@ -147,7 +147,7 @@ public class TreeFolder extends NodeControl {
             return;
         }
 
-        if (! m_mindView.beginChanging()) {
+        if (m_mindView.isChanging()) {
             return;
         }
 

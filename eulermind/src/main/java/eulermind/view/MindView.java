@@ -620,45 +620,39 @@ public class MindView extends Display {
     }
 
     public void cursorMoveUp() {
-        if (! beginChanging()) {
+
+        if (m_isChanging) {
             return;
         }
 
         m_cursor.moveUp();
-
-        endChanging();
     }
 
     public void cursorMoveDown() {
-        if (! beginChanging()) {
+        if (m_isChanging) {
             return;
         }
-
         m_cursor.moveDown();
-        endChanging();
     }
 
     public void cursorMoveLeft() {
-        if (! beginChanging()) {
+        if (m_isChanging) {
             return;
         }
         m_cursor.moveLeft();
-        endChanging();
     }
 
     public void cursorMoveRight() {
-        if (! beginChanging()) {
+        if (m_isChanging) {
             return;
         }
         m_cursor.moveRight();
-        endChanging();
     }
 
     public void toggleFoldNode() {
-        if (! beginChanging()) {
+        if (m_isChanging) {
             return;
         }
         m_folder.toggleFoldNode(m_cursor.getCursorNodeItem());
-        endChanging();
     }
 } // end of class TreeMap

@@ -110,7 +110,7 @@ public class StyleList extends JList implements MindPropertyComponent {
             int borderThickness = 3;
 
             if (isSelected) {
-                listCellRendererComponent.setBorder(BorderFactory.createLineBorder(Color.blue, borderThickness));
+                listCellRendererComponent.setBorder(BorderFactory.createLineBorder(ColorLib.getColor(240, 240, 240), borderThickness));
             } else {
                 listCellRendererComponent.setBorder(BorderFactory.createEmptyBorder(
                         borderThickness, borderThickness, borderThickness, borderThickness));
