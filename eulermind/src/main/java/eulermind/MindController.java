@@ -247,10 +247,15 @@ public class MindController extends UndoManager {
             Removing removing = (Removing)operator;
             Object trashedDBId = removing.m_removedDBId;
 
+            HashSet<Object> toBeRemovedMindViewIds = new HashSet<>();
+
             for (Object rootDBId : m_mindViews.keySet()) {
                 if (m_mindModel.m_mindDb.isVertexIdDescendant(trashedDBId, rootDBId)) {
-                    removeMindView(rootDBId);
+                    toBeRemovedMindViewIds.add(rootDBId);
                 }
+            }
+
+            for (Object toBeRemovedMindViewId : toBeRemovedMindViewIds) {
             }
         }
 
