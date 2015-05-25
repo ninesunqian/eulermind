@@ -3,6 +3,7 @@ package eulermind;
 import java.nio.ByteBuffer;
 import java.util.*;
 
+import com.orientechnologies.orient.core.exception.ORecordNotFoundException;
 import com.orientechnologies.orient.core.metadata.schema.OType;
 import com.tinkerpop.blueprints.impls.orient.OrientVertexType;
 import org.slf4j.Logger;
@@ -948,7 +949,12 @@ public class MindDB {
             }
         }
 
-        m_graph.removeVertex(root);
+        try {
+            m_graph.removeVertex(root);
+
+        } catch (ORecordNotFoundException e) {
+            m_logger.warn("remove Vertex: not found: {}, exception {}", root.getId(), e);
+        }
     }
 
     private boolean isInTrashIndex(Object dbId) {
