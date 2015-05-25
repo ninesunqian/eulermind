@@ -256,6 +256,7 @@ public class MindController extends UndoManager {
             }
 
             for (Object toBeRemovedMindViewId : toBeRemovedMindViewIds) {
+                removeMindView(toBeRemovedMindViewId);
             }
         }
 
