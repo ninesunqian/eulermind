@@ -283,10 +283,10 @@ public class MainFrame  extends JFrame {
                     String name = null;
                     while(true) {
                         name = JOptionPane.showInputDialog("input a map name, must alphabet, number or '_'", null);
-                        if (name != null && name.matches("[a-zA-Z0-9_]+")) {
-                            JOptionPane.showMessageDialog(null, "name format error", null, JOptionPane.ERROR_MESSAGE);
-                        } else {
+                        if (name == null || name.matches("[a-zA-Z0-9_]+")) {
                             break;
+                        } else {
+                            JOptionPane.showMessageDialog(null, "name format error", null, JOptionPane.ERROR_MESSAGE);
                         }
                     }
                     if (name != null && name != m_currentMapName) {
@@ -295,6 +295,7 @@ public class MainFrame  extends JFrame {
                     }
                 }
             });
+
             m_mindMapMenu.add(addingMenuItem);
 
             JMenuItem removingMenuItem = new JMenuItem("remove current map");
