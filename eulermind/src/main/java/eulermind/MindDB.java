@@ -351,6 +351,10 @@ public class MindDB {
         return thatInheritPath.contains(thiz);
     }
 
+    boolean isVertextIdInSubTree(Object subTreeId, Object vertexId) {
+        return isVertexIdDescendant(subTreeId, vertexId) || isVertexIdSelf(subTreeId, vertexId);
+    }
+
 	public EdgeType getEdgeType(Edge edge)
 	{
         int edgeTypeValue = edge.getProperty(EDGE_TYPE_PROP_NAME);
@@ -750,7 +754,7 @@ public class MindDB {
 		deepTraverse(vertex, proc, 0);
 	}
 
-	//remove vertex, the children append to
+    //删除子树时用，保存子树之外的节点到子树之内的节点的引用关系
 	public static class RefLinkInfo implements OSerializableStream {
 		final Object m_referrer;
 		final Object m_referent;
@@ -805,7 +809,7 @@ public class MindDB {
 		
 		assert (getEdgeType(edgeVertex.m_edge) == EdgeType.INCLUDE);
 		
-		Vertex removedVertex = edgeVertex.m_vertex;
+		final Vertex removedVertex = edgeVertex.m_vertex;
 
         //collect the refer info, to help update display tree
         final ArrayList<RefLinkInfo> refLinkInfos = new ArrayList<RefLinkInfo> ();
@@ -827,9 +831,14 @@ public class MindDB {
                         //此处不必再加入m_outEdgeInnerIdCache
 
 						int edgeIndex = outEdgeIdPairsOfReferrer.indexOf(getOutEdgeIdPair(referrer.m_edge));
+                        Object referrerId = referrer.m_vertex.getId();
 
-                        refLinkInfos.add(new RefLinkInfo(referrer.m_vertex.getId(), vertex.getId(), edgeIndex));
-						removeRefEdgeImpl(referrer.m_vertex, edgeIndex);
+                        //仅仅删除子树之外的节点到子树之内的节点的引用关系
+                        if (! isVertextIdInSubTree(removedVertex.getId(), referrerId)) {
+                            refLinkInfos.add(new RefLinkInfo(referrerId, vertex.getId(), edgeIndex));
+                            removeRefEdgeImpl(referrer.m_vertex, edgeIndex);
+                        }
+
 					}
 				}
 
