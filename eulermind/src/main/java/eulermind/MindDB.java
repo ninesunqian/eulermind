@@ -6,6 +6,7 @@ import java.util.*;
 import com.orientechnologies.orient.core.exception.ORecordNotFoundException;
 import com.orientechnologies.orient.core.metadata.schema.OType;
 import com.tinkerpop.blueprints.impls.orient.OrientVertexType;
+import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -515,6 +516,7 @@ public class MindDB {
         m_graph.removeEdge(edgeBeingRemoved);
     }
 
+    //不用pos作为参数。应为删除一个边后，其他边的pos会改变，增加复杂性
     public void removeRefEdge(Vertex source, Edge edge)
     {
         assert getEdgeType(edge) == EdgeType.REFERENCE;
@@ -785,13 +787,17 @@ public class MindDB {
 			m_referent = referent;
             m_edge = edge;
 			m_pos = pos;
+
+            assert referent instanceof ORecordId;
+            assert referrer instanceof ORecordId;
+            assert edge instanceof ORecordId;
 		}
 
         public byte[] toStream() throws OSerializationException
         {
             byte referrerBytes[] = ((ORecordId)m_referrer).toStream();
             byte referentBytes[] = ((ORecordId)m_referent).toStream();
-            byte edgeBytes[] = ((ORecordId)m_referent).toStream();
+            byte edgeBytes[] = ((ORecordId)m_edge).toStream();
 
             ByteBuffer byteBuffer = ByteBuffer.allocate(16 + referrerBytes.length + referentBytes.length + edgeBytes.length);
 
@@ -804,11 +810,14 @@ public class MindDB {
             byteBuffer.put(referentBytes);
             byteBuffer.put(edgeBytes);
 
-            return byteBuffer.array();
+            //orientdb内部不是直接存byte[], 而是先把它当成utf-8字符串先解析一遍，再存储。不知道为什么这样
+            //所以这里用base64 转换一下
+            return Base64.encodeBase64(byteBuffer.array());
         }
 
         public RefLinkInfo fromStream(byte[] iStream) throws OSerializationException
         {
+            iStream = Base64.decodeBase64(iStream);
             ByteBuffer byteBuffer = ByteBuffer.wrap(iStream);
             int pos = byteBuffer.getInt();
             int referrerByteLength = byteBuffer.getInt();
@@ -826,6 +835,8 @@ public class MindDB {
             from = to;
             to += edgeByteLength;
             byte edgeByte[] = Arrays.copyOfRange(iStream, from, to);
+
+            assert to == iStream.length;
 
             ORecordId referrer = (new ORecordId()).fromStream(referrerByte);
             ORecordId referent = (new ORecordId()).fromStream(referentByte);
@@ -867,7 +878,7 @@ public class MindDB {
 
                         //仅仅删除子树之外的节点到子树之内的节点的引用关系
                         if (! isVertextIdInSubTree(removedVertex.getId(), referrerId)) {
-                            refLinkInfos.add(new RefLinkInfo(referrerId, vertex.getId(), referrer.m_edge, edgeIndex));
+                            refLinkInfos.add(new RefLinkInfo(referrerId, vertex.getId(), referrer.m_edge.getId(), edgeIndex));
                             removeRefEdge(referrer.m_source, referrer.m_edge);
                         }
 

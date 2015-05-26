@@ -88,7 +88,7 @@ public class Removing extends MindOperator {
         if (mindModel.isRefNode(node)) {
             return true;
         } else {
-            if (mindModel.isDescendantInDB(node, root) || mindModel.isSelfInDB(node, root)) {
+            if (mindModel.isInSubTreeInDB(node, root)) {
                 return false;
             } else {
                 return true;
@@ -96,7 +96,7 @@ public class Removing extends MindOperator {
         }
     }
 
-    private Node getNearestSiblingWithDiffDBId(Node node)
+    private Node getNearestKeptSibling(Node node)
     {
         int start = node.getIndex();
         Node parent = node.getParent();
@@ -104,7 +104,7 @@ public class Removing extends MindOperator {
         //firstly to right
         for (int i=start+1; i<parent.getChildCount(); i++) {
             Node tmp = parent.getChild(i);
-            if (!m_mindModel.isSelfInDB(tmp, node)) {
+            if (!m_mindModel.isInSubTreeInDB(node, tmp)) {
                 return tmp;
             }
         }
@@ -112,7 +112,7 @@ public class Removing extends MindOperator {
         //then to left
         for (int i=start-1; i>=0; i--) {
             Node tmp = parent.getChild(i);
-            if (!m_mindModel.isSelfInDB(tmp, node)) {
+            if (!m_mindModel.isInSubTreeInDB(node, tmp)) {
                 return tmp;
             }
         }
@@ -165,23 +165,23 @@ public class Removing extends MindOperator {
 
         } else {
 
-            Node nearestSiblingWithDiffDBId =  getNearestSiblingWithDiffDBId(formerCursor);
+            Node nearestKeptSibling =  getNearestKeptSibling(formerCursor);
 
-            if (nearestSiblingWithDiffDBId == null) {
+            if (nearestKeptSibling == null) {
                 m_laterCursorPath = getNodePath(parent);
 
             } else {
-                ArrayList<Node> siblingsWithDiffDBId = new ArrayList<Node>();
+                ArrayList<Node> keptSiblings = new ArrayList<Node>();
 
                 for (int i=0; i<parent.getChildCount(); i++) {
                     Node sibling = parent.getChild(i);
-                    if (!m_mindModel.isSelfInDB(sibling, formerCursor)) {
-                        siblingsWithDiffDBId.add(parent.getChild(i));
+                    if (! m_mindModel.isInSubTreeInDB(sibling, formerCursor)) {
+                        keptSiblings.add(parent.getChild(i));
                     }
                 }
 
                 m_laterCursorPath = getNodePath(formerCursor);
-                m_laterCursorPath.set(m_laterCursorPath.size()-1, siblingsWithDiffDBId.indexOf(nearestSiblingWithDiffDBId));
+                m_laterCursorPath.set(m_laterCursorPath.size() - 1, keptSiblings.indexOf(nearestKeptSibling));
             }
         }
     }

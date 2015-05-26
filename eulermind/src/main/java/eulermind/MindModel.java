@@ -979,6 +979,12 @@ public class MindModel {
         return m_mindDb.isVertexIdAncestor(getDbId(thiz), getDbId(that));
     }
 
+    public boolean isInSubTreeInDB(Node n1, Node n2)
+    {
+        return isSelfInDB(n1, n2) || isDescendantInDB(n1, n2);
+    }
+
+
     private String objectToString(Object object)
     {
         return object == null ? "null" : object.toString();
