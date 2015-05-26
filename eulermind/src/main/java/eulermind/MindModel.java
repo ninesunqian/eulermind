@@ -233,10 +233,10 @@ public class MindModel {
             root.setProperty(TEXT_PROP_NAME, "root");
 
             EdgeVertex edgeVertex = m_mindDb.addChild(root, 0);
-            edgeVertex.m_vertex.setProperty(MindModel.TEXT_PROP_NAME, "child_1");
+            edgeVertex.m_target.setProperty(MindModel.TEXT_PROP_NAME, "child_1");
 
             edgeVertex = m_mindDb.addChild(root, 1);
-            edgeVertex.m_vertex.setProperty(MindModel.TEXT_PROP_NAME, "child_2");
+            edgeVertex.m_target.setProperty(MindModel.TEXT_PROP_NAME, "child_2");
 
             m_mindDb.addRefEdge(root, root, 2);
 
@@ -431,7 +431,7 @@ public class MindModel {
             for (EdgeVertex edgeVertex : edgeVertexArray)
             {
                 Vertex parentV = getDBVertex(parent);
-                Vertex childV = edgeVertex.m_vertex;
+                Vertex childV = edgeVertex.m_target;
 
                 s_logger.info("[{}] -> [{}]", parentV.getProperty(TEXT_PROP_NAME), childV.getProperty(TEXT_PROP_NAME));
             }
@@ -443,8 +443,8 @@ public class MindModel {
 			Node child = tree.addChild(parent);
 			Edge edge = tree.getEdge(parent, child);
 
-			s_logger.info(getDBVertex(parent) + "->" + edgeVertex.m_vertex + "   :  " + edgeVertex.m_edge);
-			loadNodeProperties(edgeVertex.m_vertex, child);
+			s_logger.info(getDBVertex(parent) + "->" + edgeVertex.m_target + "   :  " + edgeVertex.m_edge);
+			loadNodeProperties(edgeVertex.m_target, child);
 			loadEdgeProperties(edgeVertex.m_edge, edge);
 
             verifyNode(child, false);
@@ -532,7 +532,7 @@ public class MindModel {
         Node child = tree.addNode();
         Edge edge = tree.addChildEdge(sourceNode, child, pos);
 
-        loadNodeProperties(toTarget.m_vertex, child);
+        loadNodeProperties(toTarget.m_target, child);
         loadEdgeProperties(toTarget.m_edge, edge);
     }
 
@@ -685,7 +685,7 @@ public class MindModel {
 		Vertex dbParent = m_mindDb.getVertex(parentDbId);
 		EdgeVertex edgeVertex = m_mindDb.addChild(dbParent, pos);
 
-        edgeVertex.m_vertex.setProperty(TEXT_PROP_NAME, text);
+        edgeVertex.m_target.setProperty(TEXT_PROP_NAME, text);
 
         exposeModelRelation(parent, pos, edgeVertex);
 
@@ -777,12 +777,22 @@ public class MindModel {
         Vertex parent = m_mindDb.getVertex(parentDbId);
         final EdgeVertex edgeChild = m_mindDb.getChildOrReferent(parent, pos);
 
-        Object removedDbId = edgeChild.m_vertex.getId();
+        Object removedDbId = edgeChild.m_target.getId();
         Object removedEdgeDbId = edgeChild.m_edge.getId();
 
-        m_mindDb.trashSubTree(parent, pos);
+        Vertex trashedVertex = m_mindDb.trashSubTree(parent, pos);
 
         hideModelRelation(parentDbId, removedEdgeDbId);
+
+        final MindDB.TrashedTreeContext context = m_mindDb.getTrashedTreeContext(trashedVertex);
+
+        for (final RefLinkInfo refLinkInfo : context.m_refLinkInfos) {
+            final Vertex referrerVertex = m_mindDb.getVertex(refLinkInfo.m_referrer);
+
+            for (final Tree tree : m_trees) {
+                hideTreeRelation(tree, refLinkInfo.m_referrer, refLinkInfo.m_edge);
+            }
+        }
 
         removeFromFavorite(removedDbId);
 
@@ -804,9 +814,9 @@ public class MindModel {
         final Vertex restoredVertex = m_mindDb.getVertex(dbId);
         final MindDB.TrashedTreeContext context = m_mindDb.getTrashedTreeContext(restoredVertex);
 
-        final EdgeVertex edgeParent = m_mindDb.restoreTrashedSubTree(restoredVertex);
+        final EdgeVertex restoredEdgeVertex = m_mindDb.restoreTrashedSubTree(restoredVertex);
 
-        exposeModelRelation(parent, context.m_pos, new EdgeVertex(edgeParent.m_edge, restoredVertex));
+        exposeModelRelation(parent, context.m_pos, restoredEdgeVertex);
 
         for (final RefLinkInfo refLinkInfo : context.m_refLinkInfos) {
             final Vertex referrerVertex = m_mindDb.getVertex(refLinkInfo.m_referrer);
@@ -823,13 +833,14 @@ public class MindModel {
             attachChildren(referrerNode);
         }
 
+        //TODO: move to minddb
         s_logger.info(String.format("addReference : %s -- %s", getText(referrerNode), referentDbId.toString()));
         Object referrerDbId  = getDbId(referrerNode);
         Vertex referrerVertex = m_mindDb.getVertex(referrerDbId);
         Vertex referentVertex = m_mindDb.getVertex(referentDbId);
         com.tinkerpop.blueprints.Edge refEdge = m_mindDb.addRefEdge(referrerVertex, referentVertex, pos);
 
-        exposeModelRelation(referrerNode, pos, new EdgeVertex(refEdge, referentVertex));
+        exposeModelRelation(referrerNode, pos, new EdgeVertex(referrerVertex, referentVertex, refEdge, pos));
     }
 
 
@@ -838,7 +849,7 @@ public class MindModel {
         com.tinkerpop.blueprints.Edge edge = m_mindDb.getEdge(referrerVertex, pos);
         Object edgeId = edge.getId();
 
-        m_mindDb.removeRefEdge(referrerVertex, pos);
+        m_mindDb.removeRefEdge(referrerVertex, edge);
         hideModelRelation(referrerDbId, edgeId);
     }
 

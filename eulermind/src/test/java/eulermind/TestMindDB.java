@@ -53,14 +53,14 @@ public class TestMindDB extends TestCase {
         m_mindDB = new MindDB(m_dbPath);
 
         m_root = m_mindDB.getVertex(m_mindDB.getRootId());
-        m_v0 = m_mindDB.addChild(m_root).m_vertex;
-        m_v1 = m_mindDB.addChild(m_root).m_vertex;
+        m_v0 = m_mindDB.addChild(m_root).m_target;
+        m_v1 = m_mindDB.addChild(m_root).m_target;
 
-        m_v00 = m_mindDB.addChild(m_v0).m_vertex;
-        m_v01 = m_mindDB.addChild(m_v0).m_vertex;
+        m_v00 = m_mindDB.addChild(m_v0).m_target;
+        m_v01 = m_mindDB.addChild(m_v0).m_target;
 
-        m_v10 = m_mindDB.addChild(m_v1).m_vertex;
-        m_v100 = m_mindDB.addChild(m_v10).m_vertex;
+        m_v10 = m_mindDB.addChild(m_v1).m_target;
+        m_v100 = m_mindDB.addChild(m_v10).m_target;
     }
 
     public void tearDown() {
@@ -74,7 +74,7 @@ public class TestMindDB extends TestCase {
     void assertInitTree() {
 
         assertTrue(m_mindDB.isVertexIdSelf(m_root.getId(), m_mindDB.getParent(m_v1).getId()));
-        assertTrue(m_mindDB.isVertexIdSelf(m_mindDB.getChildOrReferent(m_v1, 1).m_vertex.getId(), m_root.getId()));
+        assertTrue(m_mindDB.isVertexIdSelf(m_mindDB.getChildOrReferent(m_v1, 1).m_target.getId(), m_root.getId()));
         assertEquals(2, m_mindDB.getChildOrReferentCount(m_root));
 
         assertTrue(m_mindDB.isVertexIdParent(m_v0.getId(), m_root.getId()));

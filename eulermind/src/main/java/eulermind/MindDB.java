@@ -282,7 +282,7 @@ public class MindDB {
 
         } else {
             Vertex parent = getEdgeSource(parentToVertex);
-            return new EdgeVertex(parentToVertex, parent);
+            return new EdgeVertex(parent, vertex, parentToVertex, -1);
         }
     }
 
@@ -515,19 +515,17 @@ public class MindDB {
         m_graph.removeEdge(edgeBeingRemoved);
     }
 
-    private void removeRefEdgeImpl(Vertex source, int pos)
+    public void removeRefEdge(Vertex source, Edge edge)
     {
-        EdgeVertex referent = getChildOrReferent(source, pos);
-        removeEdge(source, pos, EdgeType.REFERENCE);
+        assert getEdgeType(edge) == EdgeType.REFERENCE;
+        assert isVertexIdSelf(source.getId(), edge.getVertex(Direction.OUT).getId());
+
+        Vertex referrent = edge.getVertex(Direction.IN);
+        m_graph.removeEdge(edge);
 
         verifyVertex(source);
-        verifyVertex(referent.m_vertex);
+        verifyVertex(referrent);
     }
-
-	public void removeRefEdge (Vertex source, int pos)
-	{
-        removeRefEdgeImpl(source, pos);
-	}
 
     public Edge getEdge(Vertex source, int pos)
 	{
@@ -541,14 +539,33 @@ public class MindDB {
         return getEdge(outEdgeIds.get(pos).m_dbId);
 	}
 
-	static public class EdgeVertex {
-		final public Vertex m_vertex;
-		final public Edge m_edge;
-		
-		public EdgeVertex(Edge edge, Vertex vertex) {
-			m_vertex = vertex;
+    //这是一个保存临时信息的类
+	static public class EdgeVertex implements Comparable <EdgeVertex> {
+		final public Vertex m_source;
+        final public Vertex m_target;
+        final public Edge m_edge;
+        final public String m_edgeInnerId;
+
+        final public int m_edgePos; //edgePos 不一定用到，-1表示未知，需要用户自己计算
+
+		public EdgeVertex(Vertex source, Vertex target, Edge edge, int edgePos) {
+			m_source = source;
 			m_edge = edge;
+            m_target = target;
+            m_edgePos = edgePos;
+            m_edgeInnerId = getOutEdgeInnerId(edge);
+
+            assert  m_edge.getVertex(Direction.OUT).getId().equals(m_source);
+            assert  m_edge.getVertex(Direction.IN).getId().equals(m_target);
 		}
+
+        public int compareTo(EdgeVertex other) {
+            if (! m_source.getId().equals(m_target.getId())) {
+                return m_source.getId().hashCode() - m_target.getId().hashCode();
+            } else {
+                return getOutEdgeInnerId(m_edge).compareTo(getOutEdgeInnerId(other.m_edge));
+            }
+        }
 	};
 
     public EdgeVertex addChild (Vertex parent)
@@ -576,7 +593,7 @@ public class MindDB {
         verifyVertex(parent);
         verifyVertex(child);
 
-        return new EdgeVertex(edge, child);
+        return new EdgeVertex(parent, child, edge, pos);
 	}
 
     public int getChildOrReferentCount(Vertex vertex)
@@ -594,7 +611,7 @@ public class MindDB {
 		else
 		{
 			Vertex child = getEdgeTarget(edge);
-			return new EdgeVertex(edge, child);
+			return new EdgeVertex(parent, child, edge, pos);
 		}
 	}
 	
@@ -612,7 +629,7 @@ public class MindDB {
 		{
 			Edge edgeToChild = getEdge(outEdgeIdPairs.get(i).m_dbId);
 			Vertex child = getEdgeTarget(edgeToChild);
-			children.add(new EdgeVertex(edgeToChild, child));
+			children.add(new EdgeVertex(parent, child, edgeToChild, i));
 		}
 		return children;
 	}
@@ -629,10 +646,10 @@ public class MindDB {
             return cachedParentDbId;
         } else {
             EdgeVertex toParent = getParentSkipCache(getVertex(dbId));
-            if (toParent == null || toParent.m_vertex == null) {
+            if (toParent == null || toParent.m_source == null) {
                 int i= 1;
             }
-            Object parentDbId = toParent.m_vertex.getId();
+            Object parentDbId = toParent.m_source.getId();
             assert(!(dbId instanceof Vertex));
             assert(!(parentDbId instanceof Vertex));
             m_parentDbIdCache.put(dbId, parentDbId);
@@ -649,8 +666,8 @@ public class MindDB {
         Object cachedParentDbId = m_parentDbIdCache.get(vertex.getId());
         if (cachedParentDbId == null) {
             EdgeVertex toParent = getParentSkipCache(vertex);
-            m_parentDbIdCache.put(vertex.getId(), toParent.m_vertex.getId());
-            return toParent.m_vertex;
+            m_parentDbIdCache.put(vertex.getId(), toParent.m_source.getId());
+            return toParent.m_source;
         } else {
             return getVertex(cachedParentDbId);
         }
@@ -658,7 +675,7 @@ public class MindDB {
 
     public EdgeVertex handoverChild(Vertex fromParent, int fromPos, Vertex toParent, int toPos)
     {
-        Vertex child = getChildOrReferent(fromParent, fromPos).m_vertex;
+        Vertex child = getChildOrReferent(fromParent, fromPos).m_target;
         removeEdge (fromParent, fromPos, EdgeType.INCLUDE);
         Edge edge = addEdge(toParent, child, toPos, EdgeType.INCLUDE);
 
@@ -671,12 +688,12 @@ public class MindDB {
         verifyVertex(toParent);
         verifyVertex(child);
 
-        return new EdgeVertex(edge, child);
+        return new EdgeVertex(toParent, child, edge, toPos);
     }
 
     public EdgeVertex handoverReferent(Vertex fromReferrer, int fromPos, Vertex toReferrer, int toPos)
     {
-        Vertex referent = getChildOrReferent(fromReferrer, fromPos).m_vertex;
+        Vertex referent = getChildOrReferent(fromReferrer, fromPos).m_target;
         removeEdge (fromReferrer, fromPos, EdgeType.REFERENCE);
         Edge edge = addEdge(toReferrer, referent, toPos, EdgeType.REFERENCE);
 
@@ -684,7 +701,7 @@ public class MindDB {
         verifyVertex(toReferrer);
         verifyVertex(referent);
 
-        return new EdgeVertex(edge, referent);
+        return new EdgeVertex(toReferrer, referent, edge, toPos);
     }
 
     public void changeChildOrReferentPos(Vertex parent, int oldPos, int newPos)
@@ -707,8 +724,7 @@ public class MindDB {
 	{
 		Iterator<Edge> edgeIterator = referent.getEdges(Direction.IN).iterator();
 		Edge refEdge;
-		ArrayList<EdgeVertex> referrerArray = new ArrayList<EdgeVertex> ();
-		
+		ArrayList<EdgeVertex> referrerArray = new ArrayList<> ();
 		
 		while (edgeIterator.hasNext())
 		{
@@ -717,9 +733,11 @@ public class MindDB {
 			if (getEdgeType(refEdge) == EdgeType.REFERENCE)
 			{
 				Vertex referrer = getEdgeSource(refEdge);
-				referrerArray.add(new EdgeVertex(refEdge, referrer));
+				referrerArray.add(new EdgeVertex(referrer, referent, refEdge, -1));
 			}
 		}
+
+        Collections.sort(referrerArray);
 		
 		return referrerArray.size() == 0 ? null : referrerArray;
 	}
@@ -742,7 +760,7 @@ public class MindDB {
 				{
 					if (getEdgeType(child.m_edge) == EdgeType.INCLUDE)
 					{
-						deepTraverse(child.m_vertex, proc, level+1);
+						deepTraverse(child.m_target, proc, level+1);
 					}
 				}
 			}
@@ -756,35 +774,38 @@ public class MindDB {
 
     //删除子树时用，保存子树之外的节点到子树之内的节点的引用关系
 	public static class RefLinkInfo implements OSerializableStream {
-		final Object m_referrer;
-		final Object m_referent;
-		final int m_pos;
+		public final Object m_referrer;
+		public final Object m_referent;
+        public final Object m_edge;
+		public final int m_pos;
 		
-		RefLinkInfo (Object referrer, Object referent, int pos)
+		RefLinkInfo (Object referrer, Object referent, Object edge, int pos)
 		{
 			m_referrer = referrer;
 			m_referent = referent;
+            m_edge = edge;
 			m_pos = pos;
 		}
-
 
         public byte[] toStream() throws OSerializationException
         {
             byte referrerBytes[] = ((ORecordId)m_referrer).toStream();
             byte referentBytes[] = ((ORecordId)m_referent).toStream();
+            byte edgeBytes[] = ((ORecordId)m_referent).toStream();
 
-            ByteBuffer byteBuffer = ByteBuffer.allocate(12 + referrerBytes.length + referentBytes.length);
+            ByteBuffer byteBuffer = ByteBuffer.allocate(16 + referrerBytes.length + referentBytes.length + edgeBytes.length);
 
             byteBuffer.putInt(m_pos);
             byteBuffer.putInt(referrerBytes.length);
             byteBuffer.putInt(referentBytes.length);
+            byteBuffer.putInt(edgeBytes.length);
 
             byteBuffer.put(referrerBytes);
             byteBuffer.put(referentBytes);
+            byteBuffer.put(edgeBytes);
 
             return byteBuffer.array();
         }
-
 
         public RefLinkInfo fromStream(byte[] iStream) throws OSerializationException
         {
@@ -792,13 +813,24 @@ public class MindDB {
             int pos = byteBuffer.getInt();
             int referrerByteLength = byteBuffer.getInt();
             int referentByteLength = byteBuffer.getInt();
+            int edgeByteLength = byteBuffer.getInt();
 
-            byte referrerByte[] = Arrays.copyOfRange(iStream, 12, 12 + referrerByteLength);
-            byte referentByte[] = Arrays.copyOfRange(iStream, 12 + referrerByteLength, iStream.length);
+            int from = 16;
+            int to = from + referrerByteLength;
+            byte referrerByte[] = Arrays.copyOfRange(iStream, from, to);
+
+            from = to;
+            to += referentByteLength;
+            byte referentByte[] = Arrays.copyOfRange(iStream, from, to);
+
+            from = to;
+            to += edgeByteLength;
+            byte edgeByte[] = Arrays.copyOfRange(iStream, from, to);
 
             ORecordId referrer = (new ORecordId()).fromStream(referrerByte);
             ORecordId referent = (new ORecordId()).fromStream(referentByte);
-            return new RefLinkInfo(referrer, referent, pos);
+            ORecordId edge = (new ORecordId()).fromStream(edgeByte);
+            return new RefLinkInfo(referrer, referent, edge, pos);
         }
     }
 	
@@ -809,10 +841,10 @@ public class MindDB {
 		
 		assert (getEdgeType(edgeVertex.m_edge) == EdgeType.INCLUDE);
 		
-		final Vertex removedVertex = edgeVertex.m_vertex;
+		final Vertex removedVertex = edgeVertex.m_target;
 
         //collect the refer info, to help update display tree
-        final ArrayList<RefLinkInfo> refLinkInfos = new ArrayList<RefLinkInfo> ();
+        final ArrayList<RefLinkInfo> refLinkInfos = new ArrayList<> ();
 
 		deepTraverse(removedVertex, new Processor() {
 			
@@ -823,20 +855,20 @@ public class MindDB {
 				{
 					for (EdgeVertex referrer : referrers)
 					{
-                        List<OutEdgeIdPair> outEdgeIdPairsOfReferrer = m_outEdgeInnerIdCache.get(referrer.m_vertex.getId());
+                        List<OutEdgeIdPair> outEdgeIdPairsOfReferrer = m_outEdgeInnerIdCache.get(referrer.m_source.getId());
                         if (outEdgeIdPairsOfReferrer == null) {
-                            outEdgeIdPairsOfReferrer = getOutEdgeIdPairsSkipCache(referrer.m_vertex);
+                            outEdgeIdPairsOfReferrer = getOutEdgeIdPairsSkipCache(referrer.m_source);
                         }
 
                         //此处不必再加入m_outEdgeInnerIdCache
 
 						int edgeIndex = outEdgeIdPairsOfReferrer.indexOf(getOutEdgeIdPair(referrer.m_edge));
-                        Object referrerId = referrer.m_vertex.getId();
+                        Object referrerId = referrer.m_source.getId();
 
                         //仅仅删除子树之外的节点到子树之内的节点的引用关系
                         if (! isVertextIdInSubTree(removedVertex.getId(), referrerId)) {
-                            refLinkInfos.add(new RefLinkInfo(referrerId, vertex.getId(), edgeIndex));
-                            removeRefEdgeImpl(referrer.m_vertex, edgeIndex);
+                            refLinkInfos.add(new RefLinkInfo(referrerId, vertex.getId(), referrer.m_edge, edgeIndex));
+                            removeRefEdge(referrer.m_source, referrer.m_edge);
                         }
 
 					}
@@ -947,14 +979,14 @@ public class MindDB {
 
         assert(!(parentId instanceof Vertex));
         m_parentDbIdCache.put(vertex.getId(), parentId);
-		return new EdgeVertex(edge, parent);
+		return new EdgeVertex(parent, vertex, edge, pos);
 	}
 
     private void removeSubTree(Vertex root)
     {
         for (EdgeVertex edgeVertex : getChildrenAndReferents(root)) {
             if (getEdgeType(edgeVertex.m_edge) == EdgeType.INCLUDE) {
-                removeSubTree(edgeVertex.m_vertex);
+                removeSubTree(edgeVertex.m_target);
             }
         }
 

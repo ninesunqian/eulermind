@@ -88,8 +88,8 @@ public class Crawler extends WebCrawler {
     {
         Vertex dbParent = sm_mindDb.getVertex(parentDbId);
         MindDB.EdgeVertex edgeVertex = sm_mindDb.addChild(dbParent);
-        edgeVertex.m_vertex.setProperty(MindModel.TEXT_PROP_NAME, text);
-        return edgeVertex.m_vertex.getId();
+        edgeVertex.m_target.setProperty(MindModel.TEXT_PROP_NAME, text);
+        return edgeVertex.m_target.getId();
     }
 
     /**

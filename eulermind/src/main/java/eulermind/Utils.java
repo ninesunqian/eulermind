@@ -145,13 +145,13 @@ public class Utils {
 
         } else {
             MindDB.EdgeVertex edgeVertex = mindDb.addChild(parent, 0);
-            edgeVertex.m_vertex.setProperty(MindModel.TEXT_PROP_NAME, parentText + "a");
+            edgeVertex.m_target.setProperty(MindModel.TEXT_PROP_NAME, parentText + "a");
 
             edgeVertex = mindDb.addChild(parent, 1);
-            edgeVertex.m_vertex.setProperty(MindModel.TEXT_PROP_NAME, parentText + "b");
+            edgeVertex.m_target.setProperty(MindModel.TEXT_PROP_NAME, parentText + "b");
 
             edgeVertex = mindDb.addChild(parent, 2);
-            edgeVertex.m_vertex.setProperty(MindModel.TEXT_PROP_NAME, parentText + "c");
+            edgeVertex.m_target.setProperty(MindModel.TEXT_PROP_NAME, parentText + "c");
 
             mindDb.addRefEdge(parent, parent, 3);
         }
