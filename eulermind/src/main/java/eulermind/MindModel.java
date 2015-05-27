@@ -901,7 +901,7 @@ public class MindModel {
         if (isRefEdge(graph.getEdge(oldParent, node))) {
             return true;
         } else {
-            return (! isSelfInDB(node, newParent)) && (! isAncestorOfInDB(node, newParent));
+            return (! isSelfInDB(node, newParent)) && (! isDescendantInDB(node, newParent));
         }
     }
 
@@ -956,32 +956,32 @@ public class MindModel {
 
     public boolean isSelfInDB(Node n1, Node n2)
     {
-        return m_mindDb.vertexIdIsSelf(getDbId(n1), getDbId(n2));
+        return m_mindDb.isVertexIdSelf(getDbId(n1), getDbId(n2));
     }
 
-    public boolean isParentOfInDB(Node thiz, Node that) {
-        return m_mindDb.vertexIdIsParentOf(getDbId(thiz), getDbId(that));
+    public boolean isChildInDB(Node thiz, Node that) {
+        return m_mindDb.isVertexIdChild(getDbId(thiz), getDbId(that));
     }
 
-    public boolean isChildOfInDB(Node thiz, Node that) {
-        return m_mindDb.vertexIdIsChildOf(getDbId(thiz), getDbId(that));
+    public boolean isParentInDB(Node thiz, Node that) {
+        return m_mindDb.isVertexIdParent(getDbId(thiz), getDbId(that));
     }
 
-    public boolean isSiblingOfInDB(Node thiz, Node that) {
-        return m_mindDb.vertexIdIsSiblingOf(getDbId(thiz), getDbId(that));
+    public boolean isSiblingInDB(Node thiz, Node that) {
+        return m_mindDb.isVertexIdSibling(getDbId(thiz), getDbId(that));
     }
 
-    public boolean isAncestorOfInDB(Node thiz, Node that) {
-        return m_mindDb.vertexIdIsAncestorOf(getDbId(thiz), getDbId(that));
+    public boolean isDescendantInDB(Node thiz, Node that) {
+        return m_mindDb.isVertexIdDescendant(getDbId(thiz), getDbId(that));
     }
 
-    public boolean isDescendantOfInDB(Node thiz, Node that) {
-        return m_mindDb.vertexIdIsDescendantOf(getDbId(thiz), getDbId(that));
+    public boolean isAncestorInDB(Node thiz, Node that) {
+        return m_mindDb.isVertexIdAncestor(getDbId(thiz), getDbId(that));
     }
 
-    public boolean subTreeContainsInDB(Node n1, Node n2)
+    public boolean isInSubTreeInDB(Node n1, Node n2)
     {
-        return m_mindDb.subTreeContainsVertexId(getDbId(n1), getDbId(n2));
+        return isSelfInDB(n1, n2) || isDescendantInDB(n1, n2);
     }
 
 
@@ -1422,7 +1422,7 @@ public class MindModel {
 
             Integer outEdgeType = (Integer)outEdge.get(sm_edgeTypePropName);
             if (MindDB.EdgeType.values()[outEdgeType] == MindDB.EdgeType.INCLUDE) {
-                assert m_mindDb.vertexIdIsChildOf(getDbId(childOrReferenceNode), getDbId(node));
+                assert m_mindDb.isVertexIdParent(getDbId(childOrReferenceNode), getDbId(node));
             } else {
                 assert MindDB.EdgeType.values()[outEdgeType] == MindDB.EdgeType.REFERENCE;
             }
@@ -1445,7 +1445,7 @@ public class MindModel {
             assert parentOrReferrerOutEdgeIdPairs.get(node.getIndex()).m_innerId.equals(getOutEdgeInnerId(inEdge));
 
             if (MindDB.EdgeType.values()[inEdgeType] == MindDB.EdgeType.INCLUDE) {
-                assert m_mindDb.vertexIdIsParentOf(getDbId(parentOrReferrerNode), getDbId(node));
+                assert m_mindDb.isVertexIdChild(getDbId(parentOrReferrerNode), getDbId(node));
             } else {
                 assert MindDB.EdgeType.values()[inEdgeType] == MindDB.EdgeType.REFERENCE;
             }

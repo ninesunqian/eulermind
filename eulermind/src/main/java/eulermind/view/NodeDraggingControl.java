@@ -6,6 +6,8 @@ import eulermind.operator.AddingReference;
 import eulermind.operator.ChangingPosition;
 import eulermind.operator.HandoveringChild;
 import eulermind.operator.HandoveringReference;
+import eulermind.view.MindView;
+import eulermind.view.NodeControl;
 import prefuse.data.Node;
 import prefuse.visual.NodeItem;
 
@@ -214,7 +216,7 @@ class NodeDraggingControl extends NodeControl {
                     operator = new HandoveringReference(mindModel, draggedNode, newParent, newPosition);
                 } else {
 
-                    assert ! mindModel.isAncestorOfInDB(draggedNode, newParent);
+                    assert ! mindModel.isDescendantInDB(draggedNode, newParent);
                     assert(mindModel.canResetParent(draggedNode, newParent));
 
                     operator = new HandoveringChild(mindModel, draggedNode, newParent, newPosition);

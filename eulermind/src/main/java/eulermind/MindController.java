@@ -2,6 +2,7 @@ package eulermind;
 
 import eulermind.component.ButtonTabComponent;
 import eulermind.component.MindPropertyComponent;
+import eulermind.component.PropertyComponentConnector;
 import eulermind.operator.Removing;
 import eulermind.view.MindKeyView;
 import eulermind.view.MindView;
@@ -249,7 +250,7 @@ public class MindController extends UndoManager {
             HashSet<Object> toBeRemovedMindViewIds = new HashSet<>();
 
             for (Object rootDBId : m_mindViews.keySet()) {
-                if (m_mindModel.m_mindDb.vertexIdIsAncestorOf(trashedDBId, rootDBId)) {
+                if (m_mindModel.m_mindDb.isVertexIdDescendant(trashedDBId, rootDBId)) {
                     toBeRemovedMindViewIds.add(rootDBId);
                 }
             }

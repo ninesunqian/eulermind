@@ -325,35 +325,35 @@ public class MindDB {
         return sharedAncestorId;
     }
 
-    boolean vertexIdIsSelf(Object thiz, Object that) {
+    boolean isVertexIdSelf(Object thiz, Object that) {
         return thiz.equals(that);
     }
 
-    boolean vertexIdIsParentOf(Object thiz, Object that) {
-        return vertexIdIsSelf(thiz, getParentDbId(that));
+    boolean isVertexIdChild(Object thiz, Object that) {
+        return isVertexIdSelf(thiz, getParentDbId(that));
     }
 
-    boolean vertexIdIsChildOf(Object thiz, Object that) {
-        return vertexIdIsSelf(getParentDbId(thiz), that);
+    boolean isVertexIdParent(Object thiz, Object that) {
+        return isVertexIdSelf(getParentDbId(thiz), that);
     }
 
-    boolean vertexIdIsSiblingOf(Object thiz, Object that) {
-        return vertexIdIsSelf(getParentDbId(thiz), getParentDbId(that));
+    boolean isVertexIdSibling(Object thiz, Object that) {
+        return isVertexIdSelf(getParentDbId(thiz), getParentDbId(that));
     }
 
 
-    boolean vertexIdIsDescendantOf(Object thiz, Object that) {
+    boolean isVertexIdAncestor(Object thiz, Object that) {
         List thizInheritPath = getInheritPath(thiz);
         return thizInheritPath.contains(that);
     }
 
-    boolean vertexIdIsAncestorOf(Object thiz, Object that) {
+    boolean isVertexIdDescendant(Object thiz, Object that) {
         List thatInheritPath = getInheritPath(that);
         return thatInheritPath.contains(thiz);
     }
 
-    boolean subTreeContainsVertexId(Object subTreeId, Object vertexId) {
-        return vertexIdIsAncestorOf(subTreeId, vertexId) || vertexIdIsSelf(subTreeId, vertexId);
+    boolean isVertextIdInSubTree(Object subTreeId, Object vertexId) {
+        return isVertexIdDescendant(subTreeId, vertexId) || isVertexIdSelf(subTreeId, vertexId);
     }
 
 	public EdgeType getEdgeType(Edge edge)
@@ -520,7 +520,7 @@ public class MindDB {
     public void removeRefEdge(Vertex source, Edge edge)
     {
         assert getEdgeType(edge) == EdgeType.REFERENCE;
-        assert vertexIdIsSelf(source.getId(), edge.getVertex(Direction.OUT).getId());
+        assert isVertexIdSelf(source.getId(), edge.getVertex(Direction.OUT).getId());
 
         Vertex referrent = edge.getVertex(Direction.IN);
         m_graph.removeEdge(edge);
@@ -692,7 +692,7 @@ public class MindDB {
         Edge edge = addEdge(toParent, child, toPos, EdgeType.INCLUDE);
 
         //新的父节点，不能是子节点的后代
-        assert ! vertexIdIsAncestorOf(child.getId(), toParent.getId());
+        assert ! isVertexIdDescendant(child.getId(), toParent.getId());
 
         m_parentDbIdCache.put(child.getId(), toParent.getId());
 
@@ -887,7 +887,7 @@ public class MindDB {
                         Object referrerId = referrer.m_source.getId();
 
                         //仅仅删除子树之外的节点到子树之内的节点的引用关系
-                        if (! subTreeContainsVertexId(removedVertex.getId(), referrerId)) {
+                        if (! isVertextIdInSubTree(removedVertex.getId(), referrerId)) {
                             refLinkInfos.add(new RefLinkInfo(referrerId, vertex.getId(), referrer.m_edge.getId(), edgeIndex));
                             removeRefEdge(referrer.m_source, referrer.m_edge);
                         }
@@ -1191,7 +1191,7 @@ public class MindDB {
         if (refLinkInfos != null) {
             for (RefLinkInfo refLinkInfo : refLinkInfos) {
                 assert root.getId().equals(refLinkInfo.m_referent) ||
-                        vertexIdIsAncestorOf(root.getId(), refLinkInfo.m_referent);
+                        isVertexIdDescendant(root.getId(), refLinkInfo.m_referent);
             }
         }
 

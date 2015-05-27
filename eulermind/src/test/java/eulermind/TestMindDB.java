@@ -73,19 +73,19 @@ public class TestMindDB extends TestCase {
 
     void assertInitTree() {
 
-        assertTrue(m_mindDB.vertexIdIsSelf(m_root.getId(), m_mindDB.getParent(m_v1).getId()));
-        assertTrue(m_mindDB.vertexIdIsSelf(m_mindDB.getChildOrReferent(m_v1, 1).m_target.getId(), m_root.getId()));
+        assertTrue(m_mindDB.isVertexIdSelf(m_root.getId(), m_mindDB.getParent(m_v1).getId()));
+        assertTrue(m_mindDB.isVertexIdSelf(m_mindDB.getChildOrReferent(m_v1, 1).m_target.getId(), m_root.getId()));
         assertEquals(2, m_mindDB.getChildOrReferentCount(m_root));
 
-        assertTrue(m_mindDB.vertexIdIsChildOf(m_v0.getId(), m_root.getId()));
-        assertTrue(m_mindDB.vertexIdIsParentOf(m_root.getId(), m_v0.getId()));
+        assertTrue(m_mindDB.isVertexIdParent(m_v0.getId(), m_root.getId()));
+        assertTrue(m_mindDB.isVertexIdChild(m_root.getId(), m_v0.getId()));
 
-        assertTrue(m_mindDB.vertexIdIsDescendantOf(m_v0.getId(), m_root.getId()));
-        assertTrue(m_mindDB.vertexIdIsDescendantOf(m_v100.getId(), m_root.getId()));
-        assertTrue(m_mindDB.vertexIdIsAncestorOf(m_root.getId(), m_v100.getId()));
+        assertTrue(m_mindDB.isVertexIdAncestor(m_v0.getId(), m_root.getId()));
+        assertTrue(m_mindDB.isVertexIdAncestor(m_v100.getId(), m_root.getId()));
+        assertTrue(m_mindDB.isVertexIdDescendant(m_root.getId(), m_v100.getId()));
 
-        assertTrue(m_mindDB.vertexIdIsSiblingOf(m_v00.getId(), m_v01.getId()));
-        assertFalse(m_mindDB.vertexIdIsSiblingOf(m_v00.getId(), m_v10.getId()));
+        assertTrue(m_mindDB.isVertexIdSibling(m_v00.getId(), m_v01.getId()));
+        assertFalse(m_mindDB.isVertexIdSibling(m_v00.getId(), m_v10.getId()));
 
         //getSharedAncestorId [MindDB]
     }
