@@ -104,7 +104,7 @@ public class HandoveringChild extends MindOperator{
 
         Node child = oldParentNode.getChild(oldPos);
 
-        assert ! m_mindModel.isSelfInDB(child, newParentNode) && ! m_mindModel.isDescendantInDB(child, newParentNode);
+        assert ! m_mindModel.isSelfInDB(child, newParentNode) && ! m_mindModel.isAncestorOfInDB(child, newParentNode);
 
         assert !MindModel.getDbId(oldParentNode).equals(MindModel.getDbId(newParentNode));
         assert !m_mindModel.isRefNode(child);

@@ -88,7 +88,7 @@ public class Removing extends MindOperator {
         if (mindModel.isRefNode(node)) {
             return true;
         } else {
-            if (mindModel.isInSubTreeInDB(node, root)) {
+            if (mindModel.subTreeContainsInDB(node, root)) {
                 return false;
             } else {
                 return true;
@@ -104,7 +104,7 @@ public class Removing extends MindOperator {
         //firstly to right
         for (int i=start+1; i<parent.getChildCount(); i++) {
             Node tmp = parent.getChild(i);
-            if (!m_mindModel.isInSubTreeInDB(node, tmp)) {
+            if (!m_mindModel.subTreeContainsInDB(node, tmp)) {
                 return tmp;
             }
         }
@@ -112,7 +112,7 @@ public class Removing extends MindOperator {
         //then to left
         for (int i=start-1; i>=0; i--) {
             Node tmp = parent.getChild(i);
-            if (!m_mindModel.isInSubTreeInDB(node, tmp)) {
+            if (!m_mindModel.subTreeContainsInDB(node, tmp)) {
                 return tmp;
             }
         }
@@ -175,7 +175,7 @@ public class Removing extends MindOperator {
 
                 for (int i=0; i<parent.getChildCount(); i++) {
                     Node sibling = parent.getChild(i);
-                    if (! m_mindModel.isInSubTreeInDB(formerCursor, sibling)) {
+                    if (! m_mindModel.subTreeContainsInDB(formerCursor, sibling)) {
                         keptSiblings.add(parent.getChild(i));
                     }
                 }
