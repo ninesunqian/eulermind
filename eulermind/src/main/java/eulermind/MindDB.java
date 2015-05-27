@@ -525,6 +525,16 @@ public class MindDB {
         Vertex referrent = edge.getVertex(Direction.IN);
         m_graph.removeEdge(edge);
 
+        List<OutEdgeIdPair> cachedInnerId = m_outEdgeInnerIdCache.get(source.getId());
+        if (cachedInnerId != null) {
+            for (OutEdgeIdPair outEdgeIdPair : cachedInnerId) {
+                if (outEdgeIdPair.m_dbId.equals(edge.getId())) {
+                    cachedInnerId.remove(outEdgeIdPair);
+                    break;
+                }
+            }
+        }
+
         verifyVertex(source);
         verifyVertex(referrent);
     }
