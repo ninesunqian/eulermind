@@ -175,7 +175,7 @@ public class Removing extends MindOperator {
 
                 for (int i=0; i<parent.getChildCount(); i++) {
                     Node sibling = parent.getChild(i);
-                    if (! m_mindModel.isInSubTreeInDB(sibling, formerCursor)) {
+                    if (! m_mindModel.isInSubTreeInDB(formerCursor, sibling)) {
                         keptSiblings.add(parent.getChild(i));
                     }
                 }
