@@ -1,5 +1,6 @@
 package eulermind;
 
+import com.orientechnologies.orient.core.id.ORecordId;
 import com.tinkerpop.blueprints.*;
 import eulermind.MindDB.EdgeVertex;
 import eulermind.MindDB.RefLinkInfo;
@@ -55,7 +56,6 @@ public class MindModel {
 
 	final static String sm_dbIdColumnName = "dbElementId";
 
-    private final static String OUT_EDGE_ID_PAIRS_PROP_NAME = "outEdgeIdPairs";
     private final static String EDGE_INNER_ID_PROP_NAME = MindDB.EDGE_INNER_ID_PROP_NAME;
 
     //这两个属性应用频繁
@@ -90,7 +90,7 @@ public class MindModel {
         VertexBasicInfo(Vertex vertex) {
             m_dbId = vertex.getId();
             m_text = vertex.getProperty(TEXT_PROP_NAME);
-            Vertex parent = m_mindDb.getParent(vertex);
+            Vertex parent = m_mindDb.getParentEge(vertex).m_source;
 
             if (parent == null) {
                 m_parentText = null;
@@ -137,7 +137,6 @@ public class MindModel {
 	private void addNodeTableProperties(Table t)
 	{
 		t.addColumn(sm_dbIdColumnName, Object.class, null);
-        t.addColumn(OUT_EDGE_ID_PAIRS_PROP_NAME, Object.class, null);
 
 		for (String propName : sm_nodePropNames)
 		{
@@ -163,12 +162,6 @@ public class MindModel {
         assert(vertex != null && vertex.getId() != null);
 
         node.set(sm_dbIdColumnName, vertex.getId());
-
-        //拷贝一份，自己维护。因为prefuse需要独立操作节点，使用户有操作树的感觉。所以需要自己维护一套状态
-        ArrayList<MindDB.OutEdgeIdPair> outEdgeIdPairs = new ArrayList<>();
-        outEdgeIdPairs.addAll(m_mindDb.getOutEdgeIdPairs(vertex));
-
-        node.set(OUT_EDGE_ID_PAIRS_PROP_NAME, outEdgeIdPairs);
 
         loadElementProperties(vertex, node, sm_nodePropNames);
     }
@@ -332,7 +325,7 @@ public class MindModel {
         return tree;
     }
 
-    public void removeTree(Object rootId)
+    public void closeSubTree(Object rootId)
     {
         Tree tree = findTree(rootId);
         if (tree != null) {
@@ -376,18 +369,6 @@ public class MindModel {
         for (String key : keys)
         {
             Object tupleValue = tuple.get(key);
-
-            //OLD
-            if (key == OUT_EDGE_ID_PAIRS_PROP_NAME) {
-                ArrayList dbElementValue = m_mindDb.getContainerProperty(dbElement, key);
-                assert tupleValue == dbElementValue || tupleValue.equals(dbElementValue);
-            } else {
-                Object dbElementValue = dbElement.getProperty(key);
-                if (!(tupleValue == dbElementValue || tupleValue.equals(dbElementValue))) {
-                    int debug = 1;
-                }
-                assert tupleValue == dbElementValue || tupleValue.equals(dbElementValue);
-            }
 
             //NEW
             Object dbElementValue = dbElement.getProperty(key);
@@ -460,9 +441,13 @@ public class MindModel {
         tree.removeDescendants(node);
     }
 
-	interface Visitor {
+	interface NodeVisitor {
 	 	abstract public void visit(Node node);
 	}
+
+    interface EdgeVisitor {
+        abstract public void visit(Edge edge);
+    }
 
     static ArrayList<Integer> getNodeAvatars(Tree tree, Object dbId)
     {
@@ -484,8 +469,29 @@ public class MindModel {
 
         return aimRows;
     }
-	
-	void visitNodeAvatars(Tree tree, Object dbId, Visitor visitor)
+
+    static ArrayList<Integer> getEdgeAvatars(Tree tree, Object dbId)
+    {
+        Table edgeTable = tree.getEdgeTable();
+        IntIterator allRows = edgeTable.rows();
+
+        ArrayList<Integer> aimRows = new ArrayList<Integer> ();
+
+        //collect the edge with the same dbId to aimRows
+        while (allRows.hasNext()) {
+            int curRow = allRows.nextInt();
+
+            assert (curRow >= 0);
+
+            if (edgeTable.get(curRow, sm_dbIdColumnName).equals(dbId)) {
+                aimRows.add(curRow);
+            }
+        }
+
+        return aimRows;
+    }
+
+	void visitNodeAvatars(Tree tree, Object dbId, NodeVisitor nodeVisitor)
 	{
         assert(dbId != null);
 
@@ -498,13 +504,32 @@ public class MindModel {
 			if (nodeTable.isValidRow(row))
 			{
 				Node node = tree.getNode(row);
-				visitor.visit(node);
+				nodeVisitor.visit(node);
 			}
 		}
 	}
 
-    private List<MindDB.OutEdgeIdPair> getNodeOutEdgeIdPairs(Node sourceNode) {
-        return (List<MindDB.OutEdgeIdPair>)sourceNode.get(OUT_EDGE_ID_PAIRS_PROP_NAME);
+    void visitEdgeAvatars(Tree tree, Object dbId, EdgeVisitor edgeVisitor)
+    {
+        assert(dbId != null);
+
+        Table edgeTable = tree.getEdgeTable();
+
+        ArrayList<Integer> aimRows = getEdgeAvatars(tree, dbId);
+
+        //attach blueprints edge, to each edge in aimRows
+        for (Integer row : aimRows) {
+            if (edgeTable.isValidRow(row))
+            {
+                Edge node = tree.getEdge(row);
+                edgeVisitor.visit(node);
+            }
+        }
+    }
+
+    private List<MindDB.EdgeVertexId> getNodeOutEdgeIdPairs(Node sourceNode) {
+        //return (List<MindDB.EdgeVertexId>)sourceNode.get(OUT_EDGE_ID_PAIRS_PROP_NAME);
+        return m_mindDb.getOutEdgeVertexIds(m_mindDb.getVertex(getDbId(sourceNode)));
     }
 
     protected void exposeNodeRelation(Node sourceNode, int pos, EdgeVertex toTarget)
@@ -512,20 +537,17 @@ public class MindModel {
         assert sourceNode != null;
         assert sourceNode.isValid();
 
-        List<MindDB.OutEdgeIdPair> outEdgeIdPairs = getNodeOutEdgeIdPairs(sourceNode);
-
-        //if this node is updated, skip
-        if (outEdgeIdPairs.size() > pos && outEdgeIdPairs.get(pos).belongTo(toTarget.m_edge)) {
-            return;
-        }
-
         //如果原来没有挂上子节点，仅仅更新outEdgeIdPairs
         if (! isChildrenAttached(sourceNode)) {
-            outEdgeIdPairs.add(pos, m_mindDb.getOutEdgeIdPair(toTarget.m_edge));
             return;
         }
 
-        outEdgeIdPairs.add(pos, m_mindDb.getOutEdgeIdPair(toTarget.m_edge));
+        //如果已经添加上了，跳过
+        if (pos < sourceNode.getChildCount() &&
+                getDbId(sourceNode.getChildEdge(pos)).equals(toTarget.m_edge.getId()))
+        {
+            return;
+        }
 
         Tree tree = (Tree)sourceNode.getGraph();
 
@@ -536,42 +558,14 @@ public class MindModel {
         loadEdgeProperties(toTarget.m_edge, edge);
     }
 
-    private int getPositionInOutEdgeIdPairs(List<MindDB.OutEdgeIdPair> outEdgeIdPairs, Object edgeDbId) {
-        for (int i=0; i<outEdgeIdPairs.size(); i++) {
-            if (outEdgeIdPairs.get(i).m_dbId.equals(edgeDbId)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    protected void hideNodeRelation(Node sourceNode, Object edgeDbId)
+    protected void hideNodeRelation(Edge edge)
     {
-        assert (sourceNode != null);
-        assert (sourceNode.isValid());
-
-        List<MindDB.OutEdgeIdPair> outEdgeIdPairs = getNodeOutEdgeIdPairs(sourceNode);
-
-        int pos = getPositionInOutEdgeIdPairs(outEdgeIdPairs, edgeDbId);
-
-        //if this node is updated, skip
-        if (pos == -1) {
-            return;
-        }
-
-        //如果原来没有挂上子节点，仅仅更新outEdgeIdPairs
-        if (! isChildrenAttached(sourceNode)) {
-            outEdgeIdPairs.remove(pos);
-            return;
-        }
-
-        outEdgeIdPairs.remove(pos);
-
-        Tree tree = (Tree)sourceNode.getGraph();
-        Node child = tree.getChild(sourceNode, pos);
+        Tree tree = (Tree)edge.getGraph();
+        Node child = tree.getTargetNode(edge);
         tree.removeChild(child);
     }
 
+    /*
     protected void exposeNodeRelations(Node sourceNode, int pos, List<EdgeVertex> toTargets)
     {
         assert sourceNode != null;
@@ -581,25 +575,23 @@ public class MindModel {
             exposeNodeRelation(sourceNode, i+pos, toTargets.get(i));
         }
     }
+    */
 
-    protected void hideNodeRelations(Node sourceNode, List<Object> edgeDbIds)
+    /*
+    protected void hideNodeRelations(List<Object> edgeDbIds)
     {
-        assert (sourceNode != null);
-        assert (sourceNode.isValid());
-
         for (Object edgeDbId : edgeDbIds) {
-            hideNodeRelation(sourceNode, edgeDbId);
+            hideNodeRelation(edgeDbId);
         }
     }
+    */
 
     //Maybe there are more than one reference edge link source target
     //The callers of exposeTreeRelation has got target and dbEdge, so pass them as argument
     protected void exposeTreeRelation(final Tree tree, final Object sourceId, final int edgePosInSourceNode,
                                       final EdgeVertex toTarget)
 	{
-        final Vertex sourceVertex = m_mindDb.getVertex(sourceId);
-
-		visitNodeAvatars(tree, sourceId, new Visitor() {
+		visitNodeAvatars(tree, sourceId, new NodeVisitor() {
             public void visit(Node sourceNode)
             {
                 exposeNodeRelation(sourceNode, edgePosInSourceNode, toTarget);
@@ -607,22 +599,22 @@ public class MindModel {
         });
 	}
 
-    private void hideTreeRelation(final Tree tree, final Object sourceId, final Object edgeDbId)
+    private void hideTreeRelation(final Tree tree, final Object edgeDbId)
     {
-        visitNodeAvatars(tree, sourceId, new Visitor() {
-            public void visit(Node sourceNode)
-            {
-                hideNodeRelation(sourceNode, edgeDbId);
+        visitEdgeAvatars(tree, edgeDbId, new EdgeVisitor() {
+            public void visit(Edge edge) {
+                hideNodeRelation(edge);
             }
         });
     }
 
+    /*
     protected void exposeTreeRelations(final Tree tree, final Object sourceId, final int edgePosInSourceNode,
                                       final List<EdgeVertex> toTargets)
     {
         final Vertex sourceVertex = m_mindDb.getVertex(sourceId);
 
-        visitNodeAvatars(tree, sourceId, new Visitor() {
+        visitNodeAvatars(tree, sourceId, new NodeVisitor() {
             public void visit(Node sourceNode)
             {
                 exposeNodeRelations(sourceNode, edgePosInSourceNode, toTargets);
@@ -632,38 +624,37 @@ public class MindModel {
 
     private void hideTreeRelations(final Tree tree, final Object sourceId, final List<Object> edgeDbIds)
     {
-        visitNodeAvatars(tree, sourceId, new Visitor() {
+        visitNodeAvatars(tree, sourceId, new NodeVisitor() {
             public void visit(Node sourceNode)
             {
                 hideNodeRelations(sourceNode, edgeDbIds);
             }
         });
     }
+    */
 
     //opNode: user operated node
-    protected void exposeModelRelation(Node opNode, int pos, EdgeVertex edgeVertex)
+    protected void exposeModelRelation(Object sourceId, int pos, EdgeVertex edgeVertex)
     {
-        for (Tree tree : m_trees) {
-            exposeTreeRelation(tree, getDbId(opNode), pos, edgeVertex);
-        }
+        //TODO: 重构时防止拉下，
+        assert sourceId instanceof ORecordId;
 
-        verifyNode(opNode, true);
+        for (Tree tree : m_trees) {
+            exposeTreeRelation(tree, sourceId, pos, edgeVertex);
+        }
     }
 
-    private void hideModelRelation(Object sourceId, Object edgeDbId)
+    private void hideModelRelation(Object edgeDbId)
     {
         for (final Tree tree : m_trees) {
-            hideTreeRelation(tree, sourceId, edgeDbId);
+            hideTreeRelation(tree, edgeDbId);
         }
     }
 
+    /*
     //opNode: user operated node
     protected void exposeModelRelations(Node opNode, int pos, List<EdgeVertex> toTargets)
     {
-        for (Tree tree : m_trees) {
-            exposeTreeRelations(tree, getDbId(opNode), pos, toTargets);
-        }
-
         verifyNode(opNode, true);
     }
 
@@ -673,6 +664,7 @@ public class MindModel {
             hideTreeRelations(tree, sourceId, edgeDbIds);
         }
     }
+    */
 
     //return new child node
 	public Node addChild(Node parent, int pos, String text)
@@ -767,36 +759,33 @@ public class MindModel {
             newToTargets.add(edgeVertex);
         }
 
-        exposeModelRelations(parent, pos, newToTargets);
+        int newVertexPos = pos;
+        for (EdgeVertex edgeVertex : newToTargets) {
+            exposeModelRelation(parentDbId, newVertexPos, edgeVertex);
+            newVertexPos++;
+
+        }
+
         return newChildren;
     }
 
 	//return the DBid of node
-	public Object trashNode(Object parentDbId, int pos)
+	public Object trashNode(Object dbId)
 	{
-        Vertex parent = m_mindDb.getVertex(parentDbId);
-        final EdgeVertex edgeChild = m_mindDb.getChildOrReferent(parent, pos);
+        Vertex vertex = m_mindDb.getVertex(dbId);
+        MindDB.EdgeVertexId  edgeParentId = m_mindDb.getParentEdgeId(dbId);
 
-        Object removedDbId = edgeChild.m_target.getId();
-        Object removedEdgeDbId = edgeChild.m_edge.getId();
+        m_mindDb.trashSubTree(m_mindDb.getVertex(dbId));
+        removeFromFavorite(dbId);
 
-        Vertex trashedVertex = m_mindDb.trashSubTree(parent, pos);
+        hideModelRelation(edgeParentId.m_edgeId);
 
-        hideModelRelation(parentDbId, removedEdgeDbId);
-
-        final MindDB.TrashedTreeContext context = m_mindDb.getTrashedTreeContext(trashedVertex);
-
+        final MindDB.TrashedTreeContext context = m_mindDb.getTrashedTreeContext(vertex);
         for (final RefLinkInfo refLinkInfo : context.m_refLinkInfos) {
-            final Vertex referrerVertex = m_mindDb.getVertex(refLinkInfo.m_referrer);
-
-            for (final Tree tree : m_trees) {
-                hideTreeRelation(tree, refLinkInfo.m_referrer, refLinkInfo.m_edge);
-            }
+            hideModelRelation(refLinkInfo.m_edge);
         }
 
-        removeFromFavorite(removedDbId);
-
-        return removedDbId;
+        return dbId;
 	}
 
     public boolean isVertexTrashed(Object dbId)
@@ -805,18 +794,20 @@ public class MindModel {
         return m_mindDb.isVertexTrashed(vertex);
     }
 
-	public void restoreNodeFromTrash(Node parent, final Object dbId)
+	public void restoreNodeFromTrash(final Object dbId)
 	{
+        /*TODO: 放到外面
         if (! isChildrenAttached(parent)) {
             attachChildren(parent);
         }
+        */
 
         final Vertex restoredVertex = m_mindDb.getVertex(dbId);
         final MindDB.TrashedTreeContext context = m_mindDb.getTrashedTreeContext(restoredVertex);
 
         final EdgeVertex restoredEdgeVertex = m_mindDb.restoreTrashedSubTree(restoredVertex);
 
-        exposeModelRelation(parent, context.m_pos, restoredEdgeVertex);
+        exposeModelRelation(context.m_parentId, context.m_pos, restoredEdgeVertex);
 
         for (final RefLinkInfo refLinkInfo : context.m_refLinkInfos) {
             final Vertex referrerVertex = m_mindDb.getVertex(refLinkInfo.m_referrer);
@@ -833,58 +824,46 @@ public class MindModel {
             attachChildren(referrerNode);
         }
 
-        //TODO: move to minddb
         s_logger.info(String.format("addReference : %s -- %s", getText(referrerNode), referentDbId.toString()));
         Object referrerDbId  = getDbId(referrerNode);
         Vertex referrerVertex = m_mindDb.getVertex(referrerDbId);
         Vertex referentVertex = m_mindDb.getVertex(referentDbId);
-        com.tinkerpop.blueprints.Edge refEdge = m_mindDb.addRefEdge(referrerVertex, referentVertex, pos);
+        EdgeVertex edgeVertex = m_mindDb.addRefEdge(referrerVertex, referentVertex, pos);
 
-        exposeModelRelation(referrerNode, pos, new EdgeVertex(referrerVertex, referentVertex, refEdge, pos));
+        exposeModelRelation(referrerNode, pos, edgeVertex);
     }
 
 
-    public void removeReference(Object referrerDbId, int pos) {
-        Vertex referrerVertex = m_mindDb.getVertex(referrerDbId);
-        com.tinkerpop.blueprints.Edge edge = m_mindDb.getEdge(referrerVertex, pos);
-        Object edgeId = edge.getId();
-
-        m_mindDb.removeRefEdge(referrerVertex, edge);
-        hideModelRelation(referrerDbId, edgeId);
+    public void removeReference(Object edgeId) {
+        m_mindDb.removeRefEdge(m_mindDb.getEdge(edgeId));
+        hideModelRelation(edgeId);
     }
 
-    public void changeChildPos(final Object parentDbId, final int oldPos, final int newPos)
+    public void changeChildPos(final Object edgeId, final int newPos)
     {
-        s_logger.info("arg: parentDBID:{}", parentDbId);
-        s_logger.info("arg: oldPos:{}", oldPos);
-        s_logger.info("arg: newPos:{}", newPos);
+        s_logger.info("arg: edgeId{}: newPos:{}", edgeId, newPos);
 
-        Vertex parent = m_mindDb.getVertex(parentDbId);
-        m_mindDb.changeChildOrReferentPos(parent, oldPos, newPos);
-        com.tinkerpop.blueprints.Edge edge = m_mindDb.getEdge(parent, newPos);
-        final MindDB.OutEdgeIdPair outEdgeIdPair = m_mindDb.getOutEdgeIdPair(edge);
+        com.tinkerpop.blueprints.Edge edge = m_mindDb.getEdge(edgeId);
+        m_mindDb.changeEdgePos(edge, newPos);
+
+        final MindDB.EdgeVertexId edgeVertexId = m_mindDb.getEdgeVertexId(edge);
+
+        s_logger.info("after change: EdgeVertexId:{}", edgeVertexId);
 
         for (final Tree tree : m_trees) {
-            visitNodeAvatars(tree, parentDbId,
-                new Visitor() {
-                    public void visit(Node parent)
-                    {
-                        List<MindDB.OutEdgeIdPair> outEdgeIdPairs = getNodeOutEdgeIdPairs(parent);
+            visitEdgeAvatars(tree, edgeId,
+                    new EdgeVisitor() {
+                        public void visit(Edge edge) {
+                            Node sourceNode = tree.getSourceNode(edge);
+                            Node targetNode = tree.getTargetNode(edge);
 
-                        s_logger.info("before change: outEdgeIdPairs:{}", outEdgeIdPairs);
-                        outEdgeIdPairs.remove(oldPos);
-                        outEdgeIdPairs.add(newPos, outEdgeIdPair);
+                            edge.set(EDGE_INNER_ID_PROP_NAME, edgeVertexId.m_edgeInnerId);
+                            //TODO 修改接口，改变边的位置
+                            tree.changeChildIndex(sourceNode, targetNode.getIndex(), newPos);
 
-                        s_logger.info("after change: outEdgeIdPairs:{}", outEdgeIdPairs);
-                        if (parent.getChildCount() > 0) {
-                            Edge edge = parent.getChildEdge(oldPos);
-                            edge.set(EDGE_INNER_ID_PROP_NAME, outEdgeIdPair.m_innerId);
-                            tree.changeChildIndex(parent, oldPos, newPos);
+                            verifyNode(sourceNode, false);
                         }
-
-                        verifyNode(parent, false);
-                    }
-                });
+                    });
         }
 
         s_logger.info("ret:");
@@ -917,7 +896,7 @@ public class MindModel {
         }
 
         for (Tree tree : m_trees) {
-            visitNodeAvatars(tree, dbId, new Visitor() {
+            visitNodeAvatars(tree, dbId, new NodeVisitor() {
                 public void visit(Node node)
                 {
                     node.set(key, value);
@@ -1025,12 +1004,12 @@ public class MindModel {
     {
         Vertex vertex = m_mindDb.getVertex(dbId);
         String text = vertex.getProperty(TEXT_PROP_NAME);
-        Vertex parent = m_mindDb.getParent(vertex);
+        EdgeVertex parent = m_mindDb.getParentEge(vertex);
 
         if (parent == null) {
             return text;
         } else {
-            String parentText = parent.getProperty(TEXT_PROP_NAME);
+            String parentText = parent.m_source.getProperty(TEXT_PROP_NAME);
             return parentText + " -> " + text;
         }
     }
@@ -1279,7 +1258,7 @@ public class MindModel {
             Node newParent = tree.getNode(node2);
             Node child = oldParent.getChild(oldChildPos);
 
-            List<MindDB.OutEdgeIdPair> outEdgeIdPairs;
+            List<MindDB.EdgeVertexId> outEdgeIdPairs;
 
             outEdgeIdPairs = getNodeOutEdgeIdPairs(oldParent);
             outEdgeIdPairs.remove(oldChildPos);
@@ -1287,7 +1266,7 @@ public class MindModel {
             tree.removeEdge(tree.getEdge(oldParent, child));
 
             outEdgeIdPairs = getNodeOutEdgeIdPairs(newParent);
-            outEdgeIdPairs.add(m_mindDb.getOutEdgeIdPair(childEdgeVertex.m_edge));
+            outEdgeIdPairs.add(m_mindDb.getEdgeVertexId(childEdgeVertex.m_edge));
 
             Edge newEdge = tree.addChildEdge(newParent, child, newChildPos);
             loadEdgeProperties(childEdgeVertex.m_edge, newEdge);
@@ -1334,28 +1313,32 @@ public class MindModel {
         }
     }
 
-    public void handoverChild(Node oldParent, int oldPos, Node newParent, int newPos)
+    public void handoverChild(Node child, Node newParent, int newPos)
     {
-        s_logger.info("arg: oldParent:{}", oldParent);
-        s_logger.info("arg: oldPos:{}", oldPos);
+        s_logger.info("arg: child:{}", child);
         s_logger.info("arg: newParent:{}", newParent);
         s_logger.info("arg: newPos:{}", newPos);
 
-        assert (oldParent.getGraph() == newParent.getGraph());
+        assert (child.getGraph() == newParent.getGraph());
+
+        Tree tree = (Tree)child.getGraph();
+
+        assert child != tree.getRoot();
 
         if (! isChildrenAttached(newParent)) {
             attachChildren(newParent);
         }
 
+        Node oldParent = child.getParent();
+        int oldPos = child.getIndex();
+
         Object oldParentDbId = getDbId(oldParent);
         Object newParentDbId = getDbId(newParent);
         assert (! oldParentDbId.equals(newParentDbId));
 
-        Vertex oldParentVertex = m_mindDb.getVertex(oldParentDbId);
         Vertex newParentVertex = m_mindDb.getVertex(newParentDbId);
-        Object oldEdgeId = getDbId(oldParent.getChildEdge(oldPos));
 
-        EdgeVertex edgeVertex = m_mindDb.handoverChild(oldParentVertex, oldPos, newParentVertex, newPos);
+        EdgeVertex edgeVertex = m_mindDb.handoverChild(getDBVertex(child), newParentVertex, newPos);
 
         handoverNode(oldParent, oldPos, newParent, newPos, edgeVertex, oldEdgeId);
 
@@ -1408,7 +1391,7 @@ public class MindModel {
 
         verifyElementProperties(vertex, node, sm_nodePropNames);
 
-        List<MindDB.OutEdgeIdPair> outEdgeIdPairs = m_mindDb.getOutEdgeIdPairs(getDBVertex(node));
+        List<MindDB.EdgeVertexId> outEdgeIdPairs = m_mindDb.getOutEdgeVertexIds(getDBVertex(node));
         if (outEdgeIdPairs.size() > 0 && forceChildAttached) {
             assert node.getChildCount() == outEdgeIdPairs.size();
         }
@@ -1435,8 +1418,8 @@ public class MindModel {
             Integer inEdgeType = (Integer)inEdge.get(sm_edgeTypePropName);
             Node parentOrReferrerNode = inEdge.getSourceNode();
 
-            List<MindDB.OutEdgeIdPair> parentOrReferrerOutEdgeIdPairs =
-                    m_mindDb.getOutEdgeIdPairs(getDBVertex(parentOrReferrerNode));
+            List<MindDB.EdgeVertexId> parentOrReferrerOutEdgeIdPairs =
+                    m_mindDb.getOutEdgeVertexIds(getDBVertex(parentOrReferrerNode));
 
             if (node.getIndex() >= parentOrReferrerOutEdgeIdPairs.size()) {
                 int debug = 1;
@@ -1537,7 +1520,7 @@ public class MindModel {
 
     private void pasteNodeRecursively(final Node externalNode, final Node newNode)
     {
-        visitNodeAvatars((Tree)newNode.getGraph(), getDbId(newNode), new Visitor() {
+        visitNodeAvatars((Tree)newNode.getGraph(), getDbId(newNode), new NodeVisitor() {
             @Override
             public void visit(Node newNodeAvatar)
             {

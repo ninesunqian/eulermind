@@ -234,7 +234,7 @@ public class MindCombobox extends JComboBox {
             m_dbId = vertex.getId();
             m_text = vertex.getProperty(MindModel.TEXT_PROP_NAME);
 
-            Vertex parent = m_mindDb.getParent(vertex);
+            Vertex parent = m_mindDb.getParentEge(vertex);
             if (parent == null) {
                 m_parentDBId = null;
                 m_parentText = null;

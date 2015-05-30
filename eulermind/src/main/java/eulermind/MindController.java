@@ -169,7 +169,7 @@ public class MindController extends UndoManager {
         MindView mindView = m_mindViews.get(rootDBId);
         m_tabbedPane.remove(mindView);
         m_mindViews.remove(rootDBId);
-        m_mindModel.removeTree(rootDBId);
+        m_mindModel.closeSubTree(rootDBId);
     }
 
     public MindView exposeMindView(Object rootDBId) {

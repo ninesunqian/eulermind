@@ -176,14 +176,14 @@ public class JCustomTooltip extends JToolTip {
         }
 
         public void mouseEntered(MouseEvent e) {
-//            Window ttip = SwingUtilities.getWindowAncestor(getParent());
+//            Window ttip = SwingUtilities.getWindowAncestor(getParentEge());
 //            ttip.removeMouseListener(this);
 //            if ( ttip == null || !ttip.isVisible() ) {
 //                return;
 //            }
 //            ttip.getLocation(point);
 //            ttip.hide();
-//            getParent().remove(JCustomTooltip.this);
+//            getParentEge().remove(JCustomTooltip.this);
 //            
 //            JComponent c = getComponent();
 //            c.setToolTipText(null);
