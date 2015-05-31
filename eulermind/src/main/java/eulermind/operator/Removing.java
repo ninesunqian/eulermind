@@ -1,11 +1,13 @@
 package eulermind.operator;
 
+import eulermind.MindDB;
 import eulermind.MindModel;
 import eulermind.MindOperator;
 import prefuse.data.Node;
 import prefuse.data.Tree;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /*
 The MIT License (MIT)
@@ -30,32 +32,23 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 public class Removing extends MindOperator {
-    public Object m_parentDBId;
-    public int m_siblingPos;
-    public Object m_removedDBId;
 
     public boolean m_isRefRelation;
 
     public Removing(MindModel mindModel, Node formerCursor)
     {
         super(mindModel, formerCursor);
-        Node parent = formerCursor.getParent();
-        m_parentDBId = m_mindModel.getDbId(parent);
-
-        m_siblingPos = formerCursor.getIndex();
-        m_removedDBId = mindModel.getDbId(formerCursor);
-
         computeLaterCursor(formerCursor);
-
-        m_isRefRelation = m_mindModel.isRefNode(formerCursor);
     }
 
     public void does()
     {
-        if (m_isRefRelation) {
-            m_mindModel.removeReference(m_parentDBId, m_siblingPos);
+        if (m_isRefNode) {
+            MindDB mindDb = m_mindModel.m_mindDb;
+            List<MindDB.EdgeVertexId> outEdgeVetexIds = mindDb.getOutEdgeVertexIds(mindDb.getVertex(m_formerCursorParentId));
+            m_mindModel.removeReference(outEdgeVetexIds.get(m_formerCursorPos).m_edgeId);
         } else {
-            m_mindModel.trashNode(m_parentDBId, m_siblingPos);
+            m_mindModel.trashNode(m_formerCursorId);
         }
     }
 
@@ -66,9 +59,9 @@ public class Removing extends MindOperator {
 
         Node parentNode = getNodeByPath(parentPath);
         if (m_isRefRelation) {
-            m_mindModel.addReference(parentNode, m_siblingPos, m_removedDBId);
+            m_mindModel.addReference(parentNode, m_formerCursorPos, m_formerCursorId);
         } else {
-            m_mindModel.restoreNodeFromTrash(parentNode, m_removedDBId);
+            m_mindModel.restoreNodeFromTrash(m_formerCursorId);
         }
     }
 
@@ -145,7 +138,7 @@ public class Removing extends MindOperator {
 
         //change formerCursor to its avatar nearest to root
         parent = topSameDBNode(tree, parent);
-        formerCursor = parent.getChild(m_siblingPos);
+        formerCursor = parent.getChild(m_formerCursorPos);
 
         m_formerCursorPath = getNodePath(formerCursor);
 

@@ -2,6 +2,7 @@ package eulermind.operator;
 
 import eulermind.MindModel;
 import eulermind.MindOperator;
+import prefuse.data.Edge;
 import prefuse.data.Node;
 
 import java.util.ArrayList;
@@ -76,7 +77,9 @@ public class AddingReference extends MindOperator {
     }
 
     public void undo() {
-        m_mindModel.removeReference(m_referrerDBId, m_pos);
+        Node referentNode  = getNodeByPath(m_laterCursorPath);
+        Edge referEdge = referentNode.getParentEdge();
+        m_mindModel.removeReference(MindModel.getDbId(referEdge));
     }
 
     public void redo() {

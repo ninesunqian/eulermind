@@ -57,12 +57,10 @@ public class PastingExternalTree extends MindOperator {
     }
 
     public void undo() {
-        Node parent = getNodeByPath(m_parentPathAfterDoing);
-        m_mindModel.trashNode(MindModel.getDbId(parent), m_pos);
+        m_mindModel.trashNode(m_newSubTreeRootDbId);
     }
 
     public void redo() {
-        Node parent = getNodeByPath(m_parentPath);
-        m_mindModel.restoreNodeFromTrash(parent, m_newSubTreeRootDbId);
+        m_mindModel.restoreNodeFromTrash(m_newSubTreeRootDbId);
     }
 }

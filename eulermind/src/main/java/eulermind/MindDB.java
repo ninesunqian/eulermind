@@ -239,6 +239,7 @@ public class MindDB {
 	}
 	*/
 
+    //返回的是一份拷贝，用户可以自由修改
     public List<EdgeVertexId> getOutEdgeVertexIds(Vertex source)
     {
         List<EdgeVertexId> outEdgeVertexIds = m_edgeVertexIdCache.getOutEdgesOfOneVertex(source.getId());
@@ -462,7 +463,7 @@ public class MindDB {
         verifyVertex(referrer);
         verifyVertex(referent);
 
-        return new EdgeVertex(referrer, referrer, edge);
+        return new EdgeVertex(referrer, referent, edge);
     }
 
     private void removeEdge (Edge edge)
@@ -640,6 +641,17 @@ public class MindDB {
         }
 
         List<EdgeVertexId> outEdgeVertexIds = getOutEdgeVertexIds(source);
+
+        int oldPos = getEdgeIndex(outEdgeVertexIds, edge.getId());
+
+        if (oldPos == newPos) {
+            return edgeVertexId;
+        }
+
+        if (oldPos < newPos) {
+            newPos--;
+        }
+
         outEdgeVertexIds.remove(new EdgeVertexId(edge));
 
         EdgeVertexId newEdgeVertexId = insertToOrderedOutEdges(outEdgeVertexIds, newPos, edge);
@@ -923,8 +935,6 @@ public class MindDB {
                         getVertex(refLinkInfo.m_referent),
                         refLinkInfo.m_pos,
                         EdgeType.REFERENCE);
-                verifyVertex(getVertex(refLinkInfo.m_referrer));
-                verifyVertex(getVertex(refLinkInfo.m_referent));
 			}
 		}
 
@@ -1162,7 +1172,7 @@ public class MindDB {
     }
 
     //这是一个保存临时信息的类
-    class EdgeVertex implements Comparable <EdgeVertex> {
+    public class EdgeVertex implements Comparable <EdgeVertex> {
         final public Vertex m_source;
         final public Vertex m_target;
         final public Edge m_edge;
@@ -1193,17 +1203,20 @@ public class MindDB {
     };
 
 
-    class EdgeVertexId  implements Comparable <EdgeVertexId> {
-        final Object m_sourceId;
-        final Object m_edgeId;
-        final Object m_targetId;
-        final String m_edgeInnerId; //用于排序，无其他用途
+    public class EdgeVertexId  implements Comparable <EdgeVertexId> {
+        public final Object m_sourceId;
+        public final Object m_edgeId;
+        public final Object m_targetId;
+        public final String m_edgeInnerId; //用于排序，无其他用途
 
         EdgeVertexId(Edge edge) {
+
             m_sourceId = edge.getVertex(Direction.OUT).getId();
             m_targetId = edge.getVertex(Direction.IN).getId();
             m_edgeId = edge.getId();
             m_edgeInnerId = getOutEdgeInnerId(edge);
+
+            assert m_targetId.equals(m_rootId) || m_sourceId != null;
         }
 
         //用于通过一个EdgeVertexId，修改 edgeInnerId后，重新生成一个EdgeVertexId
@@ -1212,6 +1225,8 @@ public class MindDB {
             m_targetId = targetId;
             m_edgeId = edgeId;
             m_edgeInnerId = edgeInnerId;
+
+            assert m_targetId.equals(m_rootId) || m_sourceId != null;
         }
 
         public int compareTo(EdgeVertexId other) {

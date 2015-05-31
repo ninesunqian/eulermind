@@ -4,6 +4,7 @@ import prefuse.data.Node;
 import prefuse.data.Tree;
 
 import javax.swing.undo.AbstractUndoableEdit;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import org.slf4j.Logger;
@@ -37,6 +38,13 @@ public abstract class MindOperator extends AbstractUndoableEdit {
     protected ArrayList<Integer> m_formerCursorPath;
     protected ArrayList<Integer> m_laterCursorPath;
 
+    //因为边是实时变化的，不能保留边的id
+
+    protected Object m_formerCursorId;
+    protected Object m_formerCursorParentId;
+    protected int m_formerCursorPos;
+    protected boolean m_isRefNode;
+
     protected Logger m_logger;
 
     public MindOperator(MindModel mindModel, Node formerCursor) {
@@ -46,6 +54,18 @@ public abstract class MindOperator extends AbstractUndoableEdit {
         m_mindModel = mindModel;
         m_rootDbId = m_mindModel.getDbId(tree.getRoot());
         m_formerCursorPath = m_mindModel.getNodePath(formerCursor);
+
+        m_formerCursorId = MindModel.getDbId(formerCursor);
+        Node parent = formerCursor.getParent();
+        if (parent != null) {
+            m_formerCursorParentId = MindModel.getDbId(parent);
+            m_formerCursorPos = formerCursor.getIndex();
+            m_isRefNode = mindModel.isRefEdge(formerCursor.getParentEdge());
+        } else {
+            m_formerCursorParentId = null;
+            m_formerCursorPos = -1;
+            m_isRefNode = false;
+        }
     }
 
     protected Node getNodeByPath(ArrayList<Integer> path) {

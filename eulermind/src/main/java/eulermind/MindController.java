@@ -244,7 +244,7 @@ public class MindController extends UndoManager {
         //remove no needed mindview
         if (operator instanceof Removing) {
             Removing removing = (Removing)operator;
-            Object trashedDBId = removing.m_removedDBId;
+            Object trashedDBId = removing.m_formerCursorId;
 
             HashSet<Object> toBeRemovedMindViewIds = new HashSet<>();
 

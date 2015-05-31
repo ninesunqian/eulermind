@@ -125,8 +125,10 @@ public class Crawler extends WebCrawler {
 
             m_importer.importString(currentDbId, 0, text);
 
+            /*TODO: get vertex Count
             m_logger.info("add page: {},  vertex: {}, page_count: {}, vertex_count {}",
                     url, currentDbId.toString(), page_count, sm_mindDb.getVertexCount());
+                    */
 
             String html = htmlParseData.getHtml();
 

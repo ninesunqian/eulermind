@@ -110,7 +110,7 @@ class NodeDraggingControl extends NodeControl {
             case MOVE:
                 if (!MindModel.getDbId(parentNode).equals(MindModel.getDbId(newParentNode))) {
                     if (! m_mindView.m_mindModel.isRefNode(fromNode)) {
-                        return m_mindView.m_mindModel.canResetParent(fromNode, (Node)possibleEdgeSource[0]);
+                        return m_mindView.m_mindModel.canDragTo(fromNode, (Node) possibleEdgeSource[0]);
                     }
                 }
                 return true;
@@ -215,7 +215,7 @@ class NodeDraggingControl extends NodeControl {
                 } else {
 
                     assert ! mindModel.isAncestorOfInDB(draggedNode, newParent);
-                    assert(mindModel.canResetParent(draggedNode, newParent));
+                    assert(mindModel.canDragTo(draggedNode, newParent));
 
                     operator = new HandoveringChild(mindModel, draggedNode, newParent, newPosition);
                 }

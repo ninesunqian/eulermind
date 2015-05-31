@@ -73,7 +73,7 @@ public class TestMindDB extends TestCase {
 
     void assertInitTree() {
 
-        assertTrue(m_mindDB.vertexIdIsSelf(m_root.getId(), m_mindDB.getParentEge(m_v1).getId()));
+        assertTrue(m_mindDB.vertexIdIsSelf(m_root.getId(), m_mindDB.getParentEge(m_v1).m_source.getId()));
         assertTrue(m_mindDB.vertexIdIsSelf(m_mindDB.getChildOrReferent(m_v1, 1).m_target.getId(), m_root.getId()));
         assertEquals(2, m_mindDB.getChildOrReferentCount(m_root));
 
@@ -91,12 +91,12 @@ public class TestMindDB extends TestCase {
     }
 
     public void testEdge() {
-        Edge refEdge = m_mindDB.addRefEdge(m_v00, m_v01);
-        assertEquals(m_mindDB.getEdgeType(refEdge), MindDB.EdgeType.REFERENCE);
+        MindDB.EdgeVertex refEdge = m_mindDB.addRefEdge(m_v00, m_v01);
+        assertEquals(m_mindDB.getEdgeType(refEdge.m_edge), MindDB.EdgeType.REFERENCE);
 
         //FIXME:
-        assertEquals(m_mindDB.getEdgeSource(refEdge), m_v00);
-        assertEquals(m_mindDB.getEdgeTarget(refEdge), m_v01);
+        assertEquals(m_mindDB.getEdgeSource(refEdge.m_edge), m_v00);
+        assertEquals(m_mindDB.getEdgeTarget(refEdge.m_edge), m_v01);
         //getEdgeType [MindDB]
 
         /*

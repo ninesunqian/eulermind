@@ -62,15 +62,14 @@ public class ImportingFile extends MindOperator{
     }
 
     public void undo() {
-        Node parent = getNodeByPath(m_parentPathAfterDoing);
         for (int i=0; i<m_newChildren.size(); i++) {
-            m_mindModel.trashNode(MindModel.getDbId(parent), parent.getChildCount() + i);
+            m_mindModel.trashNode(m_newChildren.get(i));
         }
     }
 
     public void redo() {
         for (int i=0; i<m_newChildren.size(); i++) {
-            m_mindModel.restoreNodeFromTrash(getNodeByPath(m_formerCursorPath), m_newChildren.get(i));
+            m_mindModel.restoreNodeFromTrash(m_newChildren.get(i));
         }
     }
 }

@@ -2,6 +2,7 @@ package eulermind.operator;
 
 import eulermind.MindModel;
 import eulermind.MindOperator;
+import prefuse.data.Edge;
 import prefuse.data.Node;
 
 import java.util.ArrayList;
@@ -95,7 +96,8 @@ public class ChangingPosition extends MindOperator{
         }
 
         Node parentNode = getNodeByPath(parentPath);
-        m_mindModel.changeChildPos(m_mindModel.getDbId(parentNode), oldPos, newPos);
+        Edge childEdge = parentNode.getChildEdge(oldPos);
+        m_mindModel.changeChildPos(m_mindModel.getDbId(childEdge), newPos);
 
         m_logger.info("ret:");
     }

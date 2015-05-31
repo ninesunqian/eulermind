@@ -56,6 +56,7 @@ public class MindModel {
 
 	final static String sm_dbIdColumnName = "dbElementId";
 
+    private final static String OUT_EDGE_ID_PAIRS_PROP_NAME = "outEdgeIdPairs";
     private final static String EDGE_INNER_ID_PROP_NAME = MindDB.EDGE_INNER_ID_PROP_NAME;
 
     //这两个属性应用频繁
@@ -90,12 +91,13 @@ public class MindModel {
         VertexBasicInfo(Vertex vertex) {
             m_dbId = vertex.getId();
             m_text = vertex.getProperty(TEXT_PROP_NAME);
-            Vertex parent = m_mindDb.getParentEge(vertex).m_source;
+            MindDB.EdgeVertex edgeParent = m_mindDb.getParentEge(vertex);
 
-            if (parent == null) {
+            if (edgeParent == null) {
                 m_parentText = null;
                 m_parentDbId = null;
             } else {
+                Vertex parent = edgeParent.m_source;
                 m_parentDbId = parent.getId();
                 m_parentText = parent.getProperty(TEXT_PROP_NAME);
             }
@@ -137,6 +139,7 @@ public class MindModel {
 	private void addNodeTableProperties(Table t)
 	{
 		t.addColumn(sm_dbIdColumnName, Object.class, null);
+        t.addColumn(OUT_EDGE_ID_PAIRS_PROP_NAME, Object.class, null);
 
 		for (String propName : sm_nodePropNames)
 		{
@@ -162,6 +165,9 @@ public class MindModel {
         assert(vertex != null && vertex.getId() != null);
 
         node.set(sm_dbIdColumnName, vertex.getId());
+
+        //拷贝一份，自己维护。因为prefuse需要独立操作节点，使用户有操作树的感觉。所以需要自己维护一套状态
+        node.set(OUT_EDGE_ID_PAIRS_PROP_NAME, m_mindDb.getOutEdgeVertexIds(vertex));
 
         loadElementProperties(vertex, node, sm_nodePropNames);
     }
@@ -370,7 +376,6 @@ public class MindModel {
         {
             Object tupleValue = tuple.get(key);
 
-            //NEW
             Object dbElementValue = dbElement.getProperty(key);
             if (!(tupleValue == dbElementValue || tupleValue.equals(dbElementValue))) {
                 int debug = 1;
@@ -402,7 +407,7 @@ public class MindModel {
         }
 
 		ArrayList<EdgeVertex> edgeVertexArray = m_mindDb.getChildrenAndReferents(getDBVertex(parent));
-		
+
 		if (edgeVertexArray == null || edgeVertexArray.size() == 0)
 		{
 			return;
@@ -528,8 +533,11 @@ public class MindModel {
     }
 
     private List<MindDB.EdgeVertexId> getNodeOutEdgeIdPairs(Node sourceNode) {
-        //return (List<MindDB.EdgeVertexId>)sourceNode.get(OUT_EDGE_ID_PAIRS_PROP_NAME);
-        return m_mindDb.getOutEdgeVertexIds(m_mindDb.getVertex(getDbId(sourceNode)));
+        return (List<MindDB.EdgeVertexId>)sourceNode.get(OUT_EDGE_ID_PAIRS_PROP_NAME);
+    }
+
+    private void updateNodeOutEdgeIdPairs(Node sourceNode) {
+        sourceNode.set(OUT_EDGE_ID_PAIRS_PROP_NAME, m_mindDb.getOutEdgeVertexIds(getDBVertex(sourceNode)));
     }
 
     protected void exposeNodeRelation(Node sourceNode, int pos, EdgeVertex toTarget)
@@ -537,31 +545,35 @@ public class MindModel {
         assert sourceNode != null;
         assert sourceNode.isValid();
 
+        List<MindDB.EdgeVertexId> outEdgeIdPairs = getNodeOutEdgeIdPairs(sourceNode);
+        MindDB.EdgeVertexId toTargetId = toTarget.getEdgeVertexId();
+
+
         //如果原来没有挂上子节点，仅仅更新outEdgeIdPairs
-        if (! isChildrenAttached(sourceNode)) {
-            return;
+        if (isChildrenAttached(sourceNode)) {
+
+            if (pos < sourceNode.getChildCount()
+                    && getDbId(sourceNode.getChildEdge(pos)).equals(toTarget.m_edge.getId())
+                    && getOutEdgeInnerId(sourceNode.getChildEdge(pos)).equals(toTarget.m_edgeInnerId)) {
+                Tree tree = (Tree)sourceNode.getGraph();
+
+                Node child = tree.addNode();
+                Edge edge = tree.addChildEdge(sourceNode, child, pos);
+
+                loadNodeProperties(toTarget.m_target, child);
+                loadEdgeProperties(toTarget.m_edge, edge);
+            }
         }
 
-        //如果已经添加上了，跳过
-        if (pos < sourceNode.getChildCount() &&
-                getDbId(sourceNode.getChildEdge(pos)).equals(toTarget.m_edge.getId()))
-        {
-            return;
-        }
-
-        Tree tree = (Tree)sourceNode.getGraph();
-
-        Node child = tree.addNode();
-        Edge edge = tree.addChildEdge(sourceNode, child, pos);
-
-        loadNodeProperties(toTarget.m_target, child);
-        loadEdgeProperties(toTarget.m_edge, edge);
+        updateNodeOutEdgeIdPairs(sourceNode);
     }
 
     protected void hideNodeRelation(Edge edge)
     {
         Tree tree = (Tree)edge.getGraph();
         Node child = tree.getTargetNode(edge);
+
+        updateNodeOutEdgeIdPairs(edge.getSourceNode());
         tree.removeChild(child);
     }
 
@@ -679,7 +691,7 @@ public class MindModel {
 
         edgeVertex.m_target.setProperty(TEXT_PROP_NAME, text);
 
-        exposeModelRelation(parent, pos, edgeVertex);
+        exposeModelRelation(parentDbId, pos, edgeVertex);
 
         return parent.getChild(pos);
 	}
@@ -813,9 +825,9 @@ public class MindModel {
             final Vertex referrerVertex = m_mindDb.getVertex(refLinkInfo.m_referrer);
             final EdgeVertex toReferent = m_mindDb.getChildOrReferent(referrerVertex, refLinkInfo.m_pos);
 
-            for (final Tree tree : m_trees) {
-                exposeTreeRelation(tree, referrerVertex, refLinkInfo.m_pos, toReferent);
-            }
+            //不能用 refLink.Info.m_edge, 边会删除、重新添加。与已保存的不同
+
+            exposeModelRelation(refLinkInfo.m_referrer, refLinkInfo.m_pos, toReferent);
         }
 	}
 
@@ -830,7 +842,7 @@ public class MindModel {
         Vertex referentVertex = m_mindDb.getVertex(referentDbId);
         EdgeVertex edgeVertex = m_mindDb.addRefEdge(referrerVertex, referentVertex, pos);
 
-        exposeModelRelation(referrerNode, pos, edgeVertex);
+        exposeModelRelation(getDbId(referrerNode), pos, edgeVertex);
     }
 
 
@@ -854,12 +866,15 @@ public class MindModel {
             visitEdgeAvatars(tree, edgeId,
                     new EdgeVisitor() {
                         public void visit(Edge edge) {
+
                             Node sourceNode = tree.getSourceNode(edge);
                             Node targetNode = tree.getTargetNode(edge);
 
                             edge.set(EDGE_INNER_ID_PROP_NAME, edgeVertexId.m_edgeInnerId);
-                            //TODO 修改接口，改变边的位置
+
                             tree.changeChildIndex(sourceNode, targetNode.getIndex(), newPos);
+
+                            updateNodeOutEdgeIdPairs(sourceNode);
 
                             verifyNode(sourceNode, false);
                         }
@@ -869,7 +884,7 @@ public class MindModel {
         s_logger.info("ret:");
     }
 
-    public boolean canResetParent(Node node, Node newParent)
+    public boolean canDragTo(Node node, Node newParent)
     {
         assert(node.getGraph() == newParent.getGraph());
         assert(node.getParent() != null);
@@ -880,7 +895,7 @@ public class MindModel {
         if (isRefEdge(graph.getEdge(oldParent, node))) {
             return true;
         } else {
-            return (! isSelfInDB(node, newParent)) && (! isAncestorOfInDB(node, newParent));
+            return (! subTreeContainsInDB(node, newParent)) && (! isSelfInDB(node.getParent(), newParent));
         }
     }
 
@@ -1189,7 +1204,7 @@ public class MindModel {
         Iterator<Integer> iterator2 = nodeAvatars2.iterator();
         while (iterator2.hasNext()) {
             int node2 = iterator2.next();
-            if (! isChildrenAttached(tree.getNode(node2))) {
+            if (!isChildrenAttached(tree.getNode(node2)) && node2 != enforceNode2) {
                 iterator2.remove();
             }
         }
@@ -1258,16 +1273,10 @@ public class MindModel {
             Node newParent = tree.getNode(node2);
             Node child = oldParent.getChild(oldChildPos);
 
-            List<MindDB.EdgeVertexId> outEdgeIdPairs;
-
-            outEdgeIdPairs = getNodeOutEdgeIdPairs(oldParent);
-            outEdgeIdPairs.remove(oldChildPos);
-
+            updateNodeOutEdgeIdPairs(oldParent);
             tree.removeEdge(tree.getEdge(oldParent, child));
 
-            outEdgeIdPairs = getNodeOutEdgeIdPairs(newParent);
-            outEdgeIdPairs.add(m_mindDb.getEdgeVertexId(childEdgeVertex.m_edge));
-
+            updateNodeOutEdgeIdPairs(newParent);
             Edge newEdge = tree.addChildEdge(newParent, child, newChildPos);
             loadEdgeProperties(childEdgeVertex.m_edge, newEdge);
 
@@ -1278,7 +1287,8 @@ public class MindModel {
         for (int node1 : oldNewParentPairingInfo.m_nodeAvatars1Alone) {
             if (tree.getNodeTable().isValidRow(node1)) {
                 Node oldParent = tree.getNode(node1);
-                hideNodeRelation(oldParent, oldEdgeDbId);
+                //NO, 不是他
+                hideNodeRelation(tree.getChildEdge(oldParent, oldChildPos));
                 verifyNode(oldParent, false);
             }
         }
@@ -1313,24 +1323,24 @@ public class MindModel {
         }
     }
 
-    public void handoverChild(Node child, Node newParent, int newPos)
+    //新的父节点和老的父节点不能是同一个，否则会造成用户歧义：老父节点的某个子节点已经被拖动走了，结果有出现了一个。
+    public void handoverChild(Node oldParent, int oldPos, Node newParent, int newPos)
     {
-        s_logger.info("arg: child:{}", child);
+        s_logger.info("arg: oldParent:{}", oldParent);
+        s_logger.info("arg: oldPos:{}", oldPos);
         s_logger.info("arg: newParent:{}", newParent);
         s_logger.info("arg: newPos:{}", newPos);
 
-        assert (child.getGraph() == newParent.getGraph());
 
-        Tree tree = (Tree)child.getGraph();
-
-        assert child != tree.getRoot();
+        Tree tree = (Tree)oldParent.getGraph();
 
         if (! isChildrenAttached(newParent)) {
             attachChildren(newParent);
         }
 
-        Node oldParent = child.getParent();
-        int oldPos = child.getIndex();
+        Node child = oldParent.getChild(oldPos);
+
+        Object oldEdgeId = getDbId(child.getParentEdge());
 
         Object oldParentDbId = getDbId(oldParent);
         Object newParentDbId = getDbId(newParent);
@@ -1363,11 +1373,10 @@ public class MindModel {
         Object newReferrerDbId = getDbId(newReferrer);
         assert (! oldReferrerDbId.equals(newReferrerDbId));
 
-        Vertex oldReferrerVertex = m_mindDb.getVertex(oldReferrerDbId);
         Vertex newReferrerVertex = m_mindDb.getVertex(newReferrerDbId);
         Object oldEdgeId = getDbId(oldReferrer.getChildEdge(oldPos));
 
-        EdgeVertex edgeVertex = m_mindDb.handoverReferent(oldReferrerVertex, oldPos, newReferrerVertex, newPos);
+        EdgeVertex edgeVertex = m_mindDb.handoverReferent(m_mindDb.getEdge(oldEdgeId), newReferrerVertex, newPos);
         handoverNode(oldReferrer, oldPos, newReferrer, newPos, edgeVertex, oldEdgeId);
 
         s_logger.info("ret:");
@@ -1391,16 +1400,16 @@ public class MindModel {
 
         verifyElementProperties(vertex, node, sm_nodePropNames);
 
-        List<MindDB.EdgeVertexId> outEdgeIdPairs = m_mindDb.getOutEdgeVertexIds(getDBVertex(node));
-        if (outEdgeIdPairs.size() > 0 && forceChildAttached) {
-            assert node.getChildCount() == outEdgeIdPairs.size();
+        List<MindDB.EdgeVertexId> outEdgeVertexIds = m_mindDb.getOutEdgeVertexIds(getDBVertex(node));
+        if (outEdgeVertexIds.size() > 0 && forceChildAttached) {
+            assert node.getChildCount() == outEdgeVertexIds.size();
         }
 
         for (int i=0; i<node.getChildCount(); i++) {
             Node childOrReferenceNode = node.getChild(i);
             Edge outEdge = (node.getGraph()).getEdge(node, childOrReferenceNode);
 
-            assert(getOutEdgeInnerId(outEdge).equals(outEdgeIdPairs.get(i).m_innerId));
+            assert(getOutEdgeInnerId(outEdge).equals(outEdgeVertexIds.get(i).m_edgeInnerId));
             verifyElementProperties(getDBEdge(outEdge), outEdge, sm_edgePropNames);
 
             Integer outEdgeType = (Integer)outEdge.get(sm_edgeTypePropName);
@@ -1425,7 +1434,7 @@ public class MindModel {
                 int debug = 1;
             }
 
-            assert parentOrReferrerOutEdgeIdPairs.get(node.getIndex()).m_innerId.equals(getOutEdgeInnerId(inEdge));
+            assert parentOrReferrerOutEdgeIdPairs.get(node.getIndex()).m_edgeInnerId.equals(getOutEdgeInnerId(inEdge));
 
             if (MindDB.EdgeType.values()[inEdgeType] == MindDB.EdgeType.INCLUDE) {
                 assert m_mindDb.vertexIdIsParentOf(getDbId(parentOrReferrerNode), getDbId(node));

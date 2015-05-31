@@ -406,13 +406,13 @@ public class MindEditor extends JTextField {
             m_dbId = vertex.getId();
             m_text = vertex.getProperty(MindModel.TEXT_PROP_NAME);
 
-            Vertex parent = m_mindDb.getParentEge(vertex);
-            if (parent == null) {
+            MindDB.EdgeVertex edgeParent = m_mindDb.getParentEge(vertex);
+            if (edgeParent == null) {
                 m_parentDBId = null;
                 m_parentText = null;
             } else {
-                m_parentDBId = parent.getId();
-                m_parentText = parent.getProperty(MindModel.TEXT_PROP_NAME);
+                m_parentDBId = edgeParent.m_source.getId();
+                m_parentText = edgeParent.m_source.getProperty(MindModel.TEXT_PROP_NAME);
             }
         }
     }
