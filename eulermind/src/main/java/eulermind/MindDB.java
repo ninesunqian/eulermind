@@ -1158,14 +1158,6 @@ public class MindDB {
 
                 verifyVertex(vertex);
 
-                //回收站里的节点只有一个入边，因为所有的引用边都删除了
-                Iterable<Edge> inEdges = vertex.getEdges(Direction.IN);
-
-                Iterator iterator = inEdges.iterator();
-                assert iterator.hasNext() == true;
-                iterator.next();
-                assert iterator.hasNext() == false;
-
                 return true;
             }
         });

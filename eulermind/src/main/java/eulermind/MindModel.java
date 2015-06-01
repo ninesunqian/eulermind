@@ -56,7 +56,7 @@ public class MindModel {
 
 	final static String sm_dbIdColumnName = "dbElementId";
 
-    private final static String OUT_EDGE_ID_PAIRS_PROP_NAME = "outEdgeIdPairs";
+    private final static String CHILDREN_ATTACHED_PROP_NAME = "childrenAttached";
     private final static String EDGE_INNER_ID_PROP_NAME = MindDB.EDGE_INNER_ID_PROP_NAME;
 
     //这两个属性应用频繁
@@ -139,7 +139,7 @@ public class MindModel {
 	private void addNodeTableProperties(Table t)
 	{
 		t.addColumn(sm_dbIdColumnName, Object.class, null);
-        t.addColumn(OUT_EDGE_ID_PAIRS_PROP_NAME, Object.class, null);
+        t.addColumn(CHILDREN_ATTACHED_PROP_NAME, boolean.class, false);
 
 		for (String propName : sm_nodePropNames)
 		{
@@ -165,9 +165,6 @@ public class MindModel {
         assert(vertex != null && vertex.getId() != null);
 
         node.set(sm_dbIdColumnName, vertex.getId());
-
-        //拷贝一份，自己维护。因为prefuse需要独立操作节点，使用户有操作树的感觉。所以需要自己维护一套状态
-        node.set(OUT_EDGE_ID_PAIRS_PROP_NAME, m_mindDb.getOutEdgeVertexIds(vertex));
 
         loadElementProperties(vertex, node, sm_nodePropNames);
     }
@@ -327,6 +324,7 @@ public class MindModel {
             }
         });
 
+        updateChildrenAttached();
 
         return tree;
     }
@@ -514,6 +512,21 @@ public class MindModel {
 		}
 	}
 
+    void visitAllNode(Tree tree, NodeVisitor nodeVisitor)
+    {
+        Table nodeTable = tree.getNodeTable();
+        IntIterator allRows = nodeTable.rows();
+
+        while (allRows.hasNext()) {
+            int curRow = allRows.nextInt();
+
+            if (nodeTable.isValidRow(curRow)) {
+                Node node = tree.getNode(curRow);
+                nodeVisitor.visit(node);
+            }
+        }
+    }
+
     void visitEdgeAvatars(Tree tree, Object dbId, EdgeVisitor edgeVisitor)
     {
         assert(dbId != null);
@@ -533,21 +546,13 @@ public class MindModel {
     }
 
     private List<MindDB.EdgeVertexId> getNodeOutEdgeIdPairs(Node sourceNode) {
-        return (List<MindDB.EdgeVertexId>)sourceNode.get(OUT_EDGE_ID_PAIRS_PROP_NAME);
-    }
-
-    private void updateNodeOutEdgeIdPairs(Node sourceNode) {
-        sourceNode.set(OUT_EDGE_ID_PAIRS_PROP_NAME, m_mindDb.getOutEdgeVertexIds(getDBVertex(sourceNode)));
+        return Collections.unmodifiableList(m_mindDb.getOutEdgeVertexIds(getDBVertex(sourceNode)));
     }
 
     protected void exposeNodeRelation(Node sourceNode, int pos, EdgeVertex toTarget)
     {
         assert sourceNode != null;
         assert sourceNode.isValid();
-
-        List<MindDB.EdgeVertexId> outEdgeIdPairs = getNodeOutEdgeIdPairs(sourceNode);
-        MindDB.EdgeVertexId toTargetId = toTarget.getEdgeVertexId();
-
 
         //如果原来没有挂上子节点，仅仅更新outEdgeIdPairs
         if (isChildrenAttached(sourceNode)) {
@@ -564,20 +569,12 @@ public class MindModel {
             }
         }
 
-        //updateNodeOutEdgeIdPairs(sourceNode);
-        outEdgeIdPairs.add(pos, toTargetId);
     }
 
     protected void hideNodeRelation(Edge edge)
     {
         Tree tree = (Tree)edge.getGraph();
         Node child = tree.getTargetNode(edge);
-
-        //updateNodeOutEdgeIdPairs(edge.getSourceNode());
-        Node sourceNode = edge.getSourceNode();
-        int pos = sourceNode.getChildIndex(edge.getTargetNode());
-        List<MindDB.EdgeVertexId> outEdgeIdPairs = getNodeOutEdgeIdPairs(edge.getSourceNode());
-        outEdgeIdPairs.remove(pos);
 
         tree.removeChild(child);
     }
@@ -698,6 +695,8 @@ public class MindModel {
 
         exposeModelRelation(parentDbId, pos, edgeVertex);
 
+        updateChildrenAttached();
+
         return parent.getChild(pos);
 	}
 
@@ -783,6 +782,7 @@ public class MindModel {
 
         }
 
+        updateChildrenAttached();
         return newChildren;
     }
 
@@ -801,6 +801,8 @@ public class MindModel {
         for (final RefLinkInfo refLinkInfo : context.m_refLinkInfos) {
             hideModelRelation(refLinkInfo.m_edge);
         }
+
+        updateChildrenAttached();
 
         return dbId;
 	}
@@ -834,6 +836,7 @@ public class MindModel {
 
             exposeModelRelation(refLinkInfo.m_referrer, refLinkInfo.m_pos, toReferent);
         }
+        updateChildrenAttached();
 	}
 
     public void addReference(Node referrerNode, int pos, Object referentDbId) {
@@ -848,12 +851,14 @@ public class MindModel {
         EdgeVertex edgeVertex = m_mindDb.addRefEdge(referrerVertex, referentVertex, pos);
 
         exposeModelRelation(getDbId(referrerNode), pos, edgeVertex);
+        updateChildrenAttached();
     }
 
 
     public void removeReference(Object edgeId) {
         m_mindDb.removeRefEdge(m_mindDb.getEdge(edgeId));
         hideModelRelation(edgeId);
+        updateChildrenAttached();
     }
 
     public void changeChildPos(final Object edgeId, final int newPos)
@@ -880,19 +885,13 @@ public class MindModel {
                             int oldPos = targetNode.getIndex();
                             tree.changeChildIndex(sourceNode, oldPos, newPos);
 
-                            List<MindDB.EdgeVertexId> outEgeVertexIds = getNodeOutEdgeIdPairs(sourceNode);
-                            outEgeVertexIds.remove(oldPos);
-
-                            outEgeVertexIds.add(newPos > oldPos ? newPos -1 : newPos, edgeVertexId);
-
-                            //updateNodeOutEdgeIdPairs(sourceNode);
-
                             verifyNode(sourceNode, false);
                         }
                     });
         }
 
         s_logger.info("ret:");
+        updateChildrenAttached();
     }
 
     public boolean canDragTo(Node node, Node newParent)
@@ -955,9 +954,31 @@ public class MindModel {
 
     public boolean isChildrenAttached(Node node)
     {
+        return node.getBoolean(CHILDREN_ATTACHED_PROP_NAME);
+        /*
         assert  node.getChildCount() == 0 || node.getChildCount() == getNodeOutEdgeIdPairs(node).size();
         return getNodeOutEdgeIdPairs(node).size() == node.getChildCount();
+        */
     }
+
+    void updateChildrenAttached()
+    {
+        for (Tree tree: m_trees) {
+
+            visitAllNode(tree, new NodeVisitor() {
+                @Override
+                public void visit(Node node) {
+                    if (!(node.getChildCount() == 0 || node.getChildCount() == getNodeOutEdgeIdPairs(node).size())) {
+                        int debug = 1;
+                    }
+                    assert  node.getChildCount() == 0 || node.getChildCount() == getNodeOutEdgeIdPairs(node).size();
+                    boolean childrenAttached = getNodeOutEdgeIdPairs(node).size() == node.getChildCount();
+                    node.setBoolean(CHILDREN_ATTACHED_PROP_NAME, childrenAttached);
+                }
+            });
+        }
+    }
+
 
     public boolean isSelfInDB(Node n1, Node n2)
     {
@@ -1284,14 +1305,8 @@ public class MindModel {
             Node newParent = tree.getNode(node2);
             Node child = oldParent.getChild(oldChildPos);
 
-            //updateNodeOutEdgeIdPairs(oldParent);
-            List<MindDB.EdgeVertexId> oldParentOutEdgeVertexIds = getNodeOutEdgeIdPairs(oldParent);
-            oldParentOutEdgeVertexIds.remove(oldChildPos);
             tree.removeEdge(tree.getEdge(oldParent, child));
 
-            //updateNodeOutEdgeIdPairs(newParent);
-            List<MindDB.EdgeVertexId> newParentOutEdgeVertexIds = getNodeOutEdgeIdPairs(newParent);
-            oldParentOutEdgeVertexIds.add(newChildPos, childEdgeVertex.getEdgeVertexId());
             Edge newEdge = tree.addChildEdge(newParent, child, newChildPos);
             loadEdgeProperties(childEdgeVertex.m_edge, newEdge);
 
@@ -1303,7 +1318,9 @@ public class MindModel {
             if (tree.getNodeTable().isValidRow(node1)) {
                 Node oldParent = tree.getNode(node1);
                 //NO, 不是他
-                hideNodeRelation(tree.getChildEdge(oldParent, oldChildPos));
+                if (isChildrenAttached(oldParent)) {
+                    hideNodeRelation(tree.getChildEdge(oldParent, oldChildPos));
+                }
                 verifyNode(oldParent, false);
             }
         }
@@ -1368,6 +1385,7 @@ public class MindModel {
         handoverNode(oldParent, oldPos, newParent, newPos, edgeVertex, oldEdgeId);
 
         s_logger.info("ret:");
+        updateChildrenAttached();
 
     }
 
@@ -1395,6 +1413,7 @@ public class MindModel {
         handoverNode(oldReferrer, oldPos, newReferrer, newPos, edgeVertex, oldEdgeId);
 
         s_logger.info("ret:");
+        updateChildrenAttached();
     }
 
     public boolean m_verifyNodeEnabled = true;
@@ -1579,6 +1598,7 @@ public class MindModel {
 
         Node subTreeRoot = addChild(pastePoint, position, "pasteTree");
         pasteNodeRecursively(externalTree.getRoot(), subTreeRoot);
+        updateChildrenAttached();
         return subTreeRoot;
     }
 }
