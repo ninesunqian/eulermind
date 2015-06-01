@@ -41,6 +41,8 @@ public class Removing extends MindOperator {
 
     public void does()
     {
+        Node laterCursor = computeLaterCursor(getNodeByPath(m_formerCursorPath));
+
         if (m_isRefNode) {
             MindDB mindDb = m_mindModel.m_mindDb;
             List<MindDB.EdgeVertexId> outEdgeVetexIds = mindDb.getOutEdgeVertexIds(mindDb.getVertex(m_formerCursorParentId));
@@ -48,6 +50,8 @@ public class Removing extends MindOperator {
         } else {
             m_mindModel.trashNode(m_formerCursorId);
         }
+
+        m_laterCursorPath = getNodePath(laterCursor);
     }
 
     public void undo()
@@ -129,7 +133,7 @@ public class Removing extends MindOperator {
         return topNode;
     }
 
-    private void computeLaterCursor(Node formerCursor)
+    private Node computeLaterCursor(Node formerCursor)
     {
         Tree tree = (Tree)formerCursor.getGraph();
         Node parent = formerCursor.getParent();
@@ -142,15 +146,13 @@ public class Removing extends MindOperator {
 
         if (m_isRefNode) {
             if (parent.getChildCount()  == 1) {
-                m_laterCursorPath = getNodePath(parent);
+                return parent;
 
             } else {
                 if (formerCursor.getIndex() == parent.getChildCount() - 1) {
-                    m_laterCursorPath = getNodePath(formerCursor);
-                    m_laterCursorPath.set(0, formerCursor.getIndex() - 1);
+                    return parent.getChild(formerCursor.getIndex() - 1);
                 } else {
-                    //formerCursor's older sibling move into this position
-                    m_laterCursorPath = getNodePath(formerCursor);
+                    return parent.getChild(formerCursor.getIndex() + 1);
                 }
             }
 
@@ -159,20 +161,10 @@ public class Removing extends MindOperator {
             Node nearestKeptSibling =  getNearestKeptSibling(formerCursor);
 
             if (nearestKeptSibling == null) {
-                m_laterCursorPath = getNodePath(parent);
+                return parent;
 
             } else {
-                ArrayList<Node> keptSiblings = new ArrayList<Node>();
-
-                for (int i=0; i<parent.getChildCount(); i++) {
-                    Node sibling = parent.getChild(i);
-                    if (! m_mindModel.subTreeContainsInDB(formerCursor, sibling)) {
-                        keptSiblings.add(parent.getChild(i));
-                    }
-                }
-
-                m_laterCursorPath = getNodePath(formerCursor);
-                m_laterCursorPath.set(m_laterCursorPath.size() - 1, keptSiblings.indexOf(nearestKeptSibling));
+                return nearestKeptSibling;
             }
         }
     }

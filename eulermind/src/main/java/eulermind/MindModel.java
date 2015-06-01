@@ -435,6 +435,7 @@ public class MindModel {
 		}
 
         verifyNode(parent, true);
+        updateChildrenAttached();
 	}
 
 
