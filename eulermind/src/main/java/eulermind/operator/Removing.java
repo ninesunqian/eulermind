@@ -33,8 +33,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 public class Removing extends MindOperator {
 
-    public boolean m_isRefRelation;
-
     public Removing(MindModel mindModel, Node formerCursor)
     {
         super(mindModel, formerCursor);
@@ -58,7 +56,7 @@ public class Removing extends MindOperator {
         parentPath.remove(parentPath.size() - 1);
 
         Node parentNode = getNodeByPath(parentPath);
-        if (m_isRefRelation) {
+        if (m_isRefNode) {
             m_mindModel.addReference(parentNode, m_formerCursorPos, m_formerCursorId);
         } else {
             m_mindModel.restoreNodeFromTrash(m_formerCursorId);
@@ -142,7 +140,7 @@ public class Removing extends MindOperator {
 
         m_formerCursorPath = getNodePath(formerCursor);
 
-        if (m_isRefRelation) {
+        if (m_isRefNode) {
             if (parent.getChildCount()  == 1) {
                 m_laterCursorPath = getNodePath(parent);
 
