@@ -152,9 +152,11 @@ public class TreeFolder extends NodeControl {
         }
 
         if (isFolded(node)) {
+            m_logger.info("unfoldNode");
             unfoldNode(node);
         }
         else {
+            m_logger.info("foldNode");
             foldNode(node);
         }
 
@@ -164,12 +166,5 @@ public class TreeFolder extends NodeControl {
     @Override
     public void nodeItemClicked(NodeItem item, MouseEvent e) {
         toggleFoldNode(item);
-    }
-
-    @Override
-    public void nodeItemKeyPressed(NodeItem item, KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            toggleFoldNode(item);
-        }
     }
 }
