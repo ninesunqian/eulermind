@@ -552,9 +552,8 @@ public class MindModel {
         //如果原来没有挂上子节点，仅仅更新outEdgeIdPairs
         if (isChildrenAttached(sourceNode)) {
 
-            if (pos < sourceNode.getChildCount()
-                    && getDbId(sourceNode.getChildEdge(pos)).equals(toTarget.m_edge.getId())
-                    && getOutEdgeInnerId(sourceNode.getChildEdge(pos)).equals(toTarget.m_edgeInnerId)) {
+            if (!(pos < sourceNode.getChildCount()
+                    && getDbId(sourceNode.getChildEdge(pos)).equals(toTarget.m_edge.getId()))) {
                 Tree tree = (Tree)sourceNode.getGraph();
 
                 Node child = tree.addNode();
@@ -565,7 +564,8 @@ public class MindModel {
             }
         }
 
-        updateNodeOutEdgeIdPairs(sourceNode);
+        //updateNodeOutEdgeIdPairs(sourceNode);
+        outEdgeIdPairs.add(pos, toTargetId);
     }
 
     protected void hideNodeRelation(Edge edge)
@@ -573,7 +573,12 @@ public class MindModel {
         Tree tree = (Tree)edge.getGraph();
         Node child = tree.getTargetNode(edge);
 
-        updateNodeOutEdgeIdPairs(edge.getSourceNode());
+        //updateNodeOutEdgeIdPairs(edge.getSourceNode());
+        Node sourceNode = edge.getSourceNode();
+        int pos = sourceNode.getChildIndex(edge.getTargetNode());
+        List<MindDB.EdgeVertexId> outEdgeIdPairs = getNodeOutEdgeIdPairs(edge.getSourceNode());
+        outEdgeIdPairs.remove(pos);
+
         tree.removeChild(child);
     }
 
@@ -872,9 +877,15 @@ public class MindModel {
 
                             edge.set(EDGE_INNER_ID_PROP_NAME, edgeVertexId.m_edgeInnerId);
 
-                            tree.changeChildIndex(sourceNode, targetNode.getIndex(), newPos);
+                            int oldPos = targetNode.getIndex();
+                            tree.changeChildIndex(sourceNode, oldPos, newPos);
 
-                            updateNodeOutEdgeIdPairs(sourceNode);
+                            List<MindDB.EdgeVertexId> outEgeVertexIds = getNodeOutEdgeIdPairs(sourceNode);
+                            outEgeVertexIds.remove(oldPos);
+
+                            outEgeVertexIds.add(newPos > oldPos ? newPos -1 : newPos, edgeVertexId);
+
+                            //updateNodeOutEdgeIdPairs(sourceNode);
 
                             verifyNode(sourceNode, false);
                         }
@@ -1273,10 +1284,14 @@ public class MindModel {
             Node newParent = tree.getNode(node2);
             Node child = oldParent.getChild(oldChildPos);
 
-            updateNodeOutEdgeIdPairs(oldParent);
+            //updateNodeOutEdgeIdPairs(oldParent);
+            List<MindDB.EdgeVertexId> oldParentOutEdgeVertexIds = getNodeOutEdgeIdPairs(oldParent);
+            oldParentOutEdgeVertexIds.remove(oldChildPos);
             tree.removeEdge(tree.getEdge(oldParent, child));
 
-            updateNodeOutEdgeIdPairs(newParent);
+            //updateNodeOutEdgeIdPairs(newParent);
+            List<MindDB.EdgeVertexId> newParentOutEdgeVertexIds = getNodeOutEdgeIdPairs(newParent);
+            oldParentOutEdgeVertexIds.add(newChildPos, childEdgeVertex.getEdgeVertexId());
             Edge newEdge = tree.addChildEdge(newParent, child, newChildPos);
             loadEdgeProperties(childEdgeVertex.m_edge, newEdge);
 
