@@ -59,7 +59,7 @@
 
     </vbox>
 
-    <vbox constraints="BorderLayout.EAST"  preferredSize="150, 0">
+    <vbox constraints="BorderLayout.WEST"  preferredSize="150, 0">
         <label text="Style"/>
 
         <scrollPane  preferredSize="150, 10000">
