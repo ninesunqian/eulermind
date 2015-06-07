@@ -210,7 +210,7 @@ public class Style {
     }
 
     private static XStream createXStream() {
-        XStream xstream = new XStream(new DomDriver());
+        XStream xstream = new XStream(new DomDriver("UTF-8"));
         NamedMapConverter converter = new NamedMapConverter(xstream.getMapper(), "entry",
                 "name", String.class, "style", Style.class,
                 true, false,
@@ -243,6 +243,7 @@ public class Style {
         File userStylesFile = new File(Config.STYLE_FILE);
 
         XStream xstream = createXStream();
+
         String xml = xstream.toXML(sm_styles);
 
         s_logger.info("xml string is {}", xml);
