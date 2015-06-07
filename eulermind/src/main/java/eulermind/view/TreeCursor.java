@@ -1,7 +1,9 @@
 package eulermind.view;
 
 import eulermind.MindModel;
+import prefuse.data.Node;
 import prefuse.data.Table;
+import prefuse.data.Tree;
 import prefuse.util.collections.IntIterator;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualTree;
@@ -125,7 +127,7 @@ public class TreeCursor extends NodeControl {
                 NodeItem child = (NodeItem)children.next();
 
                 if (righter == null ||
-                        Math.abs(child.getY() - righterParent.getY()) < Math.abs(righter.getY() - righterParent.getY())) {
+                        Math.abs(child.getY() - originCursor.getY()) < Math.abs(righter.getY() - originCursor.getY())) {
                     righter = child;
                 }
             }
@@ -134,31 +136,22 @@ public class TreeCursor extends NodeControl {
             righterParent = righter;
         }
 
-        //fill uper and downer
-        Table nodeTable = m_tree.getNodeTable();
-        IntIterator allRows = nodeTable.rows(new VisiblePredicate());
-        NodeItem upDowner;
+        m_originXIndex = m_xAxis.indexOf(originCursor);
 
-        while (allRows.hasNext()) {
-            int row = allRows.nextInt();
-            upDowner = (NodeItem) m_tree.getNode(row);
-            if (overlayInXAxis(upDowner, m_originCursor) || upDowner.isExpanded() == false) {
-                if (overlayInXAxis(upDowner, m_originCursor)) {
-                    m_logger.debug(m_originCursor.getString(MindModel.TEXT_PROP_NAME) + ": overlay upDowner: "
-                            + upDowner.getString(MindModel.TEXT_PROP_NAME));
-                }
-                m_yAxis.add(upDowner);
-            }
-        }
-
-        Collections.sort(m_yAxis, new Comparator<NodeItem>() {
+        //上下键 插入同级别的节点
+        m_tree.deepTraverse(m_tree.getRoot(), new Tree.TraverseProcessor() {
             @Override
-            public int compare(NodeItem n1, NodeItem n2) {
-                return (int)(n1.getY() - n2.getY());
+            public boolean run(Node parent, Node node, int level) {
+                NodeItem nodeItem = (NodeItem)node;
+                if (level >= m_originXIndex || nodeItem.isExpanded() == false || nodeItem.getChildCount() == 0) {
+                    m_yAxis.add(nodeItem);
+                    return false;
+                } else {
+                    return true;
+                }
             }
         });
 
-        m_originXIndex = m_xAxis.indexOf(originCursor);
         m_originYIndex = m_yAxis.indexOf(originCursor);
 
         m_currentXIndex = m_originXIndex;
