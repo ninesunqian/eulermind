@@ -125,7 +125,7 @@ public class TreeCursor extends NodeControl {
                 NodeItem child = (NodeItem)children.next();
 
                 if (righter == null ||
-                        Math.abs(child.getY() - righterParent.getY()) < Math.abs(righter.getY() - righterParent.getY())) {
+                        Math.abs(child.getY() - originCursor.getY()) < Math.abs(righter.getY() - originCursor.getY())) {
                     righter = child;
                 }
             }

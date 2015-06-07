@@ -14,6 +14,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.*;
 
 /*
@@ -246,7 +247,7 @@ public class Style {
 
         s_logger.info("xml string is {}", xml);
         try {
-            FileUtils.write(userStylesFile, xml);
+            FileUtils.write(userStylesFile, xml, Charset.forName("UTF-8"));
         } catch (IOException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
