@@ -274,7 +274,7 @@ public class MindController extends UndoManager {
             } else {
                 //not using mindView.getCursorSourceNode(), because if nodeItem is not valid,
                 //the source node is can't be got
-                if (! mindView.m_cursor.m_currentCursor.isValid()) {
+                if (! mindView.m_cursor.getCursorNodeItem().isValid()) {
                     ArrayList<Integer> rootPath = new ArrayList<Integer>();
                     mindView.setCursorNodeByPath(rootPath);
                 }
@@ -379,4 +379,5 @@ public class MindController extends UndoManager {
         }
         m_settingNodePropertyEnabled = true;
     }
+
 }

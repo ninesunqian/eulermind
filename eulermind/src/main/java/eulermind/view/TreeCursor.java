@@ -1,22 +1,19 @@
 package eulermind.view;
 
-import eulermind.MindModel;
 import prefuse.data.Node;
-import prefuse.data.Table;
 import prefuse.data.Tree;
-import prefuse.util.collections.IntIterator;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualTree;
-import prefuse.visual.expression.VisiblePredicate;
 
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +48,7 @@ public class TreeCursor extends NodeControl {
 
     NodeItem m_originCursor;
 
-    public NodeItem m_currentCursor;
+    public ArrayList<NodeItem> m_selectedNodes = new ArrayList<>();
 
     ArrayList<NodeItem> m_xAxis;
     ArrayList<NodeItem> m_yAxis;
@@ -66,6 +63,9 @@ public class TreeCursor extends NodeControl {
 
     final Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
+    enum SelectMode {ONLY_ONE, ADD_ONE, SERIES};
+    private SelectMode m_selectMode = SelectMode.ONLY_ONE;
+
     public TreeCursor(MindView mindView) {
         super(mindView);
 
@@ -76,13 +76,72 @@ public class TreeCursor extends NodeControl {
 
     public NodeItem getCursorNodeItem()
     {
-        return m_currentCursor;
+        assert (m_selectedNodes.size() > 0);
+        return m_selectedNodes.get(m_selectedNodes.size() - 1);
     }
+
+    void copyNodeBetweenPreviousAndCurrentCursor(ArrayList<NodeItem> axis, NodeItem prevCursor, NodeItem currentCursor)
+    {
+        int preIndex = axis.indexOf(prevCursor);
+        int curIndex = axis.indexOf(currentCursor);
+        if (preIndex < curIndex) {
+            m_selectedNodes.addAll(axis.subList(preIndex + 1, curIndex));
+
+        } else {
+            List<NodeItem> newSelectedNode = new ArrayList<>();
+            newSelectedNode.addAll(axis.subList(curIndex + 1, preIndex));
+            Collections.reverse(newSelectedNode);
+
+            m_selectedNodes.addAll(newSelectedNode);
+        }
+    }
+
+    private void selectNodeItem(NodeItem item)
+    {
+        if (m_selectMode == SelectMode.ONLY_ONE) {
+            m_selectedNodes.clear();
+            m_selectedNodes.add(item);
+
+        } else if (m_selectMode == SelectMode.ADD_ONE) {
+            if (! m_selectedNodes.contains(item)) {
+                m_selectedNodes.add(item);
+
+            } else {
+
+                if (m_selectedNodes.size() > 1) {
+                    m_selectedNodes.remove(item);
+                }
+            }
+
+        } else {
+            int currentCursorIndex = m_selectedNodes.lastIndexOf(item);
+
+            if (currentCursorIndex == -1) {
+                NodeItem prevCursor = m_selectedNodes.get(m_selectedNodes.size() - 1);
+
+                //只要两者在一个光标十字上，就可以。不管当前光标十字是 prevCursor的还是item的
+
+                if (m_xAxis.contains(prevCursor) && m_xAxis.contains(item)) {
+                    copyNodeBetweenPreviousAndCurrentCursor(m_xAxis, prevCursor, item);
+                }
+                if (m_yAxis.contains(prevCursor) && m_yAxis.contains(item)) {
+                    copyNodeBetweenPreviousAndCurrentCursor(m_yAxis, prevCursor, item);
+                }
+
+                m_selectedNodes.add(item);
+
+            } else {
+                m_selectedNodes.subList(currentCursorIndex + 1, m_selectedNodes.size()).clear();
+            }
+        }
+    }
+
+    //TODO: redo undo 再加一个函数，先清空选集。
 
     public void setCursorNodeItem(NodeItem node)
     {
         m_originCursor = node;
-        m_currentCursor = node;
+        selectNodeItem(node);
 
         if (node == null) {
             int debug = 1;
@@ -102,7 +161,6 @@ public class TreeCursor extends NodeControl {
     private void buildXYAxis(NodeItem originCursor)
     {
         m_originCursor = originCursor;
-        m_currentCursor = originCursor;
 
         m_xAxis = new ArrayList<NodeItem>();
         m_yAxis = new ArrayList<NodeItem>();
@@ -158,24 +216,6 @@ public class TreeCursor extends NodeControl {
         m_currentYIndex = m_originYIndex;
     }
 
-
-    boolean overlayInXAxis(NodeItem n1, NodeItem n2) {
-        Rectangle2D bounds1 = n1.getBounds();
-        Rectangle2D bounds2 = n2.getBounds();
-
-        double left1 = bounds1.getMinX();
-        double right1 = bounds1.getMaxX();
-
-        double left2 = bounds2.getMinX();
-        double right2 = bounds2.getMaxX();
-
-        if (left1 < left2) {
-            return left2 < right1;
-        } else {
-            return left1 < right2;
-        }
-    }
-
     void moveLeft()
     {
         stopCursorTimer();
@@ -185,13 +225,13 @@ public class TreeCursor extends NodeControl {
         }
 
         if (m_xAxis == null || m_currentYIndex != m_originYIndex) {
-            buildXYAxis(m_currentCursor);
+            buildXYAxis(getCursorNodeItem());
         }
 
         if (m_currentXIndex > 0) {
             m_currentXIndex--;
 
-            m_currentCursor = m_xAxis.get(m_currentXIndex);
+            selectNodeItem(m_xAxis.get(m_currentXIndex));
             m_mindView.renderTree();
         }
     }
@@ -205,18 +245,18 @@ public class TreeCursor extends NodeControl {
         }
 
         if (m_xAxis == null || m_currentYIndex != m_originYIndex) {
-            buildXYAxis(m_currentCursor);
+            buildXYAxis(getCursorNodeItem());
         }
 
         if (m_currentXIndex < m_xAxis.size() - 1) {
             //如果该节点闭合了，焦点就不能右移动了。
-            if (!m_currentCursor.isExpanded()) {
+            if (!getCursorNodeItem().isExpanded()) {
                 return;
             }
 
         } else if (m_currentXIndex == m_xAxis.size() - 1) {
             //如果最右边的节点张开了，重新计算
-            if (m_currentCursor.getChildCount() > 0 && m_currentCursor.isExpanded()) {
+            if (getCursorNodeItem().getChildCount() > 0 && getCursorNodeItem().isExpanded()) {
                 buildXYAxis(m_originCursor);
             }
         }
@@ -224,7 +264,7 @@ public class TreeCursor extends NodeControl {
         if (m_currentXIndex < m_xAxis.size() - 1) {
             m_currentXIndex++;
 
-            m_currentCursor = m_xAxis.get(m_currentXIndex);
+            selectNodeItem(m_xAxis.get(m_currentXIndex));
             m_mindView.renderTree();
         }
     }
@@ -238,12 +278,12 @@ public class TreeCursor extends NodeControl {
         }
 
         if (m_xAxis == null || m_currentXIndex != m_originXIndex) {
-            buildXYAxis(m_currentCursor);
+            buildXYAxis(getCursorNodeItem());
         }
         if (m_currentYIndex > 0) {
             m_currentYIndex--;
 
-            m_currentCursor = m_yAxis.get(m_currentYIndex);
+            selectNodeItem(m_yAxis.get(m_currentYIndex));
             m_mindView.renderTree();
         }
     }
@@ -257,13 +297,13 @@ public class TreeCursor extends NodeControl {
         }
 
         if (m_xAxis == null || m_currentXIndex != m_originXIndex) {
-            buildXYAxis(m_currentCursor);
+            buildXYAxis(getCursorNodeItem());
         }
 
         if (m_currentYIndex < m_yAxis.size() - 1) {
             m_currentYIndex++;
 
-            m_currentCursor = m_yAxis.get(m_currentYIndex);
+            selectNodeItem(m_yAxis.get(m_currentYIndex));
             m_mindView.renderTree();
         }
     }
@@ -271,6 +311,10 @@ public class TreeCursor extends NodeControl {
     @Override
     public void nodeItemEntered(NodeItem item, MouseEvent e) {
         if (m_isHeld) {
+            return;
+        }
+
+        if (e.isControlDown() || e.isShiftDown() || e.isMetaDown()) {
             return;
         }
 
@@ -290,10 +334,14 @@ public class TreeCursor extends NodeControl {
             return;
         }
 
-        if (item != m_currentCursor) {
-            setCursorNodeItem(item);
-            m_mindView.renderTree();
+        m_selectMode = e.isControlDown() ? SelectMode.ADD_ONE : SelectMode.ONLY_ONE;
+
+        if (m_selectMode == SelectMode.ONLY_ONE && getCursorNodeItem() == item) {
+            return;
         }
+
+        setCursorNodeItem(item);
+        m_mindView.renderTree();
     }
 
     private Timer m_cursorTimer;
@@ -320,9 +368,52 @@ public class TreeCursor extends NodeControl {
 
     @Override
     public void nodeItemKeyPressed(NodeItem nodeItem, KeyEvent e) {
-        keyPressed(e);
+        if (m_isHeld) {
+            return;
+        }
+
+        m_selectMode = e.isShiftDown() ? SelectMode.SERIES : SelectMode.ONLY_ONE;
+
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_UP:
+            case KeyEvent.VK_KP_UP:
+                moveUp();
+                break;
+
+            case KeyEvent.VK_DOWN:
+            case KeyEvent.VK_KP_DOWN:
+                moveDown();
+                break;
+
+            case KeyEvent.VK_LEFT:
+            case KeyEvent.VK_KP_LEFT:
+                moveLeft();
+                break;
+
+            case KeyEvent.VK_RIGHT:
+            case KeyEvent.VK_KP_RIGHT:
+                moveRight();
+                break;
+        }
     }
 
+    /*
+    //当鼠标没有在节点上时，这个函数响应按键。 FIXME：当鼠标在一个边上呢
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_SHIFT || e.getKeyCode() == KeyEvent.VK_CONTROL) {
+            m_selectMore = true;
+        }
+    }
+
+    //当鼠标没有在节点上时，这个函数响应按键。 FIXME：当鼠标在一个边上呢
+    @Override
+    public void keyReleased(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_SHIFT || e.getKeyCode() == KeyEvent.VK_CONTROL) {
+            m_selectMore = false;
+        }
+    }
+    */
 
     public void hold() {
         stopCursorTimer();
@@ -333,4 +424,7 @@ public class TreeCursor extends NodeControl {
         m_isHeld = false;
     }
 
+    public List<NodeItem> getSelectedNodeItems() {
+        return Collections.unmodifiableList(m_selectedNodes);
+    }
 }

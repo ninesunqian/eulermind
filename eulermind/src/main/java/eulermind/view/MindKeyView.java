@@ -105,10 +105,17 @@ public class MindKeyView extends MindView {
         inputMap.put(KeyStroke.getKeyStroke("ctrl V"), sm_pasteActionName);
         inputMap.put(KeyStroke.getKeyStroke("ctrl L"), sm_linkActionName);
 
+        /*
         inputMap.put(KeyStroke.getKeyStroke("UP"), sm_cursorMoveUpActionName);
         inputMap.put(KeyStroke.getKeyStroke("DOWN"), sm_cursorMoveDownActionName);
         inputMap.put(KeyStroke.getKeyStroke("LEFT"), sm_cursorMoveLeftActionName);
         inputMap.put(KeyStroke.getKeyStroke("RIGHT"), sm_cursorMoveRightActionName);
+
+        inputMap.put(KeyStroke.getKeyStroke("shift UP"), sm_cursorMoveUpActionName);
+        inputMap.put(KeyStroke.getKeyStroke("shift DOWN"), sm_cursorMoveDownActionName);
+        inputMap.put(KeyStroke.getKeyStroke("shift LEFT"), sm_cursorMoveLeftActionName);
+        inputMap.put(KeyStroke.getKeyStroke("shift RIGHT"), sm_cursorMoveRightActionName);
+        */
 
         inputMap.put(KeyStroke.getKeyStroke("SPACE"), sm_toggleFoldNodeName);
 

@@ -2,6 +2,7 @@ package eulermind.view;
 
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.List;
 
 import eulermind.*;
 import org.slf4j.Logger;
@@ -504,6 +505,11 @@ public class MindView extends Display {
     public NodeItem getCursorNodeItem()
     {
         return m_cursor.getCursorNodeItem();
+    }
+
+    public List<NodeItem> getSelectedNodeItems()
+    {
+        return m_cursor.getSelectedNodeItems();
     }
 
     public Node getCursorSourceNode()

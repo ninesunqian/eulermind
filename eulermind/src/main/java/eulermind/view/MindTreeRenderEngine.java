@@ -378,8 +378,10 @@ public class MindTreeRenderEngine {
                 return;
             }
 
-            if (item == m_mindView.getDragHitNode()) {
-                RectangularShape shape = (RectangularShape)getShape(item);
+            NodeItem nodeItem = (NodeItem)item;
+
+            if (nodeItem == m_mindView.getDragHitNode()) {
+                RectangularShape shape = (RectangularShape)getShape(nodeItem);
 
                 float x = (float)shape.getX();
                 float y = (float)shape.getY();
@@ -444,16 +446,21 @@ public class MindTreeRenderEngine {
                 return;
             }
 
-            Node node = m_mindView.toSource((NodeItem)item);
-            Node cursorNode = m_mindView.getCursorSourceNode();
+            java.util.List<NodeItem> selectedNodeItems = m_mindView.getSelectedNodeItems();
+            m_logger.info("selected NodeItem size {}", selectedNodeItems.size());
 
-            if (node == cursorNode) {
+            if (selectedNodeItems.contains(nodeItem)) {
                 Color color = ColorLib.getColor(0, 0, 255, 255);
-                paintCursorBoundary(g, item, color);
+                paintCursorBoundary(g, nodeItem, color);
 
-            } else if (!m_mindView.isPlaceholder(cursorNode) && m_mindView.m_mindModel.isSelfInDB(node, cursorNode)) {
-                Color color = ColorLib.getColor(0, 0, 255, 80);
-                paintCursorBoundary(g, item, color);
+            } else  {
+                for (NodeItem selectedNode : selectedNodeItems) {
+                    if (m_mindView.m_mindModel.isSelfInDB(nodeItem, selectedNode)) {
+                        Color color = ColorLib.getColor(0, 0, 255, 80);
+                        paintCursorBoundary(g, nodeItem, color);
+                        break;
+                    }
+                }
             }
         }
 
