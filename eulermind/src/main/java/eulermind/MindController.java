@@ -100,17 +100,6 @@ public class MindController extends UndoManager {
         m_tabbedPane.setFocusCycleRoot(true);
     }
 
-    void addExternalMouseController(NodeControl robustNodeItemController)
-    {
-        if (m_externalMouseContollers.contains(robustNodeItemController)) {
-            return;
-        }
-
-        for (Object rootDBId : m_mindViews.keySet()) {
-            m_mindViews.get(rootDBId).addControlListener(robustNodeItemController);
-        }
-    }
-
     public MindView findOrAddMindView(Object rootDBId) {
         MindView mindView = m_mindViews.get(rootDBId);
         if (mindView != null) {
@@ -128,10 +117,6 @@ public class MindController extends UndoManager {
         ButtonTabComponent buttonTabComponent = new ButtonTabComponent(m_tabbedPane);
         buttonTabComponent.getButton().addActionListener(m_tabCloseButtonListener);
         m_tabbedPane.setTabComponentAt(m_tabbedPane.getTabCount() - 1, buttonTabComponent);
-
-        for(NodeControl controller : m_externalMouseContollers) {
-            mindView.addControlListener(controller);
-        }
 
         int lastMindViewIndex = m_tabbedPane.getTabCount() - 1;
         if (lastMindViewIndex < 9) {
