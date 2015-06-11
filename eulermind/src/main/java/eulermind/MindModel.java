@@ -133,7 +133,9 @@ public class MindModel {
     };
 
 	public MindDB m_mindDb;
-    ArrayList<Tree> m_trees = new ArrayList<Tree>();
+
+    //需要记住打开tree的位置，所以不能用HashSet
+    private ArrayList<Tree> m_trees = new ArrayList<Tree>();
 
 	//return sorted copy of propName
 	private void addNodeTableProperties(Table t)
@@ -286,7 +288,7 @@ public class MindModel {
         return null;
     }
 
-    public prefuse.data.Tree findOrPutTree(Object rootId, int depth)
+    public prefuse.data.Tree findOrPutTree(Object rootId)
     {
         Tree tree;
 
@@ -316,11 +318,11 @@ public class MindModel {
         Node root = tree.addRoot();
         loadNodeProperties(m_mindDb.getVertex(rootId), root);
 
-        final int initialLevel = depth;
+        final int expandLevel = 2;
         tree.deepTraverse(root, new Tree.TraverseProcessor() {
             public boolean run(Node parent, Node node, int level) {
                 attachChildren(node);
-                return level < initialLevel;
+                return level < expandLevel;
             }
         });
 
@@ -329,12 +331,14 @@ public class MindModel {
         return tree;
     }
 
-    public void closeSubTree(Object rootId)
+    public List<Tree> getDisplaySubTrees()
     {
-        Tree tree = findTree(rootId);
-        if (tree != null) {
-            m_trees.remove(tree);
-        }
+        return Collections.unmodifiableList(m_trees);
+    }
+
+    public void closeSubTree(Tree tree)
+    {
+        m_trees.remove(tree);
     }
 
 	private void loadElementProperties(com.tinkerpop.blueprints.Element dbElement, Tuple tuple, String keys[])
@@ -790,6 +794,16 @@ public class MindModel {
 	//return the DBid of node
 	public Object trashNode(Object dbId)
 	{
+        //删除显示子树
+        Iterator<Tree> treeIterator = m_trees.iterator();
+        while (treeIterator.hasNext()) {
+            Tree tree = treeIterator.next();
+            Object treeRootId = tree.getRoot().get(sm_dbIdColumnName);
+            if (m_mindDb.subTreeContainsVertexId(dbId, treeRootId)) {
+                treeIterator.remove();
+            }
+        }
+
         Vertex vertex = m_mindDb.getVertex(dbId);
         MindDB.EdgeVertexId  edgeParentId = m_mindDb.getParentEdgeId(dbId);
 

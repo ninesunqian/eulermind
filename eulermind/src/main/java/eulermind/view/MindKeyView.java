@@ -2,6 +2,7 @@ package eulermind.view;
 
 import eulermind.MindController;
 import eulermind.MindModel;
+import prefuse.data.Tree;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -30,8 +31,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 public class MindKeyView extends MindView {
 
-    public MindKeyView(MindModel mindModel, MindController undoManager, Object rootId) {
-        super(mindModel, undoManager, rootId);
+    public MindKeyView(MindModel mindModel, MindController undoManager, Tree tree) {
+        super(mindModel, undoManager, tree);
         setKeyControlListener();
     }
 

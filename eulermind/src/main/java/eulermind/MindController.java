@@ -22,9 +22,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Hashtable;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +52,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 public class MindController extends UndoManager {
     Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
-    Hashtable<Object, MindView> m_mindViews = new Hashtable<Object, MindView>();
+    Hashtable<Tree, MindView> m_mindViews = new Hashtable<>();
 
     MindModel m_mindModel;
     JTabbedPane m_tabbedPane;
@@ -101,15 +99,17 @@ public class MindController extends UndoManager {
     }
 
     public MindView findOrAddMindView(Object rootDBId) {
-        MindView mindView = m_mindViews.get(rootDBId);
+
+        Tree tree = m_mindModel.findOrPutTree(rootDBId);
+        MindView mindView = m_mindViews.get(tree);
         if (mindView != null) {
             m_tabbedPane.setSelectedComponent(mindView);
             return mindView;
         }
 
-        mindView = new MindKeyView(m_mindModel, this, rootDBId);
+        mindView = new MindKeyView(m_mindModel, this, tree);
 
-        m_mindViews.put(rootDBId, mindView);
+        m_mindViews.put(tree, mindView);
         Node root = mindView.m_tree.getRoot();
 
         m_tabbedPane.addTab(m_mindModel.getText(root), mindView);
@@ -140,28 +140,19 @@ public class MindController extends UndoManager {
             int pos = m_tabbedPane.indexOfTabComponent(buttonTabComponent);
             MindView removedMindView = (MindView)m_tabbedPane.getComponentAt(pos);
 
-            if (pos != -1) {
-                for (Object key: m_mindViews.keySet()) {
-                    if (m_mindViews.get(key) == removedMindView) {
-                        removeMindView(key);
-                    }
+            for (Tree tree: m_mindViews.keySet()) {
+                if (m_mindViews.get(tree) == removedMindView) {
+                    m_mindModel.closeSubTree(tree);
+                    m_mindViews.remove(tree);
+                    m_tabbedPane.remove(removedMindView);
+                    return;
                 }
             }
         }
     };
 
-    public void removeMindView(Object rootDBId) {
-        MindView mindView = m_mindViews.get(rootDBId);
-        m_tabbedPane.remove(mindView);
-        m_mindViews.remove(rootDBId);
-        m_mindModel.closeSubTree(rootDBId);
-    }
-
     public MindView exposeMindView(Object rootDBId) {
-        MindView mindView = m_mindViews.get(rootDBId);
-        if (mindView == null) {
-            findOrAddMindView(rootDBId);
-        }
+        MindView mindView = findOrAddMindView(rootDBId);
 
         if (m_tabbedPane.getSelectedComponent() != mindView) {
             m_tabbedPane.setSelectedComponent(mindView);
@@ -186,8 +177,6 @@ public class MindController extends UndoManager {
             return false;
         }
         return currentView.isChanging();
-
-
     }
 
     public Object getCurrentVertexId() {
@@ -224,26 +213,35 @@ public class MindController extends UndoManager {
         return str;
     }
 
-    private void updateMindViews(MindOperator operator, boolean isUndo)
+    private void removeInvalidMindViews()
     {
-        //remove no needed mindview
-        if (operator instanceof Removing) {
-            Removing removing = (Removing)operator;
-            Object trashedDBId = removing.m_formerCursorId;
+        HashSet<Tree> invalidTrees = new HashSet<>();
 
-            HashSet<Object> toBeRemovedMindViewIds = new HashSet<>();
+        //不能直接操作keySet， 否则会影响到内部变化
+        invalidTrees.addAll(m_mindViews.keySet());
+        invalidTrees.removeAll(m_mindModel.getDisplaySubTrees());
 
-            for (Object rootDBId : m_mindViews.keySet()) {
-                if (m_mindModel.m_mindDb.vertexIdIsAncestorOf(trashedDBId, rootDBId)) {
-                    toBeRemovedMindViewIds.add(rootDBId);
-                }
-            }
-
-            for (Object toBeRemovedMindViewId : toBeRemovedMindViewIds) {
-                removeMindView(toBeRemovedMindViewId);
-            }
+        for (Tree tree : invalidTrees) {
+            MindView mindView = m_mindViews.get(tree);
+            m_tabbedPane.remove(mindView);
+            m_mindViews.remove(tree);
         }
 
+        {
+            invalidTrees.clear();
+            invalidTrees.addAll(m_mindViews.keySet());
+            invalidTrees.removeAll(m_mindModel.getDisplaySubTrees());
+            assert invalidTrees.size() == 0;
+            assert m_mindViews.size() == m_mindModel.getDisplaySubTrees().size();
+        }
+    }
+
+    private void updateMindViews(MindOperator operator, boolean isUndo)
+    {
+        //TODO：多选：这个函数移到外部。每一个operator都要调用
+        removeInvalidMindViews();
+
+        //多选：其余部分最后一个operator调用
         if (operator == null) {
             int i = 0;
         }
@@ -251,9 +249,9 @@ public class MindController extends UndoManager {
         MindView operatorBornView = exposeMindView(operator.m_rootDbId);
 
         //repaint remain mindviews
-        for (Object rootDBId : m_mindViews.keySet()) {
+        for (Tree tree : m_mindViews.keySet()) {
 
-            MindView mindView = m_mindViews.get(rootDBId);
+            MindView mindView = m_mindViews.get(tree);
             if (mindView == operatorBornView) {
                 mindView.setCursorNodeByPath(isUndo ? operator.m_formerCursorPath : operator.m_laterCursorPath);
             } else {

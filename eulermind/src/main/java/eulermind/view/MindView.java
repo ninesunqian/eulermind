@@ -168,7 +168,7 @@ public class MindView extends Display {
 
     VisualTree m_visualTree;
 
-	public MindView(MindModel mindModel, MindController undoManager, Object rootId) {
+	public MindView(MindModel mindModel, MindController undoManager, Tree tree) {
 		super(new Visualization());
         JPanel pp = new JPanel();
 
@@ -179,7 +179,7 @@ public class MindView extends Display {
         m_mindModel = mindModel;
         m_mindController = undoManager;
 
-        m_tree = mindModel.findOrPutTree(rootId, 1);
+        m_tree = tree;
         m_visualTree = (VisualTree)m_vis.add(m_treeGroupName, m_tree);
         MindModel.addNodeMirrorXYColumn(m_tree, m_visualTree);
 
