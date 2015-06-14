@@ -51,7 +51,9 @@ public class ImportingFile extends MindOperator{
 
     public boolean does() throws Exception
     {
-        prepareCursorInfo();
+        if (! prepareCursorInfo()) {
+            return false;
+        }
 
         Node parent = getNodeByPath(m_parentPath);
         m_newChildren = m_mindModel.importFile(parent, m_importedFilePath, m_progressMonitorParent);

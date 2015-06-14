@@ -2,7 +2,6 @@ package eulermind;
 
 import eulermind.component.ButtonTabComponent;
 import eulermind.component.MindPropertyComponent;
-import eulermind.operator.Removing;
 import eulermind.view.MindKeyView;
 import eulermind.view.MindView;
 import eulermind.view.NodeControl;
@@ -15,7 +14,6 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.undo.UndoManager;
-import javax.swing.undo.UndoableEdit;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -239,10 +237,7 @@ public class MindController extends UndoManager {
 
     private void updateMindViews(MindOperator operator, boolean isUndo)
     {
-        //TODO：多选：这个函数移到外部。每一个operator都要调用
         removeInvalidMindViews();
-
-        //多选：其余部分最后一个operator调用
 
         MindView operatorBornView = exposeMindView(operator.m_rootDbId);
 
@@ -250,11 +245,11 @@ public class MindController extends UndoManager {
 
             MindView mindView = m_mindViews.get(tree);
             if (mindView == operatorBornView) {
-                mindView.setCursorNodeByPath(isUndo ? operator.m_formerCursorPath : operator.m_laterCursorPath);
+                mindView.clearSelectAndSetCursorNodeByPath(isUndo ? operator.m_formerCursorPath : operator.m_laterCursorPath);
             } else {
                 if (mindView.getCursorSourceNode() == null) {
                     ArrayList<Integer> rootPath = new ArrayList<Integer>();
-                    mindView.setCursorNodeByPath(rootPath);
+                    mindView.clearSelectAndSetCursorNodeByPath(rootPath);
                 }
             }
 

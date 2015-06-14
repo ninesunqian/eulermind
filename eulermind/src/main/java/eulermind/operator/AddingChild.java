@@ -44,7 +44,9 @@ public class AddingChild extends MindOperator{
     }
 
     public boolean does() {
-        prepareCursorInfo();
+        if (!prepareCursorInfo()) {
+            return false;
+        }
 
         Node parent = getNodeByPath(m_formerCursorPath);
         m_parentPath = (ArrayList)m_formerCursorPath.clone();

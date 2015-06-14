@@ -1,5 +1,4 @@
 package eulermind.view;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.*;
 
@@ -65,7 +64,7 @@ public class TreeFolder extends NodeControl {
         final String group = node.getGroup();
 
         //unfold descendants deeply, to the folded descendants
-        m_tree.deepTraverse(node, new Tree.TraverseProcessor() {
+        m_tree.deepthFirstTraverse(node, new Tree.DeepthFristTraverseProcessor() {
             @Override
             public boolean run(Node parent, Node node, int level) {
 
@@ -73,8 +72,8 @@ public class TreeFolder extends NodeControl {
                     return true;
                 }
 
-                TableNodeItem visualNode = (TableNodeItem)vis.getVisualItem(group, node);
-                TableEdgeItem visualEdge = (TableEdgeItem)visualNode.getParentEdge();
+                TableNodeItem visualNode = (TableNodeItem) vis.getVisualItem(group, node);
+                TableEdgeItem visualEdge = (TableEdgeItem) visualNode.getParentEdge();
 
                 //s_logger.info ( "visiableNode " + m_mindTree.getText(node));
                 PrefuseLib.updateVisible(visualNode, true);
@@ -106,15 +105,14 @@ public class TreeFolder extends NodeControl {
         final Node foldTreeRoot = node;
 
         //set descendants unvisible deeply, to the folded descendants
-        m_tree.deepTraverse(node, new Tree.TraverseProcessor() {
+        m_tree.deepthFirstTraverse(node, new Tree.DeepthFristTraverseProcessor() {
             public boolean run(Node parent, Node node, int level) {
-                if (node == foldTreeRoot)
-                {
+                if (node == foldTreeRoot) {
                     return true;
                 }
 
-                TableNodeItem visualNode = (TableNodeItem)vis.getVisualItem(group, node);
-                TableEdgeItem visualEdge = (TableEdgeItem)visualNode.getParentEdge();
+                TableNodeItem visualNode = (TableNodeItem) vis.getVisualItem(group, node);
+                TableEdgeItem visualEdge = (TableEdgeItem) visualNode.getParentEdge();
 
                 PrefuseLib.updateVisible(visualNode, false);
                 PrefuseLib.updateVisible(visualEdge, false);

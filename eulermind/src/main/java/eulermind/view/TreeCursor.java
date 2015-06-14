@@ -6,7 +6,6 @@ import prefuse.visual.NodeItem;
 import prefuse.visual.VisualTree;
 
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -137,6 +136,11 @@ public class TreeCursor extends NodeControl {
     }
 
     //TODO: redo undo 再加一个函数，先清空选集。
+    public void clearSelectAndSetCursorNodeItem(NodeItem node) {
+        m_selectMode = SelectMode.ONLY_ONE;
+        setCursorNodeItem(node);
+    }
+
 
     public void setCursorNodeItem(NodeItem node)
     {
@@ -197,10 +201,10 @@ public class TreeCursor extends NodeControl {
         m_originXIndex = m_xAxis.indexOf(originCursor);
 
         //上下键 插入同级别的节点
-        m_tree.deepTraverse(m_tree.getRoot(), new Tree.TraverseProcessor() {
+        m_tree.deepthFirstTraverse(m_tree.getRoot(), new Tree.DeepthFristTraverseProcessor() {
             @Override
             public boolean run(Node parent, Node node, int level) {
-                NodeItem nodeItem = (NodeItem)node;
+                NodeItem nodeItem = (NodeItem) node;
                 if (level >= m_originXIndex || nodeItem.isExpanded() == false || nodeItem.getChildCount() == 0) {
                     m_yAxis.add(nodeItem);
                     return false;

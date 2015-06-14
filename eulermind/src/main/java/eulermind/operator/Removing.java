@@ -36,12 +36,25 @@ public class Removing extends MindOperator {
     public Removing(MindModel mindModel, Node formerCursor)
     {
         super(mindModel, formerCursor);
-        computeLaterCursor(formerCursor);
     }
 
     public boolean does()
     {
-        prepareCursorInfo();
+        if (!prepareCursorInfo()) {
+            return false;
+        }
+
+        if (m_formerCursorParent == null) {
+            return false;
+        }
+
+        if (! m_isRefNode) {
+            if (m_mindModel.subTreeContainsInDB(m_formerCursor, m_tree.getRoot())) {
+                return false;
+            }
+        }
+
+        computeLaterCursor(m_formerCursor);
 
         Node laterCursor = computeLaterCursor(getNodeByPath(m_formerCursorPath));
 
@@ -73,25 +86,6 @@ public class Removing extends MindOperator {
     public void redo()
     {
         does();
-    }
-
-    public static boolean canDo(MindModel mindModel, Tree tree, Node node)
-    {
-        Node root = tree.getRoot();
-
-        if (node == root) {
-            return false;
-        }
-
-        if (mindModel.isRefNode(node)) {
-            return true;
-        } else {
-            if (mindModel.subTreeContainsInDB(node, root)) {
-                return false;
-            } else {
-                return true;
-            }
-        }
     }
 
     private Node getNearestKeptSibling(Node node)

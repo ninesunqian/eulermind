@@ -42,16 +42,6 @@ public class AddingReference extends MindOperator {
 
     static Logger s_logger = LoggerFactory.getLogger(AddingReference.class);
 
-    private void init(Node referrerNode, Object referrerDBId, Object referentDBId, int pos) {
-        m_referrerDBId = referrerDBId;
-        m_referentDBId = referentDBId;
-        m_pos = pos;
-
-        m_referrerPath = getNodePath(referrerNode);
-        s_logger.info(String.format("referrerDBId %s -- referentDBId %s, referrerNodePath %s",
-                referrerDBId.toString(), referentDBId.toString(), m_referrerPath.toString()));
-    }
-
     //formerCursor is referent: using for drag referent node to referrer node by mouse
     public AddingReference(MindModel mindModel, Node formerCursor, Node referrerNode, int pos) {
         super(mindModel, formerCursor);
@@ -65,8 +55,21 @@ public class AddingReference extends MindOperator {
         init(formerCursor, m_mindModel.getDbId(formerCursor), referentDBId, pos);
     }
 
+    private void init(Node referrerNode, Object referrerDBId, Object referentDBId, int pos) {
+        m_referrerDBId = referrerDBId;
+        m_referentDBId = referentDBId;
+        m_pos = pos;
+
+        m_referrerPath = getNodePath(referrerNode);
+        s_logger.info(String.format("referrerDBId %s -- referentDBId %s, referrerNodePath %s",
+                referrerDBId.toString(), referentDBId.toString(), m_referrerPath.toString()));
+    }
+
     public boolean does() {
-        prepareCursorInfo();
+        if (! prepareCursorInfo()) {
+            return false;
+        }
+
         Node referrer = getNodeByPath(m_referrerPath);
 
         m_mindModel.addReference(getNodeByPath(m_referrerPath), m_pos, m_referentDBId);

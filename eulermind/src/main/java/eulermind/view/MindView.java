@@ -312,9 +312,9 @@ public class MindView extends Display {
         super.stopEditing2(false);
     }
 
-    public void setCursorNodeByPath(ArrayList<Integer> path)
+    public void clearSelectAndSetCursorNodeByPath(ArrayList<Integer> path)
     {
-        m_cursor.setCursorNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, path)));
+        m_cursor.clearSelectAndSetCursorNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, path)));
     }
 
     public boolean isChanging() {
@@ -480,7 +480,7 @@ public class MindView extends Display {
 
         newNode.set(MindModel.TEXT_PROP_NAME, "");
 
-        m_cursor.setCursorNodeItem(toVisual(newNode));
+        m_cursor.clearSelectAndSetCursorNodeItem(toVisual(newNode));
     }
 
     private void removePlaceholderCursor()
@@ -493,7 +493,7 @@ public class MindView extends Display {
         assert(placeholderNode != m_tree.getRoot());
 
         m_tree.removeChild(placeholderNode);
-        m_cursor.setCursorNodeItem(toVisual(m_savedCursor));
+        m_cursor.clearSelectAndSetCursorNodeItem(toVisual(m_savedCursor));
     }
 
     //include node and edge, the edge is used rendering
@@ -594,7 +594,7 @@ public class MindView extends Display {
             return;
         }
 
-        if (Removing.canDo(m_mindModel, m_tree, getCursorSourceNode())) {
+        {
             Node cursorNode = getCursorSourceNode();
             MindOperator operator = new Removing(m_mindModel, cursorNode);
             m_mindController.does(operator);

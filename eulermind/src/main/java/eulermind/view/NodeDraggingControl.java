@@ -7,6 +7,8 @@ import prefuse.data.Node;
 import prefuse.visual.NodeItem;
 
 import java.awt.dnd.DragSource;
+import java.util.ArrayList;
+import java.util.List;
 
 /*
 The MIT License (MIT)
@@ -91,29 +93,49 @@ class NodeDraggingControl extends NodeControl {
         m_mindView.renderTree();
     }
 
-    MindOperator getDragOperator(NodeItem draggedNode, NodeItem droppedNode,
+    List<MindOperator> getDragOperator(NodeItem draggedNodeItem, NodeItem droppedNodeItem,
                                 NodeControl.HitPosition hitPosition,
                                 NodeControl.DragAction dragAction)
     {
         MindModel mindModel = m_mindView.m_mindModel;
 
-        MindOperator operator = null;
+        List<MindOperator> operators = new ArrayList<>();
 
-        if (dragAction == NodeControl.DragAction.LINK) {
-            /* TODO:
-            Node referrer = (Node)possibleEdgeSource[0];
-            int position = (Integer)possibleEdgeSource[1];
+        List<NodeItem> selectedNodeItems = m_mindView.m_cursor.getSelectedNodeItems();
 
-            operator = new AddingReference(mindModel, draggedNode, referrer, position);
-            */
+        NodeItem targetNodeItem;
+        int position;
+
+        if (hitPosition == HitPosition.TOP || hitPosition == HitPosition.BOTTOM) {
+            if (droppedNodeItem.getParent() == null) {
+                return null;
+            }
+            targetNodeItem = (NodeItem)droppedNodeItem.getParent();
+            position = hitPosition == HitPosition.TOP ? droppedNodeItem.getIndex() : droppedNodeItem.getIndex() + 1;
 
         } else {
-            operator = new DraggingNode(mindModel, m_mindView.toSource(draggedNode),
-                    m_mindView.toSource(droppedNode), hitPosition);
-
+            targetNodeItem = droppedNodeItem;
+            position = droppedNodeItem.getChildCount();
         }
 
-        return operator;
+        if (dragAction == NodeControl.DragAction.LINK) {
+            for (NodeItem selectedItem : selectedNodeItems) {
+                operators.add(new AddingReference(mindModel, m_mindView.toSource(selectedItem),
+                        m_mindView.toSource(targetNodeItem), position));
+                position++;
+            }
+
+        } else {
+            operators.add(new DraggingNode(mindModel, m_mindView.toSource(selectedNodeItems.get(0)),
+                    m_mindView.toSource(targetNodeItem), hitPosition));
+
+            for(int i=1; i<selectedNodeItems.size(); i++) {
+                operators.add(new DraggingNode(mindModel, m_mindView.toSource(selectedNodeItems.get(i)),
+                        m_mindView.toSource(selectedNodeItems.get(i-1)), HitPosition.BOTTOM));
+            }
+        }
+
+        return operators;
     }
 
     @Override
@@ -124,15 +146,15 @@ class NodeDraggingControl extends NodeControl {
         }
 
         m_logger.info("nodeItemDropped");
-        MindOperator operator = null;
+        List<MindOperator> operators = null;
 
-        if (droppedNode != null) {
+        if (droppedNode != null && hitPosition != HitPosition.OUTSIDE) {
             m_logger.info(String.format("--- dragAction %s", dragAction.toString()));
-            operator = getDragOperator(draggedNode, droppedNode, hitPosition, dragAction);
+            operators = getDragOperator(draggedNode, droppedNode, hitPosition, dragAction);
         }
 
-        if (operator != null) {
-            m_mindView.m_mindController.does(operator);
+        if (operators != null && operators.size() > 0) {
+            m_mindView.m_mindController.does(operators);
         } else {
             m_mindView.renderTreeToEndChanging();
         }

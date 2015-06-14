@@ -40,13 +40,16 @@ public class SettingProperty extends MindOperator {
         m_property = property;
         m_newValue = newValue;
         m_oldValue = m_mindModel.getProperty(m_nodeDBId, m_property);
-        m_laterCursorPath = (ArrayList<Integer>) m_formerCursorPath.clone();
     }
 
     public boolean does()
     {
-        prepareCursorInfo();
+        if (! prepareCursorInfo()) {
+            return false;
+        }
+
         m_mindModel.setProperty(m_nodeDBId, m_property, m_newValue);
+        m_laterCursorPath = (ArrayList<Integer>) m_formerCursorPath.clone();
         return true;
     }
 

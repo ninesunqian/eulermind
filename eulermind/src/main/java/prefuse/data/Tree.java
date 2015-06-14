@@ -1,6 +1,7 @@
 package prefuse.data;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -751,27 +752,47 @@ public class Tree extends Graph {
         return super.outNeighbors(n);
     }
 
-    public static interface TraverseProcessor
+    public static interface DeepthFristTraverseProcessor
     {
         //return: true: continue deeper, false stop
         abstract public boolean run(Node parent, Node node, int level);
     }
 
-    private void deepTraverse (Node parent, Node node, int level, TraverseProcessor proc)
+    private void deepthFirstTraverse(Node parent, Node node, int level, DeepthFristTraverseProcessor proc)
     {
         if (proc.run(parent, node, level))
         {
             Iterator children_iter = children(node);
             while (children_iter.hasNext())
             {
-                deepTraverse(node, (Node)children_iter.next(), level+1, proc);
+                deepthFirstTraverse(node, (Node) children_iter.next(), level + 1, proc);
             }
         }
     }
 
-    public void deepTraverse (Node node, TraverseProcessor proc)
+    public void deepthFirstTraverse(Node node, DeepthFristTraverseProcessor proc)
     {
-        deepTraverse(null, node, 0, proc);
+        deepthFirstTraverse(null, node, 0, proc);
+    }
+
+    public static interface BreadthFristTraverseProcessor
+    {
+        abstract public void run(Node node);
+    }
+
+    public void breadthFirstTraverse(Node subTreeRoot, BreadthFristTraverseProcessor proc)
+    {
+        LinkedList<Node> traverseNodes = new LinkedList<>();
+        traverseNodes.add(subTreeRoot);
+
+        while (! traverseNodes.isEmpty()) {
+            Node node = traverseNodes.pop();
+            proc.run(node);
+
+            for (int i=0; i<node.getChildCount(); i++) {
+                traverseNodes.add(node.getChild(i));
+            }
+        }
     }
 
     // ------------------------------------------------------------------------

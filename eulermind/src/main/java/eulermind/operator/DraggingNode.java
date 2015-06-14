@@ -31,15 +31,6 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/*TODO:
-if (dragAction == NodeControl.DragAction.LINK) {
-        Node referrer = (Node)possibleEdgeSource[0];
-        int position = (Integer)possibleEdgeSource[1];
-
-        operator = new AddingReference(mindModel, formerCursor, referrer, position);
-
-        } else {
-        */
 
 public class DraggingNode extends MindOperator{
 
