@@ -168,7 +168,7 @@ public class TableNode extends TableTuple implements Node {
     public Node getFirstChild() {
         return m_graph.getSpanningTree().getFirstChild(this);
     }
-    
+
     /**
      * @see prefuse.data.Node#getLastChild()
      */
@@ -210,5 +210,30 @@ public class TableNode extends TableTuple implements Node {
     public int getDepth() {
         return m_graph.getSpanningTree().getDepth(m_row);
     }
+
+    public boolean isParentOf(Node that) {
+        return m_graph.getSpanningTree().isParentOf(this, that);
+    }
+
+    public boolean isChildOf(Node that) {
+        return m_graph.getSpanningTree().isChildOf(this, that);
+    }
+
+    public boolean isSiblingOf(Node that) {
+        return m_graph.getSpanningTree().isSiblingOf(this, that);
+    }
+
+    public boolean isDescendantOf(Node that) {
+        return m_graph.getSpanningTree().isDescendantOf(this, that);
+    }
+
+    public boolean isAncestorOf(Node that) {
+        return m_graph.getSpanningTree().isAncestorOf(this, that);
+    }
+
+    public boolean subTreeContains(Node node) {
+        return m_graph.getSpanningTree().subTreeContains(this, node);
+    }
+
 
 } // end of class TableNode

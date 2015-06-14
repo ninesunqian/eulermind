@@ -173,7 +173,7 @@ public class MainFrame  extends JFrame {
         m_currentMapName = name;
 
         //调试模式下，不记录最后一次打开脑图
-        if (debugProperty != null) {
+        if (debugProperty == null) {
             Utils.recordLastOpenedMap(name);
         }
     }

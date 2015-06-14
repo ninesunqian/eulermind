@@ -39,8 +39,10 @@ public class Removing extends MindOperator {
         computeLaterCursor(formerCursor);
     }
 
-    public void does()
+    public boolean does()
     {
+        prepareCursorInfo();
+
         Node laterCursor = computeLaterCursor(getNodeByPath(m_formerCursorPath));
 
         if (m_isRefNode) {
@@ -52,6 +54,7 @@ public class Removing extends MindOperator {
         }
 
         m_laterCursorPath = getNodePath(laterCursor);
+        return true;
     }
 
     public void undo()

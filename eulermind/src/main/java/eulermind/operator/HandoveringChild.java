@@ -59,8 +59,9 @@ public class HandoveringChild extends MindOperator{
         m_logger.info("ret:");
     }
 
-    public void does()
+    public boolean does()
     {
+        prepareCursorInfo();
         m_logger.info("arg:");
 
         Node oldParentNode = getNodeByPath(m_oldParentPath);
@@ -74,6 +75,7 @@ public class HandoveringChild extends MindOperator{
         m_laterCursorPath = (ArrayList) m_newParentPathAfterDoing.clone();
         m_laterCursorPath.add(m_newPos);
         m_logger.info("ret:");
+        return true;
     }
 
     public void undo()

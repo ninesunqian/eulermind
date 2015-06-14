@@ -43,9 +43,11 @@ public class SettingProperty extends MindOperator {
         m_laterCursorPath = (ArrayList<Integer>) m_formerCursorPath.clone();
     }
 
-    public void does()
+    public boolean does()
     {
+        prepareCursorInfo();
         m_mindModel.setProperty(m_nodeDBId, m_property, m_newValue);
+        return true;
     }
 
     public void undo ()

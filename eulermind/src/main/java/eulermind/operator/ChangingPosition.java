@@ -53,8 +53,10 @@ public class ChangingPosition extends MindOperator{
         m_logger.info("ret:");
     }
 
-    public void does()
+    public boolean does()
     {
+        prepareCursorInfo();
+
         m_logger.info("arg:");
 
         Node parent = getNodeByPath(m_parentPath);
@@ -67,6 +69,7 @@ public class ChangingPosition extends MindOperator{
         m_laterCursorPath = (ArrayList)m_parentPathAfterDoing.clone();
         m_laterCursorPath.add(m_newPos);
         m_logger.info("ret:");
+        return true;
     }
 
     public void undo()

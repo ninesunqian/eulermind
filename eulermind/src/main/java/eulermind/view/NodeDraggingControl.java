@@ -2,10 +2,7 @@ package eulermind.view;
 
 import eulermind.MindModel;
 import eulermind.MindOperator;
-import eulermind.operator.AddingReference;
-import eulermind.operator.ChangingPosition;
-import eulermind.operator.HandoveringChild;
-import eulermind.operator.HandoveringReference;
+import eulermind.operator.*;
 import prefuse.data.Node;
 import prefuse.visual.NodeItem;
 
@@ -51,84 +48,14 @@ class NodeDraggingControl extends NodeControl {
         }
     }
 
-    private Object[] getPossibleEdgeSource(Node droppedNode, NodeControl.HitPosition hitPosition)
-    {
-        Object ret[] = new Object[2];
-
-        if (droppedNode == m_mindView.m_tree.getRoot()) {
-            ret[0] = droppedNode;
-            ret[1] = m_mindView.m_mindModel.getDBChildCount(droppedNode);
-            return ret;
-        }
-
-        switch (hitPosition) {
-            case TOP:
-                ret[0] = droppedNode.getParent();
-                ret[1] = droppedNode.getIndex();
-                break;
-            case BOTTOM:
-                ret[0] = droppedNode.getParent();
-                ret[1] = droppedNode.getIndex() + 1;
-                break;
-            case RIGHT:
-                ret[0] = droppedNode;
-                ret[1] = m_mindView.m_mindModel.getDBChildCount(droppedNode);
-                break;
-            default:
-                ret[0] = null;
-                ret[1] = -1;
-                break;
-        }
-
-        return ret;
-    }
-
-    //TODO: 改成nodeItem 参数类型
-    private boolean canDrop(NodeItem fromNodeItem, NodeItem hitNodeItem, HitPosition hitPosition, DragAction dragAction)
-    {
-        Node fromNode = m_mindView.toSource(fromNodeItem);
-        Node hitNode = m_mindView.toSource(hitNodeItem);
-        Object possibleEdgeSource[] = getPossibleEdgeSource(hitNode, hitPosition);
-
-        Node parentNode = fromNode.getParent();
-        Node newParentNode = (Node)possibleEdgeSource[0];
-
-        if (possibleEdgeSource[0] == null) {
-            return false;
-        }
-
-        //拖动到父节点的右半部，视为无效操作
-        if (m_mindView.m_mindModel.isSelfInDB(parentNode, newParentNode)) {
-            if (hitPosition == HitPosition.RIGHT) {
-                return false;
-            }
-        }
-
-        switch (dragAction) {
-            case LINK:
-                return true;
-            case MOVE:
-                if (!MindModel.getDbId(parentNode).equals(MindModel.getDbId(newParentNode))) {
-                    if (! m_mindView.m_mindModel.isRefNode(fromNode)) {
-                        return m_mindView.m_mindModel.canDragTo(fromNode, (Node) possibleEdgeSource[0]);
-                    }
-                }
-                return true;
-            default:
-                return false;
-        }
-    }
-
     private void setCursorShape(NodeItem sourceNode, NodeItem hitNode, HitPosition hitPosition, DragAction dragAction)
     {
-        boolean cursorEnabled = (hitNode == null) || canDrop(sourceNode, hitNode, hitPosition, dragAction);
-
         switch (dragAction) {
             case LINK:
-                m_mindView.setCursor(cursorEnabled ? DragSource.DefaultLinkDrop : DragSource.DefaultLinkNoDrop);
+                m_mindView.setCursor(DragSource.DefaultLinkDrop);
                 break;
             case MOVE:
-                m_mindView.setCursor(cursorEnabled ? DragSource.DefaultMoveDrop : DragSource.DefaultMoveNoDrop);
+                m_mindView.setCursor(DragSource.DefaultMoveDrop);
                 break;
             default:
                 break;
@@ -164,62 +91,26 @@ class NodeDraggingControl extends NodeControl {
         m_mindView.renderTree();
     }
 
-    MindOperator getDragOperator(Node draggedNode, Node droppedNode,
+    MindOperator getDragOperator(NodeItem draggedNode, NodeItem droppedNode,
                                 NodeControl.HitPosition hitPosition,
                                 NodeControl.DragAction dragAction)
     {
         MindModel mindModel = m_mindView.m_mindModel;
 
-        Object possibleEdgeSource[] = getPossibleEdgeSource(droppedNode, hitPosition);
         MindOperator operator = null;
 
         if (dragAction == NodeControl.DragAction.LINK) {
+            /* TODO:
             Node referrer = (Node)possibleEdgeSource[0];
             int position = (Integer)possibleEdgeSource[1];
 
             operator = new AddingReference(mindModel, draggedNode, referrer, position);
+            */
 
         } else {
+            operator = new DraggingNode(mindModel, m_mindView.toSource(draggedNode),
+                    m_mindView.toSource(droppedNode), hitPosition);
 
-            Node newParent = (Node)possibleEdgeSource[0];
-            int newPosition = (Integer)possibleEdgeSource[1];
-
-            if (draggedNode == m_mindView.m_tree.getRoot()) {
-                m_logger.info("forbid drag prefuse root to other as child");
-                return null;
-            }
-
-            Node parent = draggedNode.getParent();
-
-            if (MindModel.getDbId(newParent).equals(MindModel.getDbId(parent))) {
-                //拖到现在的父节点的右半部，视为无效操作
-                if (hitPosition == HitPosition.RIGHT) {
-                    return null;
-                }
-
-                int oldPosition = draggedNode.getIndex();
-                if (oldPosition < newPosition) {
-                    newPosition--;
-                }
-
-                if (oldPosition == newPosition) {
-                    return null;
-                }
-
-                operator = new ChangingPosition(mindModel, draggedNode, newPosition);
-
-            } else {
-
-                if (mindModel.isRefNode(draggedNode)) {
-                    operator = new HandoveringReference(mindModel, draggedNode, newParent, newPosition);
-                } else {
-
-                    assert ! mindModel.isAncestorOfInDB(draggedNode, newParent);
-                    assert(mindModel.canDragTo(draggedNode, newParent));
-
-                    operator = new HandoveringChild(mindModel, draggedNode, newParent, newPosition);
-                }
-            }
         }
 
         return operator;
@@ -237,9 +128,7 @@ class NodeDraggingControl extends NodeControl {
 
         if (droppedNode != null) {
             m_logger.info(String.format("--- dragAction %s", dragAction.toString()));
-            if (canDrop(draggedNode, droppedNode, hitPosition, dragAction)) {
-                operator = getDragOperator(draggedNode, droppedNode, hitPosition, dragAction);
-            }
+            operator = getDragOperator(draggedNode, droppedNode, hitPosition, dragAction);
         }
 
         if (operator != null) {

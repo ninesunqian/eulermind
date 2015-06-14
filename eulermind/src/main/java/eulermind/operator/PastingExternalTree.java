@@ -43,7 +43,8 @@ public class PastingExternalTree extends MindOperator {
         m_externalTree = externalTree;
     }
 
-    public void does() {
+    public boolean does() {
+        prepareCursorInfo();
         Node parent = getNodeByPath(m_formerCursorPath);
         m_parentPath = (ArrayList)m_formerCursorPath.clone();
 
@@ -54,6 +55,7 @@ public class PastingExternalTree extends MindOperator {
         m_parentPathAfterDoing = getNodePath(parent);
         m_laterCursorPath = (ArrayList)m_parentPathAfterDoing.clone();
         m_laterCursorPath.add(m_pos);
+        return true;
     }
 
     public void undo() {

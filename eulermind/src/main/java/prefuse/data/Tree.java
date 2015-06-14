@@ -403,6 +403,47 @@ public class Tree extends Graph {
         return ( e<0 ? null : getEdge(e) );
     }
 
+    public boolean isParentOf(Node thiz, Node that) {
+        return getParent(that) == thiz;
+    }
+
+    public boolean isChildOf(Node thiz, Node that) {
+        return getParent(thiz) == that;
+    }
+
+    public boolean isSiblingOf(Node thiz, Node that) {
+        return thiz != that && getParent(thiz) == getParent(that);
+    }
+
+
+    public boolean isDescendantOf(Node thiz, Node that) {
+        Node parent = getParent(thiz);
+        while (parent != null) {
+            if (parent == that) {
+                return true;
+            }
+
+            parent = getParent(parent);
+        }
+        return false;
+    }
+
+    public boolean isAncestorOf(Node thiz, Node that) {
+        Node parent = getParent(that);
+        while (parent != null) {
+            if (parent == thiz) {
+                return true;
+            }
+
+            parent = getParent(parent);
+        }
+        return false;
+    }
+
+    public boolean subTreeContains(Node subTreeRoot, Node node) {
+        return isAncestorOf(subTreeRoot, node) || node == subTreeRoot;
+    }
+
     public int getIndexInSiblings(int child)
     {
         int parent = getParent(child);

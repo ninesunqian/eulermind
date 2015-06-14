@@ -175,5 +175,17 @@ public interface Node extends Tuple {
      * @return an iterator over the edges to the child nodes
      */
     public Iterator childEdges();
-    
+
+    public boolean isParentOf(Node that);
+
+    public boolean isChildOf(Node that);
+
+    public boolean isSiblingOf(Node that);
+
+    public boolean isDescendantOf(Node that);
+
+    public boolean isAncestorOf(Node that);
+
+    public boolean subTreeContains(Node node);
+
 } // end of interface Node

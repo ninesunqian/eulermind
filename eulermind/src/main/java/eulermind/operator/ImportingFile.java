@@ -49,8 +49,10 @@ public class ImportingFile extends MindOperator{
 
     }
 
-    public void does() throws Exception
+    public boolean does() throws Exception
     {
+        prepareCursorInfo();
+
         Node parent = getNodeByPath(m_parentPath);
         m_newChildren = m_mindModel.importFile(parent, m_importedFilePath, m_progressMonitorParent);
 
@@ -59,6 +61,7 @@ public class ImportingFile extends MindOperator{
 
         m_laterCursorPath = (ArrayList)m_parentPathAfterDoing.clone();
         m_laterCursorPath.add(parent.getChildCount() - 1);
+        return true;
     }
 
     public void undo() {

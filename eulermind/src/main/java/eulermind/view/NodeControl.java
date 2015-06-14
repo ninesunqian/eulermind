@@ -39,7 +39,7 @@ public abstract class NodeControl extends ControlAdapter {
 
     Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
-    enum HitPosition {OUTSIDE, TOP, BOTTOM, RIGHT};
+    public enum HitPosition {OUTSIDE, TOP, BOTTOM, RIGHT};
 
     Display m_display;
 

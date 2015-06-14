@@ -512,12 +512,33 @@ public class MindView extends Display {
         return m_cursor.getSelectedNodeItems();
     }
 
+    //FIXME：不能加判断, 接口中要确保光标有效
     public Node getCursorSourceNode()
     {
-        if (m_cursor.getCursorNodeItem() == null) {
-            int debug = 1;
+        NodeItem cursorItem = m_cursor.getCursorNodeItem();
+
+        if (cursorItem != null && cursorItem.isValid()) {
+            return toSource(cursorItem);
+        } else {
+            return null;
         }
-        return toSource(m_cursor.getCursorNodeItem());
+    }
+
+    public void verifyCursor()
+    {
+
+    }
+
+    public List<Node> getSelectedSourceNodes()
+    {
+        List<NodeItem> nodeItems = m_cursor.getSelectedNodeItems();
+        ArrayList<Node> nodes = new ArrayList<>();
+
+        for (NodeItem nodeItem : nodeItems) {
+            nodes.add(toSource(nodeItem));
+        }
+
+        return nodes;
     }
 
     public void setCursorProperty(String key, Object value)
@@ -529,11 +550,12 @@ public class MindView extends Display {
 
         m_logger.info("setCursorProperty: {} - {}", key, value);
 
-        Node cursorNode = getCursorSourceNode();
-        MindOperator operator = new SettingProperty(m_mindModel, cursorNode, key, value);
+        ArrayList<MindOperator> operators = new ArrayList<>();
+        for (Node node : getSelectedSourceNodes()) {
+            operators.add(new SettingProperty(m_mindModel, node, key, value));
+        }
 
-        m_mindController.does(operator);
-
+        m_mindController.does(operators);
         endChanging();
     }
 

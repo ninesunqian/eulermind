@@ -23,6 +23,7 @@ import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.*;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -242,22 +243,16 @@ public class MindController extends UndoManager {
         removeInvalidMindViews();
 
         //多选：其余部分最后一个operator调用
-        if (operator == null) {
-            int i = 0;
-        }
 
         MindView operatorBornView = exposeMindView(operator.m_rootDbId);
 
-        //repaint remain mindviews
         for (Tree tree : m_mindViews.keySet()) {
 
             MindView mindView = m_mindViews.get(tree);
             if (mindView == operatorBornView) {
                 mindView.setCursorNodeByPath(isUndo ? operator.m_formerCursorPath : operator.m_laterCursorPath);
             } else {
-                //not using mindView.getCursorSourceNode(), because if nodeItem is not valid,
-                //the source node is can't be got
-                if (! mindView.m_cursor.getCursorNodeItem().isValid()) {
+                if (mindView.getCursorSourceNode() == null) {
                     ArrayList<Integer> rootPath = new ArrayList<Integer>();
                     mindView.setCursorNodeByPath(rootPath);
                 }
@@ -267,25 +262,53 @@ public class MindController extends UndoManager {
         }
     }
 
-    public boolean does(UndoableEdit edit) {
-        MindOperator operator = (MindOperator)edit;
+    public void does(MindOperator operator) {
         try {
             operator.does();
-            updateMindViews(operator, false);
 
             m_logger.info("m_formerCursorPath: " + operator.m_formerCursorPath.toString());
             m_logger.info("m_laterCursorPath: " + operator.m_laterCursorPath.toString());
 
-            return super.addEdit(edit);
+            super.addEdit(operator);
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, e.getMessage(), e.getMessage(), JOptionPane.ERROR_MESSAGE);
             m_logger.warn("operator exception" + e.getMessage());
         }
 
-        return true;
+        updateMindViews(operator, false);
     }
 
+    public void does(List<MindOperator> operators) {
+
+        MindOperator lastOperator = null;
+
+        try {
+            for (MindOperator operator : operators)
+            {
+                if (operator.does()) {
+                    //要放在前面，
+                    lastOperator = operator;
+
+                    m_logger.info("m_formerCursorPath: " + operator.m_formerCursorPath.toString());
+                    m_logger.info("m_laterCursorPath: " + operator.m_laterCursorPath.toString());
+                    super.addEdit(operator);
+
+                } else {
+                    /*当中间某个操作出错，立即终止。
+                     * 以拖动操作为例：选集中的某个节点是拖动到上一个个节点的兄弟位置。 如果某个操作失败了，其余的就不会移动到正确位置了。
+                     */
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, e.getMessage(), e.getMessage(), JOptionPane.ERROR_MESSAGE);
+            m_logger.warn("operator exception" + e.getMessage());
+        }
+
+        updateMindViews(lastOperator, false);
+    }
 
     public void redo()
     {

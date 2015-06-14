@@ -57,8 +57,9 @@ public class HandoveringReference extends MindOperator{
         m_logger.info("ret:");
     }
 
-    public void does()
+    public boolean does()
     {
+        prepareCursorInfo();
         m_logger.info("arg:");
 
         Node oldReferrerNode = getNodeByPath(m_oldReferrerPath);
@@ -72,6 +73,7 @@ public class HandoveringReference extends MindOperator{
         m_laterCursorPath = (ArrayList) m_newReferrerPathAfterDoing.clone();
         m_laterCursorPath.add(m_newPos);
         m_logger.info("ret:");
+        return false;
     }
 
     public void undo()

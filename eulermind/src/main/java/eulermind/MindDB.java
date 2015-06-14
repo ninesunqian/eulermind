@@ -293,34 +293,34 @@ public class MindDB {
         return inheritPath;
     }
 
-    boolean vertexIdIsSelf(Object thiz, Object that) {
+    public boolean vertexIdIsSelf(Object thiz, Object that) {
         return thiz.equals(that);
     }
 
-    boolean vertexIdIsParentOf(Object thiz, Object that) {
+    public boolean vertexIdIsParentOf(Object thiz, Object that) {
         return vertexIdIsSelf(thiz, getParentDbId(that));
     }
 
-    boolean vertexIdIsChildOf(Object thiz, Object that) {
+    public boolean vertexIdIsChildOf(Object thiz, Object that) {
         return vertexIdIsSelf(getParentDbId(thiz), that);
     }
 
-    boolean vertexIdIsSiblingOf(Object thiz, Object that) {
+    public boolean vertexIdIsSiblingOf(Object thiz, Object that) {
         return vertexIdIsSelf(getParentDbId(thiz), getParentDbId(that));
     }
 
 
-    boolean vertexIdIsDescendantOf(Object thiz, Object that) {
+    public boolean vertexIdIsDescendantOf(Object thiz, Object that) {
         List thizInheritPath = getInheritPath(thiz);
         return thizInheritPath.contains(that);
     }
 
-    boolean vertexIdIsAncestorOf(Object thiz, Object that) {
+    public boolean vertexIdIsAncestorOf(Object thiz, Object that) {
         List thatInheritPath = getInheritPath(that);
         return thatInheritPath.contains(thiz);
     }
 
-    boolean subTreeContainsVertexId(Object subTreeId, Object vertexId) {
+    public boolean subTreeContainsVertexId(Object subTreeId, Object vertexId) {
         return vertexIdIsAncestorOf(subTreeId, vertexId) || vertexIdIsSelf(subTreeId, vertexId);
     }
 
