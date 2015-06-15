@@ -93,7 +93,7 @@ class NodeDraggingControl extends NodeControl {
         m_mindView.renderTree();
     }
 
-    List<MindOperator> getDragOperator(NodeItem draggedNodeItem, NodeItem droppedNodeItem,
+    List<MindOperator> getDragOperator(NodeItem droppedNodeItem,
                                 NodeControl.HitPosition hitPosition,
                                 NodeControl.DragAction dragAction)
     {
@@ -101,37 +101,41 @@ class NodeDraggingControl extends NodeControl {
 
         List<MindOperator> operators = new ArrayList<>();
 
-        List<NodeItem> selectedNodeItems = m_mindView.m_cursor.getSelectedNodeItems();
+        List<Node> selectedNodes = m_mindView.getSelectedSourceNodes();
 
-        NodeItem targetNodeItem;
+        Node targetNode;
         int position;
+
 
         if (hitPosition == HitPosition.TOP || hitPosition == HitPosition.BOTTOM) {
             if (droppedNodeItem.getParent() == null) {
                 return null;
             }
-            targetNodeItem = (NodeItem)droppedNodeItem.getParent();
+            targetNode = droppedNodeItem.getParent();
             position = hitPosition == HitPosition.TOP ? droppedNodeItem.getIndex() : droppedNodeItem.getIndex() + 1;
 
         } else {
-            targetNodeItem = droppedNodeItem;
+            targetNode = droppedNodeItem;
             position = droppedNodeItem.getChildCount();
         }
 
+        selectedNodes = m_mindView.breadthFirstSort(selectedNodes);
+
         if (dragAction == NodeControl.DragAction.LINK) {
-            for (NodeItem selectedItem : selectedNodeItems) {
-                operators.add(new AddingReference(mindModel, m_mindView.toSource(selectedItem),
-                        m_mindView.toSource(targetNodeItem), position));
+            selectedNodes = m_mindView.removeNodesWithSameDbId(selectedNodes);
+
+            for (Node selectedNode : selectedNodes) {
+                operators.add(new AddingReference(mindModel, selectedNode, targetNode, position));
                 position++;
             }
 
         } else {
-            operators.add(new DraggingNode(mindModel, m_mindView.toSource(selectedNodeItems.get(0)),
-                    m_mindView.toSource(targetNodeItem), hitPosition));
+            selectedNodes = m_mindView.removeNodesWithSameInEdgeDbId(selectedNodes);
 
-            for(int i=1; i<selectedNodeItems.size(); i++) {
-                operators.add(new DraggingNode(mindModel, m_mindView.toSource(selectedNodeItems.get(i)),
-                        m_mindView.toSource(selectedNodeItems.get(i-1)), HitPosition.BOTTOM));
+            operators.add(new DraggingNode(mindModel, selectedNodes.get(0), targetNode, hitPosition));
+
+            for(int i=1; i<selectedNodes.size(); i++) {
+                operators.add(new DraggingNode(mindModel, selectedNodes.get(i), selectedNodes.get(i-1), HitPosition.BOTTOM));
             }
         }
 
@@ -150,7 +154,7 @@ class NodeDraggingControl extends NodeControl {
 
         if (droppedNode != null && hitPosition != HitPosition.OUTSIDE) {
             m_logger.info(String.format("--- dragAction %s", dragAction.toString()));
-            operators = getDragOperator(draggedNode, droppedNode, hitPosition, dragAction);
+            operators = getDragOperator(droppedNode, hitPosition, dragAction);
         }
 
         if (operators != null && operators.size() > 0) {

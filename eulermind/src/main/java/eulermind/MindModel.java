@@ -1025,64 +1025,6 @@ public class MindModel {
         return m_mindDb.subTreeContainsVertexId(getDbId(n1), getDbId(n2));
     }
 
-    public List<Node> breadthFirstSort(final List<Node> nodes)
-    {
-        final ArrayList<Node> sortedNodes = new ArrayList<>(nodes.size());
-
-        if (nodes.size() == 0) {
-            return sortedNodes;
-        }
-
-        Tree tree = nodes.get(0).getGraph().getSpanningTree();
-
-        tree.breadthFirstTraverse(tree.getRoot(), new Tree.BreadthFristTraverseProcessor() {
-            @Override
-            public void run(Node node) {
-                if (nodes.contains(node)) {
-                    sortedNodes.add(node);
-                }
-            }
-        });
-
-        return sortedNodes;
-    }
-
-    public List<Node> removeNodesWithSameDbId(List<Node> nodes)
-    {
-        ArrayList<Node> leftNodes = new ArrayList<>();
-        HashSet<Object> leftDbIds = new HashSet<>();
-
-        for (Node node : nodes) {
-            if (! leftDbIds.contains(getDbId(node))) {
-                leftNodes.add(node);
-                leftDbIds.add(getDbId(node));
-            }
-        }
-
-        return leftNodes;
-    }
-
-    //这个函数会去掉根节点。删除多选节点时用, 拖动多选节点时也用
-    public List<Node> removeNodesWithSameInEdgeDbId(List<Node> nodes)
-    {
-        ArrayList<Node> leftNodes = new ArrayList<>();
-        HashSet<Object> leftInEdgeDbIds = new HashSet<>();
-
-        for (Node node : nodes) {
-            Edge inEdge = node.getParentEdge();
-            if (inEdge == null) {
-                continue;
-            }
-
-            if (! leftInEdgeDbIds.contains(getDbId(inEdge))) {
-                leftNodes.add(node);
-                leftInEdgeDbIds.add(getDbId(inEdge));
-            }
-        }
-
-        return leftNodes;
-    }
-
     private String objectToString(Object object)
     {
         return object == null ? "null" : object.toString();
