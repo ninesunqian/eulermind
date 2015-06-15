@@ -313,19 +313,22 @@ public class MindView extends Display {
         super.stopEditing2(false);
     }
 
-
-    public void clearMultiSelectNodesItems() {
-        m_cursor.clearMultiSelectedNodeItems();
-    }
-
     public void setCursorNodeByPath(ArrayList<Integer> path)
     {
         m_cursor.setCursorNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, path)));
     }
 
-    public void setCursorToRootIfNeeded()
+    public void setCursorAfterTreeChanged()
     {
-        m_cursor.moveToRootIfNeeded();
+        m_cursor.clearMultiSelectedNodeItems();
+        NodeItem cursor = m_cursor.getCursorNodeItem();
+
+        if (cursor.isValid()) {
+            //需要重新计算一下光标十字
+            m_cursor.setCursorNodeItem(cursor);
+        } else {
+            m_cursor.setCursorNodeItem((NodeItem)m_visualTree.getRoot());
+        }
     }
 
     public boolean isChanging() {

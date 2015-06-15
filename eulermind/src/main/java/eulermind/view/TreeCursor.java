@@ -142,16 +142,6 @@ public class TreeCursor extends NodeControl {
         m_selectedNodes.add(cursor);
     }
 
-    public void moveToRootIfNeeded() {
-        assert m_selectMode == SelectMode.ONLY_ONE;
-
-        NodeItem cursor = getCursorNodeItem();
-        if (! cursor.isValid()) {
-            setCursorNodeItem((NodeItem)m_tree.getRoot());
-        }
-    }
-
-
     public void setCursorNodeItem(NodeItem node)
     {
         m_originCursor = node;
