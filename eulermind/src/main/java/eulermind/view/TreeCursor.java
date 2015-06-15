@@ -135,10 +135,20 @@ public class TreeCursor extends NodeControl {
         }
     }
 
-    //TODO: redo undo 再加一个函数，先清空选集。
-    public void clearSelectAndSetCursorNodeItem(NodeItem node) {
+    public void clearMultiSelectedNodeItems() {
         m_selectMode = SelectMode.ONLY_ONE;
-        setCursorNodeItem(node);
+        NodeItem cursor = m_selectedNodes.get(m_selectedNodes.size() - 1);
+        m_selectedNodes.clear();
+        m_selectedNodes.add(cursor);
+    }
+
+    public void moveToRootIfNeeded() {
+        assert m_selectMode == SelectMode.ONLY_ONE;
+
+        NodeItem cursor = getCursorNodeItem();
+        if (! cursor.isValid()) {
+            setCursorNodeItem((NodeItem)m_tree.getRoot());
+        }
     }
 
 

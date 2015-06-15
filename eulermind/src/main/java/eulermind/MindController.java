@@ -244,13 +244,12 @@ public class MindController extends UndoManager {
         for (Tree tree : m_mindViews.keySet()) {
 
             MindView mindView = m_mindViews.get(tree);
+            mindView.clearMultiSelectNodesItems();
+
             if (mindView == operatorBornView) {
-                mindView.clearSelectAndSetCursorNodeByPath(isUndo ? operator.m_formerCursorPath : operator.m_laterCursorPath);
+                mindView.setCursorNodeByPath(isUndo ? operator.m_formerCursorPath : operator.m_laterCursorPath);
             } else {
-                if (mindView.getCursorSourceNode() == null) {
-                    ArrayList<Integer> rootPath = new ArrayList<Integer>();
-                    mindView.clearSelectAndSetCursorNodeByPath(rootPath);
-                }
+                mindView.setCursorToRootIfNeeded();
             }
 
             mindView.renderTreeToEndChanging();

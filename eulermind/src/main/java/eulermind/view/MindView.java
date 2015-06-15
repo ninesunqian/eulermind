@@ -313,9 +313,19 @@ public class MindView extends Display {
         super.stopEditing2(false);
     }
 
-    public void clearSelectAndSetCursorNodeByPath(ArrayList<Integer> path)
+
+    public void clearMultiSelectNodesItems() {
+        m_cursor.clearMultiSelectedNodeItems();
+    }
+
+    public void setCursorNodeByPath(ArrayList<Integer> path)
     {
-        m_cursor.clearSelectAndSetCursorNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, path)));
+        m_cursor.setCursorNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, path)));
+    }
+
+    public void setCursorToRootIfNeeded()
+    {
+        m_cursor.moveToRootIfNeeded();
     }
 
     public boolean isChanging() {
@@ -481,7 +491,8 @@ public class MindView extends Display {
 
         newNode.set(MindModel.TEXT_PROP_NAME, "");
 
-        m_cursor.clearSelectAndSetCursorNodeItem(toVisual(newNode));
+        m_cursor.clearMultiSelectedNodeItems();
+        m_cursor.setCursorNodeItem(toVisual(newNode));
     }
 
     private void removePlaceholderCursor()
@@ -494,7 +505,9 @@ public class MindView extends Display {
         assert(placeholderNode != m_tree.getRoot());
 
         m_tree.removeChild(placeholderNode);
-        m_cursor.clearSelectAndSetCursorNodeItem(toVisual(m_savedCursor));
+
+        m_cursor.clearMultiSelectedNodeItems();
+        m_cursor.setCursorNodeItem(toVisual(m_savedCursor));
     }
 
     //include node and edge, the edge is used rendering
@@ -517,17 +530,8 @@ public class MindView extends Display {
     public Node getCursorSourceNode()
     {
         NodeItem cursorItem = m_cursor.getCursorNodeItem();
-
-        if (cursorItem != null && cursorItem.isValid()) {
-            return toSource(cursorItem);
-        } else {
-            return null;
-        }
-    }
-
-    public void verifyCursor()
-    {
-
+        assert cursorItem != null && cursorItem.isValid();
+        return toSource(cursorItem);
     }
 
     public List<Node> getSelectedSourceNodes()
