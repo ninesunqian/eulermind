@@ -551,8 +551,11 @@ public class MindView extends Display {
 
         m_logger.info("setCursorProperty: {} - {}", key, value);
 
+        List<Node> selectedNodes = getSelectedSourceNodes();
+        selectedNodes = removeNodesWithSameDbId(selectedNodes);
+
         ArrayList<MindOperator> operators = new ArrayList<>();
-        for (Node node : getSelectedSourceNodes()) {
+        for (Node node : selectedNodes) {
             operators.add(new SettingProperty(m_mindModel, node, key, value));
         }
 
@@ -595,11 +598,16 @@ public class MindView extends Display {
             return;
         }
 
-        {
-            Node cursorNode = getCursorSourceNode();
-            MindOperator operator = new Removing(m_mindModel, cursorNode);
-            m_mindController.does(operator);
+        List<Node> selectedNodes = getSelectedSourceNodes();
+        selectedNodes = breadthFirstSort(selectedNodes);
+        selectedNodes = removeNodesWithSameInEdgeDbId(selectedNodes);
+
+        ArrayList<MindOperator> operators = new ArrayList<>();
+        for (Node node : selectedNodes) {
+            operators.add(new Removing(m_mindModel, node));
         }
+
+        m_mindController.does(operators);
 
         endChanging();
     }
