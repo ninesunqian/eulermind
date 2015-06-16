@@ -319,7 +319,7 @@ public class MindModel {
         loadNodeProperties(m_mindDb.getVertex(rootId), root);
 
         final int expandLevel = 2;
-        tree.deepthFirstTraverse(root, new Tree.DeepthFristTraverseProcessor() {
+        tree.depthFirstTraverse(root, new Tree.DepthFirstTraverseProcessor() {
             public boolean run(Node parent, Node node, int level) {
                 attachChildren(node);
                 return level < expandLevel;
@@ -1560,7 +1560,7 @@ public class MindModel {
         final StringBuilder stringBuilder = new StringBuilder();
         final String newline  = System.getProperty("line.separator");
 
-        Tree.DeepthFristTraverseProcessor appendTextProc = new Tree.DeepthFristTraverseProcessor() {
+        Tree.DepthFirstTraverseProcessor appendTextProc = new Tree.DepthFirstTraverseProcessor() {
             public boolean run(Node parent, Node node, int level) {
                 for (int i=0; i<level; i++) {
                     stringBuilder.append("    ");
@@ -1571,7 +1571,7 @@ public class MindModel {
             }
         };
 
-        tree.deepthFirstTraverse(subTreeRoot, appendTextProc);
+        tree.depthFirstTraverse(subTreeRoot, appendTextProc);
         return stringBuilder.toString();
     }
 
@@ -1615,4 +1615,65 @@ public class MindModel {
         updateChildrenAttached();
         return subTreeRoot;
     }
+
+    class BoundaryNodes {
+        public Node top;
+        public Node bottom;
+        public Node left;
+        public Node right;
+    }
+
+    //横向排布的树
+    //选集的左移：放入最左端爷爷的儿子位置
+    //选集的右移：放入最左端哥哥的儿子位置
+    //选集的上移：放在最上端的哥哥位置
+    //选集的下移：放在最下端的弟弟位置
+    public BoundaryNodes getBoundaryNodes(Tree tree, final List<Node> nodes)
+    {
+        if (nodes.size() == 0) {
+            return null;
+        }
+
+        Node root = tree.getRoot();
+
+        final BoundaryNodes boundaryNodes = new BoundaryNodes();
+
+        Tree.DepthFirstReverseTraverseProcessor leftRightTopFinder = new Tree.DepthFirstReverseTraverseProcessor() {
+            int minLevel = Integer.MAX_VALUE;
+            int maxLevel = Integer.MIN_VALUE;
+
+            @Override
+            public void run(Node parent, Node node, int level) {
+                if (nodes.contains(node)) {
+                    if (level < minLevel) {
+                        minLevel = level;
+                        boundaryNodes.left = node;
+                    } else if (maxLevel < level) {
+                        maxLevel = level;
+                        boundaryNodes.right  = node;
+                    }
+
+                    if (boundaryNodes.top == null) {
+                        boundaryNodes.top = node;
+                    }
+                }
+            }
+        };
+        tree.depthFirstReverseTraverse(root, leftRightTopFinder, Tree.ChildTraverseOrder.LEFT_TO_RIGHT);
+
+        Tree.DepthFirstReverseTraverseProcessor bottomFinder = new Tree.DepthFirstReverseTraverseProcessor() {
+            @Override
+            public void run(Node parent, Node node, int level) {
+                if (nodes.contains(node)) {
+                    if (boundaryNodes.bottom == null) {
+                        boundaryNodes.bottom = node;
+                    }
+                }
+            }
+        };
+        tree.depthFirstReverseTraverse(root, leftRightTopFinder, Tree.ChildTraverseOrder.RIGHT_TO_LEFT);
+
+        return boundaryNodes;
+    }
+
 }

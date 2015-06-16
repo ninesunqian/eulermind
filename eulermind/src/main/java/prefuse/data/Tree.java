@@ -752,27 +752,65 @@ public class Tree extends Graph {
         return super.outNeighbors(n);
     }
 
-    public static interface DeepthFristTraverseProcessor
+    public static interface DepthFirstTraverseProcessor
     {
         //return: true: continue deeper, false stop
         abstract public boolean run(Node parent, Node node, int level);
     }
 
-    private void deepthFirstTraverse(Node parent, Node node, int level, DeepthFristTraverseProcessor proc)
+    private void depthFirstTraverse(Node parent, Node node, int level, DepthFirstTraverseProcessor proc)
     {
         if (proc.run(parent, node, level))
         {
             Iterator children_iter = children(node);
             while (children_iter.hasNext())
             {
-                deepthFirstTraverse(node, (Node) children_iter.next(), level + 1, proc);
+                depthFirstTraverse(node, (Node) children_iter.next(), level + 1, proc);
             }
         }
     }
 
-    public void deepthFirstTraverse(Node node, DeepthFristTraverseProcessor proc)
+    public void depthFirstTraverse(Node node, DepthFirstTraverseProcessor proc)
     {
-        deepthFirstTraverse(null, node, 0, proc);
+        depthFirstTraverse(null, node, 0, proc);
+    }
+
+    public static abstract class DepthFirstReverseTraverseProcessor
+    {
+        public boolean needDown() {
+            return true;
+        }
+        //return: true: continue deeper, false stop
+        abstract public void run(Node parent, Node node, int level);
+    }
+
+    public enum ChildTraverseOrder {LEFT_TO_RIGHT, RIGHT_TO_LEFT}
+
+    private void depthFirstReverseTraverse(Node parent, Node node, int level,
+                                           DepthFirstReverseTraverseProcessor proc, ChildTraverseOrder childTraverseOrder)
+    {
+        if (proc.needDown()) {
+            if (childTraverseOrder == ChildTraverseOrder.LEFT_TO_RIGHT) {
+                for (int i=0; i<node.getChildCount(); i++)
+                {
+                    depthFirstReverseTraverse(node, node.getChild(i), level + 1, proc, childTraverseOrder);
+                }
+
+            } else {
+                for (int i=node.getChildCount()-1; i>=0; i--)
+                {
+                    depthFirstReverseTraverse(node, node.getChild(i), level + 1, proc, childTraverseOrder);
+                }
+
+            }
+        }
+
+        proc.run(parent, node, level);
+    }
+
+    public void depthFirstReverseTraverse(Node node, DepthFirstReverseTraverseProcessor proc, ChildTraverseOrder childTraverseOrder)
+    {
+        depthFirstReverseTraverse(null, node, 0, proc, childTraverseOrder);
     }
 
     public static interface BreadthFristTraverseProcessor

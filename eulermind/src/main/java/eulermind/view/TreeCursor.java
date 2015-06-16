@@ -201,7 +201,7 @@ public class TreeCursor extends NodeControl {
         m_originXIndex = m_xAxis.indexOf(originCursor);
 
         //上下键 插入同级别的节点
-        m_tree.deepthFirstTraverse(m_tree.getRoot(), new Tree.DeepthFristTraverseProcessor() {
+        m_tree.depthFirstTraverse(m_tree.getRoot(), new Tree.DepthFirstTraverseProcessor() {
             @Override
             public boolean run(Node parent, Node node, int level) {
                 NodeItem nodeItem = (NodeItem) node;

@@ -64,7 +64,7 @@ public class TreeFolder extends NodeControl {
         final String group = node.getGroup();
 
         //unfold descendants deeply, to the folded descendants
-        m_tree.deepthFirstTraverse(node, new Tree.DeepthFristTraverseProcessor() {
+        m_tree.depthFirstTraverse(node, new Tree.DepthFirstTraverseProcessor() {
             @Override
             public boolean run(Node parent, Node node, int level) {
 
@@ -105,7 +105,7 @@ public class TreeFolder extends NodeControl {
         final Node foldTreeRoot = node;
 
         //set descendants unvisible deeply, to the folded descendants
-        m_tree.deepthFirstTraverse(node, new Tree.DeepthFristTraverseProcessor() {
+        m_tree.depthFirstTraverse(node, new Tree.DepthFirstTraverseProcessor() {
             public boolean run(Node parent, Node node, int level) {
                 if (node == foldTreeRoot) {
                     return true;

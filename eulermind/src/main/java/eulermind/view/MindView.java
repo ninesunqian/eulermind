@@ -697,7 +697,10 @@ public class MindView extends Display {
         if (m_isChanging) {
             return;
         }
+
+
         m_folder.toggleFoldNode(m_cursor.getCursorNodeItem());
+        //FIXME:  renderTreeToEndChanging() 挪到这里？
     }
 
     public List<Node> breadthFirstSort(final List<Node> nodes)
