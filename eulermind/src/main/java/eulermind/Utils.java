@@ -432,4 +432,10 @@ public class Utils {
             }
         }
     }
+
+    static boolean isDebuging() {
+        //在 run/debug configurations --> vm options 中添加 "-Ddebug=true"
+        String debugProperty = System.getProperty("debug");
+        return debugProperty != null;
+    }
 }

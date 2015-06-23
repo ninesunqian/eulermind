@@ -77,8 +77,6 @@ public class MainFrame  extends JFrame {
 
     String m_currentMapName;
 
-    String debugProperty = null;
-
     public MainFrame()
     {
         try {
@@ -128,10 +126,7 @@ public class MainFrame  extends JFrame {
 
         m_propertyToolBarVisibleCheckMenu.addActionListener(m_propertyToolBarVisibleAction);
 
-        //在 run/debug configurations --> vm options 中添加 "-Ddebug=true"
-        debugProperty = System.getProperty("debug");
-
-        if (debugProperty != null) {
+        if (Utils.isDebuging()) {
             openMindDb("debug");
 
         } else {
@@ -173,7 +168,7 @@ public class MainFrame  extends JFrame {
         m_currentMapName = name;
 
         //调试模式下，不记录最后一次打开脑图
-        if (debugProperty == null) {
+        if (! Utils.isDebuging()) {
             Utils.recordLastOpenedMap(name);
         }
     }
