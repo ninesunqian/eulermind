@@ -103,33 +103,37 @@ class NodeDraggingControl extends NodeControl {
 
         List<Node> selectedNodes = m_mindView.getSelectedSourceNodes();
 
-        Node targetNode;
-        int position;
-
-
-        if (hitPosition == HitPosition.TOP || hitPosition == HitPosition.BOTTOM) {
-            targetNode = droppedNodeItem;
-            position = hitPosition == HitPosition.TOP ? droppedNodeItem.getIndex() : droppedNodeItem.getIndex() + 1;
-
-        } else {
-            targetNode = droppedNodeItem;
-            position = droppedNodeItem.getChildCount();
-        }
-
         selectedNodes = m_mindView.breadthFirstSort(selectedNodes);
 
         if (dragAction == NodeControl.DragAction.LINK) {
-            selectedNodes = m_mindView.removeNodesWithSameDbId(selectedNodes);
 
+            int edgePosition;
+            Node referrerNode;
+
+            if (hitPosition == HitPosition.TOP || hitPosition == HitPosition.BOTTOM) {
+                referrerNode = droppedNodeItem.getParent();
+                if (referrerNode == null) {
+                    return null;
+                }
+
+                edgePosition = (hitPosition == HitPosition.TOP) ? droppedNodeItem.getIndex() : droppedNodeItem.getIndex() + 1;
+
+            } else {
+                referrerNode = droppedNodeItem;
+                edgePosition = droppedNodeItem.getChildCount();
+            }
+
+            //由于添加引用操作，是新建Node。所以多选的时候，选集中的后续节点不能作为前驱节点的兄弟
             for (Node selectedNode : selectedNodes) {
-                operators.add(new AddingReference(mindModel, selectedNode, targetNode, position));
-                position++;
+                operators.add(new AddingReference(mindModel, selectedNode, referrerNode, edgePosition));
+                edgePosition++;
             }
 
         } else {
+
             selectedNodes = m_mindView.removeNodesWithSameInEdgeDbId(selectedNodes);
 
-            operators.add(new DraggingNode(mindModel, selectedNodes.get(0), targetNode, hitPosition));
+            operators.add(new DraggingNode(mindModel, selectedNodes.get(0), droppedNodeItem, hitPosition));
 
             for(int i=1; i<selectedNodes.size(); i++) {
                 operators.add(new DraggingNode(mindModel, selectedNodes.get(i), selectedNodes.get(i-1), HitPosition.BOTTOM));

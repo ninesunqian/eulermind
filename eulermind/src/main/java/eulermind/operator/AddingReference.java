@@ -42,14 +42,16 @@ public class AddingReference extends MindOperator {
 
     static Logger s_logger = LoggerFactory.getLogger(AddingReference.class);
 
-    //formerCursor is referent: using for drag referent node to referrer node by mouse
+    //操作内部只需要两个dbId就够了，但是由于需要保存光标位置，所以有必要传入Node。
+    //通过拖动添加的引用关系，此时的光标是被引用节点
     public AddingReference(MindModel mindModel, Node formerCursor, Node referrerNode, int pos) {
         super(mindModel, formerCursor);
         s_logger.info(String.format("formerCursor %s -- refererNode %s", m_mindModel.getNodeDebugInfo(formerCursor), m_mindModel.getNodeDebugInfo(referrerNode)));
         init(referrerNode, m_mindModel.getDbId(referrerNode), m_mindModel.getDbId(formerCursor), pos);
     }
 
-    //formerCursor is referrer: using add referent node by edit prompter
+    //操作内部只需要两个dbId就够了，但是由于需要保存光标位置，所以有必要传入Node。
+    //通过输入框添加的引用关系，此时的光标是引用节点
     public AddingReference(MindModel mindModel, Node formerCursor, Object referentDBId, int pos) {
         super(mindModel, formerCursor);
         init(formerCursor, m_mindModel.getDbId(formerCursor), referentDBId, pos);
