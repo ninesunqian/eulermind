@@ -108,10 +108,7 @@ class NodeDraggingControl extends NodeControl {
 
 
         if (hitPosition == HitPosition.TOP || hitPosition == HitPosition.BOTTOM) {
-            if (droppedNodeItem.getParent() == null) {
-                return null;
-            }
-            targetNode = droppedNodeItem.getParent();
+            targetNode = droppedNodeItem;
             position = hitPosition == HitPosition.TOP ? droppedNodeItem.getIndex() : droppedNodeItem.getIndex() + 1;
 
         } else {

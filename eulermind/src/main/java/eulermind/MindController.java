@@ -299,7 +299,9 @@ public class MindController extends UndoManager {
             m_logger.warn("operator exception" + e.getMessage());
         }
 
-        updateMindViews(lastOperator, false);
+        if (lastOperator != null) {
+            updateMindViews(lastOperator, false);
+        }
     }
 
     public void redo()
