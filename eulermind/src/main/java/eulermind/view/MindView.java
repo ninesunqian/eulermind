@@ -1,6 +1,7 @@
 package eulermind.view;
 
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -54,17 +55,91 @@ public class MindView extends Display {
     final public MindModel m_mindModel;
     MindController m_mindController;
 
+    public Tree m_tree;
+    VisualTree m_visualTree;
+    MindTreeRenderEngine m_renderEngine;
+
+
     public TreeCursor m_cursor;
     Node m_savedCursor = null;
 
     TreeFolder m_folder;
 
-    public Tree m_tree;
-	MindTreeRenderEngine m_renderEngine;
-
-    MindEditor m_mindEditor;
 
     boolean m_isChanging = false;
+
+    MindEditor m_mindEditor;
+    MindEditor.MindEditorListener m_editorListenerForEditing;
+    MindEditor.MindEditorListener m_editorListenerForInserting;
+
+    NodeDraggingControl m_dragControl;
+    ControlAdapter m_stopEditControl;
+    ControlAdapter m_wheelZoomControl;
+    ControlAdapter m_panControl;
+    ControlAdapter m_wheelPanControl;
+
+
+    public MindView(MindModel mindModel, MindController undoManager, Tree tree) {
+        super(new Visualization());
+
+        //s_logger.setLevel(Level.OFF);
+        setSize(700, 600);
+        setHighQuality(true);
+
+        m_mindModel = mindModel;
+        m_mindController = undoManager;
+
+        m_tree = tree;
+        m_visualTree = (VisualTree)m_vis.add(m_treeGroupName, m_tree);
+        MindModel.addNodeMirrorXYColumn(m_tree, m_visualTree);
+
+        setItemSorter(new TreeDepthItemSorter());
+        m_renderEngine = new MindTreeRenderEngine(this, m_treeGroupName);
+
+        initEditor();
+
+        initMouseControlListener();
+
+        this.requestFocusInWindow();
+        this.setFocusCycleRoot(true);
+    }
+
+    private void initEditor() {
+
+        m_mindEditor = new MindEditor();
+        m_mindEditor.setMindDb(m_mindModel.m_mindDb);
+        m_mindEditor.setHasPromptList(true);
+
+        m_mindEditor.setBorder(null);
+        m_mindEditor.setVisible(false);
+
+        setTextEditor(m_mindEditor);
+
+        m_editorListenerForEditing = new MindEditor.MindEditorListener() {
+            public void editorOk(String text) {
+                endEditing(text);
+            }
+
+            public void cancel() {
+                cancelEditing();
+            }
+        };
+
+        m_editorListenerForInserting = new MindEditor.MindEditorListener() {
+            public void editorOk(String text) {
+                endInserting(text);
+            }
+
+            public void promptListOk(Object dbId, String text, Object parentDbId, String parentText) {
+                endInserting(dbId, text, parentDbId, parentText);
+            }
+
+            public void cancel() {
+                cancelInserting();
+            }
+        };
+
+    }
 
     //提出这个函数是为了单元测试
     void endInserting(final String text)
@@ -122,20 +197,6 @@ public class MindView extends Display {
         hideEditor();
     }
 
-    MindEditor.MindEditorListener m_editorListenerForInserting = new MindEditor.MindEditorListener() {
-        public void editorOk(String text) {
-            endInserting(text);
-        }
-
-        public void promptListOk(Object dbId, String text, Object parentDbId, String parentText) {
-            endInserting(dbId, text, parentDbId, parentText);
-        }
-
-        public void cancel() {
-            cancelInserting();
-        }
-    };
-
     void endEditing(final String text)
     {
         hideEditor();
@@ -156,57 +217,6 @@ public class MindView extends Display {
     {
         hideEditor();
     }
-
-    MindEditor.MindEditorListener m_editorListenerForEditing = new MindEditor.MindEditorListener() {
-        public void editorOk(String text) {
-            endEditing(text);
-        }
-
-        public void cancel() {
-            cancelEditing();
-        }
-    };
-
-    VisualTree m_visualTree;
-
-	public MindView(MindModel mindModel, MindController undoManager, Tree tree) {
-		super(new Visualization());
-        JPanel pp = new JPanel();
-
-        //s_logger.setLevel(Level.OFF);
-		setSize(700, 600);
-		setHighQuality(true);
-
-        m_mindModel = mindModel;
-        m_mindController = undoManager;
-
-        m_tree = tree;
-        m_visualTree = (VisualTree)m_vis.add(m_treeGroupName, m_tree);
-        MindModel.addNodeMirrorXYColumn(m_tree, m_visualTree);
-
-        setItemSorter(new TreeDepthItemSorter());
-        m_renderEngine = new MindTreeRenderEngine(this, m_treeGroupName);
-
-        m_cursor = new TreeCursor(this);
-        m_folder = new TreeFolder(this);
-
-		setMouseControlListener();
-
-        m_mindEditor = new MindEditor();
-        m_mindEditor.setMindDb(m_mindModel.m_mindDb);
-        m_mindEditor.setHasPromptList(true);
-
-        m_mindEditor.setBorder(null);
-        m_mindEditor.setVisible(false);
-
-        addControlListener(m_stopEditControl);
-
-        setTextEditor(m_mindEditor);
-        this.requestFocusInWindow();
-
-        this.setFocusCycleRoot(true);
-
-	}
 
     public NodeItem toVisual (Node node)
     {
@@ -256,49 +266,71 @@ public class MindView extends Display {
         });
     }
 
-    ControlAdapter m_zoomToFitControl;
-    ControlAdapter m_zoomControl;
-    ControlAdapter m_wheelZoomControl;
-    ControlAdapter m_panControl;
-
-    ControlAdapter m_stopEditControl = new ControlAdapter() {
-        public void mousePressed(MouseEvent e) {
-            if (m_mindEditor.isVisible()) {
-                m_mindEditor.confirm();
-            }
-        }
-    };
-
-    NodeDraggingControl m_dragControl;
-
     public NodeItem getDragHitNode()
     {
         return m_dragControl.m_hitNode;
     }
 
-	private void setMouseControlListener()
+	private void initMouseControlListener()
     {
-		m_zoomToFitControl = new ZoomToFitControl(Control.MIDDLE_MOUSE_BUTTON);
-		m_zoomControl = new ZoomControl();
-		m_wheelZoomControl = new WheelZoomControl();
-		m_panControl = new PanControl();
+        m_wheelZoomControl = new WheelZoomControl(true, false) {
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent e) {
+                if (e.isControlDown() || e.isMetaDown()) {
+                    super.mouseWheelMoved(e);
+                }
+            }
+        };
 
-		m_dragControl = new NodeDraggingControl(this);
+        m_panControl = new PanControl();
 
-        addControlListener(m_zoomToFitControl);
-        addControlListener(m_zoomControl);
+        m_wheelPanControl = new ControlAdapter() {
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent e) {
+                if (e.isControlDown() || e.isMetaDown()) {
+                    return;
+                }
+
+                double dx = 0;
+                double dy = 0;
+
+                if (e.isShiftDown()) {
+                    dx = -getWidth() * 0.1 * e.getPreciseWheelRotation();
+                } else {
+                    dy = -getHeight() * 0.1 * e.getPreciseWheelRotation();
+                }
+
+                pan(dx, dy);
+                repaint();
+            }
+        };
+
+        m_stopEditControl = new ControlAdapter() {
+            public void mousePressed(MouseEvent e) {
+                if (m_mindEditor.isVisible()) {
+                    m_mindEditor.confirm();
+                }
+            }
+        };
+
+        //TODO:修改这三个control, 内部不要保存MindView的成员变量。需要的时候实时获取。
+        m_cursor = new TreeCursor(this);
+        m_folder = new TreeFolder(this);
+        m_dragControl = new NodeDraggingControl(this);
+
         addControlListener(m_wheelZoomControl);
         addControlListener(m_panControl);
+        addControlListener(m_wheelPanControl);
 
         addControlListener(m_cursor);
         addControlListener(m_dragControl);
         addControlListener(m_folder);
+
+        addControlListener(m_stopEditControl);
 	}
 
     void setTransformEnabled(boolean enabled)
     {
-        m_zoomToFitControl.setEnabled(enabled);
-        m_zoomControl.setEnabled(enabled);
         m_wheelZoomControl.setEnabled(enabled);
         m_panControl.setEnabled(enabled);
     }
@@ -802,5 +834,95 @@ public class MindView extends Display {
 
         return subTreeRoots;
     }
+
+    void setAllControlEnabled(boolean enabled) {
+
+        m_wheelZoomControl.setEnabled(enabled);
+        m_panControl.setEnabled(enabled);
+
+        m_cursor.setEnabled(enabled);
+        m_dragControl.setEnabled(enabled);
+        m_folder.setEnabled(enabled);
+
+        m_stopEditControl.setEnabled(enabled);
+    }
+
+    /*
+    NodeControl m_controlArbiter = new NodeControl(this) {
+        @Override
+        public void nodeItemEntered(NodeItem item, MouseEvent e) {
+            super.nodeItemEntered(item, e);    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void nodeItemExited(NodeItem item, MouseEvent e) {
+            super.nodeItemExited(item, e);    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void nodeItemPressed(NodeItem item, MouseEvent e) {
+            super.nodeItemPressed(item, e);    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void nodeItemClicked(NodeItem item, MouseEvent e) {
+            super.nodeItemClicked(item, e);    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void dragHit(NodeItem draggedNode, NodeItem hitNode, HitPosition hitPosition, DragAction dragAction) {
+            super.dragHit(draggedNode, hitNode, hitPosition, dragAction);    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void dragMiss(NodeItem draggedNode, NodeItem hitNode, DragAction dragAction) {
+            super.dragMiss(draggedNode, hitNode, dragAction);    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void dragStart(NodeItem draggedNode, DragAction dragAction) {
+            super.dragStart(draggedNode, dragAction);    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void dragActionChanged(NodeItem draggedNode, NodeItem hitNode, HitPosition hitPosition, DragAction dragAction) {
+            super.dragActionChanged(draggedNode, hitNode, hitPosition, dragAction);    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void dragEnd(NodeItem draggedNode, NodeItem hitNode, HitPosition hitPosition, DragAction dragAction) {
+            super.dragEnd(draggedNode, hitNode, hitPosition, dragAction);    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void itemDragged(VisualItem item, MouseEvent e) {
+            super.itemDragged(item, e);    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void nodeItemReleased(NodeItem item, MouseEvent e) {
+            super.nodeItemReleased(item, e);    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void itemReleased(VisualItem item, MouseEvent e) {
+            super.itemReleased(item, e);    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void nodeItemKeyPressed(NodeItem item, KeyEvent e) {
+            super.nodeItemKeyPressed(item, e);    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void nodeItemKeyReleased(NodeItem item, KeyEvent e) {
+            super.nodeItemKeyReleased(item, e);    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+        }
+    };
+    */
 
 } // end of class TreeMap

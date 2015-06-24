@@ -1188,6 +1188,7 @@ public class MindModel {
     static final String MIRROR_X = "mirrorX";
     static final String MIRROR_Y = "mirrorY";
 
+    //mirror_x, mirror_y 列与 nodeItem中的 VisualItem.X, VisualItem.Y列同步。用于计算Node之间的距离, 在拖动操作中使用
     public static void addNodeMirrorXYColumn(Tree tree, VisualTree visualTree)
     {
         final Table nodeTable = tree.getNodeTable();
