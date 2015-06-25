@@ -1,5 +1,6 @@
 package eulermind.view;
 
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.util.ArrayList;
@@ -318,6 +319,8 @@ public class MindView extends Display {
         m_folder = new TreeFolder(this);
         m_dragControl = new NodeDraggingControl(this);
 
+
+        addControlListener(m_controlArbiter);
         addControlListener(m_wheelZoomControl);
         addControlListener(m_panControl);
         addControlListener(m_wheelPanControl);
@@ -847,82 +850,80 @@ public class MindView extends Display {
         m_stopEditControl.setEnabled(enabled);
     }
 
-    /*
     NodeControl m_controlArbiter = new NodeControl(this) {
         @Override
         public void nodeItemEntered(NodeItem item, MouseEvent e) {
-            super.nodeItemEntered(item, e);    //To change body of overridden methods use File | Settings | File Templates.
+            setAllControlEnabled(true);
         }
 
         @Override
         public void nodeItemExited(NodeItem item, MouseEvent e) {
-            super.nodeItemExited(item, e);    //To change body of overridden methods use File | Settings | File Templates.
+            setAllControlEnabled(true);
         }
 
         @Override
         public void nodeItemPressed(NodeItem item, MouseEvent e) {
-            super.nodeItemPressed(item, e);    //To change body of overridden methods use File | Settings | File Templates.
+            if (getCursorNodeItem() == item) {
+                if (m_cursor.getSelectedNodeItems().size() > 1) {
+                    m_cursor.setEnabled(true);
+                    m_folder.setEnabled(false);
+                } else {
+                    m_cursor.setEnabled(false);
+                    m_folder.setEnabled(true);
+                }
+
+            } else {
+                m_cursor.setEnabled(true);
+                m_folder.setEnabled(false);
+            }
         }
 
         @Override
         public void nodeItemClicked(NodeItem item, MouseEvent e) {
-            super.nodeItemClicked(item, e);    //To change body of overridden methods use File | Settings | File Templates.
+            setAllControlEnabled(true);
         }
 
         @Override
         public void dragHit(NodeItem draggedNode, NodeItem hitNode, HitPosition hitPosition, DragAction dragAction) {
-            super.dragHit(draggedNode, hitNode, hitPosition, dragAction);    //To change body of overridden methods use File | Settings | File Templates.
+            setAllControlEnabled(true);
         }
 
         @Override
         public void dragMiss(NodeItem draggedNode, NodeItem hitNode, DragAction dragAction) {
-            super.dragMiss(draggedNode, hitNode, dragAction);    //To change body of overridden methods use File | Settings | File Templates.
+            setAllControlEnabled(true);
         }
 
         @Override
         public void dragStart(NodeItem draggedNode, DragAction dragAction) {
-            super.dragStart(draggedNode, dragAction);    //To change body of overridden methods use File | Settings | File Templates.
+            setAllControlEnabled(true);
         }
 
         @Override
         public void dragActionChanged(NodeItem draggedNode, NodeItem hitNode, HitPosition hitPosition, DragAction dragAction) {
-            super.dragActionChanged(draggedNode, hitNode, hitPosition, dragAction);    //To change body of overridden methods use File | Settings | File Templates.
+            setAllControlEnabled(true);
         }
 
         @Override
         public void dragEnd(NodeItem draggedNode, NodeItem hitNode, HitPosition hitPosition, DragAction dragAction) {
-            super.dragEnd(draggedNode, hitNode, hitPosition, dragAction);    //To change body of overridden methods use File | Settings | File Templates.
+            setAllControlEnabled(true);
         }
 
-        @Override
-        public void itemDragged(VisualItem item, MouseEvent e) {
-            super.itemDragged(item, e);    //To change body of overridden methods use File | Settings | File Templates.
-        }
 
         @Override
         public void nodeItemReleased(NodeItem item, MouseEvent e) {
-            super.nodeItemReleased(item, e);    //To change body of overridden methods use File | Settings | File Templates.
+            setAllControlEnabled(true);
         }
 
-        @Override
-        public void itemReleased(VisualItem item, MouseEvent e) {
-            super.itemReleased(item, e);    //To change body of overridden methods use File | Settings | File Templates.
-        }
 
         @Override
         public void nodeItemKeyPressed(NodeItem item, KeyEvent e) {
-            super.nodeItemKeyPressed(item, e);    //To change body of overridden methods use File | Settings | File Templates.
+            setAllControlEnabled(true);
         }
 
         @Override
-        public void nodeItemKeyReleased(NodeItem item, KeyEvent e) {
-            super.nodeItemKeyReleased(item, e);    //To change body of overridden methods use File | Settings | File Templates.
-        }
-
-        @Override
-        public void keyReleased(KeyEvent e) {
+        public void keyPressed(KeyEvent e) {
+            setAllControlEnabled(true);
         }
     };
-    */
 
 } // end of class TreeMap

@@ -116,10 +116,14 @@ public class TreeCursor extends NodeControl {
             int currentCursorIndex = m_selectedNodes.lastIndexOf(item);
 
             if (currentCursorIndex == -1) {
+
                 NodeItem prevCursor = m_selectedNodes.get(m_selectedNodes.size() - 1);
 
-                //只要两者在一个光标十字上，就可以。不管当前光标十字是 prevCursor的还是item的
+                if (m_xAxis == null || m_yAxis == null) {
+                    buildXYAxis(prevCursor);
+                }
 
+                //只要两者在一个光标十字上，就可以。不管当前光标十字是 prevCursor的还是item的
                 if (m_xAxis.contains(prevCursor) && m_xAxis.contains(item)) {
                     copyNodeBetweenPreviousAndCurrentCursor(m_xAxis, prevCursor, item);
                 }
@@ -338,7 +342,15 @@ public class TreeCursor extends NodeControl {
             return;
         }
 
-        m_selectMode = e.isControlDown() ? SelectMode.ADD_ONE : SelectMode.ONLY_ONE;
+        if (e.isControlDown() || e.isMetaDown()) {
+            m_selectMode = SelectMode.ADD_ONE;
+
+        } else if (e.isShiftDown()) {
+            m_selectMode = SelectMode.SERIES;
+
+        } else {
+            m_selectMode = SelectMode.ONLY_ONE;
+        }
 
         if (m_selectMode == SelectMode.ONLY_ONE && getCursorNodeItem() == item) {
             return;
@@ -370,8 +382,7 @@ public class TreeCursor extends NodeControl {
         }
     }
 
-    @Override
-    public void nodeItemKeyPressed(NodeItem nodeItem, KeyEvent e) {
+    private void processKey(KeyEvent e) {
         if (m_isHeld) {
             return;
         }
@@ -399,25 +410,20 @@ public class TreeCursor extends NodeControl {
                 moveRight();
                 break;
         }
+
     }
 
-    /*
+    @Override
+    public void nodeItemKeyPressed(NodeItem nodeItem, KeyEvent e) {
+        processKey(e);
+    }
+
     //当鼠标没有在节点上时，这个函数响应按键。 FIXME：当鼠标在一个边上呢
     @Override
     public void keyPressed(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_SHIFT || e.getKeyCode() == KeyEvent.VK_CONTROL) {
-            m_selectMore = true;
-        }
+        processKey(e);
     }
 
-    //当鼠标没有在节点上时，这个函数响应按键。 FIXME：当鼠标在一个边上呢
-    @Override
-    public void keyReleased(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_SHIFT || e.getKeyCode() == KeyEvent.VK_CONTROL) {
-            m_selectMore = false;
-        }
-    }
-    */
 
     public void hold() {
         stopCursorTimer();

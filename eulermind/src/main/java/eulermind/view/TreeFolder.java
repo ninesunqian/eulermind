@@ -126,7 +126,6 @@ public class TreeFolder extends NodeControl {
             }
         });
 
-
         node.setExpanded(false);
     }
 
@@ -162,7 +161,7 @@ public class TreeFolder extends NodeControl {
     }
 
     @Override
-    public void nodeItemClicked(NodeItem item, MouseEvent e) {
+    public void nodeItemPressed(NodeItem item, MouseEvent e) {
         toggleFoldNode(item);
     }
 }
