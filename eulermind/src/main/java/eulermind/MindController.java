@@ -253,6 +253,17 @@ public class MindController extends UndoManager {
         }
     }
 
+    private void updateMindViews()
+    {
+        removeInvalidMindViews();
+
+        for (Tree tree : m_mindViews.keySet()) {
+            MindView mindView = m_mindViews.get(tree);
+            mindView.setCursorAfterTreeChanged();
+            mindView.renderTreeToEndChanging();
+        }
+    }
+
     public void does(MindOperator operator) {
         try {
             operator.does();
@@ -300,6 +311,8 @@ public class MindController extends UndoManager {
 
         if (lastOperator != null) {
             updateMindViews(lastOperator, false);
+        } else {
+            updateMindViews();
         }
     }
 

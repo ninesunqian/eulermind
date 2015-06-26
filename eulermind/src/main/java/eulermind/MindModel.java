@@ -1125,6 +1125,8 @@ public class MindModel {
             int pos = path.get(i);
             node = node.getChild(pos);
 
+            assert(node != null);
+
             if (node == null) {
                 return null;
             }

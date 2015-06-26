@@ -447,7 +447,7 @@ public class MindTreeRenderEngine {
             }
 
             java.util.List<NodeItem> selectedNodeItems = m_mindView.getSelectedNodeItems();
-            m_logger.info("selected NodeItem size {}", selectedNodeItems.size());
+            //m_logger.info("selected NodeItem size {}", selectedNodeItems.size());
 
             if (selectedNodeItems.contains(nodeItem)) {
                 Color color = ColorLib.getColor(0, 0, 255, 255);

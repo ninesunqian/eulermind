@@ -127,7 +127,7 @@ public class DraggingNode extends MindOperator{
 
         m_oldParentOrReferrerPathAfterDoing = getNodePath(m_formerCursorParent);
         m_newParentOrReferrerPathAfterDoing = getNodePath(newParent);
-        m_laterCursorPath = (ArrayList)m_newParentOrReferrerPath.clone();
+        m_laterCursorPath = (ArrayList)m_newParentOrReferrerPathAfterDoing.clone();
         m_laterCursorPath.add(m_newPos);
         m_logger.info("ret:");
 
