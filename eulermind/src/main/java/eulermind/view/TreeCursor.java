@@ -364,7 +364,7 @@ public class TreeCursor extends NodeControl {
 
     private void startCursorTimer(final NodeItem nodeItem)
     {
-        m_cursorTimer = new Timer(500, new ActionListener() {
+        m_cursorTimer = new Timer(100, new ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent actionEvent) {
                 setCursorNodeItem(nodeItem);
             }
