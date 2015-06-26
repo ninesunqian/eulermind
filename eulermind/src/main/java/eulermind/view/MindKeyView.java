@@ -82,11 +82,6 @@ public class MindKeyView extends MindView {
         m_mindActionMap.put(sm_markToBeLinkedActionName, m_markToBeLinkedAction);
         m_mindActionMap.put(sm_linkActionName, m_linkAction);
 
-        m_mindActionMap.put(sm_cursorMoveUpActionName, m_cursorMoveUpAction);
-        m_mindActionMap.put(sm_cursorMoveDownActionName, m_cursorMoveDownAction);
-        m_mindActionMap.put(sm_cursorMoveLeftActionName, m_cursorMoveLeftAction);
-        m_mindActionMap.put(sm_cursorMoveRightActionName, m_cursorMoveRightAction);
-
         m_mindActionMap.put(sm_toggleFoldNodeName, m_toggleFoldNodeAction);
 
         InputMap inputMap = getInputMap();
@@ -213,32 +208,6 @@ public class MindKeyView extends MindView {
         @Override
         public void actionPerformed(ActionEvent e) {
             edit();
-        }
-    };
-
-    public AbstractAction m_cursorMoveUpAction = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            cursorMoveUp();
-        }
-    };
-
-    public AbstractAction m_cursorMoveDownAction = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            cursorMoveDown();
-        }
-    };
-    public AbstractAction m_cursorMoveLeftAction = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            cursorMoveLeft();
-        }
-    };
-    public AbstractAction m_cursorMoveRightAction = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            cursorMoveRight();
         }
     };
 

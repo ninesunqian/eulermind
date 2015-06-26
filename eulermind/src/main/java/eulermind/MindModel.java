@@ -9,6 +9,7 @@ import eulermind.importer.DirectoryImporter;
 import eulermind.importer.FreemindImporter;
 import eulermind.importer.Importer;
 import eulermind.importer.TikaPlainTextImporter;
+import eulermind.view.MindView;
 import prefuse.data.*;
 import prefuse.data.Edge;
 import prefuse.data.Graph;
@@ -1615,66 +1616,6 @@ public class MindModel {
         pasteNodeRecursively(externalTree.getRoot(), subTreeRoot);
         updateChildrenAttached();
         return subTreeRoot;
-    }
-
-    class BoundaryNodes {
-        public Node top;
-        public Node bottom;
-        public Node left;
-        public Node right;
-    }
-
-    //横向排布的树
-    //选集的左移：放入最左端爷爷的儿子位置
-    //选集的右移：放入最左端哥哥的儿子位置
-    //选集的上移：放在最上端的哥哥位置
-    //选集的下移：放在最下端的弟弟位置
-    public BoundaryNodes getBoundaryNodes(Tree tree, final List<Node> nodes)
-    {
-        if (nodes.size() == 0) {
-            return null;
-        }
-
-        Node root = tree.getRoot();
-
-        final BoundaryNodes boundaryNodes = new BoundaryNodes();
-
-        Tree.DepthFirstReverseTraverseProcessor leftRightTopFinder = new Tree.DepthFirstReverseTraverseProcessor() {
-            int minLevel = Integer.MAX_VALUE;
-            int maxLevel = Integer.MIN_VALUE;
-
-            @Override
-            public void run(Node parent, Node node, int level) {
-                if (nodes.contains(node)) {
-                    if (level < minLevel) {
-                        minLevel = level;
-                        boundaryNodes.left = node;
-                    } else if (maxLevel < level) {
-                        maxLevel = level;
-                        boundaryNodes.right  = node;
-                    }
-
-                    if (boundaryNodes.top == null) {
-                        boundaryNodes.top = node;
-                    }
-                }
-            }
-        };
-        tree.depthFirstReverseTraverse(root, leftRightTopFinder, Tree.ChildTraverseOrder.LEFT_TO_RIGHT);
-
-        Tree.DepthFirstReverseTraverseProcessor bottomFinder = new Tree.DepthFirstReverseTraverseProcessor() {
-            @Override
-            public void run(Node parent, Node node, int level) {
-                if (nodes.contains(node)) {
-                    if (boundaryNodes.bottom == null) {
-                        boundaryNodes.bottom = node;
-                    }
-                }
-            }
-        };
-        tree.depthFirstReverseTraverse(root, leftRightTopFinder, Tree.ChildTraverseOrder.RIGHT_TO_LEFT);
-
-        return boundaryNodes;
     }
 
 }

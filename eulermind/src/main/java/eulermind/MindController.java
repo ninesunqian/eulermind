@@ -2,7 +2,6 @@ package eulermind;
 
 import eulermind.component.ButtonTabComponent;
 import eulermind.component.MindPropertyComponent;
-import eulermind.view.MindKeyView;
 import eulermind.view.MindView;
 import eulermind.view.NodeControl;
 import prefuse.data.Node;
@@ -106,7 +105,7 @@ public class MindController extends UndoManager {
             return mindView;
         }
 
-        mindView = new MindKeyView(m_mindModel, this, tree);
+        mindView = new MindView(m_mindModel, this, tree);
 
         m_mindViews.put(tree, mindView);
         Node root = mindView.m_tree.getRoot();

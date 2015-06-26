@@ -275,4 +275,5 @@ public abstract class NodeControl extends ControlAdapter {
     public void nodeItemKeyReleased(NodeItem item, KeyEvent e) {
 
     }
+
 }

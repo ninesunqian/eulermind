@@ -784,13 +784,13 @@ public class Tree extends Graph {
         abstract public void run(Node parent, Node node, int level);
     }
 
-    public enum ChildTraverseOrder {LEFT_TO_RIGHT, RIGHT_TO_LEFT}
+    public enum ChildTraverseOrder {OLDER_FIRST, YOUNGER_FIRST}
 
     private void depthFirstReverseTraverse(Node parent, Node node, int level,
                                            DepthFirstReverseTraverseProcessor proc, ChildTraverseOrder childTraverseOrder)
     {
         if (proc.needDown()) {
-            if (childTraverseOrder == ChildTraverseOrder.LEFT_TO_RIGHT) {
+            if (childTraverseOrder == ChildTraverseOrder.OLDER_FIRST) {
                 for (int i=0; i<node.getChildCount(); i++)
                 {
                     depthFirstReverseTraverse(node, node.getChild(i), level + 1, proc, childTraverseOrder);

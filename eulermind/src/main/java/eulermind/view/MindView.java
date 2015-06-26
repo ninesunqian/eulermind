@@ -698,41 +698,10 @@ public class MindView extends Display {
         endChanging();
     }
 
-    public void cursorMoveUp() {
-
-        if (m_isChanging) {
-            return;
-        }
-
-        m_cursor.moveUp();
-    }
-
-    public void cursorMoveDown() {
-        if (m_isChanging) {
-            return;
-        }
-        m_cursor.moveDown();
-    }
-
-    public void cursorMoveLeft() {
-        if (m_isChanging) {
-            return;
-        }
-        m_cursor.moveLeft();
-    }
-
-    public void cursorMoveRight() {
-        if (m_isChanging) {
-            return;
-        }
-        m_cursor.moveRight();
-    }
-
     public void toggleFoldNode() {
         if (m_isChanging) {
             return;
         }
-
 
         m_folder.toggleFoldNode(m_cursor.getCursorNodeItem());
         //FIXME:  renderTreeToEndChanging() 挪到这里？
@@ -918,12 +887,288 @@ public class MindView extends Display {
         @Override
         public void nodeItemKeyPressed(NodeItem item, KeyEvent e) {
             setAllControlEnabled(true);
+            processKey(e);
         }
 
         @Override
         public void keyPressed(KeyEvent e) {
             setAllControlEnabled(true);
+            processKey(e);
         }
     };
 
+
+    List<MindOperator> getDragOperator(Node droppedNode,
+                                       NodeControl.HitPosition hitPosition,
+                                       boolean toAddReference)
+    {
+        MindModel mindModel = m_mindModel;
+
+        List<MindOperator> operators = new ArrayList<>();
+
+        List<Node> selectedNodes = getSelectedSourceNodes();
+
+        selectedNodes = breadthFirstSort(selectedNodes);
+
+        if (toAddReference) {
+
+            int edgePosition;
+            Node referrerNode;
+
+            if (hitPosition == NodeControl.HitPosition.TOP || hitPosition == NodeControl.HitPosition.BOTTOM) {
+                referrerNode = droppedNode.getParent();
+                if (referrerNode == null) {
+                    return null;
+                }
+
+                edgePosition = (hitPosition == NodeControl.HitPosition.TOP) ? droppedNode.getIndex() : droppedNode.getIndex() + 1;
+
+            } else {
+                referrerNode = droppedNode;
+                edgePosition = droppedNode.getChildCount();
+            }
+
+            //由于添加引用操作，是新建Node。所以多选的时候，选集中的后续节点不能作为前驱节点的兄弟
+            for (Node selectedNode : selectedNodes) {
+                operators.add(new AddingReference(mindModel, selectedNode, referrerNode, edgePosition));
+                edgePosition++;
+            }
+
+        } else {
+
+            selectedNodes = removeNodesWithSameInEdgeDbId(selectedNodes);
+
+            operators.add(new DraggingNode(mindModel, selectedNodes.get(0), droppedNode, hitPosition));
+
+            for(int i=1; i<selectedNodes.size(); i++) {
+                operators.add(new DraggingNode(mindModel, selectedNodes.get(i), selectedNodes.get(i-1), NodeControl.HitPosition.BOTTOM));
+            }
+        }
+
+        return operators;
+    }
+
+    void moveUp() {
+        List <Node> selectedNodes = getSelectedSourceNodes();
+        selectedNodes = removeNodesWithSameInEdgeDbId(selectedNodes);
+        selectedNodes = removeNodesInSameDisplaySubTree(selectedNodes);
+        BoundaryNodes boundary = getBoundaryNodes(selectedNodes);
+
+        if (boundary.top.getPreviousSibling() == null) {
+            return;
+        }
+
+        //选集的上移：放在最上端的哥哥上面 (肯定不在选集内)
+
+
+        List<MindOperator> operators = getDragOperator(boundary.top.getPreviousSibling(), NodeControl.HitPosition.TOP, false);
+        if (operators != null && operators.size() > 0) {
+            m_mindController.does(operators);
+        }
+    }
+
+    void moveDown() {
+        List <Node> selectedNodes = getSelectedSourceNodes();
+        selectedNodes = removeNodesWithSameInEdgeDbId(selectedNodes);
+        selectedNodes = removeNodesInSameDisplaySubTree(selectedNodes);
+        BoundaryNodes boundary = getBoundaryNodes(selectedNodes);
+
+        if (boundary.bottom.getNextSibling() == null) {
+            return;
+        }
+
+        //选集的下移：放在最下端的弟弟的下面 (肯定不在选集内)
+
+        List<MindOperator> operators = getDragOperator(boundary.bottom.getNextSibling(), NodeControl.HitPosition.BOTTOM, false);
+        if (operators != null && operators.size() > 0) {
+            m_mindController.does(operators);
+        }
+    }
+    void moveLeft() {
+        List <Node> selectedNodes = getSelectedSourceNodes();
+        selectedNodes = removeNodesWithSameInEdgeDbId(selectedNodes);
+        selectedNodes = removeNodesInSameDisplaySubTree(selectedNodes);
+        BoundaryNodes boundary = getBoundaryNodes(selectedNodes);
+
+        //选集的左移：放入最左端的父亲的弟弟位置 (肯定不在选集内)
+        if (boundary.left.getParent() != null) {
+            List<MindOperator> operators = getDragOperator(boundary.left.getParent(), NodeControl.HitPosition.RIGHT, false);
+            if (operators != null && operators.size() > 0) {
+                m_mindController.does(operators);
+            }
+        }
+    }
+    void moveRight() {
+
+        List <Node> selectedNodes = getSelectedSourceNodes();
+        selectedNodes = removeNodesWithSameInEdgeDbId(selectedNodes);
+        selectedNodes = removeNodesInSameDisplaySubTree(selectedNodes);
+        BoundaryNodes boundary = getBoundaryNodes(selectedNodes);
+
+        Node leftSibling;
+
+        for (leftSibling = boundary.left.getPreviousSibling();
+             leftSibling != null;
+             leftSibling = leftSibling.getPreviousSibling()) {
+            if (! selectedNodes.contains(leftSibling)) {
+                break;
+            }
+        }
+
+        if (leftSibling == null) {
+            for (leftSibling = boundary.left.getNextSibling();
+                 leftSibling != null;
+                 leftSibling = leftSibling.getNextSibling()) {
+                if (! selectedNodes.contains(leftSibling)) {
+                    break;
+                }
+            }
+        }
+
+        if (leftSibling != null) {
+            List<MindOperator> operators = getDragOperator(boundary.bottom.getParent(), NodeControl.HitPosition.RIGHT, false);
+            if (operators != null && operators.size() > 0) {
+                m_mindController.does(operators);
+            }
+        }
+    }
+
+    void processKey(KeyEvent e) {
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_SPACE:
+                toggleFoldNode();
+                break;
+
+            case KeyEvent.VK_F2:
+                edit();
+                break;
+
+            case KeyEvent.VK_DELETE:
+                remove();
+                break;
+
+            case KeyEvent.VK_INSERT:
+                if (! e.isControlDown()) {
+                    addChild();
+                } else  {
+                    addChildWithPrompt();
+                }
+                break;
+
+            case KeyEvent.VK_ENTER:
+                if (! e.isShiftDown()) {
+                    if (e.isControlDown()) {
+                        addSibling();
+                    } else {
+                        addSiblingWithPrompt();
+                    }
+                }
+                break;
+
+            case KeyEvent.VK_Z:
+                undo();
+                break;
+            case KeyEvent.VK_Y:
+                redo();
+                break;
+
+            case KeyEvent.VK_S:
+                save();
+                break;
+
+            case KeyEvent.VK_C:
+                copySubTree();
+                markToBeLinkedDbId();
+                break;
+            case KeyEvent.VK_V:
+                pasteAsSubTree();
+                break;
+            case KeyEvent.VK_L:
+                linkMarkedVertexToCursor();
+                break;
+
+            case KeyEvent.VK_KP_UP:
+            case KeyEvent.VK_UP:
+                if (e.isControlDown()) {
+                    moveUp();
+                }
+                break;
+            case KeyEvent.VK_KP_DOWN:
+            case KeyEvent.VK_DOWN:
+                if (e.isControlDown()) {
+                    moveDown();
+                }
+                break;
+            case KeyEvent.VK_KP_LEFT:
+            case KeyEvent.VK_LEFT:
+                if (e.isControlDown()) {
+                    moveLeft();
+                }
+                break;
+            case KeyEvent.VK_KP_RIGHT:
+            case KeyEvent.VK_RIGHT:
+                if (e.isControlDown()) {
+                    moveRight();
+                }
+                break;
+        }
+    }
+
+    static public BoundaryNodes getBoundaryNodes(final List<Node> nodes)
+    {
+        if (nodes.size() == 0) {
+            return null;
+        }
+
+        Tree tree = (Tree)nodes.get(0).getGraph();
+
+        Node root = tree.getRoot();
+
+        final BoundaryNodes boundaryNodes = new BoundaryNodes();
+
+        Tree.DepthFirstReverseTraverseProcessor leftRightTopFinder = new Tree.DepthFirstReverseTraverseProcessor() {
+            int minLevel = Integer.MAX_VALUE;
+            int maxLevel = Integer.MIN_VALUE;
+
+            @Override
+            public void run(Node parent, Node node, int level) {
+                if (nodes.contains(node)) {
+                    if (level < minLevel) {
+                        minLevel = level;
+                        boundaryNodes.left = node;
+                    } else if (maxLevel < level) {
+                        maxLevel = level;
+                        boundaryNodes.right  = node;
+                    }
+
+                    if (boundaryNodes.top == null) {
+                        boundaryNodes.top = node;
+                    }
+                }
+            }
+        };
+        tree.depthFirstReverseTraverse(root, leftRightTopFinder, Tree.ChildTraverseOrder.OLDER_FIRST);
+
+        Tree.DepthFirstReverseTraverseProcessor bottomFinder = new Tree.DepthFirstReverseTraverseProcessor() {
+            @Override
+            public void run(Node parent, Node node, int level) {
+                if (nodes.contains(node)) {
+                    if (boundaryNodes.bottom == null) {
+                        boundaryNodes.bottom = node;
+                    }
+                }
+            }
+        };
+        tree.depthFirstReverseTraverse(root, bottomFinder, Tree.ChildTraverseOrder.YOUNGER_FIRST);
+
+        return boundaryNodes;
+    }
+
+
+    public static class BoundaryNodes {
+        public Node top;
+        public Node bottom;
+        public Node left;
+        public Node right;
+    }
 } // end of class TreeMap

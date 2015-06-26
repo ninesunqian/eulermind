@@ -93,55 +93,6 @@ class NodeDraggingControl extends NodeControl {
         m_mindView.renderTree();
     }
 
-    List<MindOperator> getDragOperator(NodeItem droppedNodeItem,
-                                NodeControl.HitPosition hitPosition,
-                                NodeControl.DragAction dragAction)
-    {
-        MindModel mindModel = m_mindView.m_mindModel;
-
-        List<MindOperator> operators = new ArrayList<>();
-
-        List<Node> selectedNodes = m_mindView.getSelectedSourceNodes();
-
-        selectedNodes = m_mindView.breadthFirstSort(selectedNodes);
-
-        if (dragAction == NodeControl.DragAction.LINK) {
-
-            int edgePosition;
-            Node referrerNode;
-
-            if (hitPosition == HitPosition.TOP || hitPosition == HitPosition.BOTTOM) {
-                referrerNode = droppedNodeItem.getParent();
-                if (referrerNode == null) {
-                    return null;
-                }
-
-                edgePosition = (hitPosition == HitPosition.TOP) ? droppedNodeItem.getIndex() : droppedNodeItem.getIndex() + 1;
-
-            } else {
-                referrerNode = droppedNodeItem;
-                edgePosition = droppedNodeItem.getChildCount();
-            }
-
-            //由于添加引用操作，是新建Node。所以多选的时候，选集中的后续节点不能作为前驱节点的兄弟
-            for (Node selectedNode : selectedNodes) {
-                operators.add(new AddingReference(mindModel, selectedNode, referrerNode, edgePosition));
-                edgePosition++;
-            }
-
-        } else {
-
-            selectedNodes = m_mindView.removeNodesWithSameInEdgeDbId(selectedNodes);
-
-            operators.add(new DraggingNode(mindModel, selectedNodes.get(0), droppedNodeItem, hitPosition));
-
-            for(int i=1; i<selectedNodes.size(); i++) {
-                operators.add(new DraggingNode(mindModel, selectedNodes.get(i), selectedNodes.get(i-1), HitPosition.BOTTOM));
-            }
-        }
-
-        return operators;
-    }
 
     @Override
     public void dragEnd(NodeItem draggedNode, NodeItem droppedNode, HitPosition hitPosition, DragAction dragAction)
@@ -155,7 +106,7 @@ class NodeDraggingControl extends NodeControl {
 
         if (droppedNode != null && hitPosition != HitPosition.OUTSIDE) {
             m_logger.info(String.format("--- dragAction %s", dragAction.toString()));
-            operators = getDragOperator(droppedNode, hitPosition, dragAction);
+            operators = m_mindView.getDragOperator(m_mindView.toSource(droppedNode), hitPosition, dragAction == DragAction.LINK);
         }
 
         if (operators != null && operators.size() > 0) {
