@@ -1,9 +1,9 @@
 package eulermind.view;
 
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
+import java.awt.*;
+import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -19,7 +19,10 @@ import prefuse.Visualization;
 
 import prefuse.controls.*;
 import prefuse.data.*;
+import prefuse.util.ColorLib;
+import prefuse.util.FontLib;
 import prefuse.util.PrefuseLib;
+import prefuse.util.ui.UILib;
 import prefuse.visual.EdgeItem;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualTree;
@@ -880,7 +883,12 @@ public class MindView extends Display {
 
         @Override
         public void nodeItemReleased(NodeItem item, MouseEvent e) {
-            setAllControlEnabled(true);
+            if ( UILib.isButtonPressed(e, RIGHT_MOUSE_BUTTON) ) {
+                setAllControlEnabled(false);
+                openContextMenu(e.getX(), e.getY());
+            } else {
+                setAllControlEnabled(true);
+            }
         }
 
 
@@ -1171,4 +1179,112 @@ public class MindView extends Display {
         public Node left;
         public Node right;
     }
+
+    private JMenuItem createMenuItemForOpeningInNewView(Object vertexDbId, boolean hasParentInfo, String displayText)
+    {
+        final MindModel.VertexBasicInfo vertexBasicInfo = m_mindModel.getVertexBasicInfo(vertexDbId);
+        if (displayText == null) {
+            if (hasParentInfo)
+                displayText = (vertexBasicInfo.m_contextText);
+            else
+                displayText = (vertexBasicInfo.m_text);
+        }
+
+        JMenuItem menuItem = new JMenuItem(displayText);
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                m_mindController.findOrAddMindView(vertexBasicInfo.m_dbId);
+            }
+        });
+
+        return menuItem;
+    }
+
+    public JMenuItem createMenuItemForOpeningInNewView(Object vertexDbId, boolean hasParentInfo)
+    {
+        return createMenuItemForOpeningInNewView(vertexDbId, hasParentInfo, null);
+    }
+
+    public void addSubMenuForOpenAncestors(JMenu menu, boolean includeCursor)
+    {
+        if (isChanging()) {
+            return;
+        }
+
+        Node node = getCursorSourceNode();
+        Object currentVertexId = m_mindModel.getDbId(node);
+
+        List ancestorAndSelf = m_mindModel.m_mindDb.getInheritPath(currentVertexId);
+        if (includeCursor) {
+            ancestorAndSelf.add(currentVertexId);
+        }
+
+        Collections.reverse(ancestorAndSelf);
+
+        for (Object ancestor : ancestorAndSelf) {
+            menu.add(createMenuItemForOpeningInNewView(ancestor, false));
+        }
+    }
+
+    public JMenuItem createStyleMenuItem(final String styleName) {
+
+        String family = Style.getFontFamilySurely(styleName);
+        Integer size = Style.getFontSizeSurely(styleName);
+
+        boolean bold = Style.getBoldSurely(styleName);
+        boolean italic = Style.getItalicSurely(styleName);
+
+        Integer textColorValue = Style.getTextColorSurely(styleName);
+        Integer nodeColorValue = Style.getNodeColorSurely(styleName);
+
+        String icon = Style.getIconSurely(styleName);
+
+        Font font = FontLib.getFont(family, bold, italic, size);
+
+        JMenuItem menuItem = new JMenuItem(styleName);
+
+        menuItem.setFont(font);
+        menuItem.setForeground(ColorLib.getColor(textColorValue));
+        menuItem.setBackground(ColorLib.getColor(nodeColorValue));
+        menuItem.setOpaque(true);
+
+        if (icon != null) {
+            menuItem.setIcon(Style.getImageIcon(icon));
+        }
+
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setCursorProperty(MindModel.STYLE_PROP_NAME, styleName);
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+        });
+
+        return menuItem;
+    }
+
+    public void openContextMenu(int x, int y) {
+        if (isChanging()) {
+            return;
+        }
+
+        JPopupMenu popupMenu = new JPopupMenu();
+
+        Node node = getCursorSourceNode();
+        Object currentVertexId = m_mindModel.getDbId(node);
+        popupMenu.add(createMenuItemForOpeningInNewView(currentVertexId, false, "Open in new tab"));
+
+        JMenu ancestorSubMenu = new JMenu("ancestors");
+        addSubMenuForOpenAncestors(ancestorSubMenu, false);
+        popupMenu.add(ancestorSubMenu);
+
+        JMenu styleSubMenu = new JMenu("styles");
+        for (String styleName : Style.getStyleNames()) {
+            styleSubMenu.add(createStyleMenuItem(styleName));
+        }
+
+        popupMenu.add(styleSubMenu);
+    }
+
 } // end of class TreeMap

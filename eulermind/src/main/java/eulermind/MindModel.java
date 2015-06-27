@@ -80,16 +80,16 @@ public class MindModel {
 
     private Index<Vertex> m_favoriteIndex;
 
-    class VertexBasicInfo {
-        Object m_dbId;
-        String m_text;
+    public class VertexBasicInfo {
+        public Object m_dbId;
+        public String m_text;
 
-        Object m_parentDbId;
-        String m_parentText;
+        public Object m_parentDbId;
+        public String m_parentText;
 
-        String m_contextText;
+        public String m_contextText;
 
-        VertexBasicInfo(Vertex vertex) {
+        public VertexBasicInfo(Vertex vertex) {
             m_dbId = vertex.getId();
             m_text = vertex.getProperty(TEXT_PROP_NAME);
             MindDB.EdgeVertex edgeParent = m_mindDb.getParentEge(vertex);

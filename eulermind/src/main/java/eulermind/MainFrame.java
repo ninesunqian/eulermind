@@ -445,22 +445,8 @@ public class MainFrame  extends JFrame {
         @Override
         public void menuSelected(MenuEvent menuEvent)
         {
-            if (m_mindController.isChanging()) {
-                return;
-            }
-
-            final Object currentVertexId = m_mindController.getCurrentVertexId();
-            MindModel.VertexBasicInfo vertexBasicInfo =  m_mindModel.getVertexBasicInfo(currentVertexId);
-
-            List ancestorAndSelf = m_mindModel.m_mindDb.getInheritPath(currentVertexId);
-            ancestorAndSelf.add(currentVertexId);
-
-            Collections.reverse(ancestorAndSelf);
-
-            for (Object ancestor : ancestorAndSelf) {
-                final MindModel.VertexBasicInfo ancestorBasicInfo = m_mindModel.getVertexBasicInfo(ancestor);
-                addVertexSubMenu(m_ancestorMenu, ancestorBasicInfo, false);
-            }
+            MindView currentView = m_mindController.getCurrentView();
+            currentView.addSubMenuForOpenAncestors(m_ancestorMenu, false);
         }
 
         @Override
