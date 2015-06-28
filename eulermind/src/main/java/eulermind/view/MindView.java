@@ -1285,6 +1285,7 @@ public class MindView extends Display {
         }
 
         popupMenu.add(styleSubMenu);
+        popupMenu.show(this, x, y);
     }
 
 } // end of class TreeMap

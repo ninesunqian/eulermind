@@ -248,7 +248,6 @@ public abstract class NodeControl extends ControlAdapter {
             dragEnd(draggedNode, curHitNode, hitPosition, dragAction);
             m_logger.info("itemDropped : " + curHitNode.getString(MindModel.TEXT_PROP_NAME));
         } else {
-            m_logger.info("itemDropped : null");
             dragEnd(draggedNode, null, HitPosition.OUTSIDE, dragAction);
         }
 

@@ -161,7 +161,7 @@ public class TreeFolder extends NodeControl {
     }
 
     @Override
-    public void nodeItemPressed(NodeItem item, MouseEvent e) {
+    public void nodeItemReleased(NodeItem item, MouseEvent e) {
         toggleFoldNode(item);
     }
 }
