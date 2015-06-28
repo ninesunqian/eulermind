@@ -3,6 +3,7 @@ package eulermind.view;
 import eulermind.MindModel;
 import prefuse.Display;
 import prefuse.controls.ControlAdapter;
+import prefuse.util.ui.UILib;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
 
@@ -175,7 +176,7 @@ public abstract class NodeControl extends ControlAdapter {
         }
 
         Point point = e.getPoint();
-        if (m_mousePressPoint == null || point.distance(m_mousePressPoint) < 10) {
+        if (m_mousePressPoint == null || point.distance(m_mousePressPoint) < 10 || ! UILib.isButtonPressed(e, LEFT_MOUSE_BUTTON)) {
             return;
         }
 
@@ -233,8 +234,13 @@ public abstract class NodeControl extends ControlAdapter {
 
         m_mousePressPoint = null;
 
+        nodeItemReleased((NodeItem)item, e);
+
+        if (! UILib.isButtonPressed(e, LEFT_MOUSE_BUTTON) ) {
+            return;
+        }
+
         NodeItem draggedNode = (NodeItem)item;
-        nodeItemReleased(draggedNode, e);
 
         m_dragging = false;
 

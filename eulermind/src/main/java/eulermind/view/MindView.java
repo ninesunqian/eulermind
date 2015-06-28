@@ -819,22 +819,27 @@ public class MindView extends Display {
         m_dragControl.setEnabled(enabled);
         m_folder.setEnabled(enabled);
 
-        m_stopEditControl.setEnabled(enabled);
     }
 
     NodeControl m_controlArbiter = new NodeControl(this) {
         @Override
         public void nodeItemEntered(NodeItem item, MouseEvent e) {
+            if (m_popupMenu.isVisible()) {
+                setAllControlEnabled(false);
+                return;
+            }
             setAllControlEnabled(true);
         }
 
         @Override
         public void nodeItemExited(NodeItem item, MouseEvent e) {
-            setAllControlEnabled(true);
-        }
+            if (m_popupMenu.isVisible()) {
+                setAllControlEnabled(false);
+                return;
+            }
 
-        @Override
-        public void nodeItemPressed(NodeItem item, MouseEvent e) {
+            setAllControlEnabled(true);
+
             if (getCursorNodeItem() == item) {
                 if (m_cursor.getSelectedNodeItems().size() > 1) {
                     m_cursor.setEnabled(true);
@@ -851,38 +856,77 @@ public class MindView extends Display {
         }
 
         @Override
+        public void nodeItemPressed(NodeItem item, MouseEvent e) {
+            if (m_popupMenu.isVisible()) {
+                setAllControlEnabled(false);
+                return;
+            }
+            setAllControlEnabled(true);
+        }
+
+        @Override
         public void nodeItemClicked(NodeItem item, MouseEvent e) {
+            if (m_popupMenu.isVisible()) {
+                setAllControlEnabled(false);
+                return;
+            }
             setAllControlEnabled(true);
         }
 
         @Override
         public void dragHit(NodeItem draggedNode, NodeItem hitNode, HitPosition hitPosition, DragAction dragAction) {
+            if (m_popupMenu.isVisible()) {
+                setAllControlEnabled(false);
+                return;
+            }
             setAllControlEnabled(true);
         }
 
         @Override
         public void dragMiss(NodeItem draggedNode, NodeItem hitNode, DragAction dragAction) {
+            if (m_popupMenu.isVisible()) {
+                setAllControlEnabled(false);
+                return;
+            }
             setAllControlEnabled(true);
         }
 
         @Override
         public void dragStart(NodeItem draggedNode, DragAction dragAction) {
+            if (m_popupMenu.isVisible()) {
+                setAllControlEnabled(false);
+                return;
+            }
             setAllControlEnabled(true);
         }
 
         @Override
         public void dragActionChanged(NodeItem draggedNode, NodeItem hitNode, HitPosition hitPosition, DragAction dragAction) {
+            if (m_popupMenu.isVisible()) {
+                setAllControlEnabled(false);
+                return;
+            }
             setAllControlEnabled(true);
         }
 
         @Override
         public void dragEnd(NodeItem draggedNode, NodeItem hitNode, HitPosition hitPosition, DragAction dragAction) {
+            if (m_popupMenu.isVisible()) {
+                setAllControlEnabled(false);
+                return;
+            }
             setAllControlEnabled(true);
         }
 
 
         @Override
         public void nodeItemReleased(NodeItem item, MouseEvent e) {
+            if (m_popupMenu.isVisible()) {
+                setAllControlEnabled(false);
+                return;
+            }
+            setAllControlEnabled(true);
+
             if ( UILib.isButtonPressed(e, RIGHT_MOUSE_BUTTON) ) {
                 setAllControlEnabled(false);
                 openContextMenu(e.getX(), e.getY());
@@ -894,12 +938,20 @@ public class MindView extends Display {
 
         @Override
         public void nodeItemKeyPressed(NodeItem item, KeyEvent e) {
+            if (m_popupMenu.isVisible()) {
+                setAllControlEnabled(false);
+                return;
+            }
             setAllControlEnabled(true);
             processKey(e);
         }
 
         @Override
         public void keyPressed(KeyEvent e) {
+            if (m_popupMenu.isVisible()) {
+                setAllControlEnabled(false);
+                return;
+            }
             setAllControlEnabled(true);
             processKey(e);
         }
@@ -1264,28 +1316,30 @@ public class MindView extends Display {
         return menuItem;
     }
 
+    JPopupMenu m_popupMenu = new JPopupMenu();
+
     public void openContextMenu(int x, int y) {
         if (isChanging()) {
             return;
         }
 
-        JPopupMenu popupMenu = new JPopupMenu();
+        m_popupMenu.removeAll();
 
         Node node = getCursorSourceNode();
         Object currentVertexId = m_mindModel.getDbId(node);
-        popupMenu.add(createMenuItemForOpeningInNewView(currentVertexId, false, "Open in new tab"));
+        m_popupMenu.add(createMenuItemForOpeningInNewView(currentVertexId, false, "Open in new tab"));
 
         JMenu ancestorSubMenu = new JMenu("ancestors");
         addSubMenuForOpenAncestors(ancestorSubMenu, false);
-        popupMenu.add(ancestorSubMenu);
+        m_popupMenu.add(ancestorSubMenu);
 
         JMenu styleSubMenu = new JMenu("styles");
         for (String styleName : Style.getStyleNames()) {
             styleSubMenu.add(createStyleMenuItem(styleName));
         }
 
-        popupMenu.add(styleSubMenu);
-        popupMenu.show(this, x, y);
+        m_popupMenu.add(styleSubMenu);
+        m_popupMenu.show(this, x, y);
     }
 
 } // end of class TreeMap

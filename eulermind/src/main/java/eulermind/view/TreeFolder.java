@@ -6,6 +6,7 @@ import prefuse.Visualization;
 import prefuse.data.*;
 
 import prefuse.util.PrefuseLib;
+import prefuse.util.ui.UILib;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualTree;
 import prefuse.visual.tuple.TableEdgeItem;
@@ -162,6 +163,14 @@ public class TreeFolder extends NodeControl {
 
     @Override
     public void nodeItemReleased(NodeItem item, MouseEvent e) {
+        if (e.isControlDown() || e.isShiftDown() || e.isMetaDown() || e.isAltDown()) {
+            return;
+        }
+
+        if (! UILib.isButtonPressed(e, LEFT_MOUSE_BUTTON)) {
+            return;
+        }
+
         toggleFoldNode(item);
     }
 }
