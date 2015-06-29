@@ -491,7 +491,7 @@ public class MindView extends Display {
         }
 
         if (m_mindController.m_copiedSubTree != null &&
-                m_mindController.m_clipboardTextFormHere == Utils.getSystemClipboardText()) {
+                m_mindController.m_clipboardTextFormHere.equals(Utils.getSystemClipboardText())) {
             MindOperator operator = new PastingExternalTree(m_mindModel, getCursorSourceNode(), m_mindController.m_copiedSubTree);
             m_mindController.does(operator);
 
