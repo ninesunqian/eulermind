@@ -387,6 +387,10 @@ public class TreeCursor extends NodeControl {
             return;
         }
 
+        if (e.isControlDown() || e.isMetaDown()) {
+            return;
+        }
+
         m_selectMode = e.isShiftDown() ? SelectMode.SERIES : SelectMode.ONLY_ONE;
 
         switch (e.getKeyCode()) {

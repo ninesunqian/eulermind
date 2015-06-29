@@ -1083,7 +1083,7 @@ public class MindView extends Display {
 
         //选集的左移：放入最左端的父亲的弟弟位置 (肯定不在选集内)
         if (boundary.left.getParent() != null) {
-            List<MindOperator> operators = getDragOperator(boundary.left.getParent(), NodeControl.HitPosition.RIGHT, false);
+            List<MindOperator> operators = getDragOperator(boundary.left.getParent(), NodeControl.HitPosition.BOTTOM, false);
             if (operators != null && operators.size() > 0) {
                 m_mindController.does(operators);
             }
@@ -1117,7 +1117,7 @@ public class MindView extends Display {
         }
 
         if (leftSibling != null) {
-            List<MindOperator> operators = getDragOperator(boundary.bottom.getParent(), NodeControl.HitPosition.RIGHT, false);
+            List<MindOperator> operators = getDragOperator(leftSibling, NodeControl.HitPosition.RIGHT, false);
             if (operators != null && operators.size() > 0) {
                 m_mindController.does(operators);
             }
