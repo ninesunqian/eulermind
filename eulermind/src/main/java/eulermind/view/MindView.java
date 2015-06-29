@@ -469,19 +469,33 @@ public class MindView extends Display {
         endChanging();
     }
 
-    public void markToBeLinkedDbId()
-    {
-        m_mindController.m_toBeLinkedDbId = m_mindModel.getDbId(getCursorSourceNode());
-    }
-
     public void copySubTree()
     {
-        m_mindController.m_copiedSubTree = m_visualTree.copySubTree(getCursorNodeItem(), VisiblePredicate.TRUE,
-                MindModel.sm_nodePropNames, MindModel.sm_edgePropNames);
+        m_mindController.m_clipboardTextFormHere = "";
 
-        String text = m_mindModel.getSubTreeText(getCursorSourceNode());
-        m_mindController.m_clipboardTextFormHere = text;
-        Utils.copyStringToSystemClipboard(text);
+        m_mindController.m_toBeLinkedDbIds.clear();
+        m_mindController.m_copiedSubTrees.clear();
+
+        final String newline  = System.getProperty("line.separator");
+
+        List<Node> selectedNodes = getSelectedSourceNodes();
+        selectedNodes = breadthFirstSort(selectedNodes);
+
+        for (Node node : selectedNodes) {
+            //只复制可见的部分，不可见的部分可能在数据库内数目巨大
+            m_mindController.m_copiedSubTrees.add(m_visualTree.copySubTree(toVisual(node), VisiblePredicate.TRUE,
+                    MindModel.sm_nodePropNames, MindModel.sm_edgePropNames));
+
+            String text = m_mindModel.getSubTreeText(node);
+            if (!text.endsWith(newline)) {
+                text += newline;
+            }
+            m_mindController.m_clipboardTextFormHere += text;
+
+            m_mindController.m_toBeLinkedDbIds.add(m_mindModel.getDbId(node));
+        }
+
+        Utils.copyStringToSystemClipboard(m_mindController.m_clipboardTextFormHere);
     }
 
     public void pasteAsSubTree()
@@ -490,10 +504,17 @@ public class MindView extends Display {
             return;
         }
 
-        if (m_mindController.m_copiedSubTree != null &&
+        if (m_mindController.m_copiedSubTrees.size() != 0 &&
                 m_mindController.m_clipboardTextFormHere.equals(Utils.getSystemClipboardText())) {
-            MindOperator operator = new PastingExternalTree(m_mindModel, getCursorSourceNode(), m_mindController.m_copiedSubTree);
-            m_mindController.does(operator);
+
+            ArrayList<MindOperator> operators = new ArrayList<>();
+
+            for (Tree copiedTree : m_mindController.m_copiedSubTrees) {
+                MindOperator operator = new PastingExternalTree(m_mindModel, getCursorSourceNode(), copiedTree);
+                operators.add(operator);
+            }
+
+            m_mindController.does(operators);
 
         } else {
             String text = Utils.getSystemClipboardText();
@@ -689,13 +710,23 @@ public class MindView extends Display {
             return;
         }
 
-        if (m_mindController.m_toBeLinkedDbId != null
-                && ! m_mindModel.isVertexTrashed(m_mindController.m_toBeLinkedDbId)) {
+        if (m_mindController.m_toBeLinkedDbIds.size() > 0) {
 
-            MindOperator operator = new AddingReference(m_mindModel, getCursorSourceNode(),
-                    m_mindController.m_toBeLinkedDbId, getCursorSourceNode().getChildCount());
-            m_mindController.does(operator);
+            ArrayList<MindOperator> operators = new ArrayList<>();
 
+            for (Object markedDbId : m_mindController.m_toBeLinkedDbIds) {
+
+                if (m_mindModel.isVertexTrashed(markedDbId)) {
+                    continue;
+                }
+
+                MindOperator operator = new AddingReference(m_mindModel, getCursorSourceNode(),
+                        markedDbId, getCursorSourceNode().getChildCount());
+
+                operators.add(operator);
+            }
+
+            m_mindController.does(operators);
         }
 
         endChanging();
@@ -1138,7 +1169,6 @@ public class MindView extends Display {
 
             case KeyEvent.VK_C:
                 copySubTree();
-                markToBeLinkedDbId();
                 break;
             case KeyEvent.VK_V:
                 pasteAsSubTree();

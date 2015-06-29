@@ -55,12 +55,11 @@ public class MindController extends UndoManager {
     MindModel m_mindModel;
     JTabbedPane m_tabbedPane;
 
-    ArrayList<NodeControl> m_externalMouseContollers =
-            new ArrayList<NodeControl>();
+    ArrayList<NodeControl> m_externalMouseContollers = new ArrayList<NodeControl>();
 
-    public Object m_toBeLinkedDbId;
+    public ArrayList<Object> m_toBeLinkedDbIds = new ArrayList<>();
 
-    public Tree m_copiedSubTree;
+    public ArrayList<Tree> m_copiedSubTrees = new ArrayList<>();
 
     //用于记录eulermind生成的剪切板数据。
     //如果当前剪切板数据与m_clipboardTextFromHere不一致时，说明用户从其他地方复制了信息，粘贴时不能用m_copiedSubTree

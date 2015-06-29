@@ -148,7 +148,6 @@ public class MindKeyView extends MindView {
     AbstractAction m_markToBeLinkedAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            markToBeLinkedDbId();
         }
     };
 

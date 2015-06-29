@@ -30,7 +30,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 public class PastingExternalTree extends MindOperator {
-    ArrayList<Integer> m_parentPath;
     int m_pos;
     Tree m_externalTree;
     Object m_newSubTreeRootDbId;
@@ -48,9 +47,13 @@ public class PastingExternalTree extends MindOperator {
             return false;
         }
         Node parent = getNodeByPath(m_formerCursorPath);
-        m_parentPath = (ArrayList)m_formerCursorPath.clone();
 
         Node newSubTreeRoot = m_mindModel.pasteTree(parent, m_pos, m_externalTree);
+
+        if (newSubTreeRoot == null) {
+            return false;
+        }
+
         m_newSubTreeRootDbId = m_mindModel.getDbId(newSubTreeRoot);
 
         //重新取parent的路径
