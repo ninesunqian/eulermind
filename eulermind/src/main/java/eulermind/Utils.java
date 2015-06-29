@@ -176,20 +176,26 @@ public class Utils {
 
     public static String mindMapNameToUrl(String name)
     {
-        String path = Config.MAPS_DIR + File.separator + name;
+        String path = ConfigDirs.MAPS_DIR + File.separator + name;
         return "local:" +  path.replace(File.separatorChar, '/');
+    }
+
+    public static boolean dirExists(String path)
+    {
+        File file = new File(path);
+        return file.isDirectory();
     }
 
     public static boolean mapExist(String name)
     {
-        String path = Config.MAPS_DIR + File.separator + name;
+        String path = ConfigDirs.MAPS_DIR + File.separator + name;
         File file = new File(path);
         return file.exists();
     }
 
     public static String[] getAllMapNames()
     {
-        File mapsDir = new File(Config.MAPS_DIR);
+        File mapsDir = new File(ConfigDirs.MAPS_DIR);
         String maps[] = mapsDir.list(DirectoryFileFilter.INSTANCE);
         return maps;
     }
@@ -197,7 +203,7 @@ public class Utils {
 
     public static String getLastOpenedMap()
     {
-        File file = new File(Config.LAST_OPENED_MAP_RECORD_FILE);
+        File file = new File(ConfigDirs.LAST_OPENED_MAP_RECORD_FILE);
         if (file.isFile()) {
             try {
                 String name = FileUtils.readFileToString(file);
@@ -215,7 +221,7 @@ public class Utils {
     }
 
     public static void removeMap(String name) {
-        String path = Config.MAPS_DIR + File.separator + name;
+        String path = ConfigDirs.MAPS_DIR + File.separator + name;
         File mapDir = new File(path);
         recordLastOpenedMap("");
         try {
@@ -232,7 +238,7 @@ public class Utils {
             return;
         }
 
-        File file = new File(Config.LAST_OPENED_MAP_RECORD_FILE);
+        File file = new File(ConfigDirs.LAST_OPENED_MAP_RECORD_FILE);
         try {
             FileUtils.writeStringToFile(file, name);
         } catch (IOException e) {
@@ -242,7 +248,7 @@ public class Utils {
 
     public static void initFiles() throws IOException
     {
-        Utils.mkdir(Config.MAPS_DIR);
+        Utils.mkdir(ConfigDirs.MAPS_DIR);
         Style.load();
         Style.save();
     }

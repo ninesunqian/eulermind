@@ -78,6 +78,7 @@ public class EulerMind {
         }
 
         try {
+            ConfigDirs.init();
             Utils.initFiles();
         } catch (IOException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.

@@ -14,7 +14,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.*;
 
 /*
@@ -221,12 +220,12 @@ public class Style {
     }
 
     public static void load() {
-        File userStylesFile = new File(Config.STYLE_FILE);
+        File userStylesFile = new File(ConfigDirs.STYLE_FILE);
 
         if (!userStylesFile.exists()) {
 
             try {
-                Utils.copyResourceToFile("styles.xml", Config.STYLE_FILE);
+                Utils.copyResourceToFile("styles.xml", ConfigDirs.STYLE_FILE);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -240,7 +239,7 @@ public class Style {
 
     public static void save() {
 
-        File userStylesFile = new File(Config.STYLE_FILE);
+        File userStylesFile = new File(ConfigDirs.STYLE_FILE);
 
         XStream xstream = createXStream();
 
