@@ -382,6 +382,7 @@ public class MindView extends Display {
         m_logger.info("beginChanging++++++++++++++++++++++");
         m_cursor.hold();
         setTransformEnabled(false);
+        m_mindController.setSwitchTabEnable(false);
         m_isChanging = true;
         return true;
     }
@@ -393,6 +394,7 @@ public class MindView extends Display {
         m_cursor.free();
         setTransformEnabled(true);
 
+        m_mindController.setSwitchTabEnable(true);
         m_logger.info("endChanging----------------------");
         m_isChanging = false;
         requestFocus();

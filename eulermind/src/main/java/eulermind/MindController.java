@@ -101,6 +101,17 @@ public class MindController extends UndoManager {
         m_tabbedPane.setFocusCycleRoot(true);
     }
 
+    public void setSwitchTabEnable(boolean enabled) {
+        int current = m_tabbedPane.getSelectedIndex();
+        for (int i=0; i<m_tabbedPane.getTabCount(); i++) {
+            m_tabbedPane.setEnabledAt(i, enabled);
+
+            m_tabbedPane.getTabComponentAt(i).setEnabled(enabled);
+        }
+
+        m_tabbedPane.setEnabledAt(current, true);
+    }
+
     public MindView findOrAddMindView(Object rootDBId) {
 
         Tree tree = m_mindModel.findOrPutTree(rootDBId);
@@ -144,6 +155,10 @@ public class MindController extends UndoManager {
             ButtonTabComponent buttonTabComponent = ((ButtonTabComponent.TabButton)e.getSource()).getButtonTabComponent();
             int pos = m_tabbedPane.indexOfTabComponent(buttonTabComponent);
             MindView removedMindView = (MindView)m_tabbedPane.getComponentAt(pos);
+
+            if (removedMindView.isChanging()) {
+                return;
+            }
 
             for (Tree tree: m_mindViews.keySet()) {
                 if (m_mindViews.get(tree) == removedMindView) {

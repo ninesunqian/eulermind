@@ -4,17 +4,13 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Collections;
-import java.util.List;
 
 import eulermind.component.*;
-import eulermind.operator.AddingReference;
 import eulermind.view.MindEditor;
 import eulermind.view.MindView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.swixml.SwingEngine;
-import prefuse.data.Node;
 
 /*
 The MIT License (MIT)
@@ -130,7 +126,7 @@ public class MainFrame  extends JFrame {
         m_propertyToolBarVisibleCheckMenu.addActionListener(m_propertyToolBarVisibleAction);
         m_alwaysOnTopCheckMenu.addActionListener(m_alwaysOnTopAction);
 
-        if (Utils.isDebuging()) {
+        if (Utils.isDebugging()) {
             openMindDb("debug");
 
         } else {
@@ -172,7 +168,7 @@ public class MainFrame  extends JFrame {
         m_currentMapName = name;
 
         //调试模式下，不记录最后一次打开脑图
-        if (! Utils.isDebuging()) {
+        if (! Utils.isDebugging()) {
             Utils.recordLastOpenedMap(name);
         }
     }
