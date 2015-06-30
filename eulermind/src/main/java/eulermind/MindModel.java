@@ -104,7 +104,7 @@ public class MindModel {
             }
 
             //如果m_parentText在前面，需要考虑m_parentText可能过长，总长度过可能长，m_text可能过短等问题
-            m_contextText = m_text + " @ " + m_parentText;
+            m_contextText = m_parentText + " > " + m_text;
         }
     }
 
@@ -1620,4 +1620,16 @@ public class MindModel {
         return subTreeRoot;
     }
 
+    public String getVertexDbIdInheritInfo(Object dbId) {
+        List inheritPath = m_mindDb.getInheritPath(dbId);
+        String info = "";
+        for (Object ancestor : inheritPath) {
+            Vertex vertex  = m_mindDb.getVertex(ancestor);
+            info += vertex.getProperty(TEXT_PROP_NAME) + " > ";
+        }
+
+        Vertex vertex  = m_mindDb.getVertex(dbId);
+        info += vertex.getProperty(TEXT_PROP_NAME);
+        return info;
+    }
 }

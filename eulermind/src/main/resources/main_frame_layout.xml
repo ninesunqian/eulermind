@@ -10,6 +10,7 @@
 
         <menu text="Option" mnemonic="VK_O" >
             <checkboxmenuitem id="m_propertyToolBarVisibleCheckMenu" text="PropertyVisible"  Selected="true"/>
+            <checkboxmenuitem id="m_alwaysOnTopCheckMenu" text="AlwaysOnTop"  Selected="false"/>
         </menu>
 
     </menubar>
@@ -80,6 +81,9 @@
     </vbox>
 
 
-    <tabbedPane id="m_tabbedPane" constraints="BorderLayout.CENTER"/>
+    <vbox constraints="BorderLayout.CENTER">
+        <tabbedPane id="m_tabbedPane"/>
+        <label id="m_tabInfoLabel" text=" "/>
+    </vbox>
 
 </frame>

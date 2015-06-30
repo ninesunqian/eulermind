@@ -1372,4 +1372,8 @@ public class MindView extends Display {
         m_popupMenu.show(this, x, y);
     }
 
+    public Object getRootDbId() {
+        return MindModel.getDbId(m_tree.getRoot());
+    }
+
 } // end of class TreeMap

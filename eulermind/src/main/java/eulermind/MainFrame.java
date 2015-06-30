@@ -50,6 +50,7 @@ public class MainFrame  extends JFrame {
     MindModel m_mindModel;
     MindController m_mindController;
     StyleList m_styleList;
+    JLabel m_tabInfoLabel;
     JTabbedPane m_tabbedPane;
 
     SwingEngine m_swingEngine;
@@ -75,6 +76,7 @@ public class MainFrame  extends JFrame {
 
     JToolBar m_propertyToolBar;
     JCheckBoxMenuItem m_propertyToolBarVisibleCheckMenu;
+    JCheckBoxMenuItem m_alwaysOnTopCheckMenu;
 
     String m_currentMapName;
 
@@ -126,6 +128,7 @@ public class MainFrame  extends JFrame {
         m_styleDownButton.addActionListener(m_styleDownAction);
 
         m_propertyToolBarVisibleCheckMenu.addActionListener(m_propertyToolBarVisibleAction);
+        m_alwaysOnTopCheckMenu.addActionListener(m_alwaysOnTopAction);
 
         if (Utils.isDebuging()) {
             openMindDb("debug");
@@ -161,7 +164,7 @@ public class MainFrame  extends JFrame {
 
         String url = Utils.mindMapNameToUrl(name);
         m_mindModel = new MindModel(url);
-        m_mindController = new MindController(m_mindModel, m_tabbedPane);
+        m_mindController = new MindController(m_mindModel, m_tabbedPane, m_tabInfoLabel);
 
         bindComponents();
         setComponentEnabled(true);
@@ -516,6 +519,15 @@ public class MainFrame  extends JFrame {
         {
             boolean visible = m_propertyToolBarVisibleCheckMenu.isSelected();
             m_propertyToolBar.setVisible(visible);
+        }
+    };
+
+    public Action m_alwaysOnTopAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e)
+        {
+            boolean alwaysOnTop = m_alwaysOnTopCheckMenu.isSelected();
+            setAlwaysOnTop(alwaysOnTop);
         }
     };
 }

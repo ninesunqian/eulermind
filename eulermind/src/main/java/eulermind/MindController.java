@@ -54,6 +54,7 @@ public class MindController extends UndoManager {
 
     MindModel m_mindModel;
     JTabbedPane m_tabbedPane;
+    JLabel m_tabInfoLabel;
 
     ArrayList<NodeControl> m_externalMouseContollers = new ArrayList<NodeControl>();
 
@@ -65,16 +66,21 @@ public class MindController extends UndoManager {
     //如果当前剪切板数据与m_clipboardTextFromHere不一致时，说明用户从其他地方复制了信息，粘贴时不能用m_copiedSubTree
     public String m_clipboardTextFormHere;
 
-    MindController(MindModel mindModel, JTabbedPane tabbedPane) {
+    MindController(MindModel mindModel, JTabbedPane tabbedPane, JLabel tabInfoLabel) {
         super();
         m_mindModel = mindModel;
         m_tabbedPane = tabbedPane;
+        m_tabInfoLabel = tabInfoLabel;
 
         m_tabbedPane.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
                 if (m_tabbedPane.getSelectedComponent() != null) {
                     Component comp = m_tabbedPane.getSelectedComponent();
                     comp.requestFocusInWindow();
+                    MindView mindView = (MindView) comp;
+                    m_tabInfoLabel.setText(m_mindModel.getVertexDbIdInheritInfo(mindView.getRootDbId()));
+                } else {
+                    m_tabInfoLabel.setText(" ");
                 }
             }
         });
@@ -124,7 +130,9 @@ public class MindController extends UndoManager {
             //not setMnemonicAt
         }
 
-        m_tabbedPane.setSelectedComponent(mindView);
+        if (mindView != m_tabbedPane.getSelectedComponent()) {
+            m_tabbedPane.setSelectedComponent(mindView);
+        }
 
         return  mindView;
     }
@@ -151,6 +159,7 @@ public class MindController extends UndoManager {
     public MindView exposeMindView(Object rootDBId) {
         MindView mindView = findOrAddMindView(rootDBId);
 
+        //FIXME: findOrAddMindView 有下面的逻辑了，这个函数还有必要吗
         if (m_tabbedPane.getSelectedComponent() != mindView) {
             m_tabbedPane.setSelectedComponent(mindView);
         }
