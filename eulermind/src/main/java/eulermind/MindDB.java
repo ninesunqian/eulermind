@@ -560,7 +560,8 @@ public class MindDB {
 
         if (edgeParentId == null) {
             EdgeVertex toParent = getParentFromBackDb(getVertex(dbId));
-            m_edgeVertexIdCache.cacheEdge(toParent.getEdgeVertexId());
+            edgeParentId = toParent.getEdgeVertexId();
+            m_edgeVertexIdCache.cacheEdge(edgeParentId);
         }
 
         return edgeParentId;
