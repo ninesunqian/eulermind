@@ -86,9 +86,11 @@ public class DraggingNode extends MindOperator{
 
         m_newParentDbId = MindModel.getDbId(newParent);
 
-        if (m_mindModel.m_mindDb.vertexIdIsDescendantOf(m_newParentDbId, m_formerCursorId)) {
-            m_logger.info("canDo false: DB Tree: new parent is descentant of cursor");
-            return false;
+        if (!m_isRefNode) {
+            if (m_mindModel.m_mindDb.vertexIdIsDescendantOf(m_newParentDbId, m_formerCursorId)) {
+                m_logger.info("canDo false: DB Tree: new parent is descentant of cursor");
+                return false;
+            }
         }
 
         if (m_hitPosition == NodeControl.HitPosition.TOP) {
@@ -114,15 +116,9 @@ public class DraggingNode extends MindOperator{
         m_newParentOrReferrerPath = getNodePath(newParent);
 
         if (m_mindModel.m_mindDb.vertexIdIsSelf(m_formerCursorParentId, m_newParentDbId)) {
-
             changePosition(m_oldParentOrReferrerPath, m_formerCursorPos, m_newPos);
-
         } else {
-            if (m_isRefNode) {
-                handoverReferent(m_oldParentOrReferrerPath, m_formerCursorPos, m_newParentOrReferrerPath, m_newPos);
-            } else {
-                handoverChild(m_oldParentOrReferrerPath, m_formerCursorPos, m_newParentOrReferrerPath, m_newPos);
-            }
+            handoverRelation(m_oldParentOrReferrerPath, m_formerCursorPos, m_newParentOrReferrerPath, m_newPos);
         }
 
         m_oldParentOrReferrerPathAfterDoing = getNodePath(m_formerCursorParent);
@@ -141,14 +137,9 @@ public class DraggingNode extends MindOperator{
             changePosition(m_newParentOrReferrerPathAfterDoing, m_newPos, m_formerCursorPos);
 
         } else {
-            if (m_isRefNode) {
-                handoverReferent(m_newParentOrReferrerPathAfterDoing, m_newPos,
-                        m_oldParentOrReferrerPathAfterDoing, m_formerCursorPos);
+            handoverRelation(m_newParentOrReferrerPathAfterDoing, m_newPos,
+                    m_oldParentOrReferrerPathAfterDoing, m_formerCursorPos);
 
-            } else {
-                handoverChild(m_newParentOrReferrerPathAfterDoing, m_newPos,
-                        m_oldParentOrReferrerPathAfterDoing, m_formerCursorPos);
-            }
         }
 
         m_logger.info("ret:");
@@ -161,14 +152,8 @@ public class DraggingNode extends MindOperator{
             changePosition(m_oldParentOrReferrerPath, m_formerCursorPos, m_newPos);
 
         } else {
-            if (m_isRefNode) {
-                handoverReferent(m_oldParentOrReferrerPath, m_formerCursorPos, m_newParentOrReferrerPath, m_newPos);
-
-            } else {
-                handoverChild(m_oldParentOrReferrerPath, m_formerCursorPos, m_newParentOrReferrerPath, m_newPos);
-            }
+            handoverRelation(m_oldParentOrReferrerPath, m_formerCursorPos, m_newParentOrReferrerPath, m_newPos);
         }
-
     }
 
     private void changePosition(ArrayList<Integer> parentPath, int oldPos, int newPos)
@@ -189,46 +174,32 @@ public class DraggingNode extends MindOperator{
     }
 
 
-    private void handoverReferent(ArrayList<Integer> oldReferrerPath, int oldPos, ArrayList<Integer> newReferrerPath, int newPos)
+    private void handoverRelation(ArrayList<Integer> oldSourcePath, int oldPos, ArrayList<Integer> newSourcePath, int newPos)
     {
-        m_logger.info("arg: {}:{}", "oldReferrerPath", oldReferrerPath);
+        m_logger.info("arg: {}:{}", "oldSourcePath", oldSourcePath);
         m_logger.info("arg: {}:{}", "oldPos", oldPos);
-        m_logger.info("arg: {}:{}", "newReferrerPath", newReferrerPath);
+        m_logger.info("arg: {}:{}", "newSourcePath", newSourcePath);
         m_logger.info("arg: {}:{}", "newPos", newPos);
 
         Tree tree = m_mindModel.findTree(m_rootDbId);
-        Node oldReferrerNode = m_mindModel.getNodeByPath(tree, oldReferrerPath);
-        Node newReferrerNode = m_mindModel.getNodeByPath(tree, newReferrerPath);
+        Node oldSourceNode = m_mindModel.getNodeByPath(tree, oldSourcePath);
+        Node newSourceNode = m_mindModel.getNodeByPath(tree, newSourcePath);
 
-        Node child = oldReferrerNode.getChild(oldPos);
+        Node target = oldSourceNode.getChild(oldPos);
 
-        assert !MindModel.getDbId(oldReferrerNode).equals(MindModel.getDbId(newReferrerNode));
-        assert m_mindModel.isRefNode(child);
+        Object oldSourceDbId = MindModel.getDbId(oldSourceNode);
+        Object newSourceDbId = MindModel.getDbId(newSourceNode);
+        Object targetDbId = MindModel.getDbId(target);
 
-        m_mindModel.handoverReferent(oldReferrerNode, oldPos, newReferrerNode, newPos);
+        assert m_isRefNode == m_mindModel.isRefNode(target);
 
-        m_logger.info("ret:");
-    }
+        assert m_mindModel.m_mindDb.vertexIdIsSelf(oldSourceDbId, newSourceDbId);
 
-    private void handoverChild(ArrayList<Integer> oldParentPath, int oldPos, ArrayList<Integer> newParentPath, int newPos)
-    {
-        m_logger.info("arg: {}:{}", "oldParentPath", oldParentPath);
-        m_logger.info("arg: {}:{}", "oldPos", oldPos);
-        m_logger.info("arg: {}:{}", "newParentPath", newParentPath);
-        m_logger.info("arg: {}:{}", "newPos", newPos);
+        if (! m_isRefNode) {
+            assert ! m_mindModel.m_mindDb.vertexIdIsInSubTreeOf(newSourceDbId, targetDbId);
+        }
 
-        Tree tree = m_mindModel.findTree(m_rootDbId);
-        Node oldParentNode = m_mindModel.getNodeByPath(tree, oldParentPath);
-        Node newParentNode = m_mindModel.getNodeByPath(tree, newParentPath);
-
-        Node child = oldParentNode.getChild(oldPos);
-
-        assert ! m_mindModel.isSelfInDB(child, newParentNode) && ! m_mindModel.isAncestorOfInDB(child, newParentNode);
-
-        assert !MindModel.getDbId(oldParentNode).equals(MindModel.getDbId(newParentNode));
-        assert !m_mindModel.isRefNode(child);
-
-        m_mindModel.handoverChild(oldParentNode, oldPos, newParentNode, newPos);
+        m_mindModel.handoverRelation(oldSourceDbId, oldPos, oldSourceNode, newSourceDbId, newPos, newSourceNode);
 
         m_logger.info("ret:");
     }

@@ -232,10 +232,10 @@ public class MindModel {
             root.setProperty(TEXT_PROP_NAME, "root");
 
             EdgeVertex edgeVertex = m_mindDb.addChild(root, 0);
-            edgeVertex.m_target.setProperty(MindModel.TEXT_PROP_NAME, "child_1");
+            edgeVertex.m_target.setProperty(TEXT_PROP_NAME, "child_1");
 
             edgeVertex = m_mindDb.addChild(root, 1);
-            edgeVertex.m_target.setProperty(MindModel.TEXT_PROP_NAME, "child_2");
+            edgeVertex.m_target.setProperty(TEXT_PROP_NAME, "child_2");
 
             m_mindDb.addRefEdge(root, root, 2);
 
@@ -1352,20 +1352,26 @@ public class MindModel {
         }
     }
 
-    private void handoverNode(Node oldParent, int oldPos, Node newParent, int newPos,
+    private void handoverNode(Object oldParentDbId, int oldPos, Node oldParent,
+                                Object newParentDbId, int newPos, Node newParent,
                               EdgeVertex newEdgeVertex, Object oldEdgeDbId)
     {
-        Object oldParentDbId = getDbId(oldParent);
-        Object newParentDbId = getDbId(newParent);
+        if (oldParent != null) {
+            assert getDbId(oldParent).equals(oldParentDbId);
+        }
+        if (newParent != null) {
+            assert getDbId(newParent).equals(newParentDbId);
+        }
+
 
         for (Tree tree : m_trees) {
             NodeAvatarsPairingInfo oldNewParentPairingInfo;
-            if(tree == oldParent.getGraph())
+            if (tree == oldParent.getGraph() && newParent != null && oldParent != null)
             {
-                oldNewParentPairingInfo =  pairNodeAvatars(tree, oldParentDbId, newParentDbId,
+                oldNewParentPairingInfo = pairNodeAvatars(tree, oldParentDbId, newParentDbId,
                         oldParent.getRow(), newParent.getRow());
             } else {
-                oldNewParentPairingInfo =  pairNodeAvatars(tree, oldParentDbId, newParentDbId,
+                oldNewParentPairingInfo = pairNodeAvatars(tree, oldParentDbId, newParentDbId,
                         -1, -1);
             }
 
@@ -1373,66 +1379,67 @@ public class MindModel {
         }
     }
 
-    //新的父节点和老的父节点不能是同一个，否则会造成用户歧义：老父节点的某个子节点已经被拖动走了，结果有出现了一个。
-    public void handoverChild(Node oldParent, int oldPos, Node newParent, int newPos)
+    //oldSource, newSource是一个可选的参数，如果非空，界面树上会加入一个oldSource的子节点拖动newSource的效果。
+    public void handoverRelation(Object oldSourceDbId, int oldPos, Node oldSource,
+                                 Object newSourceDbId, int newPos, Node newSource)
     {
-        s_logger.info("arg: oldParent:{}", oldParent);
+        s_logger.info("arg: oldSourceDbId:{}", oldSourceDbId);
         s_logger.info("arg: oldPos:{}", oldPos);
-        s_logger.info("arg: newParent:{}", newParent);
+        s_logger.info("arg: oldSource:{}", oldSource);
+        s_logger.info("arg: newSourceDbId:{}", newSourceDbId);
         s_logger.info("arg: newPos:{}", newPos);
+        s_logger.info("arg: newSource:{}", newSource);
 
+        assert (! oldSourceDbId.equals(newSourceDbId));
 
-        Tree tree = (Tree)oldParent.getGraph();
+        Vertex targetVertex;
+        Object oldEdgeId;
+        boolean isReferent;
 
-        if (! isChildrenAttached(newParent)) {
-            attachChildren(newParent);
+        //通过Node获取比直接用数据查找快
+        if (oldSource != null) {
+            Node child = oldSource.getChild(oldPos);
+            targetVertex = getDBVertex(child);
+
+            Edge oldEdge = child.getParentEdge();
+            oldEdgeId = getDbId(oldEdge);
+            isReferent = isRefEdge(oldEdge);
+
+        } else {
+            Vertex parentVertex = m_mindDb.getVertex(oldSourceDbId);
+            EdgeVertex childEdgeVertex = m_mindDb.getChildOrReferent(parentVertex, oldPos);
+
+            targetVertex = childEdgeVertex.m_target;
+            oldEdgeId = childEdgeVertex.m_edge.getId();
+            isReferent = m_mindDb.getEdgeType(childEdgeVertex.m_edge) == MindDB.EdgeType.REFERENCE;
         }
 
-        Node child = oldParent.getChild(oldPos);
-
-        Object oldEdgeId = getDbId(child.getParentEdge());
-
-        Object oldParentDbId = getDbId(oldParent);
-        Object newParentDbId = getDbId(newParent);
-        assert (! oldParentDbId.equals(newParentDbId));
-
-        Vertex newParentVertex = m_mindDb.getVertex(newParentDbId);
-
-        EdgeVertex edgeVertex = m_mindDb.handoverChild(getDBVertex(child), newParentVertex, newPos);
-
-        handoverNode(oldParent, oldPos, newParent, newPos, edgeVertex, oldEdgeId);
-
-        s_logger.info("ret:");
-        updateChildrenAttached();
-
-    }
-
-    public void handoverReferent(Node oldReferrer, int oldPos, Node newReferrer, int newPos)
-    {
-        s_logger.info("arg: oldReferrer:{}", oldReferrer);
-        s_logger.info("arg: oldPos:{}", oldPos);
-        s_logger.info("arg: newReferrer:{}", newReferrer);
-        s_logger.info("arg: newPos:{}", newPos);
-
-        assert (oldReferrer.getGraph() == newReferrer.getGraph());
-
-        if (! isChildrenAttached(newReferrer)) {
-            attachChildren(newReferrer);
+        if (! isReferent) {
+            assert ! m_mindDb.vertexIdIsInSubTreeOf(newSourceDbId, targetVertex.getId());
         }
 
-        Object oldReferrerDbId = getDbId(oldReferrer);
-        Object newReferrerDbId = getDbId(newReferrer);
-        assert (! oldReferrerDbId.equals(newReferrerDbId));
+        //FIXME: 如果newSource有指向自身的边，此处展开一层对于并不能简化代码。
+        if (newSource != null && !isChildrenAttached(newSource)) {
+            attachChildren(newSource);
+        }
 
-        Vertex newReferrerVertex = m_mindDb.getVertex(newReferrerDbId);
-        Object oldEdgeId = getDbId(oldReferrer.getChildEdge(oldPos));
+        Vertex newSourceVertex = m_mindDb.getVertex(newSourceDbId);
+        if (newPos < 0) {
+            newPos = m_mindDb.getChildOrReferentCount(newSourceVertex);
+        }
 
-        EdgeVertex edgeVertex = m_mindDb.handoverReferent(m_mindDb.getEdge(oldEdgeId), newReferrerVertex, newPos);
-        handoverNode(oldReferrer, oldPos, newReferrer, newPos, edgeVertex, oldEdgeId);
+        EdgeVertex newEdgeVertex;
+        if (isReferent) {
+            newEdgeVertex = m_mindDb.handoverReferent(m_mindDb.getEdge(oldEdgeId), newSourceVertex, newPos);
+        } else {
+            newEdgeVertex = m_mindDb.handoverChild(targetVertex, newSourceVertex, newPos);
+        }
+        handoverNode(oldSourceDbId, oldPos, oldSource, newSourceDbId, newPos, newSource, newEdgeVertex, oldEdgeId);
 
-        s_logger.info("ret:");
         updateChildrenAttached();
+        s_logger.info("ret:");
     }
+
 
     public boolean m_verifyNodeEnabled = true;
 

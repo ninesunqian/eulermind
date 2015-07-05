@@ -134,7 +134,7 @@ public class TestMindDB extends TestCase {
     public void testHandover()
     {
         /*
-        handoverChild [MindDB]
+        handoverRelation [MindDB]
         handoverReferent [MindDB]
 
         changeEdgePos [MindDB]

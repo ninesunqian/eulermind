@@ -65,8 +65,6 @@ public class MindDB {
 
 	enum EdgeType {INCLUDE, REFERENCE};
 
-    public static final int ADDING_EDGE_END = 0x7FFFFFFF;
-
 	public OrientGraph m_graph;
 
 	private Index<Vertex> m_rootIndex;
@@ -220,7 +218,7 @@ public class MindDB {
         Collections.sort(outEdgeIdPair);
 
         for (Edge noInnerIdEdge : noInnerIdEdges) {
-            insertToOrderedOutEdges(outEdgeIdPair, ADDING_EDGE_END, noInnerIdEdge);
+            insertToOrderedOutEdges(outEdgeIdPair, -1, noInnerIdEdge);
         }
 
         return outEdgeIdPair;
@@ -313,6 +311,10 @@ public class MindDB {
     public boolean vertexIdIsDescendantOf(Object thiz, Object that) {
         List thizInheritPath = getInheritPath(thiz);
         return thizInheritPath.contains(that);
+    }
+
+    public boolean vertexIdIsInSubTreeOf(Object thiz, Object that) {
+        return vertexIdIsDescendantOf(thiz, that) || vertexIdIsSelf(thiz, that);
     }
 
     public boolean vertexIdIsAncestorOf(Object thiz, Object that) {
@@ -409,7 +411,7 @@ public class MindDB {
         String upper;
         String lower;
 
-        if (pos == ADDING_EDGE_END) {
+        if (pos < 0) {
             pos = outEdgeIdPairs.size();
         }
 
@@ -454,7 +456,7 @@ public class MindDB {
 
     public EdgeVertex addRefEdge(Vertex referrer, Vertex referent)
     {
-        return addRefEdge(referrer, referent, ADDING_EDGE_END);
+        return addRefEdge(referrer, referent, -1);
     }
 
     public EdgeVertex addRefEdge(Vertex referrer, Vertex referent, int pos)
@@ -493,7 +495,7 @@ public class MindDB {
 
     public EdgeVertex addChild (Vertex parent)
     {
-        return addChild(parent, ADDING_EDGE_END);
+        return addChild(parent, -1);
     }
 
 	public EdgeVertex addChild (Vertex parent, int pos)
