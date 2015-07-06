@@ -1,5 +1,7 @@
 package eulermind;
 
+import bibliothek.gui.dock.common.CControl;
+import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import eulermind.component.ButtonTabComponent;
 import eulermind.component.MindPropertyComponent;
 import eulermind.view.MindView;
@@ -10,13 +12,9 @@ import prefuse.data.Tree;
 import prefuse.util.collections.IntIterator;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.undo.UndoManager;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.*;
@@ -50,11 +48,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 public class MindController extends UndoManager {
     Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
-    Hashtable<Tree, MindView> m_mindViews = new Hashtable<>();
+    Hashtable<Tree, DefaultSingleCDockable> m_mindViewDockables = new Hashtable<>();
 
     MindModel m_mindModel;
-    JTabbedPane m_tabbedPane;
     JLabel m_tabInfoLabel;
+    CControl m_dockingCControl;
 
     ArrayList<NodeControl> m_externalMouseContollers = new ArrayList<NodeControl>();
 
@@ -66,16 +64,17 @@ public class MindController extends UndoManager {
     //如果当前剪切板数据与m_clipboardTextFromHere不一致时，说明用户从其他地方复制了信息，粘贴时不能用m_copiedSubTree
     public String m_clipboardTextFormHere;
 
-    MindController(MindModel mindModel, JTabbedPane tabbedPane, JLabel tabInfoLabel) {
+    MindController(MindModel mindModel, CControl dockingCControl, JLabel tabInfoLabel) {
         super();
         m_mindModel = mindModel;
-        m_tabbedPane = tabbedPane;
+        m_dockingCControl = dockingCControl;
         m_tabInfoLabel = tabInfoLabel;
 
-        m_tabbedPane.addChangeListener(new ChangeListener() {
+        /*TODO 切换时更新显示lable
+        m_treePanel.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
-                if (m_tabbedPane.getSelectedComponent() != null) {
-                    Component comp = m_tabbedPane.getSelectedComponent();
+                if (m_treePanel.getSelectedComponent() != null) {
+                    Component comp = m_treePanel.getSelectedComponent();
                     comp.requestFocusInWindow();
                     MindView mindView = (MindView) comp;
                     m_tabInfoLabel.setText(m_mindModel.getVertexDbIdInheritInfo(mindView.getRootDbId()));
@@ -84,6 +83,7 @@ public class MindController extends UndoManager {
                 }
             }
         });
+        */
 
         ArrayList<Object> lastOpenedRootId = m_mindModel.getLastOpenedRootId();
 
@@ -98,52 +98,60 @@ public class MindController extends UndoManager {
         }
 
         //防止切换tab时，焦点被切换到工具栏
-        m_tabbedPane.setFocusCycleRoot(true);
+        //m_treePanel.setFocusCycleRoot(true);
     }
 
     public void setSwitchTabEnable(boolean enabled) {
-        int current = m_tabbedPane.getSelectedIndex();
-        for (int i=0; i<m_tabbedPane.getTabCount(); i++) {
-            m_tabbedPane.setEnabledAt(i, enabled);
+    /*TODO: 编辑时禁止切换
+        int current = m_treePanel.getSelectedIndex();
+        for (int i=0; i< m_treePanel.getTabCount(); i++) {
+            m_treePanel.setEnabledAt(i, enabled);
 
-            m_tabbedPane.getTabComponentAt(i).setEnabled(enabled);
+            m_treePanel.getTabComponentAt(i).setEnabled(enabled);
         }
 
-        m_tabbedPane.setEnabledAt(current, true);
+        m_treePanel.setEnabledAt(current, true);
+    */
     }
 
     public MindView findOrAddMindView(Object rootDBId) {
 
         Tree tree = m_mindModel.findOrPutTree(rootDBId);
-        MindView mindView = m_mindViews.get(tree);
-        if (mindView != null) {
-            m_tabbedPane.setSelectedComponent(mindView);
-            return mindView;
+        DefaultSingleCDockable dockable = m_mindViewDockables.get(tree);
+        if (dockable != null) {
+            //TODO: 切换过来： m_treePanel.setSelectedComponent(mindView);
+            return (MindView)dockable.getFocusComponent();
         }
 
-        mindView = new MindView(m_mindModel, this, tree);
+        MindView mindView = new MindView(m_mindModel, this, tree);
+        dockable = new DefaultSingleCDockable(rootDBId.toString(), mindView);
+        m_dockingCControl.addDockable(dockable);
+        dockable.setVisible(true);
 
-        m_mindViews.put(tree, mindView);
+        m_mindViewDockables.put(tree, dockable);
         Node root = mindView.m_tree.getRoot();
 
-        m_tabbedPane.addTab(m_mindModel.getText(root), mindView);
+        /* TODO：添加一个
+        m_treePanel.addTab(m_mindModel.getText(root), mindView);
 
-        ButtonTabComponent buttonTabComponent = new ButtonTabComponent(m_tabbedPane);
+        ButtonTabComponent buttonTabComponent = new ButtonTabComponent(m_treePanel);
         buttonTabComponent.getButton().addActionListener(m_tabCloseButtonListener);
-        m_tabbedPane.setTabComponentAt(m_tabbedPane.getTabCount() - 1, buttonTabComponent);
 
-        int lastMindViewIndex = m_tabbedPane.getTabCount() - 1;
+        m_treePanel.setTabComponentAt(m_treePanel.getTabCount() - 1, buttonTabComponent);
+
+        int lastMindViewIndex = m_treePanel.getTabCount() - 1;
         if (lastMindViewIndex < 9) {
-            m_tabbedPane.setMnemonicAt(lastMindViewIndex, KeyEvent.VK_1 + lastMindViewIndex);
+            m_treePanel.setMnemonicAt(lastMindViewIndex, KeyEvent.VK_1 + lastMindViewIndex);
         } else if (lastMindViewIndex == 9) {
-            m_tabbedPane.setMnemonicAt(lastMindViewIndex, KeyEvent.VK_0);
+            m_treePanel.setMnemonicAt(lastMindViewIndex, KeyEvent.VK_0);
         } else {
             //not setMnemonicAt
         }
 
-        if (mindView != m_tabbedPane.getSelectedComponent()) {
-            m_tabbedPane.setSelectedComponent(mindView);
+        if (mindView != m_treePanel.getSelectedComponent()) {
+            m_treePanel.setSelectedComponent(mindView);
         }
+        */
 
         return  mindView;
     }
@@ -153,43 +161,46 @@ public class MindController extends UndoManager {
         public void actionPerformed(ActionEvent e)
         {
             ButtonTabComponent buttonTabComponent = ((ButtonTabComponent.TabButton)e.getSource()).getButtonTabComponent();
-            int pos = m_tabbedPane.indexOfTabComponent(buttonTabComponent);
-            MindView removedMindView = (MindView)m_tabbedPane.getComponentAt(pos);
+            /*TODO: 关闭一个树
+            int pos = m_treePanel.indexOfTabComponent(buttonTabComponent);
+            MindView removedMindView = (MindView) m_treePanel.getComponentAt(pos);
 
             if (removedMindView.isChanging()) {
                 return;
             }
 
-            for (Tree tree: m_mindViews.keySet()) {
-                if (m_mindViews.get(tree) == removedMindView) {
+            for (Tree tree: m_mindViewDockables.keySet()) {
+                if (m_mindViewDockables.get(tree) == removedMindView) {
                     m_mindModel.closeSubTree(tree);
-                    m_mindViews.remove(tree);
-                    m_tabbedPane.remove(removedMindView);
+                    m_mindViewDockables.remove(tree);
+                    m_treePanel.remove(removedMindView);
                     return;
                 }
             }
+            */
         }
     };
 
     public MindView exposeMindView(Object rootDBId) {
         MindView mindView = findOrAddMindView(rootDBId);
 
-        //FIXME: findOrAddMindView 有下面的逻辑了，这个函数还有必要吗
-        if (m_tabbedPane.getSelectedComponent() != mindView) {
-            m_tabbedPane.setSelectedComponent(mindView);
-        }
         return mindView;
     }
 
     public void updateAllMindViews() {
         ArrayList<MindView> mindViews = new ArrayList<MindView>();
-        for(int i=0; i<m_tabbedPane.getTabCount(); i++) {
-            ((MindView)m_tabbedPane.getComponentAt(i)).renderTree();
+        /* 所有的树都更新
+        for(int i=0; i< m_treePanel.getTabCount(); i++) {
+            ((MindView) m_treePanel.getComponentAt(i)).renderTree();
         }
+        */
     }
 
     public MindView getCurrentView() {
-        return (MindView)m_tabbedPane.getSelectedComponent();
+        /*返回当前显示的树
+        return (MindView) m_treePanel.getSelectedComponent();
+        */
+        return null;
     }
 
     public boolean isChanging() {
@@ -239,21 +250,21 @@ public class MindController extends UndoManager {
         HashSet<Tree> invalidTrees = new HashSet<>();
 
         //不能直接操作keySet， 否则会影响到内部变化
-        invalidTrees.addAll(m_mindViews.keySet());
+        invalidTrees.addAll(m_mindViewDockables.keySet());
         invalidTrees.removeAll(m_mindModel.getDisplaySubTrees());
 
         for (Tree tree : invalidTrees) {
-            MindView mindView = m_mindViews.get(tree);
-            m_tabbedPane.remove(mindView);
-            m_mindViews.remove(tree);
+            //MindView mindView = m_mindViewDockables.get(tree);
+            //TODO: m_treePanel.remove(mindView);
+            m_mindViewDockables.remove(tree);
         }
 
         {
             invalidTrees.clear();
-            invalidTrees.addAll(m_mindViews.keySet());
+            invalidTrees.addAll(m_mindViewDockables.keySet());
             invalidTrees.removeAll(m_mindModel.getDisplaySubTrees());
             assert invalidTrees.size() == 0;
-            assert m_mindViews.size() == m_mindModel.getDisplaySubTrees().size();
+            assert m_mindViewDockables.size() == m_mindModel.getDisplaySubTrees().size();
         }
     }
 
@@ -263,9 +274,9 @@ public class MindController extends UndoManager {
 
         MindView operatorBornView = exposeMindView(operator.m_rootDbId);
 
-        for (Tree tree : m_mindViews.keySet()) {
+        for (Tree tree : m_mindViewDockables.keySet()) {
 
-            MindView mindView = m_mindViews.get(tree);
+            /*TODO: MindView mindView = m_mindViewDockables.get(tree);
             mindView.setCursorAfterTreeChanged();
 
             if (mindView == operatorBornView) {
@@ -273,6 +284,7 @@ public class MindController extends UndoManager {
             }
 
             mindView.renderTreeToEndChanging();
+            */
         }
     }
 
@@ -280,10 +292,12 @@ public class MindController extends UndoManager {
     {
         removeInvalidMindViews();
 
-        for (Tree tree : m_mindViews.keySet()) {
-            MindView mindView = m_mindViews.get(tree);
+        for (Tree tree : m_mindViewDockables.keySet()) {
+            /*TODO
+            MindView mindView = m_mindViewDockables.get(tree);
             mindView.setCursorAfterTreeChanged();
             mindView.renderTreeToEndChanging();
+            */
         }
     }
 

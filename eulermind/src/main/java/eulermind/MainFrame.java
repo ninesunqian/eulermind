@@ -5,6 +5,8 @@ import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
 
+import bibliothek.gui.dock.common.CControl;
+import bibliothek.gui.dock.common.MissingCDockableStrategy;
 import eulermind.component.*;
 import eulermind.view.MindEditor;
 import eulermind.view.MindView;
@@ -36,6 +38,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 public class MainFrame  extends JFrame {
     static Logger m_logger = LoggerFactory.getLogger(EulerMind.class);
+    private final CControl m_dockingCControl;
 
     JMenu m_mindMapMenu;
     JMenu m_importMenu;
@@ -47,7 +50,7 @@ public class MainFrame  extends JFrame {
     MindController m_mindController;
     StyleList m_styleList;
     JLabel m_tabInfoLabel;
-    JTabbedPane m_tabbedPane;
+    JPanel m_treePanel;
 
     SwingEngine m_swingEngine;
 
@@ -102,10 +105,12 @@ public class MainFrame  extends JFrame {
 
         addWindowFocusListener(new WindowAdapter() {
             public void windowGainedFocus(WindowEvent e) {
-                Component comp = m_tabbedPane.getSelectedComponent();
+                /*TODO
+                Component comp = m_treePanel.getSelectedComponent();
                 if (comp != null) {
                     comp.requestFocusInWindow();
                 }
+                */
             }
         });
 
@@ -125,6 +130,23 @@ public class MainFrame  extends JFrame {
 
         m_propertyToolBarVisibleCheckMenu.addActionListener(m_propertyToolBarVisibleAction);
         m_alwaysOnTopCheckMenu.addActionListener(m_alwaysOnTopAction);
+
+
+        if (true) {
+            m_treePanel.setLayout(new GridLayout(1, 1));
+            JRootPane rootPane = new JRootPane();
+            m_treePanel.add(rootPane);
+
+            rootPane.getContentPane().setLayout( new BorderLayout() );
+
+            m_dockingCControl = new CControl( true );
+            m_dockingCControl .setMissingStrategy(MissingCDockableStrategy.STORE);
+            rootPane.getContentPane().add(m_dockingCControl.getContentArea(), BorderLayout.CENTER );
+
+        } else {
+            m_dockingCControl = new CControl(this);
+            getContentPane().add(m_dockingCControl.getContentArea(), BorderLayout.CENTER);
+        }
 
         if (Utils.isDebugging()) {
             openMindDb("debug");
@@ -160,7 +182,7 @@ public class MainFrame  extends JFrame {
 
         String url = Utils.mindMapNameToUrl(name);
         m_mindModel = new MindModel(url);
-        m_mindController = new MindController(m_mindModel, m_tabbedPane, m_tabInfoLabel);
+        m_mindController = new MindController(m_mindModel, m_dockingCControl, m_tabInfoLabel);
 
         bindComponents();
         setComponentEnabled(true);
@@ -209,7 +231,7 @@ public class MainFrame  extends JFrame {
 
     private void unbindComponents()
     {
-        m_tabbedPane.removeAll();
+        m_treePanel.removeAll();
 
         m_mindController.removeMindPropertyComponent(MindModel.sm_fontFamilyPropName, m_fontFamilyCombobox);
         m_mindController.removeMindPropertyComponent(MindModel.sm_fontSizePropName, m_fontSizeCombobox);
@@ -244,7 +266,7 @@ public class MainFrame  extends JFrame {
         m_iconButton.setEnabled(enabled);
 
         m_styleList.setEnabled(enabled);
-        m_tabbedPane.setEnabled(enabled);
+        m_treePanel.setEnabled(enabled);
 
         m_styleNewButton.setEnabled(enabled);
         m_styleDeletingButton.setEnabled(enabled);

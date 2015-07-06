@@ -82,7 +82,7 @@
 
 
     <vbox constraints="BorderLayout.CENTER">
-        <tabbedPane id="m_tabbedPane"/>
+        <panel id="m_treePanel"/>
         <label id="m_tabInfoLabel" text=" "/>
     </vbox>
 
