@@ -131,8 +131,10 @@ public class MainFrame  extends JFrame {
         m_propertyToolBarVisibleCheckMenu.addActionListener(m_propertyToolBarVisibleAction);
         m_alwaysOnTopCheckMenu.addActionListener(m_alwaysOnTopAction);
 
+        int test_ccontrol = 3;
 
-        if (true) {
+        if (test_ccontrol == 1) {
+            //从layout例子中取得的
             m_treePanel.setLayout(new GridLayout(1, 1));
             JRootPane rootPane = new JRootPane();
             m_treePanel.add(rootPane);
@@ -143,9 +145,18 @@ public class MainFrame  extends JFrame {
             m_dockingCControl .setMissingStrategy(MissingCDockableStrategy.STORE);
             rootPane.getContentPane().add(m_dockingCControl.getContentArea(), BorderLayout.CENTER );
 
-        } else {
+        } else if (test_ccontrol == 2) {
+            //基本用法
             m_dockingCControl = new CControl(this);
             getContentPane().add(m_dockingCControl.getContentArea(), BorderLayout.CENTER);
+
+        } else {
+            //放到一个pannel中
+            m_dockingCControl = new CControl(this);
+            m_dockingCControl .setMissingStrategy(MissingCDockableStrategy.STORE);
+
+            m_treePanel.setLayout(new GridLayout(1, 1));
+            m_treePanel.add(m_dockingCControl.getContentArea());
         }
 
         if (Utils.isDebugging()) {

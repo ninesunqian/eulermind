@@ -2,7 +2,6 @@ package eulermind;
 
 import bibliothek.gui.dock.common.CControl;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
-import eulermind.component.ButtonTabComponent;
 import eulermind.component.MindPropertyComponent;
 import eulermind.view.MindView;
 import eulermind.view.NodeControl;
@@ -129,29 +128,6 @@ public class MindController extends UndoManager {
         dockable.setVisible(true);
 
         m_mindViewDockables.put(tree, dockable);
-        Node root = mindView.m_tree.getRoot();
-
-        /* TODO：添加一个
-        m_treePanel.addTab(m_mindModel.getText(root), mindView);
-
-        ButtonTabComponent buttonTabComponent = new ButtonTabComponent(m_treePanel);
-        buttonTabComponent.getButton().addActionListener(m_tabCloseButtonListener);
-
-        m_treePanel.setTabComponentAt(m_treePanel.getTabCount() - 1, buttonTabComponent);
-
-        int lastMindViewIndex = m_treePanel.getTabCount() - 1;
-        if (lastMindViewIndex < 9) {
-            m_treePanel.setMnemonicAt(lastMindViewIndex, KeyEvent.VK_1 + lastMindViewIndex);
-        } else if (lastMindViewIndex == 9) {
-            m_treePanel.setMnemonicAt(lastMindViewIndex, KeyEvent.VK_0);
-        } else {
-            //not setMnemonicAt
-        }
-
-        if (mindView != m_treePanel.getSelectedComponent()) {
-            m_treePanel.setSelectedComponent(mindView);
-        }
-        */
 
         return  mindView;
     }
@@ -160,7 +136,6 @@ public class MindController extends UndoManager {
         @Override
         public void actionPerformed(ActionEvent e)
         {
-            ButtonTabComponent buttonTabComponent = ((ButtonTabComponent.TabButton)e.getSource()).getButtonTabComponent();
             /*TODO: 关闭一个树
             int pos = m_treePanel.indexOfTabComponent(buttonTabComponent);
             MindView removedMindView = (MindView) m_treePanel.getComponentAt(pos);
@@ -254,8 +229,8 @@ public class MindController extends UndoManager {
         invalidTrees.removeAll(m_mindModel.getDisplaySubTrees());
 
         for (Tree tree : invalidTrees) {
-            //MindView mindView = m_mindViewDockables.get(tree);
-            //TODO: m_treePanel.remove(mindView);
+            //TODO: test it
+            m_dockingCControl.removeDockable(m_mindViewDockables.get(tree));
             m_mindViewDockables.remove(tree);
         }
 
@@ -276,7 +251,7 @@ public class MindController extends UndoManager {
 
         for (Tree tree : m_mindViewDockables.keySet()) {
 
-            /*TODO: MindView mindView = m_mindViewDockables.get(tree);
+            MindView mindView = (MindView)m_mindViewDockables.get(tree).getContentPane().getComponent(0);
             mindView.setCursorAfterTreeChanged();
 
             if (mindView == operatorBornView) {
@@ -284,7 +259,6 @@ public class MindController extends UndoManager {
             }
 
             mindView.renderTreeToEndChanging();
-            */
         }
     }
 
@@ -293,11 +267,9 @@ public class MindController extends UndoManager {
         removeInvalidMindViews();
 
         for (Tree tree : m_mindViewDockables.keySet()) {
-            /*TODO
-            MindView mindView = m_mindViewDockables.get(tree);
+            MindView mindView = (MindView)m_mindViewDockables.get(tree).getContentPane().getComponent(0);
             mindView.setCursorAfterTreeChanged();
             mindView.renderTreeToEndChanging();
-            */
         }
     }
 
