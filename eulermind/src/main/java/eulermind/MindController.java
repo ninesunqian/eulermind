@@ -2,6 +2,10 @@ package eulermind;
 
 import bibliothek.gui.dock.common.CControl;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
+import bibliothek.gui.dock.common.EnableableItem;
+import bibliothek.gui.dock.common.event.*;
+import bibliothek.gui.dock.common.intern.CDockable;
+import bibliothek.gui.dock.common.mode.ExtendedMode;
 import eulermind.component.MindPropertyComponent;
 import eulermind.view.MindView;
 import eulermind.view.NodeControl;
@@ -98,19 +102,30 @@ public class MindController extends UndoManager {
 
         //防止切换tab时，焦点被切换到工具栏
         //m_treePanel.setFocusCycleRoot(true);
+
+        m_dockingCControl.addVetoFocusListener(new CVetoFocusListener() {
+            @Override
+            public boolean willGainFocus(CDockable dockable) {
+                return true;
+            }
+
+            @Override
+            public boolean willLoseFocus(CDockable dockable) {
+                MindView mindView = getMindViewFromDockable((DefaultSingleCDockable)dockable);
+                if (mindView.isChanging()) {
+                    return false;  //To change body of implemented methods use File | Settings | File Templates.
+                } else {
+                    return true;
+                }
+            }
+        });
+
     }
 
-    public void setSwitchTabEnable(boolean enabled) {
-    /*TODO: 编辑时禁止切换
-        int current = m_treePanel.getSelectedIndex();
-        for (int i=0; i< m_treePanel.getTabCount(); i++) {
-            m_treePanel.setEnabledAt(i, enabled);
+    private MindView getMindViewFromDockable(DefaultSingleCDockable dockable)
+    {
+        return (MindView)dockable.getContentPane().getComponent(0);
 
-            m_treePanel.getTabComponentAt(i).setEnabled(enabled);
-        }
-
-        m_treePanel.setEnabledAt(current, true);
-    */
     }
 
     public MindView findOrAddMindView(Object rootDBId) {
@@ -118,12 +133,19 @@ public class MindController extends UndoManager {
         Tree tree = m_mindModel.findOrPutTree(rootDBId);
         DefaultSingleCDockable dockable = m_mindViewDockables.get(tree);
         if (dockable != null) {
-            //TODO: 切换过来： m_treePanel.setSelectedComponent(mindView);
-            return (MindView)dockable.getFocusComponent();
+            return (MindView)getMindViewFromDockable(dockable);
         }
 
         MindView mindView = new MindView(m_mindModel, this, tree);
         dockable = new DefaultSingleCDockable(rootDBId.toString(), mindView);
+
+        dockable.setCloseable(true);
+        dockable.setMaximizable(true);
+        dockable.setMinimizable(true);
+        dockable.setEnabled(EnableableItem.ALL, false);
+
+        dockable.addVetoClosingListener(m_cVetoClosingListener);
+
         m_dockingCControl.addDockable(dockable);
         dockable.setVisible(true);
 
@@ -132,33 +154,44 @@ public class MindController extends UndoManager {
         return  mindView;
     }
 
-    ActionListener m_tabCloseButtonListener = new ActionListener() {
+    CVetoClosingListener m_cVetoClosingListener = new CVetoClosingListener() {
         @Override
-        public void actionPerformed(ActionEvent e)
-        {
-            /*TODO: 关闭一个树
-            int pos = m_treePanel.indexOfTabComponent(buttonTabComponent);
-            MindView removedMindView = (MindView) m_treePanel.getComponentAt(pos);
+        public void closing(CVetoClosingEvent event) {
+            m_logger.info("closing dockable count: {}", event.getDockableCount());
 
-            if (removedMindView.isChanging()) {
-                return;
-            }
-
-            for (Tree tree: m_mindViewDockables.keySet()) {
-                if (m_mindViewDockables.get(tree) == removedMindView) {
-                    m_mindModel.closeSubTree(tree);
-                    m_mindViewDockables.remove(tree);
-                    m_treePanel.remove(removedMindView);
+            for (int i=0; i<event.getDockableCount(); i++) {
+                DefaultSingleCDockable dockable = (DefaultSingleCDockable)event.getDockable(i);
+                if (getMindViewFromDockable(dockable).isChanging()) {
+                    event.cancel();
                     return;
                 }
             }
-            */
+        }
+
+        @Override
+        public void closed(CVetoClosingEvent event) {
+            m_logger.info("closed dockable count: {}", event.getDockableCount());
+
+            for (int i=0; i<event.getDockableCount(); i++) {
+                removeClosedDockable((DefaultSingleCDockable) event.getDockable(i));
+            }
         }
     };
 
+    private void removeClosedDockable(DefaultSingleCDockable dockable)
+    {
+        for (Tree tree: m_mindViewDockables.keySet()) {
+            if (m_mindViewDockables.get(tree) == dockable) {
+                m_mindModel.closeSubTree(tree);
+                m_mindViewDockables.remove(tree);
+                m_dockingCControl.removeDockable(dockable);
+                return;
+            }
+        }
+    }
+
     public MindView exposeMindView(Object rootDBId) {
         MindView mindView = findOrAddMindView(rootDBId);
-
         return mindView;
     }
 
@@ -229,9 +262,8 @@ public class MindController extends UndoManager {
         invalidTrees.removeAll(m_mindModel.getDisplaySubTrees());
 
         for (Tree tree : invalidTrees) {
-            //TODO: test it
-            m_dockingCControl.removeDockable(m_mindViewDockables.get(tree));
-            m_mindViewDockables.remove(tree);
+            DefaultSingleCDockable dockable = m_mindViewDockables.get(tree);
+            dockable.setVisible(false); //该函数会自动调用 m_cVetoClosingListener
         }
 
         {
