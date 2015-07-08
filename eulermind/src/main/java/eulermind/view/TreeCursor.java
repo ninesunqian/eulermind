@@ -241,6 +241,7 @@ public class TreeCursor extends NodeControl {
 
             selectNodeItem(m_xAxis.get(m_currentXIndex));
             m_mindView.renderTree();
+            m_mindView.panToExposeItem(getCursorNodeItem());
         }
     }
 
@@ -274,6 +275,7 @@ public class TreeCursor extends NodeControl {
 
             selectNodeItem(m_xAxis.get(m_currentXIndex));
             m_mindView.renderTree();
+            m_mindView.panToExposeItem(getCursorNodeItem());
         }
     }
 
@@ -293,6 +295,7 @@ public class TreeCursor extends NodeControl {
 
             selectNodeItem(m_yAxis.get(m_currentYIndex));
             m_mindView.renderTree();
+            m_mindView.panToExposeItem(getCursorNodeItem());
         }
     }
 
@@ -313,6 +316,7 @@ public class TreeCursor extends NodeControl {
 
             selectNodeItem(m_yAxis.get(m_currentYIndex));
             m_mindView.renderTree();
+            m_mindView.panToExposeItem(getCursorNodeItem());
         }
     }
 

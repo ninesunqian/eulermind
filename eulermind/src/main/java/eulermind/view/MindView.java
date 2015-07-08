@@ -106,6 +106,16 @@ public class MindView extends Display {
 
         this.requestFocusInWindow();
         this.setFocusCycleRoot(true);
+
+        addComponentListener(new ComponentListener() {
+            public void componentResized(ComponentEvent e) {
+                panToExposeItem(m_cursor.getCursorNodeItem());
+            }
+
+            public void componentMoved(ComponentEvent e) { }
+            public void componentShown(ComponentEvent e) { }
+            public void componentHidden(ComponentEvent e) { }
+        });
     }
 
     private void initEditor() {
@@ -304,7 +314,7 @@ public class MindView extends Display {
                     dy = -getHeight() * 0.1 * e.getPreciseWheelRotation();
                 }
 
-                pan(dx, dy);
+                panOnItems(dx, dy);
                 repaint();
             }
         };
@@ -333,6 +343,22 @@ public class MindView extends Display {
         addControlListener(m_folder);
 
         addControlListener(m_stopEditControl);
+
+        addControlListener(new NodeControl(this) {
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                m_logger.info("press: x:{}, y{}", e.getX(), e.getY());
+            }
+
+            @Override
+            public void nodeItemPressed(NodeItem item, MouseEvent e) {
+                m_logger.info("nodeItemPressed: x:{}, y{},   item x:{},y:{}", e.getX(), e.getY(),
+                        item.getX(), item.getY());
+
+            }
+
+        });
 	}
 
     void setTransformEnabled(boolean enabled)

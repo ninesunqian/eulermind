@@ -82,7 +82,7 @@ public class PanControl extends ControlAdapter {
             Display display = (Display)e.getComponent();
             int x = e.getX(),   y = e.getY();
             int dx = x-m_xDown, dy = y-m_yDown;
-            display.pan(dx,dy);
+            display.panOnItems(dx,dy);
             m_xDown = x;
             m_yDown = y;
             display.repaint();

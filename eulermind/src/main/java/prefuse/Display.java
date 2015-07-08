@@ -1534,7 +1534,115 @@ public class Display extends JComponent {
         }
         return null;
     }
-    
+
+    public Rectangle getItemDisplayBounds(VisualItem item) {
+        if (!item.isValid()) {
+            return null;
+        }
+
+        Rectangle2D b = item.getBounds();
+        return m_transform.createTransformedShape(b).getBounds();
+    }
+
+    public Rectangle getItemsDisplayBounds() {
+        double left    = Integer.MAX_VALUE;
+        double right   = Integer.MIN_VALUE;
+        double top     = Integer.MAX_VALUE;
+        double bottom  = Integer.MIN_VALUE;
+
+        for (int i = m_queue.psize - 1; i >= 0; i--) {
+            VisualItem item = m_queue.pitems[i];
+
+            if ( !item.isValid() ) {
+                continue;
+            }
+
+            Rectangle2D itemBounds = item.getBounds();
+
+            if (itemBounds.getX() < left) {
+                left = itemBounds.getX();
+            }
+
+            if (itemBounds.getMaxX() > right) {
+                right = itemBounds.getMaxX();
+            }
+
+            if (itemBounds.getY() < top) {
+                top = itemBounds.getY();
+            }
+
+            if (itemBounds.getMaxY() > bottom) {
+                bottom = itemBounds.getMaxY();
+            }
+        }
+
+        Rectangle2D allBounds = new Rectangle2D.Double(left, top, right - left, bottom - top);
+        return m_transform.createTransformedShape(allBounds).getBounds();
+    }
+
+    public void panToExposeItem(VisualItem item) {
+        Rectangle bounds = getItemDisplayBounds(item);
+
+        double dx = 0;
+        double dy = 0;
+
+        int left    = bounds.x;
+        int right   = bounds.x + bounds.width;
+        int top     = bounds.y;
+        int bottom  = bounds.y + bounds.height;
+
+        if (left <= 0 && getWidth() <= right) {
+            dx = 0;
+        } else if (left < 0) {
+            dx = 0 - left;
+        } else if (getWidth() < right) {
+            dx = getWidth() - right;
+        }
+
+        if (top <= 0 && getHeight() <= bottom) {
+            dy = 0;
+        } else  if (top < 0) {
+            dy = 0 - top;
+        } else if (getHeight() < bottom) {
+            dy = getHeight() - bottom;
+        }
+
+        if (dx != 0 || dy != 0) {
+            pan(dx, dy);
+        }
+    }
+
+    public void panOnItems(double dx, double dy) {
+        Rectangle allItemBounds = getItemsDisplayBounds();
+
+        double minXOfContentOnDisplay = 0 - allItemBounds.getWidth();
+        double maxXOfContentOnDisplay = getWidth();
+
+        double minYOfContentOnDisplay = 0 - allItemBounds.getHeight();
+        double maxYOfContentOnDisplay = getHeight();
+
+        double minDx = minXOfContentOnDisplay - allItemBounds.getX();
+        double maxDx = maxXOfContentOnDisplay - allItemBounds.getX();
+
+        double minDy = minYOfContentOnDisplay - allItemBounds.getY();
+        double maxDy = maxYOfContentOnDisplay - allItemBounds.getY();
+
+        if (dx < minDx) {
+            dx = minDx;
+        } else if (dx > maxDx) {
+            dx = maxDx;
+        }
+
+        if (dy < minDy) {
+            dy = minDy;
+        } else if (dy > maxDy) {
+            dy = maxDy;
+        }
+
+        pan(dx, dy);
+    }
+
+
     /**
      * Captures all mouse and key events on the display, detects relevant 
      * VisualItems, and informs ControlListeners.
@@ -1875,6 +1983,9 @@ public class Display extends JComponent {
             Object[] lstnrs = m_controls.getArray();
             for (int i = 0; i < lstnrs.length; ++i) {
                 Control ctrl = (Control) lstnrs[i];
+                if (ctrl == null) {
+                    int debug=1;
+                }
                 if (ctrl.isEnabled())
                     try {
                         ctrl.mouseEntered(e);
