@@ -1,7 +1,12 @@
 package eulermind.view;
 
 import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -25,6 +30,7 @@ import prefuse.util.PrefuseLib;
 import prefuse.util.ui.UILib;
 import prefuse.visual.EdgeItem;
 import prefuse.visual.NodeItem;
+import prefuse.visual.VisualItem;
 import prefuse.visual.VisualTree;
 import prefuse.visual.expression.VisiblePredicate;
 import prefuse.visual.sort.TreeDepthItemSorter;
@@ -116,6 +122,8 @@ public class MindView extends Display {
             public void componentShown(ComponentEvent e) { }
             public void componentHidden(ComponentEvent e) { }
         });
+
+        setDragAndDrop();
     }
 
     private void initEditor() {
@@ -497,32 +505,80 @@ public class MindView extends Display {
 
     public void copySubTree()
     {
-        m_mindController.m_clipboardTextFormHere = "";
+        //这里需要用一个变量保存下剪切板内容，以判断paste操作时来自内部，还是外部
+        m_mindController.m_clipboardTextFormHere = getSelectedSubTreesText();
+        m_mindController.m_toBeLinkedDbIds = getDBIdsOfSelectedNodes();
+        m_mindController.m_copiedSubTrees = getSelectedSubTrees();
 
-        m_mindController.m_toBeLinkedDbIds.clear();
-        m_mindController.m_copiedSubTrees.clear();
+        Utils.copyStringToSystemClipboard(m_mindController.m_clipboardTextFormHere);
+    }
+
+    public String getSelectedSubTreesText()
+    {
+        String text = "";
 
         final String newline  = System.getProperty("line.separator");
 
         List<Node> selectedNodes = getSelectedSourceNodes();
         selectedNodes = breadthFirstSort(selectedNodes);
+        selectedNodes = removeNodesInSameDisplaySubTree(selectedNodes);
+
+        for (Node node : selectedNodes) {
+            String subTreeText = m_mindModel.getSubTreeText(node);
+            if (!subTreeText.endsWith(newline)) {
+                subTreeText += newline;
+            }
+
+            text += subTreeText;
+        }
+
+        return text;
+    }
+
+    public ArrayList<Tree> getSelectedSubTrees()
+    {
+        ArrayList<Tree> subTrees = new ArrayList<>();
+
+        List<Node> selectedNodes = getSelectedSourceNodes();
+        selectedNodes = breadthFirstSort(selectedNodes);
+        selectedNodes = removeNodesInSameDisplaySubTree(selectedNodes);
 
         for (Node node : selectedNodes) {
             //只复制可见的部分，不可见的部分可能在数据库内数目巨大
-            m_mindController.m_copiedSubTrees.add(m_visualTree.copySubTree(toVisual(node), VisiblePredicate.TRUE,
+            subTrees.add(m_visualTree.copySubTree(toVisual(node), VisiblePredicate.TRUE,
                     MindModel.sm_nodePropNames, MindModel.sm_edgePropNames));
-
-            String text = m_mindModel.getSubTreeText(node);
-            if (!text.endsWith(newline)) {
-                text += newline;
-            }
-            m_mindController.m_clipboardTextFormHere += text;
-
-            m_mindController.m_toBeLinkedDbIds.add(m_mindModel.getDbId(node));
         }
 
-        Utils.copyStringToSystemClipboard(m_mindController.m_clipboardTextFormHere);
+        return subTrees;
     }
+
+    public ArrayList<Object> getInEdgeDBIdsOfSelectedNodes()
+    {
+        List<Node> selectedNodes = getSelectedSourceNodes();
+        selectedNodes = breadthFirstSort(selectedNodes);
+        selectedNodes = removeNodesWithSameInEdgeDbId(selectedNodes);
+        ArrayList<Object> inEdgeDbIds = new ArrayList<>();
+
+        for (Node node : selectedNodes) {
+            Edge inEdge = node.getParentEdge();
+            inEdgeDbIds.add(m_mindModel.getDbId(inEdge));
+        }
+
+        return inEdgeDbIds;
+    }
+
+    public ArrayList<Object> getDBIdsOfSelectedNodes()  {
+        List<Node> selectedNodes = getSelectedSourceNodes();
+        selectedNodes = breadthFirstSort(selectedNodes);
+        ArrayList<Object> dbIds = new ArrayList<>();
+        for (Node node : selectedNodes) {
+            dbIds.add(m_mindModel.getDbId(node));
+        }
+
+        return dbIds;
+    }
+
+
 
     public void pasteAsSubTree()
     {
@@ -1015,9 +1071,9 @@ public class MindView extends Display {
     };
 
 
-    List<MindOperator> getDragOperator(Node droppedNode,
-                                       NodeControl.HitPosition hitPosition,
-                                       boolean toAddReference)
+    List<MindOperator> getDragOperators(Node droppedNode,
+                                        NodeControl.HitPosition hitPosition,
+                                        boolean toAddReference)
     {
         MindModel mindModel = m_mindModel;
 
@@ -1078,7 +1134,7 @@ public class MindView extends Display {
         //选集的上移：放在最上端的哥哥上面 (肯定不在选集内)
 
 
-        List<MindOperator> operators = getDragOperator(boundary.top.getPreviousSibling(), NodeControl.HitPosition.TOP, false);
+        List<MindOperator> operators = getDragOperators(boundary.top.getPreviousSibling(), NodeControl.HitPosition.TOP, false);
         if (operators != null && operators.size() > 0) {
             m_mindController.does(operators);
         }
@@ -1096,7 +1152,7 @@ public class MindView extends Display {
 
         //选集的下移：放在最下端的弟弟的下面 (肯定不在选集内)
 
-        List<MindOperator> operators = getDragOperator(boundary.bottom.getNextSibling(), NodeControl.HitPosition.BOTTOM, false);
+        List<MindOperator> operators = getDragOperators(boundary.bottom.getNextSibling(), NodeControl.HitPosition.BOTTOM, false);
         if (operators != null && operators.size() > 0) {
             m_mindController.does(operators);
         }
@@ -1109,7 +1165,7 @@ public class MindView extends Display {
 
         //选集的左移：放入最左端的父亲的弟弟位置 (肯定不在选集内)
         if (boundary.left.getParent() != null) {
-            List<MindOperator> operators = getDragOperator(boundary.left.getParent(), NodeControl.HitPosition.BOTTOM, false);
+            List<MindOperator> operators = getDragOperators(boundary.left.getParent(), NodeControl.HitPosition.BOTTOM, false);
             if (operators != null && operators.size() > 0) {
                 m_mindController.does(operators);
             }
@@ -1143,7 +1199,7 @@ public class MindView extends Display {
         }
 
         if (leftSibling != null) {
-            List<MindOperator> operators = getDragOperator(leftSibling, NodeControl.HitPosition.RIGHT, false);
+            List<MindOperator> operators = getDragOperators(leftSibling, NodeControl.HitPosition.RIGHT, false);
             if (operators != null && operators.size() > 0) {
                 m_mindController.does(operators);
             }
@@ -1402,4 +1458,156 @@ public class MindView extends Display {
         return MindModel.getDbId(m_tree.getRoot());
     }
 
+    private void setDragAndDrop() {
+
+        DragSource dragSource = DragSource.getDefaultDragSource();
+        dragSource.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_COPY_OR_MOVE | DnDConstants.ACTION_LINK,
+            new DragGestureListener() {
+                public void dragGestureRecognized(DragGestureEvent dragGestureEvent) {
+
+                    Point dragOrigin = dragGestureEvent.getDragOrigin();
+                    VisualItem item = findItem(dragOrigin);
+                    if (item != null && item instanceof NodeItem) {
+                        m_mindController.m_dragSourceMindView = MindView.this;
+                        dragGestureEvent.startDrag(null, new MindTransferable(MindView.this));
+                    }
+                }
+            }
+        );
+
+        setDropTarget(new MindDropTarget());
+    }
+
+    static class DndData {
+        final public String m_textForOuterCopying;
+        final public ArrayList<Tree> m_treesForInnerCopying;
+        final public ArrayList<Object> m_vertexIdsForLinking;
+        final public ArrayList<Object> m_edgeIdsForDragging;
+
+        DndData(MindView mindView) {
+            m_textForOuterCopying = mindView.getSelectedSubTreesText();
+            m_treesForInnerCopying = mindView.getSelectedSubTrees();
+            m_vertexIdsForLinking = mindView.getDBIdsOfSelectedNodes();
+            m_edgeIdsForDragging = mindView.getInEdgeDBIdsOfSelectedNodes();
+        }
+    }
+
+    NodeItem m_dndDargOverNode;
+    NodeControl.HitPosition m_dndHitPosition;
+
+    static class MindTransferable implements Transferable {
+
+        public static final DataFlavor MIND_DATA_FLAVOR = new DataFlavor(DndData.class, DataFlavor.javaJVMLocalObjectMimeType);
+
+        DndData m_data;
+
+        //防止不同eulermind进程之间的拖动操作。
+        static final Double m_placeHoldValue = StrictMath.random();
+
+        MindTransferable(MindView mindView) {
+            m_data = new DndData(mindView);
+        }
+
+        @Override
+        public DataFlavor[] getTransferDataFlavors() {
+            return new DataFlavor[] {DataFlavor.stringFlavor, MIND_DATA_FLAVOR};
+        }
+
+        @Override
+        public boolean isDataFlavorSupported(DataFlavor flavor) {
+            return flavor == DataFlavor.stringFlavor || flavor == MIND_DATA_FLAVOR;
+        }
+
+        @Override
+        public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
+            if (flavor == DataFlavor.stringFlavor) {
+                return m_data.m_textForOuterCopying;
+            } else if (flavor == MIND_DATA_FLAVOR) {
+                return m_data;
+            } else {
+                throw new UnsupportedFlavorException(flavor);
+            }
+        }
+    }
+
+    void dndHitTestAndUpdateDisplay(Point point)
+    {
+        NodeItem dragOverNode = null;
+        NodeControl.HitPosition hitPosition = null;
+
+        if (point != null)  {
+            Object hitInfo[] = NodeControl.hitTest(MindView.this, point);
+            dragOverNode = (NodeItem)hitInfo[0];
+            hitPosition = (NodeControl.HitPosition)hitInfo[1];
+        }
+
+        if (dragOverNode != m_dndDargOverNode || hitPosition != m_dndHitPosition) {
+            renderTree();
+            m_dndDargOverNode = dragOverNode;
+            m_dndHitPosition = hitPosition;
+        }
+    }
+
+    private final class MindDropTarget extends DropTarget {
+
+        boolean canAccept(DropTargetDragEvent e) {
+            Transferable transfer = e.getTransferable();
+            return transfer.isDataFlavorSupported(MindTransferable.MIND_DATA_FLAVOR) ||
+                    transfer.isDataFlavorSupported(DataFlavor.stringFlavor);
+        }
+
+        @Override
+        public void dragEnter(DropTargetDragEvent e) {
+            if (! canAccept(e)) {
+                e.rejectDrag();
+                return;
+            }
+
+            dndHitTestAndUpdateDisplay(e.getLocation());
+        }
+
+        @Override
+        public void dragOver(DropTargetDragEvent e) {
+            if (! canAccept(e)) {
+                e.rejectDrag();
+                return;
+            }
+
+            dndHitTestAndUpdateDisplay(e.getLocation());
+        }
+
+        @Override
+        public void dragExit(DropTargetEvent dte) {
+            //do nothing
+            dndHitTestAndUpdateDisplay(null);
+        }
+
+        @Override
+        public void drop(DropTargetDropEvent e) {
+            Transferable transfer = e.getTransferable();
+            if (transfer.isDataFlavorSupported(MindTransferable.MIND_DATA_FLAVOR)) {
+                List<MindOperator> operators = null;
+
+                if (m_dndDargOverNode != null && m_dndHitPosition != NodeControl.HitPosition.OUTSIDE) {
+                    operators = getDragOperators(toSource(m_dndDargOverNode),
+                            m_dndHitPosition, e.getDropAction() == DnDConstants.ACTION_LINK);
+                }
+
+                m_dndDargOverNode = null;
+                m_dndHitPosition = null;
+
+                if (operators != null && operators.size() > 0) {
+                    m_mindController.does(operators);
+                } else {
+                    renderTreeToEndChanging();
+                }
+
+            } else if (transfer.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+
+            }
+
+
+
+        }
+    }
 } // end of class TreeMap

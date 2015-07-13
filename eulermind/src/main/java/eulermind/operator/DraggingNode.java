@@ -193,7 +193,7 @@ public class DraggingNode extends MindOperator{
 
         assert m_isRefNode == m_mindModel.isRefNode(target);
 
-        assert m_mindModel.m_mindDb.vertexIdIsSelf(oldSourceDbId, newSourceDbId);
+        assert ! m_mindModel.m_mindDb.vertexIdIsSelf(oldSourceDbId, newSourceDbId);
 
         if (! m_isRefNode) {
             assert ! m_mindModel.m_mindDb.vertexIdIsInSubTreeOf(newSourceDbId, targetDbId);

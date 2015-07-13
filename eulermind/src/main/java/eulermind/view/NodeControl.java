@@ -39,6 +39,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 public abstract class NodeControl extends ControlAdapter {
 
     Logger m_logger = LoggerFactory.getLogger(this.getClass());
+    static Logger s_logger = LoggerFactory.getLogger(NodeControl.class);
 
     public enum HitPosition {OUTSIDE, TOP, BOTTOM, RIGHT};
 
@@ -69,10 +70,10 @@ public abstract class NodeControl extends ControlAdapter {
         m_hitPosition = HitPosition.OUTSIDE;
     }
 
-    HitPosition getHitPosition(NodeItem node, Point point)
+    static HitPosition getHitPosition(Display display, NodeItem node, Point point)
     {
         Point absPoint = new Point();
-        m_display.getAbsoluteCoordinate(point, absPoint);
+        display.getAbsoluteCoordinate(point, absPoint);
 
         Rectangle2D bounds = node.getBounds();
 
@@ -91,6 +92,19 @@ public abstract class NodeControl extends ControlAdapter {
         } else {
             return HitPosition.OUTSIDE;
         }
+    }
+
+
+    static public Object[] hitTest(Display display, Point point) {
+        Object ret[] = new Object[2];
+
+        VisualItem item = display.findItem(point);
+        if (item != null && item instanceof NodeItem) {
+            ret[0] = item;
+            ret[1] = getHitPosition(display, (NodeItem)item, point);
+            s_logger.info("item: {}, hit {},  point,{},{}", item, ret[1], point.getX(), point.getY());
+        }
+        return ret;
     }
 
 
@@ -175,6 +189,8 @@ public abstract class NodeControl extends ControlAdapter {
             return;
         }
 
+        m_logger.info("drag item{}", item);
+
         Point point = e.getPoint();
         if (m_mousePressPoint == null || point.distance(m_mousePressPoint) < 10 || ! UILib.isButtonPressed(e, LEFT_MOUSE_BUTTON)) {
             return;
@@ -206,7 +222,7 @@ public abstract class NodeControl extends ControlAdapter {
 
         if (curHitNode != null && curHitNode != draggedNode) {
 
-            HitPosition hitPosition = getHitPosition(curHitNode, mousePoint);
+            HitPosition hitPosition = getHitPosition(m_display, curHitNode, mousePoint);
 
             if (curHitNode != m_hitNode || hitPosition != m_hitPosition) {
                 m_hitNode = curHitNode;
@@ -250,7 +266,7 @@ public abstract class NodeControl extends ControlAdapter {
         DragAction dragAction = getDragAction(e);
 
         if (curHitNode != null && curHitNode != draggedNode) {
-            HitPosition hitPosition = getHitPosition(curHitNode, mousePoint);
+            HitPosition hitPosition = getHitPosition(m_display, curHitNode, mousePoint);
             dragEnd(draggedNode, curHitNode, hitPosition, dragAction);
             m_logger.info("itemDropped : " + curHitNode.getString(MindModel.TEXT_PROP_NAME));
         } else {

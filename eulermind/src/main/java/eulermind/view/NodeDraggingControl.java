@@ -1,13 +1,9 @@
 package eulermind.view;
 
-import eulermind.MindModel;
 import eulermind.MindOperator;
-import eulermind.operator.*;
-import prefuse.data.Node;
 import prefuse.visual.NodeItem;
 
 import java.awt.dnd.DragSource;
-import java.util.ArrayList;
 import java.util.List;
 
 /*
@@ -106,7 +102,7 @@ class NodeDraggingControl extends NodeControl {
 
         if (droppedNode != null && hitPosition != HitPosition.OUTSIDE) {
             m_logger.info(String.format("--- dragAction %s", dragAction.toString()));
-            operators = m_mindView.getDragOperator(m_mindView.toSource(droppedNode), hitPosition, dragAction == DragAction.LINK);
+            operators = m_mindView.getDragOperators(m_mindView.toSource(droppedNode), hitPosition, dragAction == DragAction.LINK);
         }
 
         if (operators != null && operators.size() > 0) {

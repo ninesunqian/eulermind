@@ -380,7 +380,7 @@ public class MindTreeRenderEngine {
 
             NodeItem nodeItem = (NodeItem)item;
 
-            if (nodeItem == m_mindView.getDragHitNode()) {
+            if (nodeItem == m_mindView.m_dndDargOverNode && m_mindView.m_dndHitPosition != NodeControl.HitPosition.OUTSIDE) {
                 RectangularShape shape = (RectangularShape)getShape(nodeItem);
 
                 float x = (float)shape.getX();
@@ -393,7 +393,8 @@ public class MindTreeRenderEngine {
                 float colorEndX = x + width;
                 float colorEndY = y + width;
 
-                switch (m_mindView.m_dragControl.m_hitPosition){
+                //switch (m_mindView.m_dragControl.m_hitPosition){
+                switch (m_mindView.m_dndHitPosition){
                     case TOP:
                         m_logger.info("TOP gradient");
                         height /= 2;
