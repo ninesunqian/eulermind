@@ -651,10 +651,6 @@ public class MindDB {
             return edgeVertexId;
         }
 
-        if (oldPos < newPos) {
-            newPos--;
-        }
-
         outEdgeVertexIds.remove(new EdgeVertexId(edge));
 
         EdgeVertexId newEdgeVertexId = insertToOrderedOutEdges(outEdgeVertexIds, newPos, edge);
