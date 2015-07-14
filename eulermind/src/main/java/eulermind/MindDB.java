@@ -63,7 +63,7 @@ public class MindDB {
 
     public final static int MAX_OUT_EDGES = Short.MAX_VALUE - 1;
 
-	enum EdgeType {INCLUDE, REFERENCE};
+	public enum EdgeType {INCLUDE, REFERENCE};
 
 	public OrientGraph m_graph;
 

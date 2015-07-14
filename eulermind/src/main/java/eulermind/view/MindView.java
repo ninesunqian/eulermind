@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import com.tinkerpop.blueprints.Vertex;
 import eulermind.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -601,7 +602,7 @@ public class MindView extends Display {
         } else {
             String text = Utils.getSystemClipboardText();
             if (text != null) {
-                MindOperator operator = new ImportingFile(m_mindModel, getCursorSourceNode(), null, null);
+                MindOperator operator = new ImportingFile(m_mindModel, getCursorSourceNode(), text);
                 m_mindController.does(operator);
             }
         }
@@ -1121,6 +1122,55 @@ public class MindView extends Display {
         return operators;
     }
 
+    List<MindOperator> getExternalDragOperators(Node droppedNode,
+                                        NodeControl.HitPosition hitPosition,
+                                        boolean toAddReference,
+                                        DndData dndData)
+    {
+        MindModel mindModel = m_mindModel;
+
+        List<MindOperator> operators = new ArrayList<>();
+
+        if (toAddReference) {
+
+            int edgePosition;
+            Node referrerNode;
+
+            if (hitPosition == NodeControl.HitPosition.TOP || hitPosition == NodeControl.HitPosition.BOTTOM) {
+                referrerNode = droppedNode.getParent();
+                if (referrerNode == null) {
+                    return null;
+                }
+
+                edgePosition = (hitPosition == NodeControl.HitPosition.TOP) ? droppedNode.getIndex() : droppedNode.getIndex() + 1;
+
+            } else {
+                referrerNode = droppedNode;
+                edgePosition = droppedNode.getChildCount();
+            }
+
+            //由于添加引用操作，是新建Node。所以多选的时候，选集中的后续节点不能作为前驱节点的兄弟
+            for (Object referentDbId : dndData.m_vertexIdsForLinking) {
+                operators.add(new AddingReference(mindModel, referrerNode, referentDbId, edgePosition));
+                edgePosition++;
+            }
+
+        } else {
+
+            operators.add(new DraggingNode(mindModel, droppedNode, dndData.m_edgeIdsForDragging.get(0), hitPosition));
+
+            for(int i=1; i<dndData.m_edgeIdsForDragging.size(); i++) {
+                com.tinkerpop.blueprints.Edge previousEdge = m_mindModel.m_mindDb.getEdge(dndData.m_edgeIdsForDragging.get(i-1));
+                Vertex previousEdgeTarget = m_mindModel.m_mindDb.getEdgeTarget(previousEdge);
+
+                operators.add(new DraggingNode(mindModel, droppedNode, dndData.m_edgeIdsForDragging.get(i),
+                        previousEdgeTarget.getId()));
+            }
+        }
+
+        return operators;
+    }
+
     void moveUp() {
         List <Node> selectedNodes = getSelectedSourceNodes();
         selectedNodes = removeNodesWithSameInEdgeDbId(selectedNodes);
@@ -1467,8 +1517,8 @@ public class MindView extends Display {
 
                     Point dragOrigin = dragGestureEvent.getDragOrigin();
                     VisualItem item = findItem(dragOrigin);
-                    if (item != null && item instanceof NodeItem) {
-                        m_mindController.m_dragSourceMindView = MindView.this;
+                    if (item != null && item instanceof NodeItem && !isEditing()) {
+                        m_mindController.m_dndSourceMindView = MindView.this;
                         dragGestureEvent.startDrag(null, new MindTransferable(MindView.this));
                     }
                 }
@@ -1501,9 +1551,6 @@ public class MindView extends Display {
 
         DndData m_data;
 
-        //防止不同eulermind进程之间的拖动操作。
-        static final Double m_placeHoldValue = StrictMath.random();
-
         MindTransferable(MindView mindView) {
             m_data = new DndData(mindView);
         }
@@ -1528,6 +1575,21 @@ public class MindView extends Display {
                 throw new UnsupportedFlavorException(flavor);
             }
         }
+    }
+
+    void dndHitTest(Point point)
+    {
+        NodeItem dragOverNode = null;
+        NodeControl.HitPosition hitPosition = null;
+
+        if (point != null)  {
+            Object hitInfo[] = NodeControl.hitTest(MindView.this, point);
+            dragOverNode = (NodeItem)hitInfo[0];
+            hitPosition = (NodeControl.HitPosition)hitInfo[1];
+        }
+
+        m_dndDargOverNode = dragOverNode;
+        m_dndHitPosition = hitPosition;
     }
 
     void dndHitTestAndUpdateDisplay(Point point)
@@ -1584,13 +1646,62 @@ public class MindView extends Display {
 
         @Override
         public void drop(DropTargetDropEvent e) {
-            Transferable transfer = e.getTransferable();
-            if (transfer.isDataFlavorSupported(MindTransferable.MIND_DATA_FLAVOR)) {
-                List<MindOperator> operators = null;
 
-                if (m_dndDargOverNode != null && m_dndHitPosition != NodeControl.HitPosition.OUTSIDE) {
-                    operators = getDragOperators(toSource(m_dndDargOverNode),
-                            m_dndHitPosition, e.getDropAction() == DnDConstants.ACTION_LINK);
+            dndHitTest(e.getLocation());
+
+            if (m_dndDargOverNode == null || m_dndHitPosition == NodeControl.HitPosition.OUTSIDE) {
+                dndHitTestAndUpdateDisplay(null);
+                return;
+            }
+
+            Transferable transfer = e.getTransferable();
+            DndData dndData = null;
+            String stringData = null;
+
+            try {
+                dndData = (DndData)transfer.getTransferData(MindTransferable.MIND_DATA_FLAVOR);
+            } catch (UnsupportedFlavorException e1) {
+                e1.printStackTrace();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+                dndHitTestAndUpdateDisplay(null);
+                return;
+            }
+
+            try {
+                stringData = (String)transfer.getTransferData(DataFlavor.stringFlavor);
+            } catch (UnsupportedFlavorException e1) {
+                e1.printStackTrace();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+                dndHitTestAndUpdateDisplay(null);
+                return;
+            }
+
+            Node droppedNode = toSource(m_dndDargOverNode);
+
+            if (dndData != null) {
+
+                List<MindOperator> operators = null;
+                if (e.getDropAction() == DnDConstants.ACTION_LINK || e.getDropAction() == DnDConstants.ACTION_MOVE) {
+                    if (m_mindController.m_dndSourceMindView == MindView.this) {
+                        operators = getDragOperators(droppedNode,
+                                m_dndHitPosition, e.getDropAction() == DnDConstants.ACTION_LINK);
+                    } else {
+                        m_cursor.setCursorNodeItem(m_dndDargOverNode);
+                        operators = getExternalDragOperators(droppedNode,
+                                m_dndHitPosition, e.getDropAction() == DnDConstants.ACTION_LINK, dndData);
+
+                    }
+
+                } else {
+                    operators = new ArrayList<>();
+
+                    for (Tree copiedTree : dndData.m_treesForInnerCopying) {
+                        MindOperator operator = new PastingExternalTree(m_mindModel, droppedNode, copiedTree);
+                        operators.add(operator);
+                    }
+
                 }
 
                 m_dndDargOverNode = null;
@@ -1603,11 +1714,12 @@ public class MindView extends Display {
                 }
 
             } else if (transfer.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                MindOperator operator = new ImportingFile(m_mindModel, droppedNode, stringData);
+                m_mindController.does(operator);
 
+            } else {
+                dndHitTestAndUpdateDisplay(null);
             }
-
-
-
         }
     }
 } // end of class TreeMap

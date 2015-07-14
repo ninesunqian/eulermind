@@ -40,13 +40,22 @@ public class ImportingFile extends MindOperator{
 
     Component m_progressMonitorParent;
 
+    String m_text;
+
     //如果path为null， 从系统剪切板导入plain text 数据
-    public ImportingFile(MindModel mindModel, Node formerCursor,  String path, Component progressMonitorParent) {
+    public ImportingFile(MindModel mindModel, Node formerCursor, String path, Component progressMonitorParent) {
         super(mindModel, formerCursor);
         m_importedFilePath = path;
         m_parentPath = getNodePath(formerCursor);
         m_progressMonitorParent = progressMonitorParent;
+    }
 
+    public ImportingFile(MindModel mindModel, Node formerCursor, String text) {
+        super(mindModel, formerCursor);
+        m_importedFilePath = null;
+        m_text = text;
+        m_parentPath = getNodePath(formerCursor);
+        m_progressMonitorParent = null;
     }
 
     public boolean does() throws Exception
@@ -56,7 +65,12 @@ public class ImportingFile extends MindOperator{
         }
 
         Node parent = getNodeByPath(m_parentPath);
-        m_newChildren = m_mindModel.importFile(parent, m_importedFilePath, m_progressMonitorParent);
+
+        if (m_importedFilePath != null) {
+            m_newChildren = m_mindModel.importFile(parent, m_importedFilePath, m_progressMonitorParent);
+        } else {
+            m_newChildren = m_mindModel.importText(parent, m_text);
+        }
 
         //importFIle之后，parent的路径可能会改变，所以要重新取一次路径
         m_parentPathAfterDoing = getNodePath(parent);

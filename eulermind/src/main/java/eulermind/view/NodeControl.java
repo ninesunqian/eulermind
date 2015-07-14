@@ -102,7 +102,6 @@ public abstract class NodeControl extends ControlAdapter {
         if (item != null && item instanceof NodeItem) {
             ret[0] = item;
             ret[1] = getHitPosition(display, (NodeItem)item, point);
-            s_logger.info("item: {}, hit {},  point,{},{}", item, ret[1], point.getX(), point.getY());
         }
         return ret;
     }

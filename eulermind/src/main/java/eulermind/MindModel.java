@@ -745,33 +745,65 @@ public class MindModel {
 
         List newChildren;
 
-        if (path == null) {
-            String text = Utils.getSystemClipboardText();
-            if (text != null && !text.isEmpty()) {
-                newChildren = importer.importString(getDbId(parent), pos, text);
-            } else {
-                newChildren = new ArrayList();
-            }
-
-        } else {
-            Thread.sleep(5000);
-            SwingWorkerDialog swingWorkerDialog = new SwingWorkerDialog(progressMonitorParent, "import :" + path) {
-                @Override
-                protected Object doInBackground() throws Exception {
-                    importer.setProgressListener(new Importer.ProgressListener() {
-                        @Override
-                        public void notifyProgress(int progress, int maxProgress, String message) {
-                            notifyProgressA(progress, maxProgress, message);
-                            if (isCancelButtonPressed()) {
-                                importer.cancel();
-                            }
+        Thread.sleep(5000);
+        SwingWorkerDialog swingWorkerDialog = new SwingWorkerDialog(progressMonitorParent, "import :" + path) {
+            @Override
+            protected Object doInBackground() throws Exception {
+                importer.setProgressListener(new Importer.ProgressListener() {
+                    @Override
+                    public void notifyProgress(int progress, int maxProgress, String message) {
+                        notifyProgressA(progress, maxProgress, message);
+                        if (isCancelButtonPressed()) {
+                            importer.cancel();
                         }
-                    });
-                    return importer.importFile(getDbId(parent), pos, path);
-                }
-            };
+                    }
+                });
+                return importer.importFile(getDbId(parent), pos, path);
+            }
+        };
 
-            newChildren = (List)swingWorkerDialog.executeInProgressDialog();
+        newChildren = (List)swingWorkerDialog.executeInProgressDialog();
+
+        Vertex dbParent = m_mindDb.getVertex(parentDbId);
+        ArrayList<EdgeVertex> newToTargets = new ArrayList<EdgeVertex>();
+        for (int i=0; i<newChildren.size(); i++) {
+            EdgeVertex edgeVertex = m_mindDb.getChildOrReferent(dbParent, pos+i);
+            newToTargets.add(edgeVertex);
+        }
+
+        int newVertexPos = pos;
+        for (EdgeVertex edgeVertex : newToTargets) {
+            exposeModelRelation(parentDbId, newVertexPos, edgeVertex);
+            newVertexPos++;
+
+        }
+
+        updateChildrenAttached();
+        return newChildren;
+    }
+
+    //return new child node
+    public List importText(final Node parent, final String text) throws Exception
+    {
+        if (! isChildrenAttached(parent)) {
+            attachChildren(parent);
+        }
+
+        final int pos = parent.getChildCount();
+
+        Object parentDbId = getDbId(parent);
+        final Importer importer = getImporter(null);
+
+        if (importer == null) {
+            return new ArrayList();
+        }
+
+        List newChildren;
+
+        if (text != null && !text.isEmpty()) {
+            newChildren = importer.importString(getDbId(parent), pos, text);
+        } else {
+            newChildren = new ArrayList();
         }
 
         Vertex dbParent = m_mindDb.getVertex(parentDbId);
@@ -1366,7 +1398,7 @@ public class MindModel {
 
         for (Tree tree : m_trees) {
             NodeAvatarsPairingInfo oldNewParentPairingInfo;
-            if (tree == oldParent.getGraph() && newParent != null && oldParent != null)
+            if (newParent != null && oldParent != null && tree == oldParent.getGraph() )
             {
                 oldNewParentPairingInfo = pairNodeAvatars(tree, oldParentDbId, newParentDbId,
                         oldParent.getRow(), newParent.getRow());
