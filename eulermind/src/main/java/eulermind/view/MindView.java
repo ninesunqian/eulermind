@@ -114,14 +114,12 @@ public class MindView extends Display {
         this.requestFocusInWindow();
         this.setFocusCycleRoot(true);
 
-        addComponentListener(new ComponentListener() {
+        addComponentListener(new ComponentAdapter() {
+            @Override
             public void componentResized(ComponentEvent e) {
                 panToExposeItem(m_cursor.getCursorNodeItem());
+                repaint();
             }
-
-            public void componentMoved(ComponentEvent e) { }
-            public void componentShown(ComponentEvent e) { }
-            public void componentHidden(ComponentEvent e) { }
         });
 
         setDragAndDrop();
@@ -1725,5 +1723,7 @@ public class MindView extends Display {
                 e.dropComplete(false);
             }
         }
+
     }
+
 } // end of class TreeMap

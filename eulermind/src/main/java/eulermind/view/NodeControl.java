@@ -188,8 +188,6 @@ public abstract class NodeControl extends ControlAdapter {
             return;
         }
 
-        m_logger.info("drag item{}", item);
-
         Point point = e.getPoint();
         if (m_mousePressPoint == null || point.distance(m_mousePressPoint) < 10 || ! UILib.isButtonPressed(e, LEFT_MOUSE_BUTTON)) {
             return;
