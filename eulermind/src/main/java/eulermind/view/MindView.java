@@ -1173,13 +1173,13 @@ public class MindView extends Display {
 
         } else {
 
-            operators.add(new DraggingNode(mindModel, droppedNode, dndData.m_edgeIdsForDragging.get(0), hitPosition));
+            operators.add(new DraggingNode(mindModel, droppedNode, dndData.m_edgeIdsForDragging.get(0), hitPosition, null));
 
             for(int i=1; i<dndData.m_edgeIdsForDragging.size(); i++) {
                 com.tinkerpop.blueprints.Edge previousEdge = m_mindModel.m_mindDb.getEdge(dndData.m_edgeIdsForDragging.get(i-1));
                 Vertex previousEdgeTarget = m_mindModel.m_mindDb.getEdgeTarget(previousEdge);
 
-                operators.add(new DraggingNode(mindModel, droppedNode, dndData.m_edgeIdsForDragging.get(i),
+                operators.add(new DraggingNode(mindModel, droppedNode, dndData.m_edgeIdsForDragging.get(i), hitPosition,
                         previousEdgeTarget.getId()));
             }
         }

@@ -56,6 +56,9 @@ public class DraggingNode extends MindOperator{
     int m_oldPos;
     Object m_oldEdgeDbId;
 
+    //跨view拖动多个节点时，拖至上一个操作的节点下方。就是上一个被拖动的节点
+    Object m_previousVertexDbId;
+
     public DraggingNode(MindModel mindModel, Node formerCursor, Node droppedNode, NodeControl.HitPosition hitPosition)
     {
         super(mindModel, formerCursor);
@@ -65,15 +68,19 @@ public class DraggingNode extends MindOperator{
     }
 
     //由其他view拖动至此
-    public DraggingNode(MindModel mindModel, Node droppedNode, Object edgeDbId, NodeControl.HitPosition hitPosition)
+    //previousVertexDbId是上一次drag操作设计的db节点，如果同时拖动多个节点，当前节点要放在previousVertexDbId的下方，作为它的弟弟
+    public DraggingNode(MindModel mindModel, Node droppedNode, Object edgeDbId, NodeControl.HitPosition hitPosition,
+                        Object previousVertexDbId)
     {
         super(mindModel, droppedNode);
         m_droppedNode = droppedNode;
         m_hitPosition = hitPosition;
         m_fromSameView = false;
+        m_previousVertexDbId = previousVertexDbId;
 
         MindDB mindDB = m_mindModel.m_mindDb;
 
+        m_oldEdgeDbId = edgeDbId;
         com.tinkerpop.blueprints.Edge edge = mindDB.getEdge(edgeDbId);
         m_isRefNode = mindDB.getEdgeType(edge) == MindDB.EdgeType.REFERENCE;
 
@@ -83,47 +90,15 @@ public class DraggingNode extends MindOperator{
         Vertex target = mindDB.getEdgeTarget(edge);
         m_targetDbId = target.getId();
 
-        m_oldPos = mindDB.getEdgeIndex(mindDB.getOutEdgeVertexIds(oldSource), edgeDbId);
-        m_oldEdgeDbId = edgeDbId;
     }
 
-    //跨view拖动多个节点时，拖至上一个操作的节点下方。
-    //FIXME: 当droppedNode有多个指向previousVertexDbId引用的时候，总是找到第一个。但不会造成节点关系错误。
-    public DraggingNode(MindModel mindModel, Node droppedNode, Object edgeDbId, Object previousVertexDbId)
-    {
-        super(mindModel, droppedNode);
-
-        for (int i=0; i<droppedNode.getChildCount(); i++) {
-            Node childNode = droppedNode.getChild(i);
-            if (MindModel.getDbId(childNode).equals(previousVertexDbId)) {
-                m_droppedNode = childNode;
-                m_hitPosition = NodeControl.HitPosition.BOTTOM;
-                break;
-            }
-        }
-        assert m_droppedNode != null;
-
-        m_fromSameView = false;
-
-        MindDB mindDB = m_mindModel.m_mindDb;
-
-        com.tinkerpop.blueprints.Edge edge = mindDB.getEdge(edgeDbId);
-        m_isRefNode = mindDB.getEdgeType(edge) == MindDB.EdgeType.REFERENCE;
-
-        Vertex oldSource = mindDB.getEdgeSource(edge);
-        m_oldSourceDbId = oldSource.getId();
-
-        Vertex target = mindDB.getEdgeTarget(edge);
-        m_targetDbId = target.getId();
-
-        m_oldPos = mindDB.getEdgeIndex(mindDB.getOutEdgeVertexIds(oldSource), edgeDbId);
-        m_oldEdgeDbId = edgeDbId;
-    }
 
     public boolean does() {
         if (! prepareCursorInfo()) {
             return false;
         }
+
+        MindDB mindDB = m_mindModel.m_mindDb;
 
         if (m_fromSameView) {
             m_oldSourceDbId = m_formerCursorParentId;
@@ -132,6 +107,10 @@ public class DraggingNode extends MindOperator{
 
             Edge oldEdge = m_formerCursor.getParentEdge();
             m_oldEdgeDbId = m_mindModel.getDbId(oldEdge);
+
+        } else {
+            Vertex oldSource = mindDB.getVertex(m_oldSourceDbId);
+            m_oldPos = m_mindModel.m_mindDb.getEdgeIndex(mindDB.getOutEdgeVertexIds(oldSource), m_oldEdgeDbId);
         }
 
         if (!m_droppedNode.isValid()) {
@@ -170,12 +149,23 @@ public class DraggingNode extends MindOperator{
             }
         }
 
-        if (m_hitPosition == NodeControl.HitPosition.TOP) {
-            m_newPos = m_droppedNode.getIndex();
-        } else if (m_hitPosition == NodeControl.HitPosition.BOTTOM) {
-            m_newPos = m_droppedNode.getIndex() + 1;
+        if (m_previousVertexDbId == null) {
+            if (m_hitPosition == NodeControl.HitPosition.TOP) {
+                m_newPos = m_droppedNode.getIndex();
+            } else if (m_hitPosition == NodeControl.HitPosition.BOTTOM) {
+                m_newPos = m_droppedNode.getIndex() + 1;
+            } else {
+                m_newPos = newParent.getChildCount();
+            }
+
         } else {
-            m_newPos = newParent.getChildCount();
+            for (int i=newParent.getChildCount()-1; i>=0; i--) {
+                Node childNode = newParent.getChild(i);
+                if (MindModel.getDbId(childNode).equals(m_previousVertexDbId)) {
+                    m_newPos = i + 1;
+                    break;
+                }
+            }
         }
 
         if (m_mindModel.m_mindDb.vertexIdIsSelf(m_oldSourceDbId, m_newSourceDbId)) {
@@ -225,8 +215,8 @@ public class DraggingNode extends MindOperator{
                 handoverRelation(m_newSourceDbId, m_newPos, m_newParentOrReferrerPath,
                         m_oldSourceDbId, m_oldPos, m_oldParentOrReferrerPath);
             } else {
-                handoverRelation(m_oldSourceDbId, m_oldPos, null,
-                        m_newSourceDbId, m_newPos, null);
+                handoverRelation(m_newSourceDbId, m_newPos, null,
+                        m_oldSourceDbId, m_oldPos, null);
             }
         }
 

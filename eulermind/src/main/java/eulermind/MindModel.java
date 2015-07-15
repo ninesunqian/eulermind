@@ -1441,6 +1441,8 @@ public class MindModel {
             Vertex parentVertex = m_mindDb.getVertex(oldSourceDbId);
             EdgeVertex childEdgeVertex = m_mindDb.getChildOrReferent(parentVertex, oldPos);
 
+            assert childEdgeVertex != null;
+
             targetVertex = childEdgeVertex.m_target;
             oldEdgeId = childEdgeVertex.m_edge.getId();
             isReferent = m_mindDb.getEdgeType(childEdgeVertex.m_edge) == MindDB.EdgeType.REFERENCE;
