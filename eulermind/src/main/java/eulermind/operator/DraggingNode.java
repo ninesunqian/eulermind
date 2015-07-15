@@ -101,6 +101,11 @@ public class DraggingNode extends MindOperator{
         MindDB mindDB = m_mindModel.m_mindDb;
 
         if (m_fromSameView) {
+            //不能拖动子树的根节点
+            if (m_formerCursorParent == null) {
+                return false;
+            }
+
             m_oldSourceDbId = m_formerCursorParentId;
             m_targetDbId = m_formerCursorId;
             m_oldPos = m_formerCursorPos;
@@ -114,11 +119,6 @@ public class DraggingNode extends MindOperator{
         }
 
         if (!m_droppedNode.isValid()) {
-            return false;
-        }
-
-        //不能拖动子树的根节点
-        if (m_formerCursorParent == null) {
             return false;
         }
 
@@ -179,7 +179,10 @@ public class DraggingNode extends MindOperator{
             }
         }
 
-        m_oldParentOrReferrerPath = getNodePath(m_formerCursorParent);
+        if (m_fromSameView) {
+            m_oldParentOrReferrerPath = getNodePath(m_formerCursorParent);
+        }
+
         m_newParentOrReferrerPath = getNodePath(newParent);
 
         if (m_mindModel.m_mindDb.vertexIdIsSelf(m_oldSourceDbId, m_newSourceDbId)) {
@@ -195,7 +198,10 @@ public class DraggingNode extends MindOperator{
             }
         }
 
-        m_oldParentOrReferrerPathAfterDoing = getNodePath(m_formerCursorParent);
+        if (m_fromSameView) {
+            m_oldParentOrReferrerPathAfterDoing = getNodePath(m_formerCursorParent);
+        }
+
         m_newParentOrReferrerPathAfterDoing = getNodePath(newParent);
         m_laterCursorPath = (ArrayList)m_newParentOrReferrerPathAfterDoing.clone();
         m_laterCursorPath.add(m_newPos);

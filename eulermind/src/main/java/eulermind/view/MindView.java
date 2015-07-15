@@ -1533,7 +1533,8 @@ public class MindView extends Display {
 
                     Point dragOrigin = dragGestureEvent.getDragOrigin();
                     VisualItem item = findItem(dragOrigin);
-                    if (item != null && item instanceof NodeItem && !isEditing()) {
+                    //不同拖动一个子树的根，到另一棵子树上 （因为子树所在位置显示上未知）
+                    if (item != null && item instanceof NodeItem && !isEditing() && ((NodeItem) item).getParent() != null) {
                         m_mindController.m_dndSourceMindView = MindView.this;
                         dragGestureEvent.startDrag(null, new MindTransferable(MindView.this));
                     }
