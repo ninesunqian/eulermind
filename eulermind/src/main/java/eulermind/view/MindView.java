@@ -1713,12 +1713,16 @@ public class MindView extends Display {
                     renderTreeToEndChanging();
                 }
 
+                e.dropComplete(true);
+
             } else if (transfer.isDataFlavorSupported(DataFlavor.stringFlavor)) {
                 MindOperator operator = new ImportingFile(m_mindModel, droppedNode, stringData);
                 m_mindController.does(operator);
+                e.dropComplete(true);
 
             } else {
                 dndHitTestAndUpdateDisplay(null);
+                e.dropComplete(false);
             }
         }
     }
