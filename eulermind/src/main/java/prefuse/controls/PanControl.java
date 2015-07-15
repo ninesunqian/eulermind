@@ -18,9 +18,10 @@ import prefuse.visual.VisualItem;
 public class PanControl extends ControlAdapter {
 
     private boolean m_panOverItem;
-    private int m_xDown, m_yDown;
+    private int m_xDown = -1;
+    private int m_yDown = -1;
     private int m_button;
-    
+
     /**
      * Create a new PanControl.
      */
@@ -81,6 +82,15 @@ public class PanControl extends ControlAdapter {
         if ( UILib.isButtonPressed(e, m_button) ) {
             Display display = (Display)e.getComponent();
             int x = e.getX(),   y = e.getY();
+
+            //如果弹出popupMenu, 再点击display，是收不到mousePressed事件的。但是popupMenu消失后，会收到随后的mouseDragged事件
+            //加上以下代码，就可以拖动Display了
+            if (m_xDown == -1 && m_yDown == -1) {
+                m_xDown = x;
+                m_yDown = y;
+                return;
+            }
+
             int dx = x-m_xDown, dy = y-m_yDown;
             display.panOnItems(dx,dy);
             m_xDown = x;

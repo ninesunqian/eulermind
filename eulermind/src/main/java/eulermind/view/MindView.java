@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 
 import eulermind.operator.*;
 import prefuse.Display;
@@ -123,6 +125,22 @@ public class MindView extends Display {
         });
 
         setDragAndDrop();
+        m_popupMenu.addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                setAllControlEnabled(false);
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+                setAllControlEnabled(true);
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+                setAllControlEnabled(true);
+            }
+        });
     }
 
     private void initEditor() {
