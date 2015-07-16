@@ -69,6 +69,8 @@ public class MindController extends UndoManager {
     public String m_clipboardTextFormHere;
     public MindView m_dndSourceMindView;
 
+    private DefaultSingleCDockable m_currentDockable;
+
     MindController(MindModel mindModel, CControl dockingCControl, JLabel tabInfoLabel) {
         super();
         m_mindModel = mindModel;
@@ -108,6 +110,8 @@ public class MindController extends UndoManager {
         m_dockingCControl.addVetoFocusListener(new CVetoFocusListener() {
             @Override
             public boolean willGainFocus(CDockable dockable) {
+                m_currentDockable = (DefaultSingleCDockable)dockable;
+                updateAllMindViews();
                 return true;
             }
 
@@ -205,11 +209,10 @@ public class MindController extends UndoManager {
     }
 
     public MindView getCurrentView() {
-        CDockable focusedDockable = m_dockingCControl.getFocusedCDockable();
-        if (focusedDockable == null) {
-            focusedDockable = m_dockingCControl.getCDockable(0);
+        if (m_currentDockable == null) {
+            m_currentDockable = (DefaultSingleCDockable)m_dockingCControl.getCDockable(0);
         }
-        return getMindViewFromDockable((DefaultSingleCDockable)focusedDockable);
+        return getMindViewFromDockable(m_currentDockable);
     }
 
     public boolean isChanging() {

@@ -160,7 +160,7 @@ public class TreeCursor extends NodeControl {
         m_xAxis = null;
         m_yAxis = null;
 
-        m_mindView.renderTree();
+        m_mindView.m_mindController.updateAllMindViews();
 
         //FIXME: 放在这里合适吗
         m_mindView.m_mindController.updateMindPropertyComponents(node);

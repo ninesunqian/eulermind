@@ -447,7 +447,13 @@ public class MindTreeRenderEngine {
                 return;
             }
 
-            java.util.List<NodeItem> selectedNodeItems = m_mindView.getSelectedNodeItems();
+            /*
+            if (m_mindView != m_mindView.m_mindController.getCurrentView()) {
+                return;
+            }
+            */
+
+            java.util.List<NodeItem> selectedNodeItems = m_mindView.m_mindController.getCurrentView().getSelectedNodeItems();
             //m_logger.info("selected NodeItem size {}", selectedNodeItems.size());
 
             if (selectedNodeItems.contains(nodeItem)) {
