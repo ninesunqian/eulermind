@@ -122,6 +122,7 @@ public class MindController extends UndoManager {
             }
         });
 
+
     }
 
     private MindView getMindViewFromDockable(DefaultSingleCDockable dockable)
@@ -196,19 +197,19 @@ public class MindController extends UndoManager {
     }
 
     public void updateAllMindViews() {
-        ArrayList<MindView> mindViews = new ArrayList<MindView>();
-        /* 所有的树都更新
-        for(int i=0; i< m_treePanel.getTabCount(); i++) {
-            ((MindView) m_treePanel.getComponentAt(i)).renderTree();
+        for (Tree tree : m_mindViewDockables.keySet()) {
+            DefaultSingleCDockable dockable = m_mindViewDockables.get(tree);
+            MindView mindView = getMindViewFromDockable(dockable);
+            mindView.renderTree();
         }
-        */
     }
 
     public MindView getCurrentView() {
-        /*返回当前显示的树
-        return (MindView) m_treePanel.getSelectedComponent();
-        */
-        return null;
+        CDockable focusedDockable = m_dockingCControl.getFocusedCDockable();
+        if (focusedDockable == null) {
+            focusedDockable = m_dockingCControl.getCDockable(0);
+        }
+        return getMindViewFromDockable((DefaultSingleCDockable)focusedDockable);
     }
 
     public boolean isChanging() {
