@@ -110,8 +110,12 @@ public class MindController extends UndoManager {
         m_dockingCControl.addVetoFocusListener(new CVetoFocusListener() {
             @Override
             public boolean willGainFocus(CDockable dockable) {
-                m_currentDockable = (DefaultSingleCDockable)dockable;
-                updateAllMindViews();
+                for (Map.Entry entry : m_mindViewDockables.entrySet()) {
+                    if (entry.getValue() == dockable) {
+                        m_currentDockable = (DefaultSingleCDockable)dockable;
+                        updateAllMindViews();
+                    }
+                }
                 return true;
             }
 

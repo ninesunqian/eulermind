@@ -533,10 +533,17 @@ public class LabelRenderer extends AbstractShapeRenderer {
         }
 
     }
-    
+
+    public void setTextRenderingHint(Graphics2D g) {
+        g.setRenderingHint( RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+    }
+
+
     private final void drawString(Graphics2D g, FontMetrics fm, String text,
             boolean useInt, double x, double y, double w)
     {
+        setTextRenderingHint(g);
+
         // compute the x-coordinate
         double tx;
         switch ( m_hTextAlign ) {

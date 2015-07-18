@@ -125,6 +125,7 @@ public class MindView extends Display {
         });
 
         setDragAndDrop();
+
         m_popupMenu.addPopupMenuListener(new PopupMenuListener() {
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
@@ -141,6 +142,8 @@ public class MindView extends Display {
                 setAllControlEnabled(true);
             }
         });
+
+        renderTree();
     }
 
     private void initEditor() {
@@ -1287,19 +1290,19 @@ public class MindView extends Display {
                 break;
 
             case KeyEvent.VK_INSERT:
-                if (! e.isControlDown()) {
-                    addChild();
-                } else  {
+                if (e.isControlDown()) {
                     addChildWithPrompt();
+                } else  {
+                    addChild();
                 }
                 break;
 
             case KeyEvent.VK_ENTER:
                 if (! e.isShiftDown()) {
                     if (e.isControlDown()) {
-                        addSibling();
-                    } else {
                         addSiblingWithPrompt();
+                    } else {
+                        addSibling();
                     }
                 }
                 break;
