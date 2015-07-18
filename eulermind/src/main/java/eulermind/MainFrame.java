@@ -153,7 +153,7 @@ public class MainFrame  extends JFrame {
         } else {
             //放到一个pannel中
             m_dockingCControl = new CControl(this);
-            m_dockingCControl .setMissingStrategy(MissingCDockableStrategy.STORE);
+            m_dockingCControl.setMissingStrategy(MissingCDockableStrategy.STORE);
 
             m_treePanel.setLayout(new GridLayout(1, 1));
             m_treePanel.add(m_dockingCControl.getContentArea());
@@ -242,8 +242,7 @@ public class MainFrame  extends JFrame {
 
     private void unbindComponents()
     {
-        m_treePanel.removeAll();
-
+        m_mindController.removeAllMindViews();
         m_mindController.removeMindPropertyComponent(MindModel.sm_fontFamilyPropName, m_fontFamilyCombobox);
         m_mindController.removeMindPropertyComponent(MindModel.sm_fontSizePropName, m_fontSizeCombobox);
 
@@ -277,7 +276,7 @@ public class MainFrame  extends JFrame {
         m_iconButton.setEnabled(enabled);
 
         m_styleList.setEnabled(enabled);
-        m_treePanel.setEnabled(enabled);
+        //m_treePanel.setEnabled(enabled);
 
         m_styleNewButton.setEnabled(enabled);
         m_styleDeletingButton.setEnabled(enabled);

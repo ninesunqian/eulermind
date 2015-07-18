@@ -187,6 +187,17 @@ public class MindController extends UndoManager {
         }
     };
 
+    public void removeAllMindViews()
+    {
+        //把mindview拷贝出来。因为关闭mindview时，m_cVetoClosingListener会修改m_mindViewDockables
+        ArrayList<DefaultSingleCDockable> dockables = new ArrayList<>();
+        dockables.addAll(m_mindViewDockables.values());
+
+        for (DefaultSingleCDockable dockable : dockables) {
+            m_dockingCControl.removeDockable(dockable);
+        }
+    }
+
     private void removeClosedDockable(DefaultSingleCDockable dockable)
     {
         for (Tree tree: m_mindViewDockables.keySet()) {
@@ -205,8 +216,7 @@ public class MindController extends UndoManager {
     }
 
     public void updateAllMindViews() {
-        for (Tree tree : m_mindViewDockables.keySet()) {
-            DefaultSingleCDockable dockable = m_mindViewDockables.get(tree);
+        for (DefaultSingleCDockable dockable : m_mindViewDockables.values()) {
             MindView mindView = getMindViewFromDockable(dockable);
             mindView.renderTree();
         }
