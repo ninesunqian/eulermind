@@ -114,8 +114,10 @@ public class MindController extends UndoManager {
                     if (entry.getValue() == dockable) {
                         m_currentDockable = (DefaultSingleCDockable)dockable;
                         updateAllMindViews();
+                        m_tabInfoLabel.setText(m_mindModel.getVertexDbIdInheritInfo(getCurrentView().getRootDbId()));
                     }
                 }
+
                 return true;
             }
 

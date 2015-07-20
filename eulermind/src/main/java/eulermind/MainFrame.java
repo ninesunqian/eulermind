@@ -186,6 +186,8 @@ public class MainFrame  extends JFrame {
 
     public void openMindDb(String name)
     {
+        m_logger.info("open map:{}", name);
+
         if (m_currentMapName != null) {
             m_logger.error("must close current map, before open another");
             return;
@@ -204,10 +206,14 @@ public class MainFrame  extends JFrame {
         if (! Utils.isDebugging()) {
             Utils.recordLastOpenedMap(name);
         }
+
+        setTitle(name);
     }
 
     public void closeMindDb()
     {
+        m_logger.info("close map:{}", m_currentMapName);
+
         m_searchInputer.clearSearchResults();
         m_searchInputer.setText("");
 
