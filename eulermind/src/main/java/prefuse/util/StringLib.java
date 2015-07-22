@@ -219,5 +219,39 @@ public class StringLib {
         }
         return outString.toString();
     }
+
+    public static String expandTab(final String text, final int tabstop)
+    {
+        final char[] input = text.toCharArray();
+        final StringBuilder sb = new StringBuilder();
+
+        int linepos = 0;
+        for (int i = 0; i<input.length; i++)
+        {
+            // treat the character
+            final char ch = input[i];
+            if (ch == '\t')
+            {
+                // expand the tab
+                do
+                {
+                    sb.append(' ');
+                    linepos++;
+                } while (linepos % tabstop != 0);
+            }
+            else
+            {
+                sb.append(ch);
+                linepos++;
+            }
+
+            // end of line. Reset the lineposition to zero.
+            if (ch == '\n' || ch == '\r' || (ch|1) == '\u2029' || ch == '\u0085')
+                linepos = 0;
+
+        }
+
+        return sb.toString();
+    }
     
 } // end of class StringLib

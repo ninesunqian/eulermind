@@ -83,8 +83,6 @@ public class MindTreeRenderEngine {
 
     private boolean m_showBigBorderOfCursor = true;
 
-
-
     public MindTreeRenderEngine(MindView mindView, String treeGroupName) {
         //m_logger.setLevel(Level.OFF);
 		m_mindView = mindView;
@@ -172,6 +170,8 @@ public class MindTreeRenderEngine {
     	nodeRenderer.setRoundedCorner(10, 10);
         nodeRenderer.setHorizontalPadding(5);
         nodeRenderer.setVerticalPadding(5);
+        nodeRenderer.setMaxTextWidth(100);
+        nodeRenderer.setVerticalTextAlignment(Constants.CENTER);
 
 	    EdgeRenderer edgeRenderer = new EdgeRenderer(Constants.EDGE_TYPE_CURVE) {
             @Override

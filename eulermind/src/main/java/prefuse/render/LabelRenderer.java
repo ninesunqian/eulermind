@@ -1,7 +1,14 @@
 package prefuse.render;
 
 import java.awt.*;
+import java.awt.font.FontRenderContext;
+import java.awt.font.LineBreakMeasurer;
+import java.awt.font.TextAttribute;
+import java.awt.font.TextLayout;
 import java.awt.geom.*;
+import java.text.AttributedCharacterIterator;
+import java.text.AttributedString;
+import java.util.Hashtable;
 
 import prefuse.Constants;
 import prefuse.util.ColorLib;
@@ -66,7 +73,7 @@ public class LabelRenderer extends AbstractShapeRenderer {
     protected int m_arcWidth    = 0;
     protected int m_arcHeight   = 0;
 
-    protected int m_maxTextWidth = -1;
+    protected int m_maxTextWidth = 100000;
     
     /** Transform used to scale and position images */
     AffineTransform m_transform = new AffineTransform();
@@ -232,8 +239,8 @@ public class LabelRenderer extends AbstractShapeRenderer {
         String imageLoc = getImageLocation(item);
         return ( imageLoc == null ? null : m_images.getImage(imageLoc) );
     }
-    
-    
+
+
     // ------------------------------------------------------------------------
     // Rendering
     
@@ -244,51 +251,43 @@ public class LabelRenderer extends AbstractShapeRenderer {
         m_font = item.getFont();
         // scale the font as needed
         if ( size != 1 ) {
-            m_font = FontLib.getFont(m_font.getName(), m_font.getStyle(),
-                                     size*m_font.getSize());
+            m_font = FontLib.getFont(m_font.getName(), m_font.getStyle(), size * m_font.getSize());
         }
-        
-        FontMetrics fm = DEFAULT_GRAPHICS.getFontMetrics(m_font);
-        StringBuffer str = null;
-        
-        // compute the number of lines and the maximum width
-        int nlines = 1, w = 0, start = 0, end = text.indexOf(m_delim);
         m_textDim.width = 0;
-        String line;
-        for ( ; end >= 0; ++nlines ) {
-            w = fm.stringWidth(line=text.substring(start,end));
-            // abbreviate line as needed
-            if ( m_maxTextWidth > -1 && w > m_maxTextWidth ) {
-                if ( str == null )
-                    str = new StringBuffer(text.substring(0,start));
-                str.append(StringLib.abbreviate(line, fm, m_maxTextWidth));
-                str.append(m_delim);
-                w = m_maxTextWidth;
-            } else if ( str != null ) {
-                str.append(line).append(m_delim);
-            }
-            // update maximum width and substring indices
-            m_textDim.width = Math.max(m_textDim.width, w);
-            start = end+1;
-            end = text.indexOf(m_delim, start);
-        }
-        w = fm.stringWidth(line=text.substring(start));
-        // abbreviate line as needed
-        if ( m_maxTextWidth > -1 && w > m_maxTextWidth ) {
-            if ( str == null )
-                str = new StringBuffer(text.substring(0,start));
-            str.append(StringLib.abbreviate(line, fm, m_maxTextWidth));
-            w = m_maxTextWidth;
-        } else if ( str != null ) {
-            str.append(line);
-        }
-        // update maximum width
-        m_textDim.width = Math.max(m_textDim.width, w);
-        
-        // compute the text height
-        m_textDim.height = fm.getHeight() * nlines;
+        m_textDim.height = 0;
 
-        return str==null ? text : str.toString();
+        for (String line : text.split("\n"))
+        {
+            if (line.length() == 0) {
+                FontMetrics fm = DEFAULT_GRAPHICS.getFontMetrics(m_font);
+                m_textDim.height += fm.getHeight();
+                continue;
+            }
+
+            String expandTabbedLine = StringLib.expandTab(line, 4);
+            AttributedString attributedString = new AttributedString(expandTabbedLine, m_font.getAttributes());
+            AttributedCharacterIterator paragraph = attributedString.getIterator();
+
+            FontRenderContext frc = DEFAULT_GRAPHICS.getFontRenderContext();
+
+            int paragraphStart = paragraph.getBeginIndex();
+            int paragraphEnd = paragraph.getEndIndex();
+
+            LineBreakMeasurer lineMeasurer = new LineBreakMeasurer(paragraph, frc);
+            lineMeasurer.setPosition(paragraphStart);
+
+            // Get lines until the entire paragraph has been displayed.
+            while (lineMeasurer.getPosition() < paragraphEnd) {
+
+                TextLayout layout = lineMeasurer.nextLayout(m_maxTextWidth);
+
+                m_textDim.width = Math.max(m_textDim.width, (int)layout.getAdvance());
+                // Move y-coordinate by the ascent of the layout.
+                m_textDim.height += layout.getAscent() + layout.getDescent() + layout.getLeading();
+            }
+        }
+
+        return text;
     }
 
     @Override
@@ -512,14 +511,7 @@ public class LabelRenderer extends AbstractShapeRenderer {
             }
             
             // render each line of text
-            int lh = fm.getHeight(); // the line height
-            int start = 0, end = text.indexOf(m_delim);
-            for ( ; end >= 0; y += lh ) {
-                drawString(g, fm, text.substring(start, end), useInt, x, y, tw);
-                start = end+1;
-                end = text.indexOf(m_delim, start);   
-            }
-            drawString(g, fm, text.substring(start), useInt, x, y, tw);
+            drawString(g, text, useInt, x, y, tw);
         }
 
         // draw border
@@ -534,39 +526,57 @@ public class LabelRenderer extends AbstractShapeRenderer {
 
     }
 
-    public void setTextRenderingHint(Graphics2D g) {
-        g.setRenderingHint( RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
-    }
-
-
-    private final void drawString(Graphics2D g, FontMetrics fm, String text,
-            boolean useInt, double x, double y, double w)
+    private final void drawString(Graphics2D g, String text, boolean useInt, double x, double y, double w)
     {
-        setTextRenderingHint(g);
+        for (String line : text.split("\n"))
+        {
+            if (line.length() == 0) {
+                FontMetrics fm = DEFAULT_GRAPHICS.getFontMetrics(m_font);
+                m_textDim.height += fm.getHeight();
+                continue;
+            }
+
+            String expandTabbedLine = StringLib.expandTab(line, 4);
+            AttributedString attributedString = new AttributedString(expandTabbedLine, m_font.getAttributes());
+            AttributedCharacterIterator paragraph = attributedString.getIterator();
+
+            FontRenderContext frc = DEFAULT_GRAPHICS.getFontRenderContext();
+
+            int paragraphStart = paragraph.getBeginIndex();
+            int paragraphEnd = paragraph.getEndIndex();
+
+            LineBreakMeasurer lineMeasurer = new LineBreakMeasurer(paragraph, frc);
+            lineMeasurer.setPosition(paragraphStart);
+
+            // Get lines until the entire paragraph has been displayed.
+            while (lineMeasurer.getPosition() < paragraphEnd) {
+
+                TextLayout layout = lineMeasurer.nextLayout((float)m_maxTextWidth);
+                double tx;
+                switch ( m_hTextAlign ) {
+                    case Constants.LEFT:
+                        tx = x;
+                        break;
+                    case Constants.RIGHT:
+                        tx = x + w - layout.getAdvance();
+                        break;
+                    case Constants.CENTER:
+                        tx = x + (w - layout.getAdvance()) / 2;
+                        break;
+                    default:
+                        throw new IllegalStateException(
+                                "Unrecognized text alignment setting.");
+                }
+                // use integer precision unless zoomed-in
+                // results in more stable drawing
+                    layout.draw(g, (float)tx, (float)y);
+
+                y += layout.getAscent() + layout.getDescent() + layout.getLeading();
+
+            }
+        }
 
         // compute the x-coordinate
-        double tx;
-        switch ( m_hTextAlign ) {
-        case Constants.LEFT:
-            tx = x;
-            break;
-        case Constants.RIGHT:
-            tx = x + w - fm.stringWidth(text);
-            break;
-        case Constants.CENTER:
-            tx = x + (w - fm.stringWidth(text)) / 2;
-            break;
-        default:
-            throw new IllegalStateException(
-                    "Unrecognized text alignment setting.");
-        }
-        // use integer precision unless zoomed-in
-        // results in more stable drawing
-        if ( useInt ) {
-            g.drawString(text, (int)tx, (int)y);
-        } else {
-            g.drawString(text, (float)tx, (float)y);
-        }
     }
     
     /**
