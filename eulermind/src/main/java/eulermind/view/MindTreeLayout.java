@@ -265,36 +265,41 @@ public class MindTreeLayout extends TreeLayout {
         boolean expanded = n.isExpanded();
         if ( n.getChildCount() == 0 || !expanded ) // is leaf
         { 
-            NodeItem l = (NodeItem)n.getPreviousSibling();
+            NodeItem previousSibling = (NodeItem)n.getPreviousSibling();
             np.breadth = nBounds.getHeight()  + m_bspace;
 
-            if ( l == null ) {
+            if ( previousSibling == null ) {
                 np.subTreeTopInSibling = 0;
 
             } else {
-            	Params lp = getParams(l);
+            	Params lp = getParams(previousSibling);
                 np.subTreeTopInSibling = lp.subTreeTopInSibling + lp.breadth;
             }
 
-            np.posInChild = np.breadth * 0.5;
+            if (n.getParent() == null) {
+                np.posInChild = np.breadth * 0.5;
+            } else {
+                np.posInChild = StrictMath.max(np.breadth, ((NodeItem)n.getParent()).getBounds().getHeight() + m_bspace) * 0.5;
+            }
         }
         else if ( expanded )
         {
-        	NodeItem leftMost = (NodeItem)n.getFirstChild();
-        	NodeItem rightMost = (NodeItem)n.getLastChild();
+        	NodeItem firstChild = (NodeItem)n.getFirstChild();
+        	NodeItem lastChild = (NodeItem)n.getLastChild();
 
-        	NodeItem c = leftMost;
+        	NodeItem c = firstChild;
         	for ( int i=0; c != null; ++i, c = (NodeItem)c.getNextSibling() )
         	{
         		firstWalk(c, i, depth+1);
         	}
 
-            Params lastChildParams = getParams(rightMost);
-            np.breadth = lastChildParams.subTreeTopInSibling + lastChildParams.breadth;
+            Params lastChildParams = getParams(lastChild);
+            np.breadth = StrictMath.max(nBounds.getHeight()  + m_bspace,
+                    lastChildParams.subTreeTopInSibling + lastChildParams.breadth);
 
-            NodeItem left = (NodeItem)n.getPreviousSibling();
-            if ( left != null ) {
-                Params lp = getParams(left);
+            NodeItem previousSibling = (NodeItem)n.getPreviousSibling();
+            if ( previousSibling != null ) {
+                Params lp = getParams(previousSibling);
                 np.subTreeTopInSibling = lp.subTreeTopInSibling + lp.breadth;
 
             } else {
