@@ -2,13 +2,9 @@ package eulermind.view;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.geom.RectangularShape;
-import java.awt.geom.RoundRectangle2D;
 
 import eulermind.MindModel;
 import eulermind.Style;
-import eulermind.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +23,6 @@ import prefuse.data.Node;
 import prefuse.render.DefaultRendererFactory;
 import prefuse.render.EdgeRenderer;
 import prefuse.render.AbstractShapeRenderer;
-import prefuse.render.LabelRenderer;
 import prefuse.util.*;
 import prefuse.visual.EdgeItem;
 import prefuse.visual.NodeItem;
@@ -164,7 +159,7 @@ public class MindTreeRenderEngine {
     
     private DefaultRendererFactory makeItemRendererFactory ()
     {
-	    NodeRenderer nodeRenderer = new NodeRenderer(MindModel.TEXT_PROP_NAME, MindModel.sm_iconPropName);
+	    NodeRenderer nodeRenderer = new NodeRenderer(m_mindView, MindModel.TEXT_PROP_NAME, MindModel.sm_iconPropName);
     	nodeRenderer.setRenderType(AbstractShapeRenderer.RENDER_TYPE_FILL);
     	nodeRenderer.setHorizontalAlignment(Constants.LEFT);
     	nodeRenderer.setRoundedCorner(10, 10);
@@ -172,6 +167,8 @@ public class MindTreeRenderEngine {
         nodeRenderer.setVerticalPadding(5);
         nodeRenderer.setMaxTextWidth(100);
         nodeRenderer.setVerticalTextAlignment(Constants.CENTER);
+        nodeRenderer.setCursorBorderExpand(m_cursorBorderExpand);
+        nodeRenderer.setShowBigBorderOfCursor(m_showBigBorderOfCursor);
 
 	    EdgeRenderer edgeRenderer = new EdgeRenderer(Constants.EDGE_TYPE_CURVE) {
             @Override
@@ -319,169 +316,4 @@ public class MindTreeRenderEngine {
         }
     }
 
-    public class NodeRenderer extends LabelRenderer {
-        public NodeRenderer(String textField) {
-            super(textField);
-        }
-
-        public NodeRenderer(String textField, String imageField) {
-            super(textField, imageField);
-        }
-
-        protected String getText(VisualItem item) {
-            //return m_mindView.m_mindModel.getText((NodeItem)item) + " " + MindTreeLayout.getLayoutInfo((NodeItem)item);
-            return m_mindView.m_mindModel.getText((NodeItem)item);
-            //return m_mindView.m_mindModel.getNodeDebugInfo((NodeItem)item);
-        }
-
-        protected Image getImage(VisualItem item) {
-            String iconName = MindModel.getNodeIcon(item);
-            if (iconName == null) {
-                return null;
-            }
-            return Style.getImageIcon(iconName).getImage();
-        }
-
-        public int getRenderType(VisualItem item) {
-            //FIXME: add a color action
-            item.setStrokeColor(ColorLib.rgb(150,150,150));
-
-            if (((NodeItem) item).getChildCount() != 0) {
-                if (item.isExpanded()) {
-                    return RENDER_TYPE_FILL;
-                } else {
-                    return RENDER_TYPE_DRAW_AND_FILL;
-                }
-
-            } else {
-                if (m_mindView.isPlaceholder(item)) {
-                    return RENDER_TYPE_FILL;
-
-                } else {
-                    MindModel mindModel = m_mindView.m_mindModel;
-
-                    int childCount = mindModel.getDBChildCount((NodeItem) item);
-
-                    if (childCount == 0) {
-                        return RENDER_TYPE_FILL;
-                    } else {
-                        return RENDER_TYPE_DRAW_AND_FILL;
-                    }
-                }
-            }
-        }
-
-        public void render(Graphics2D g, VisualItem item) {
-            super.render(g, item);
-
-            if (! (item instanceof NodeItem)) {
-                return;
-            }
-
-            NodeItem nodeItem = (NodeItem)item;
-
-            if (nodeItem == m_mindView.m_dndDargOverNode && m_mindView.m_dndHitPosition != NodeControl.HitPosition.OUTSIDE) {
-                RectangularShape shape = (RectangularShape)getShape(nodeItem);
-
-                float x = (float)shape.getX();
-                float y = (float)shape.getY();
-                float width = (float)shape.getWidth();
-                float height = (float)shape.getHeight();
-
-                float colorStartX = x;
-                float colorStartY = y;
-                float colorEndX = x + width;
-                float colorEndY = y + width;
-
-                //switch (m_mindView.m_dragControl.m_hitPosition){
-                switch (m_mindView.m_dndHitPosition){
-                    case TOP:
-                        m_logger.info("TOP gradient");
-                        height /= 2;
-
-                        colorStartX = colorEndX = x;
-                        colorStartY = y + height;
-                        colorEndY = y;
-                        break;
-
-                    case BOTTOM:
-                        m_logger.info("bottom gradient");
-                        y += height / 2;
-                        height /= 2;
-
-                        colorStartX = colorEndX = x;
-                        colorStartY = y;
-                        colorEndY = y + height;
-                        break;
-
-                    case RIGHT:
-                        m_logger.info("right gradient");
-                        x += width / 2;
-                        width /= 2;
-
-                        colorStartY = colorEndY = y;
-                        colorStartX = x;
-                        colorEndX = x + width;
-                        break;
-
-                    case OUTSIDE:
-                        return;
-                }
-
-                int red = ColorLib.red(Style.sm_cursorBackColor);
-                int green = ColorLib.green(Style.sm_cursorBackColor);
-                int blue = ColorLib.blue(Style.sm_cursorBackColor);
-
-                red = green = blue = 128;
-
-                GradientPaint gradientPaint =new GradientPaint(colorStartX, colorStartY,
-                        ColorLib.getColor(red, green, blue, 0),
-                        colorEndX, colorEndY,
-                        ColorLib.getColor(red, green, blue, 128), false);
-
-                g.setPaint(gradientPaint);
-                g.fillRect((int)x, (int)y, (int)width, (int)height);
-            }
-
-            if (! m_showBigBorderOfCursor) {
-                return;
-            }
-
-            /*
-            if (m_mindView != m_mindView.m_mindController.getCurrentView()) {
-                return;
-            }
-            */
-
-            java.util.List<NodeItem> selectedNodeItems = m_mindView.m_mindController.getCurrentView().getSelectedNodeItems();
-            //m_logger.info("selected NodeItem size {}", selectedNodeItems.size());
-
-            if (selectedNodeItems.contains(nodeItem)) {
-                Color color = ColorLib.getColor(0, 0, 255, 255);
-                paintCursorBoundary(g, nodeItem, color);
-
-            } else  {
-                for (NodeItem selectedNode : selectedNodeItems) {
-                    if (m_mindView.m_mindModel.isSelfInDB(nodeItem, selectedNode)) {
-                        Color color = ColorLib.getColor(0, 0, 255, 80);
-                        paintCursorBoundary(g, nodeItem, color);
-                        break;
-                    }
-                }
-            }
-        }
-
-        private void paintCursorBoundary(Graphics2D g, VisualItem item, Color color)
-        {
-            Rectangle2D bounds = (Rectangle2D)item.getBounds().clone();
-
-            GraphicsLib.expand(bounds, m_cursorBorderExpand);
-
-            RoundRectangle2D borderShape = new RoundRectangle2D.Double(
-                    bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight(), m_cursorBorderExpand, m_cursorBorderExpand);
-
-            BasicStroke stroke = StrokeLib.getStroke(3.0f);
-            GraphicsLib.paint(g, borderShape, stroke, color, null, RENDER_TYPE_DRAW);
-        }
-    }
 }

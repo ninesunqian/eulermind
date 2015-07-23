@@ -7,6 +7,9 @@ import javax.swing.*;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -40,7 +43,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public class MindEditor extends JTextField {
+public class MindEditor extends JTextPane {
 
     boolean m_hasPromptList;
 
@@ -98,6 +101,11 @@ public class MindEditor extends JTextField {
         m_promptList.addMouseListener(m_prompterMouseListener);
 
         getDocument().addDocumentListener(m_editTextListener);
+        StyledDocument doc = getStyledDocument();
+        SimpleAttributeSet center = new SimpleAttributeSet();
+
+        StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
+        doc.setParagraphAttributes(0, doc.getLength(), center, false);
     }
 
     private void innerFocusEditor()
