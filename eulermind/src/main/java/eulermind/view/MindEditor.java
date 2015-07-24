@@ -7,9 +7,6 @@ import javax.swing.*;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -43,7 +40,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public class MindEditor extends JTextPane {
+public class MindEditor extends JTextArea {
 
     boolean m_hasPromptList;
 
@@ -61,6 +58,9 @@ public class MindEditor extends JTextPane {
     private SwingWorker<Boolean, PromptedNode> m_queryWorker;
 
     JComponent m_innerFocus = this;
+
+    int m_minWidth = 0;
+    int m_minHeight = 0;
 
     public MindEditor() {
         super();
@@ -101,11 +101,24 @@ public class MindEditor extends JTextPane {
         m_promptList.addMouseListener(m_prompterMouseListener);
 
         getDocument().addDocumentListener(m_editTextListener);
-        StyledDocument doc = getStyledDocument();
-        SimpleAttributeSet center = new SimpleAttributeSet();
+        getDocument().addDocumentListener(m_adjustSizeListener);
 
-        StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
-        doc.setParagraphAttributes(0, doc.getLength(), center, false);
+        setBorder(BorderFactory.createEtchedBorder());
+        setLineWrap(true);
+        setWrapStyleWord(true);
+        setTabSize(4);
+    }
+
+    @Override
+    protected int getRowHeight() {
+        FontMetrics metrics = getFontMetrics(getFont());
+        return metrics.getHeight();
+    }
+
+    @Override
+    public void setMinimumSize(Dimension minimumSize) {
+        m_minWidth = minimumSize.width;
+        m_minHeight = minimumSize.height;
     }
 
     private void innerFocusEditor()
@@ -300,6 +313,43 @@ public class MindEditor extends JTextPane {
         }
     };
 
+    private final DocumentListener m_adjustSizeListener = new DocumentListener() {
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            adjustSizeByText();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            adjustSizeByText();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            adjustSizeByText();
+        }
+    };
+
+    private void adjustSizeByText()
+    {
+        String text = getText();
+        Dimension exceptedSize = LabelRenderer.computeTextDimensions(text, getFont(), 600);
+        int rowHeight = getRowHeight();
+        m_logger.info("rowHeight: {}", rowHeight);
+
+        Insets margin = getMargin();
+        exceptedSize.width += margin.left + margin.right;
+        exceptedSize.height += margin.top + margin.bottom;
+
+        exceptedSize.width = Math.max(exceptedSize.width, m_minWidth);
+        exceptedSize.height = Math.max(exceptedSize.height, m_minHeight);
+
+        Dimension nowSize = getSize();
+        if (!nowSize.equals(exceptedSize)) {
+            setSize(exceptedSize);
+        }
+    }
+
     void afterFireMindEditorEvent()
     {
         m_popupMenu.setVisible(false);
@@ -338,7 +388,12 @@ public class MindEditor extends JTextPane {
             int keyCode = e.getKeyCode();
             switch (keyCode) {
                 case KeyEvent.VK_ENTER:
-                    confirm();
+                    if (e.isShiftDown()) {
+                        append("\n");
+
+                    } else {
+                        confirm();
+                    }
                     break;
 
                 case KeyEvent.VK_ESCAPE:

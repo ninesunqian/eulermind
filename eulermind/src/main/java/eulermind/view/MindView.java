@@ -6,6 +6,7 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.*;
 import java.awt.event.*;
+import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,10 +32,7 @@ import prefuse.util.ColorLib;
 import prefuse.util.FontLib;
 import prefuse.util.PrefuseLib;
 import prefuse.util.ui.UILib;
-import prefuse.visual.EdgeItem;
-import prefuse.visual.NodeItem;
-import prefuse.visual.VisualItem;
-import prefuse.visual.VisualTree;
+import prefuse.visual.*;
 import prefuse.visual.expression.VisiblePredicate;
 import prefuse.visual.sort.TreeDepthItemSorter;
 
@@ -64,6 +62,7 @@ public class MindView extends Display {
 
     final Logger m_logger = LoggerFactory.getLogger(this.getClass());
     final String m_treeGroupName = "tree";
+    final static String TEXT_AREA_COLUMN_NAME = "textBounds";
 
     final public MindModel m_mindModel;
     MindController m_mindController;
@@ -72,12 +71,10 @@ public class MindView extends Display {
     VisualTree m_visualTree;
     MindTreeRenderEngine m_renderEngine;
 
-
     public TreeCursor m_cursor;
     Node m_savedCursor = null;
 
     TreeFolder m_folder;
-
 
     boolean m_isChanging = false;
 
@@ -105,6 +102,9 @@ public class MindView extends Display {
         m_tree = tree;
         m_visualTree = (VisualTree)m_vis.add(m_treeGroupName, m_tree);
         MindModel.addNodeMirrorXYColumn(m_tree, m_visualTree);
+
+        VisualTable nodeItemTable = (VisualTable)m_visualTree.getNodeTable();
+        nodeItemTable.addColumn(TEXT_AREA_COLUMN_NAME, Rectangle2D.Double.class, null);
 
         setItemSorter(new TreeDepthItemSorter());
         m_renderEngine = new MindTreeRenderEngine(this, m_treeGroupName);
@@ -152,7 +152,6 @@ public class MindView extends Display {
         m_mindEditor.setMindDb(m_mindModel.m_mindDb);
         m_mindEditor.setHasPromptList(true);
 
-        m_mindEditor.setBorder(null);
         m_mindEditor.setVisible(false);
 
         setTextEditor(m_mindEditor);
@@ -388,6 +387,16 @@ public class MindView extends Display {
 
         });
 	}
+
+    @Override
+    protected Rectangle2D getTextBounds(VisualItem item)
+    {
+        if (item.get(TEXT_AREA_COLUMN_NAME) != null) {
+            return (Rectangle2D.Double)item.get(TEXT_AREA_COLUMN_NAME);
+        }else {
+            return item.getBounds();
+        }
+    }
 
     void setTransformEnabled(boolean enabled)
     {

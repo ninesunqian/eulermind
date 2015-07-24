@@ -161,12 +161,13 @@ public class MindTreeRenderEngine {
     {
 	    NodeRenderer nodeRenderer = new NodeRenderer(m_mindView, MindModel.TEXT_PROP_NAME, MindModel.sm_iconPropName);
     	nodeRenderer.setRenderType(AbstractShapeRenderer.RENDER_TYPE_FILL);
-    	nodeRenderer.setHorizontalAlignment(Constants.LEFT);
     	nodeRenderer.setRoundedCorner(10, 10);
         nodeRenderer.setHorizontalPadding(5);
         nodeRenderer.setVerticalPadding(5);
-        nodeRenderer.setMaxTextWidth(100);
+        nodeRenderer.setMaxTextWidth(600);
+        nodeRenderer.setHorizontalAlignment(Constants.LEFT);
         nodeRenderer.setVerticalTextAlignment(Constants.CENTER);
+        nodeRenderer.setHorizontalTextAlignment(Constants.LEFT);
         nodeRenderer.setCursorBorderExpand(m_cursorBorderExpand);
         nodeRenderer.setShowBigBorderOfCursor(m_showBigBorderOfCursor);
 

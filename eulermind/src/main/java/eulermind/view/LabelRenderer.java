@@ -3,13 +3,14 @@ package eulermind.view;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineBreakMeasurer;
-import java.awt.font.TextAttribute;
 import java.awt.font.TextLayout;
 import java.awt.geom.*;
 import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
-import java.util.Hashtable;
 
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import prefuse.Constants;
 import prefuse.render.AbstractShapeRenderer;
 import prefuse.render.ImageFactory;
@@ -54,13 +55,15 @@ import prefuse.visual.VisualItem;
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
 public class LabelRenderer extends AbstractShapeRenderer {
+    Logger m_logger = LoggerFactory.getLogger(this.getClass());
+    static Logger s_logger = LoggerFactory.getLogger(LabelRenderer.class);
 
     protected ImageFactory m_images = null;
     protected String m_delim = "\n";
     
     protected String m_labelName = "label";
     protected String m_imageName = null;
-    
+
     protected int m_xAlign = Constants.CENTER;
     protected int m_yAlign = Constants.CENTER;
     protected int m_hTextAlign = Constants.CENTER;
@@ -88,14 +91,14 @@ public class LabelRenderer extends AbstractShapeRenderer {
     protected Dimension m_textDim = new Dimension(); // text width / height
 
     /**
-     * Create a new LabelRenderer. By default the field "label" is used
+     * Create a new MyLabelRenderer. By default the field "label" is used
      * as the field name for looking up text, and no image is used.
      */
     public LabelRenderer() {
     }
     
     /**
-     * Create a new LabelRenderer. Draws a text label using the given
+     * Create a new MyLabelRenderer. Draws a text label using the given
      * text data field and does not draw an image.
      * @param textField the data field for the text label.
      */
@@ -104,7 +107,7 @@ public class LabelRenderer extends AbstractShapeRenderer {
     }
     
     /**
-     * Create a new LabelRenderer. Draws a text label using the given text
+     * Create a new MyLabelRenderer. Draws a text label using the given text
      * data field, and draws the image at the location reported by the
      * given image data field.
      * @param textField the data field for the text label
@@ -207,7 +210,7 @@ public class LabelRenderer extends AbstractShapeRenderer {
         if ( imageField != null ) m_images = new ImageFactory();
         m_imageName = imageField;
     }
-    
+
     /**
      * Sets the maximum image dimensions, used to control scaling of loaded
      * images. This scaling is enforced immediately upon loading of the image.
@@ -246,28 +249,23 @@ public class LabelRenderer extends AbstractShapeRenderer {
     // ------------------------------------------------------------------------
     // Rendering
     
-    private String computeTextDimensions(VisualItem item, String text,
-                                         double size)
+    static public Dimension computeTextDimensions(String text, Font font, int maxTextWidth)
     {
-        // put item font in temp member variable
-        m_font = item.getFont();
-        // scale the font as needed
-        if ( size != 1 ) {
-            m_font = FontLib.getFont(m_font.getName(), m_font.getStyle(), size * m_font.getSize());
-        }
-        m_textDim.width = 0;
-        m_textDim.height = 0;
+        Dimension textDim = new Dimension();
+        textDim.width = 0;
+        textDim.height = 0;
 
-        for (String line : text.split("\n"))
+        FontMetrics fm = DEFAULT_GRAPHICS.getFontMetrics(font);
+
+        for (String line : StringUtils.splitPreserveAllTokens(text, '\n'))
         {
             if (line.length() == 0) {
-                FontMetrics fm = DEFAULT_GRAPHICS.getFontMetrics(m_font);
-                m_textDim.height += fm.getHeight();
+                textDim.height += fm.getHeight();
                 continue;
             }
 
             String expandTabbedLine = StringLib.expandTab(line, 4);
-            AttributedString attributedString = new AttributedString(expandTabbedLine, m_font.getAttributes());
+            AttributedString attributedString = new AttributedString(expandTabbedLine, font.getAttributes());
             AttributedCharacterIterator paragraph = attributedString.getIterator();
 
             FontRenderContext frc = DEFAULT_GRAPHICS.getFontRenderContext();
@@ -281,15 +279,17 @@ public class LabelRenderer extends AbstractShapeRenderer {
             // Get lines until the entire paragraph has been displayed.
             while (lineMeasurer.getPosition() < paragraphEnd) {
 
-                TextLayout layout = lineMeasurer.nextLayout(m_maxTextWidth);
+                TextLayout layout = lineMeasurer.nextLayout(maxTextWidth);
 
-                m_textDim.width = Math.max(m_textDim.width, (int)layout.getAdvance());
-                // Move y-coordinate by the ascent of the layout.
-                m_textDim.height += layout.getAscent() + layout.getDescent() + layout.getLeading();
+                textDim.width = Math.max(textDim.width, (int)layout.getAdvance());
+
+                //JTextArea的行高都是字体的高度，与textLayout的高度有微小差距。目前不知道为什么是这样
+                //m_textDim.height += layout.getAscent() + layout.getDescent() + layout.getLeading();
+                textDim.height += fm.getHeight();
             }
         }
 
-        return text;
+        return textDim;
     }
 
     @Override
@@ -315,7 +315,13 @@ public class LabelRenderer extends AbstractShapeRenderer {
         // get text dimensions
         int tw=0, th=0;
         if ( m_text != null ) {
-            m_text = computeTextDimensions(item, m_text, size);
+
+            m_font = item.getFont();
+            if ( size != 1 ) {
+                m_font = FontLib.getFont(m_font.getName(), m_font.getStyle(), size * m_font.getSize());
+            }
+
+            m_textDim = computeTextDimensions(m_text, m_font, m_maxTextWidth);
             th = m_textDim.height;
             tw = m_textDim.width;   
         }
@@ -499,9 +505,9 @@ public class LabelRenderer extends AbstractShapeRenderer {
             default:
                 th = m_textDim.height;
             }
-            
+
+
             // compute starting y-coordinate
-            y += fm.getAscent();
             switch ( m_vTextAlign ) {
             case Constants.TOP:
                 break;
@@ -511,9 +517,14 @@ public class LabelRenderer extends AbstractShapeRenderer {
             case Constants.CENTER:
                 y += (th - m_textDim.height)/2;
             }
-            
+
+            item.set(MindView.TEXT_AREA_COLUMN_NAME, new Rectangle2D.Double(x, y, tw, m_textDim.getHeight()));
+
+            y += fm.getAscent();
+
             // render each line of text
             drawString(g, text, useInt, x, y, tw);
+
         }
 
         // draw border
@@ -525,16 +536,16 @@ public class LabelRenderer extends AbstractShapeRenderer {
 
             GraphicsLib.paint(g,item,line,getStroke(item),RENDER_TYPE_DRAW);
         }
-
     }
 
     private final void drawString(Graphics2D g, String text, boolean useInt, double x, double y, double w)
     {
+        FontMetrics fm = DEFAULT_GRAPHICS.getFontMetrics(m_font);
+
         for (String line : text.split("\n"))
         {
             if (line.length() == 0) {
-                FontMetrics fm = DEFAULT_GRAPHICS.getFontMetrics(m_font);
-                m_textDim.height += fm.getHeight();
+                y += fm.getHeight();
                 continue;
             }
 
@@ -571,10 +582,11 @@ public class LabelRenderer extends AbstractShapeRenderer {
                 }
                 // use integer precision unless zoomed-in
                 // results in more stable drawing
-                    layout.draw(g, (float)tx, (float)y);
+                layout.draw(g, (float)tx, (float)y);
 
-                y += layout.getAscent() + layout.getDescent() + layout.getLeading();
-
+                //JTextArea的行高都是字体的高度，与textLayout的高度有微小差距。目前不知道为什么是这样
+                //m_textDim.height += layout.getAscent() + layout.getDescent() + layout.getLeading();
+                y += fm.getHeight();
             }
         }
 
@@ -827,4 +839,4 @@ public class LabelRenderer extends AbstractShapeRenderer {
         m_imageMargin = pad;
     }
     
-} // end of class LabelRenderer
+} // end of class MyLabelRenderer

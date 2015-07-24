@@ -1,15 +1,6 @@
 package prefuse;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsEnvironment;
-import java.awt.Image;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -26,6 +17,8 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.OutputStream;
 import java.util.Iterator;
+
+import eulermind.view.MindView;
 import org.slf4j.Logger;  import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
@@ -1535,6 +1528,10 @@ public class Display extends JComponent {
         return null;
     }
 
+    public Rectangle getDisplayBounds(Rectangle2D r) {
+        return m_transform.createTransformedShape(r).getBounds();
+    }
+
     public Rectangle getItemDisplayBounds(VisualItem item) {
         if (!item.isValid()) {
             return null;
@@ -2170,6 +2167,11 @@ public class Display extends JComponent {
         m_editor = tc;
         this.add(m_editor, -1);
     }
+
+    protected Rectangle2D getTextBounds(VisualItem item)
+    {
+        return item.getBounds();
+    }
     
     /**
      * Edit text for the given VisualItem and attribute. Presents a text
@@ -2181,17 +2183,15 @@ public class Display extends JComponent {
      */
     public void editText(VisualItem item, String attribute) {
         if ( m_editing ) { stopEditing(); }
-        Rectangle2D b = item.getBounds();
+        Rectangle2D b = getTextBounds(item);
         Rectangle r = m_transform.createTransformedShape(b).getBounds();
-        
-        // hacky placement code that attempts to keep text in same place
-        // configured under Windows XP and Java 1.4.2b
-        if ( m_editor instanceof JTextArea ) {
-            r.y -= 2; r.width += 22; r.height += 2;
-        } else {
-            r.x += 3; r.y += 1; r.width -= 5; r.height -= 2;
-        }
-        
+
+        Insets margin = m_editor.getMargin();
+        r.x -= margin.left;
+        r.width += margin.left + margin.right;
+        r.y -= margin.top;
+        r.height += margin.top + margin.bottom;
+
         Font f = item.getFont();
         int size = (int)Math.round(f.getSize()*m_transform.getScaleX());
         Font nf = new Font(f.getFontName(), f.getStyle(), size);
@@ -2202,7 +2202,7 @@ public class Display extends JComponent {
         if (r.getWidth() < 100) {
             r.setSize(100, (int) r.getHeight());
         }
-        
+
         editText(item, attribute, r);
     }
     
@@ -2241,6 +2241,8 @@ public class Display extends JComponent {
         if ( m_editing ) { stopEditing(); }
         m_editing = true;
         m_editor.setBounds(r.x,r.y,r.width,r.height);
+        m_editor.setMinimumSize(new Dimension(r.width, r.height));
+
         if (txt != null) {
             m_editor.setText(txt);
             m_editor.setCaretPosition(txt.length());
