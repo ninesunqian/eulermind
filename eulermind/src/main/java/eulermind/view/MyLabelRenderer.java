@@ -54,9 +54,9 @@ import prefuse.visual.VisualItem;
  * 
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
-public class LabelRenderer extends AbstractShapeRenderer {
+public class MyLabelRenderer extends AbstractShapeRenderer {
     Logger m_logger = LoggerFactory.getLogger(this.getClass());
-    static Logger s_logger = LoggerFactory.getLogger(LabelRenderer.class);
+    static Logger s_logger = LoggerFactory.getLogger(MyLabelRenderer.class);
 
     protected ImageFactory m_images = null;
     protected String m_delim = "\n";
@@ -94,7 +94,7 @@ public class LabelRenderer extends AbstractShapeRenderer {
      * Create a new MyLabelRenderer. By default the field "label" is used
      * as the field name for looking up text, and no image is used.
      */
-    public LabelRenderer() {
+    public MyLabelRenderer() {
     }
     
     /**
@@ -102,7 +102,7 @@ public class LabelRenderer extends AbstractShapeRenderer {
      * text data field and does not draw an image.
      * @param textField the data field for the text label.
      */
-    public LabelRenderer(String textField) {
+    public MyLabelRenderer(String textField) {
         this.setTextField(textField);
     }
     
@@ -117,7 +117,7 @@ public class LabelRenderer extends AbstractShapeRenderer {
      * <code>imageField</code> parameter is null, no images at all will be
      * drawn.
      */
-    public LabelRenderer(String textField, String imageField) {
+    public MyLabelRenderer(String textField, String imageField) {
         setTextField(textField);
         setImageField(imageField);
     }

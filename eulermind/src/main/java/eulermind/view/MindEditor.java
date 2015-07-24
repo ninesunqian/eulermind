@@ -333,7 +333,7 @@ public class MindEditor extends JTextArea {
     private void adjustSizeByText()
     {
         String text = getText();
-        Dimension exceptedSize = LabelRenderer.computeTextDimensions(text, getFont(), 600);
+        Dimension exceptedSize = MyLabelRenderer.computeTextDimensions(text, getFont(), 600);
         int rowHeight = getRowHeight();
         m_logger.info("rowHeight: {}", rowHeight);
 
