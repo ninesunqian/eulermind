@@ -59,6 +59,8 @@ public abstract class MindOperator extends AbstractUndoableEdit {
 
     protected int m_formerCursorPos;
 
+    //同时操作多个节点的时候，表示第一个操作符。undo的时候也是回退到这里
+    public boolean m_firstInGroup = false;
 
     public MindOperator(MindModel mindModel, Node formerCursor) {
         m_logger = LoggerFactory.getLogger(this.getClass());

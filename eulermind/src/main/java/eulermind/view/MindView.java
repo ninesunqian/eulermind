@@ -419,6 +419,12 @@ public class MindView extends Display {
         m_cursor.setCursorNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, path)));
     }
 
+    public void selectNodeByPath(ArrayList<Integer> path)
+    {
+        assert m_mindModel.getNodeByPath(m_tree, path) != null;
+        m_cursor.multiSelectNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, path)));
+    }
+
     public void setCursorAfterTreeChanged()
     {
         m_cursor.clearMultiSelectedNodeItems();

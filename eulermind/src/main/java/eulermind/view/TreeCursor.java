@@ -166,6 +166,15 @@ public class TreeCursor extends NodeControl {
         m_mindView.m_mindController.updateMindPropertyComponents(node);
     }
 
+    public void multiSelectNodeItem(NodeItem node) {
+        if (m_selectedNodes.contains(node)) {
+            m_selectedNodes.remove(node);
+        }
+
+        m_selectMode = SelectMode.ADD_ONE;
+        setCursorNodeItem(node);
+    }
+
     private void buildXYAxis(NodeItem originCursor)
     {
         m_originCursor = originCursor;

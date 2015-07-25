@@ -295,7 +295,7 @@ public class MindController extends UndoManager {
         }
     }
 
-    private void updateMindViews(MindOperator operator, boolean isUndo)
+    private void selectNodes(MindOperator operator, boolean isUndo, boolean firstSelect)
     {
         removeInvalidMindViews();
 
@@ -307,9 +307,20 @@ public class MindController extends UndoManager {
             mindView.setCursorAfterTreeChanged();
 
             if (mindView == operatorBornView) {
-                mindView.setCursorNodeByPath(isUndo ? operator.m_formerCursorPath : operator.m_laterCursorPath);
+                if (firstSelect) {
+                    mindView.setCursorNodeByPath(isUndo ? operator.m_formerCursorPath : operator.m_laterCursorPath);
+                } else {
+                    mindView.selectNodeByPath(isUndo ? operator.m_formerCursorPath : operator.m_laterCursorPath);
+                }
             }
+        }
+    }
 
+    private void updateMindViewsAfterOperators()
+    {
+        removeInvalidMindViews();
+        for (Tree tree : m_mindViewDockables.keySet()) {
+            MindView mindView = (MindView)m_mindViewDockables.get(tree).getContentPane().getComponent(0);
             mindView.renderTreeToEndChanging();
         }
     }
@@ -331,31 +342,42 @@ public class MindController extends UndoManager {
 
             m_logger.info("m_formerCursorPath: " + operator.m_formerCursorPath.toString());
             m_logger.info("m_laterCursorPath: " + operator.m_laterCursorPath.toString());
+            operator.m_firstInGroup = true;
 
             super.addEdit(operator);
+            selectNodes(operator, false, true);
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, e.getMessage(), e.getMessage(), JOptionPane.ERROR_MESSAGE);
             m_logger.warn("operator exception" + e.getMessage());
         }
 
-        updateMindViews(operator, false);
+        updateMindViewsAfterOperators();
     }
 
     public void does(List<MindOperator> operators) {
 
-        MindOperator lastOperator = null;
+        MindOperator firstOperator = null;
+
+        assert operators.size() > 0;
+
+        boolean firstSelectedNode = true;
 
         try {
             for (MindOperator operator : operators)
             {
                 if (operator.does()) {
                     //要放在前面，
-                    lastOperator = operator;
+                    if (firstOperator == null) {
+                        firstOperator = operator;
+                    }
 
                     m_logger.info("m_formerCursorPath: " + operator.m_formerCursorPath.toString());
                     m_logger.info("m_laterCursorPath: " + operator.m_laterCursorPath.toString());
                     super.addEdit(operator);
+
+                    selectNodes(operator, false, firstSelectedNode);
+                    firstSelectedNode = false;
 
                 } else {
                     /*当中间某个操作出错，立即终止。
@@ -370,8 +392,12 @@ public class MindController extends UndoManager {
             m_logger.warn("operator exception" + e.getMessage());
         }
 
-        if (lastOperator != null) {
-            updateMindViews(lastOperator, false);
+        if (firstOperator != null) {
+            firstOperator.m_firstInGroup = true;
+        }
+
+        if (firstOperator != null) {
+            updateMindViewsAfterOperators();
         } else {
             updateMindViews();
         }
@@ -379,24 +405,59 @@ public class MindController extends UndoManager {
 
     public void redo()
     {
-        if (! canRedo())
-            return;
+        boolean meetFirstInGroup = false;
+        boolean firstSelect = true;
+        try {
+            while (canRedo()) {
+                MindOperator operator = (MindOperator)editToBeRedone();
+                //到达下一个operator group的开头
+                if (meetFirstInGroup && operator.m_firstInGroup) {
+                    break;
+                }
 
-        MindOperator operator = (MindOperator)editToBeRedone();
-        super.redo();
+                if (meetFirstInGroup == false) {
+                    assert operator.m_firstInGroup == true;
+                    meetFirstInGroup = true;
+                }
 
-        updateMindViews(operator, false);
+                super.redo();
+                selectNodes(operator, false, firstSelect);
+                firstSelect = false;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, e.getMessage(), e.getMessage(), JOptionPane.ERROR_MESSAGE);
+            m_logger.warn("operator exception" + e.getMessage());
+        }
+
+        updateMindViewsAfterOperators();
     }
 
     public void undo()
     {
-        if (! canUndo())
-            return;
+        boolean firstSelect = true;
+        try {
+            while (canUndo()) {
+                MindOperator operator = (MindOperator)editToBeUndone();
 
-        MindOperator operator = (MindOperator)editToBeUndone();
-        super.undo();
+                super.undo();
+                selectNodes(operator, true, firstSelect);
+                firstSelect = false;
 
-        updateMindViews(operator, true);
+                //到达下一个operator group的开头
+                if (operator.m_firstInGroup) {
+                    break;
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, e.getMessage(), e.getMessage(), JOptionPane.ERROR_MESSAGE);
+            m_logger.warn("operator exception" + e.getMessage());
+        }
+
+        updateMindViewsAfterOperators();
     }
 
     HashSet<MindPropertyComponent> m_mindPropertyComponents = new HashSet<>();
