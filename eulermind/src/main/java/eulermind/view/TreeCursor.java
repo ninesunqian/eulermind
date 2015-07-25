@@ -171,8 +171,10 @@ public class TreeCursor extends NodeControl {
             m_selectedNodes.remove(node);
         }
 
-        m_selectMode = SelectMode.ADD_ONE;
+        SelectMode oldSelectMode = m_selectMode;
+         m_selectMode = SelectMode.ADD_ONE;
         setCursorNodeItem(node);
+        m_selectMode = oldSelectMode;
     }
 
     private void buildXYAxis(NodeItem originCursor)
