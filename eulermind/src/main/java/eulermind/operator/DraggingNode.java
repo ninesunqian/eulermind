@@ -218,8 +218,8 @@ public class DraggingNode extends MindOperator{
             m_mindModel.changeChildPos(m_oldEdgeDbId, m_oldPos);
         } else {
             if (m_fromSameView) {
-                handoverRelation(m_newSourceDbId, m_newPos, m_newParentOrReferrerPath,
-                        m_oldSourceDbId, m_oldPos, m_oldParentOrReferrerPath);
+                handoverRelation(m_newSourceDbId, m_newPos, m_newParentOrReferrerPathAfterDoing,
+                        m_oldSourceDbId, m_oldPos, m_oldParentOrReferrerPathAfterDoing);
             } else {
                 handoverRelation(m_newSourceDbId, m_newPos, null,
                         m_oldSourceDbId, m_oldPos, null);
