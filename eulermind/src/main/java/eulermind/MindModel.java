@@ -1430,6 +1430,10 @@ public class MindModel {
 
         //通过Node获取比直接用数据查找快
         if (oldSource != null) {
+            if (! isChildrenAttached(oldSource)) {
+                attachChildren(oldSource);
+            }
+
             Node child = oldSource.getChild(oldPos);
             targetVertex = getDBVertex(child);
 
