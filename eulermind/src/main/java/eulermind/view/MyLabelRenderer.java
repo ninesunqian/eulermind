@@ -257,7 +257,16 @@ public class MyLabelRenderer extends AbstractShapeRenderer {
 
         FontMetrics fm = DEFAULT_GRAPHICS.getFontMetrics(font);
 
-        for (String line : StringUtils.splitPreserveAllTokens(text, '\n'))
+        String lines[];
+
+        if (text == null || text.length() == 0) {
+            lines = new String[]{""};
+        } else {
+            lines = StringUtils.splitPreserveAllTokens(text, '\n');
+
+        }
+
+        for (String line : lines)
         {
             if (line.length() == 0) {
                 textDim.height += fm.getHeight();
