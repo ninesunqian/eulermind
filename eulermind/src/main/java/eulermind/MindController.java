@@ -306,27 +306,19 @@ public class MindController extends UndoManager {
         }
     }
 
-    private void selectNodesAfterMultiOperator(MindView operatorBornView, List<NodeItem> selectedNodes)
-    {
-        operatorBornView.m_cursor.clearMultiSelectedNodeItems();
-        for (NodeItem node : selectedNodes) {
-            if (node.isValid()) {
-                operatorBornView.m_cursor.multiSelectNodeItem(node);
-            }
-        }
-    }
-
+    /*
     private void updateMindViewsAfterOperators(Object operatorBornViewRootId)
     {
         removeInvalidMindViews();
 
-        exposeMindView(operatorBornViewRootId);
 
         for (Tree tree : m_mindViewDockables.keySet()) {
             MindView mindView = (MindView)m_mindViewDockables.get(tree).getContentPane().getComponent(0);
+            mindView.m_cursor.checkSelectNodeItemsValid();
             mindView.renderTreeToEndChanging();
         }
     }
+    */
 
     private void updateMindViews()
     {
@@ -334,7 +326,7 @@ public class MindController extends UndoManager {
 
         for (Tree tree : m_mindViewDockables.keySet()) {
             MindView mindView = (MindView)m_mindViewDockables.get(tree).getContentPane().getComponent(0);
-            mindView.setCursorAfterTreeChanged();
+            mindView.m_cursor.checkSelectNodeItemsValid();
             mindView.renderTreeToEndChanging();
         }
     }
@@ -385,9 +377,8 @@ public class MindController extends UndoManager {
 
         if (firstOperator != null) {
             firstOperator.m_firstInGroup = true;
-            selectNodesAfterMultiOperator(operatorBornMindView, newSelectedNodes);
-            updateMindViewsAfterOperators(firstOperator.m_rootDbId);
-        } else {
+            operatorBornMindView.m_cursor.selectNodeItems(newSelectedNodes);
+            exposeMindView(operatorBornMindView.getRootDbId());
             updateMindViews();
         }
     }
@@ -401,7 +392,7 @@ public class MindController extends UndoManager {
             while (canRedo()) {
                 MindOperator operator = (MindOperator)editToBeRedone();
                 if (operatorBornMindView == null) {
-                    operatorBornMindView = exposeMindView(operator.m_rootDbId);
+                    operatorBornMindView = getMindView(operator.m_rootDbId);
                 }
 
                 //到达下一个operator group的开头
@@ -425,8 +416,9 @@ public class MindController extends UndoManager {
         }
 
         if (operatorBornMindView != null) {
-            selectNodesAfterMultiOperator(operatorBornMindView, newSelectedNodes);
-            updateMindViewsAfterOperators(operatorBornMindView.getRootDbId());
+            operatorBornMindView.m_cursor.selectNodeItems(newSelectedNodes);
+            exposeMindView(operatorBornMindView.getRootDbId());
+            updateMindViews();
         }
     }
 
@@ -438,7 +430,7 @@ public class MindController extends UndoManager {
             while (canUndo()) {
                 MindOperator operator = (MindOperator)editToBeUndone();
                 if (operatorBornMindView == null) {
-                    operatorBornMindView = exposeMindView(operator.m_rootDbId);
+                    operatorBornMindView = getMindView(operator.m_rootDbId);
                 }
 
                 super.undo();
@@ -457,8 +449,9 @@ public class MindController extends UndoManager {
         }
 
         if (operatorBornMindView != null) {
-            selectNodesAfterMultiOperator(operatorBornMindView, newSelectedNodes);
-            updateMindViewsAfterOperators(operatorBornMindView.getRootDbId());
+            operatorBornMindView.m_cursor.selectNodeItems(newSelectedNodes);
+            exposeMindView(operatorBornMindView.getRootDbId());
+            updateMindViews();
         }
     }
 

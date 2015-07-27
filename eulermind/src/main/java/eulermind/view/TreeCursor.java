@@ -63,23 +63,16 @@ public class TreeCursor extends NodeControl {
     final Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
     enum SelectMode {ONLY_ONE, ADD_ONE, SERIES};
-    private SelectMode m_selectMode = SelectMode.ONLY_ONE;
 
     public TreeCursor(MindView mindView) {
         super(mindView);
 
         m_mindView = mindView;
         m_tree = mindView.m_visualTree;
-        setCursorNodeItem((NodeItem) m_tree.getRoot());
+        moveToNodeItem((NodeItem) m_tree.getRoot(), SelectMode.ONLY_ONE);
     }
 
-    public NodeItem getCursorNodeItem()
-    {
-        assert (m_selectedNodes.size() > 0);
-        return m_selectedNodes.get(m_selectedNodes.size() - 1);
-    }
-
-    void copyNodeBetweenPreviousAndCurrentCursor(ArrayList<NodeItem> axis, NodeItem prevCursor, NodeItem currentCursor)
+    private void addNodeBetweenPreviousAndCurrentCursor(ArrayList<NodeItem> axis, NodeItem prevCursor, NodeItem currentCursor)
     {
         int preIndex = axis.indexOf(prevCursor);
         int curIndex = axis.indexOf(currentCursor);
@@ -95,7 +88,7 @@ public class TreeCursor extends NodeControl {
         }
     }
 
-    private void selectNodeItem(NodeItem item)
+    private void selectNodeItem(NodeItem item, SelectMode m_selectMode)
     {
         if (m_selectMode == SelectMode.ONLY_ONE) {
             m_selectedNodes.clear();
@@ -119,16 +112,15 @@ public class TreeCursor extends NodeControl {
 
                 NodeItem prevCursor = m_selectedNodes.get(m_selectedNodes.size() - 1);
 
-                if (m_xAxis == null || m_yAxis == null) {
-                    buildXYAxis(prevCursor);
-                }
+                assert m_xAxis != null;
+                assert m_yAxis != null;
 
                 //只要两者在一个光标十字上，就可以。不管当前光标十字是 prevCursor的还是item的
                 if (m_xAxis.contains(prevCursor) && m_xAxis.contains(item)) {
-                    copyNodeBetweenPreviousAndCurrentCursor(m_xAxis, prevCursor, item);
+                    addNodeBetweenPreviousAndCurrentCursor(m_xAxis, prevCursor, item);
                 }
                 if (m_yAxis.contains(prevCursor) && m_yAxis.contains(item)) {
-                    copyNodeBetweenPreviousAndCurrentCursor(m_yAxis, prevCursor, item);
+                    addNodeBetweenPreviousAndCurrentCursor(m_yAxis, prevCursor, item);
                 }
 
                 m_selectedNodes.add(item);
@@ -137,44 +129,14 @@ public class TreeCursor extends NodeControl {
                 m_selectedNodes.subList(currentCursorIndex + 1, m_selectedNodes.size()).clear();
             }
         }
-    }
-
-    public void clearMultiSelectedNodeItems() {
-        m_selectMode = SelectMode.ONLY_ONE;
-        NodeItem cursor = m_selectedNodes.get(m_selectedNodes.size() - 1);
-        m_selectedNodes.clear();
-        m_selectedNodes.add(cursor);
-    }
-
-    public void setCursorNodeItem(NodeItem node)
-    {
-        m_originCursor = node;
-        selectNodeItem(node);
-
-        if (node == null) {
-            int debug = 1;
-        }
-
-        //build m_xAxis and m_yAxis by lazy mode.
-        //so we can setCurserNode before layout tree
-        m_xAxis = null;
-        m_yAxis = null;
-
-        m_mindView.m_mindController.updateAllMindViews();
 
         //FIXME: 放在这里合适吗
-        m_mindView.m_mindController.updateMindPropertyComponents(node);
-    }
+        m_mindView.renderTree();
+        m_mindView.m_mindController.updateAllMindViews();
+        m_mindView.m_mindController.updateMindPropertyComponents(item);
 
-    public void multiSelectNodeItem(NodeItem node) {
-        if (m_selectedNodes.contains(node)) {
-            m_selectedNodes.remove(node);
-        }
-
-        SelectMode oldSelectMode = m_selectMode;
-         m_selectMode = SelectMode.ADD_ONE;
-        setCursorNodeItem(node);
-        m_selectMode = oldSelectMode;
+        //TODO: 放这里并没有执行，不知道为什么？ delete 然后后退之后， item坐标还是0,0
+        m_mindView.panToExposeItem(item);
     }
 
     private void buildXYAxis(NodeItem originCursor)
@@ -235,7 +197,7 @@ public class TreeCursor extends NodeControl {
         m_currentYIndex = m_originYIndex;
     }
 
-    void moveLeft()
+    private void moveLeft(SelectMode selectMode)
     {
         stopCursorTimer();
 
@@ -243,20 +205,19 @@ public class TreeCursor extends NodeControl {
             return;
         }
 
+        //竖直移动后，又水平移动，需要更新光标十字
         if (m_xAxis == null || m_currentYIndex != m_originYIndex) {
-            buildXYAxis(getCursorNodeItem());
+            buildXYAxis(getLastSelectedNodeItem());
         }
 
         if (m_currentXIndex > 0) {
             m_currentXIndex--;
 
-            selectNodeItem(m_xAxis.get(m_currentXIndex));
-            m_mindView.renderTree();
-            m_mindView.panToExposeItem(getCursorNodeItem());
+            selectNodeItem(m_xAxis.get(m_currentXIndex), selectMode);
         }
     }
 
-    void moveRight()
+    private void moveRight(SelectMode selectMode)
     {
         stopCursorTimer();
 
@@ -264,19 +225,20 @@ public class TreeCursor extends NodeControl {
             return;
         }
 
+        //竖直移动后，又水平移动，需要更新光标十字
         if (m_xAxis == null || m_currentYIndex != m_originYIndex) {
-            buildXYAxis(getCursorNodeItem());
+            buildXYAxis(getLastSelectedNodeItem());
         }
 
         if (m_currentXIndex < m_xAxis.size() - 1) {
             //如果该节点闭合了，焦点就不能右移动了。
-            if (!getCursorNodeItem().isExpanded()) {
+            if (!getLastSelectedNodeItem().isExpanded()) {
                 return;
             }
 
         } else if (m_currentXIndex == m_xAxis.size() - 1) {
             //如果最右边的节点张开了，重新计算
-            if (getCursorNodeItem().getChildCount() > 0 && getCursorNodeItem().isExpanded()) {
+            if (getLastSelectedNodeItem().getChildCount() > 0 && getLastSelectedNodeItem().isExpanded()) {
                 buildXYAxis(m_originCursor);
             }
         }
@@ -284,13 +246,11 @@ public class TreeCursor extends NodeControl {
         if (m_currentXIndex < m_xAxis.size() - 1) {
             m_currentXIndex++;
 
-            selectNodeItem(m_xAxis.get(m_currentXIndex));
-            m_mindView.renderTree();
-            m_mindView.panToExposeItem(getCursorNodeItem());
+            selectNodeItem(m_xAxis.get(m_currentXIndex), selectMode);
         }
     }
 
-    void moveUp()
+    private void moveUp(SelectMode selectMode)
     {
         stopCursorTimer();
 
@@ -298,19 +258,21 @@ public class TreeCursor extends NodeControl {
             return;
         }
 
+        //水平移动后又竖直移动，需要更新光标十字
         if (m_xAxis == null || m_currentXIndex != m_originXIndex) {
-            buildXYAxis(getCursorNodeItem());
+            buildXYAxis(getLastSelectedNodeItem());
         }
         if (m_currentYIndex > 0) {
             m_currentYIndex--;
 
-            selectNodeItem(m_yAxis.get(m_currentYIndex));
-            m_mindView.renderTree();
-            m_mindView.panToExposeItem(getCursorNodeItem());
+            selectNodeItem(m_yAxis.get(m_currentYIndex), selectMode);
+
+            //TODO: remove it
+             m_mindView.renderTree();
         }
     }
 
-    void moveDown()
+    private void moveDown(SelectMode selectMode)
     {
         stopCursorTimer();
 
@@ -318,17 +280,23 @@ public class TreeCursor extends NodeControl {
             return;
         }
 
+        //水平移动后又竖直移动，需要更新光标十字
         if (m_xAxis == null || m_currentXIndex != m_originXIndex) {
-            buildXYAxis(getCursorNodeItem());
+            buildXYAxis(getLastSelectedNodeItem());
         }
 
         if (m_currentYIndex < m_yAxis.size() - 1) {
             m_currentYIndex++;
 
-            selectNodeItem(m_yAxis.get(m_currentYIndex));
-            m_mindView.renderTree();
-            m_mindView.panToExposeItem(getCursorNodeItem());
+            selectNodeItem(m_yAxis.get(m_currentYIndex), selectMode);
         }
+    }
+
+    private void moveToNodeItem(NodeItem node, SelectMode selectMode)
+    {
+        m_originCursor = node;
+        buildXYAxis(node);
+        selectNodeItem(node, selectMode);
     }
 
     @Override
@@ -352,6 +320,7 @@ public class TreeCursor extends NodeControl {
     @Override
     public void nodeItemPressed(NodeItem item, MouseEvent e) {
         stopCursorTimer();
+        SelectMode m_selectMode;
 
         if (m_isHeld) {
             return;
@@ -367,12 +336,11 @@ public class TreeCursor extends NodeControl {
             m_selectMode = SelectMode.ONLY_ONE;
         }
 
-        if (m_selectMode == SelectMode.ONLY_ONE && getCursorNodeItem() == item) {
+        if (m_selectMode == SelectMode.ONLY_ONE && getLastSelectedNodeItem() == item) {
             return;
         }
 
-        setCursorNodeItem(item);
-        m_mindView.renderTree();
+        moveToNodeItem(item, m_selectMode);
     }
 
     private Timer m_cursorTimer;
@@ -381,7 +349,12 @@ public class TreeCursor extends NodeControl {
     {
         m_cursorTimer = new Timer(100, new ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent actionEvent) {
-                setCursorNodeItem(nodeItem);
+                //多选状态下，禁止鼠标跟随 (会无意中选中多个节点)
+                if (m_selectedNodes.size() > 1) {
+                    return;
+                }
+
+                moveToNodeItem(nodeItem, SelectMode.ONLY_ONE);
             }
         });
         m_cursorTimer.setRepeats(false);
@@ -397,7 +370,7 @@ public class TreeCursor extends NodeControl {
         }
     }
 
-    private void processKey(KeyEvent e) {
+    public void keyPressed(KeyEvent e) {
         if (m_isHeld) {
             return;
         }
@@ -406,41 +379,34 @@ public class TreeCursor extends NodeControl {
             return;
         }
 
-        m_selectMode = e.isShiftDown() ? SelectMode.SERIES : SelectMode.ONLY_ONE;
+        SelectMode selectMode = e.isShiftDown() ? SelectMode.SERIES : SelectMode.ONLY_ONE;
 
         switch (e.getKeyCode()) {
             case KeyEvent.VK_UP:
             case KeyEvent.VK_KP_UP:
-                moveUp();
+                moveUp(selectMode);
                 break;
 
             case KeyEvent.VK_DOWN:
             case KeyEvent.VK_KP_DOWN:
-                moveDown();
+                moveDown(selectMode);
                 break;
 
             case KeyEvent.VK_LEFT:
             case KeyEvent.VK_KP_LEFT:
-                moveLeft();
+                moveLeft(selectMode);
                 break;
 
             case KeyEvent.VK_RIGHT:
             case KeyEvent.VK_KP_RIGHT:
-                moveRight();
+                moveRight(selectMode);
                 break;
         }
-
     }
 
     @Override
     public void nodeItemKeyPressed(NodeItem nodeItem, KeyEvent e) {
-        processKey(e);
-    }
-
-    //当鼠标没有在节点上时，这个函数响应按键。 FIXME：当鼠标在一个边上呢
-    @Override
-    public void keyPressed(KeyEvent e) {
-        processKey(e);
+        keyPressed(e);
     }
 
 
@@ -453,7 +419,58 @@ public class TreeCursor extends NodeControl {
         m_isHeld = false;
     }
 
+
+    public NodeItem getLastSelectedNodeItem()
+    {
+        assert (m_selectedNodes.size() > 0);
+        return m_selectedNodes.get(m_selectedNodes.size() - 1);
+    }
+
     public List<NodeItem> getSelectedNodeItems() {
         return Collections.unmodifiableList(m_selectedNodes);
+    }
+
+    public void selectOnlyOneNodeItem(NodeItem nodeItem)
+    {
+        moveToNodeItem(nodeItem, SelectMode.ONLY_ONE);
+    }
+
+    public void selectNodeItems(List<NodeItem> nodeItems)
+    {
+        boolean hasSelected = false;
+        for (NodeItem nodeItem : nodeItems) {
+            if (!nodeItem.isValid()) {
+                continue;
+            }
+
+            if (! hasSelected) {
+                moveToNodeItem(nodeItem, SelectMode.ONLY_ONE);
+                hasSelected = true;
+            } else {
+                moveToNodeItem(nodeItem, SelectMode.ADD_ONE);
+            }
+        }
+
+        if (!hasSelected) {
+            moveToNodeItem((NodeItem)m_tree.getRoot(), SelectMode.ONLY_ONE);
+        }
+    }
+
+    public void checkSelectNodeItemsValid()
+    {
+        boolean allNodeValid = true;
+        for (NodeItem nodeItem : m_selectedNodes) {
+            if (!nodeItem.isValid()) {
+                allNodeValid = false;
+            }
+        }
+
+        if (allNodeValid) {
+            return;
+        }
+
+        ArrayList<NodeItem> copySelection = new ArrayList<>();
+        copySelection.addAll(m_selectedNodes);
+        selectNodeItems(copySelection);
     }
 }

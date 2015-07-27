@@ -198,6 +198,10 @@ public class NodeRenderer extends MyLabelRenderer {
 
         } else  {
             for (NodeItem selectedNode : selectedNodeItems) {
+                if (!selectedNode.isValid()) {
+                    continue;
+                }
+
                 if (m_mindView.m_mindModel.isSelfInDB(nodeItem, selectedNode)) {
                     Color color = ColorLib.getColor(0, 0, 255, 80);
                     paintCursorBoundary(g, nodeItem, color);

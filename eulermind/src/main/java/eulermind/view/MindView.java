@@ -119,7 +119,7 @@ public class MindView extends Display {
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                panToExposeItem(m_cursor.getCursorNodeItem());
+                panToExposeItem(m_cursor.getLastSelectedNodeItem());
                 repaint();
             }
         });
@@ -414,29 +414,12 @@ public class MindView extends Display {
         super.stopEditing2(false);
     }
 
+    /*
     public void setCursorNodeByPath(ArrayList<Integer> path)
     {
-        m_cursor.setCursorNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, path)));
+        m_cursor.moveToNode(toVisual(m_mindModel.getNodeByPath(m_tree, path)));
     }
-
-    public void selectNodeByPath(ArrayList<Integer> path)
-    {
-        assert m_mindModel.getNodeByPath(m_tree, path) != null;
-        m_cursor.multiSelectNodeItem(toVisual(m_mindModel.getNodeByPath(m_tree, path)));
-    }
-
-    public void setCursorAfterTreeChanged()
-    {
-        m_cursor.clearMultiSelectedNodeItems();
-        NodeItem cursor = m_cursor.getCursorNodeItem();
-
-        if (cursor.isValid()) {
-            //需要重新计算一下光标十字
-            m_cursor.setCursorNodeItem(cursor);
-        } else {
-            m_cursor.setCursorNodeItem((NodeItem)m_visualTree.getRoot());
-        }
-    }
+    */
 
     public boolean isChanging() {
         return m_isChanging;
@@ -483,7 +466,7 @@ public class MindView extends Display {
 
         m_logger.info("beginAdding---------------");
 
-        NodeItem cursorItem = m_cursor.getCursorNodeItem();
+        NodeItem cursorItem = m_cursor.getLastSelectedNodeItem();
         if (asChild) {
             if (m_folder.isFolded(cursorItem)) {
                 m_folder.unfoldNode(cursorItem);
@@ -670,8 +653,7 @@ public class MindView extends Display {
 
         newNode.set(MindModel.TEXT_PROP_NAME, "");
 
-        m_cursor.clearMultiSelectedNodeItems();
-        m_cursor.setCursorNodeItem(toVisual(newNode));
+        m_cursor.selectOnlyOneNodeItem(toVisual(newNode));
     }
 
     private void removePlaceholderCursor()
@@ -685,8 +667,7 @@ public class MindView extends Display {
 
         m_tree.removeChild(placeholderNode);
 
-        m_cursor.clearMultiSelectedNodeItems();
-        m_cursor.setCursorNodeItem(toVisual(m_savedCursor));
+        m_cursor.selectOnlyOneNodeItem(toVisual(m_savedCursor));
     }
 
     //include node and edge, the edge is used rendering
@@ -697,7 +678,7 @@ public class MindView extends Display {
 
     public NodeItem getCursorNodeItem()
     {
-        return m_cursor.getCursorNodeItem();
+        return m_cursor.getLastSelectedNodeItem();
     }
 
     public List<NodeItem> getSelectedNodeItems()
@@ -708,7 +689,7 @@ public class MindView extends Display {
     //FIXME：不能加判断, 接口中要确保光标有效
     public Node getCursorSourceNode()
     {
-        NodeItem cursorItem = m_cursor.getCursorNodeItem();
+        NodeItem cursorItem = m_cursor.getLastSelectedNodeItem();
         assert cursorItem != null && cursorItem.isValid();
         return toSource(cursorItem);
     }
@@ -854,7 +835,7 @@ public class MindView extends Display {
             return;
         }
 
-        m_folder.toggleFoldNode(m_cursor.getCursorNodeItem());
+        m_folder.toggleFoldNode(m_cursor.getLastSelectedNodeItem());
         //FIXME:  renderTreeToEndChanging() 挪到这里？
     }
 
@@ -1723,7 +1704,7 @@ public class MindView extends Display {
                         operators = getDragOperators(droppedNode,
                                 m_dndHitPosition, e.getDropAction() == DnDConstants.ACTION_LINK);
                     } else {
-                        m_cursor.setCursorNodeItem(m_dndDargOverNode);
+                        m_cursor.selectOnlyOneNodeItem(m_dndDargOverNode);
                         operators = getExternalDragOperators(droppedNode,
                                 m_dndHitPosition, e.getDropAction() == DnDConstants.ACTION_LINK, dndData);
 
