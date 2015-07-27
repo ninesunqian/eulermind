@@ -8,5 +8,5 @@ cp -r ../eulermind/target/jars/ $package_name && \
 cp ../eulermind/target/eulermind-1.0-SNAPSHOT.jar $package_name/jars && \
 cp eulermind.sh $package_name/ && \
 cp eulermind.bat $package_name/ && \
-unix2dos $package_name/start.bat && \
+unix2dos $package_name/eulermind.bat && \
 zip -r ${package_name}.zip ${package_name}
