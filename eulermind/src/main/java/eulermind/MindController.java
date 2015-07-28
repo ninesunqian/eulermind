@@ -124,12 +124,15 @@ public class MindController extends UndoManager {
 
             @Override
             public boolean willLoseFocus(CDockable dockable) {
-                MindView mindView = getMindViewFromDockable((DefaultSingleCDockable)dockable);
-                if (mindView.isChanging()) {
-                    return false;  //To change body of implemented methods use File | Settings | File Templates.
-                } else {
-                    return true;
+                for (Map.Entry entry : m_mindViewDockables.entrySet()) {
+                    if (entry.getValue() == dockable) {
+                        MindView mindView = getMindViewFromDockable((DefaultSingleCDockable)dockable);
+                        if (mindView.isChanging()) {
+                            return false;
+                        }
+                    }
                 }
+                return true;
             }
         });
 
