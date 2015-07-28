@@ -88,7 +88,7 @@ public class TreeCursor extends NodeControl {
         }
     }
 
-    private void selectNodeItem(NodeItem item, SelectMode m_selectMode)
+    private void selectNodeItem(final NodeItem item, SelectMode m_selectMode)
     {
         if (m_selectMode == SelectMode.ONLY_ONE) {
             m_selectedNodes.clear();
@@ -130,13 +130,17 @@ public class TreeCursor extends NodeControl {
             }
         }
 
-        //FIXME: 放在这里合适吗
-        m_mindView.renderTree();
+        //activity是被一个定时器调度的，不是立即执行的。renderTree仅仅是加入到调度器中，所以panToExposeItem不能直接调用。
+        m_mindView.renderTree(new Runnable() {
+            @Override
+            public void run() {
+                m_mindView.panToExposeItem(item);
+            }
+        });
+
         m_mindView.m_mindController.updateAllMindViews();
         m_mindView.m_mindController.updateMindPropertyComponents(item);
 
-        //TODO: 放这里并没有执行，不知道为什么？ delete 然后后退之后， item坐标还是0,0
-        m_mindView.panToExposeItem(item);
     }
 
     private void buildXYAxis(NodeItem originCursor)
@@ -266,9 +270,6 @@ public class TreeCursor extends NodeControl {
             m_currentYIndex--;
 
             selectNodeItem(m_yAxis.get(m_currentYIndex), selectMode);
-
-            //TODO: remove it
-             m_mindView.renderTree();
         }
     }
 
