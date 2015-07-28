@@ -640,9 +640,8 @@ public class MindView extends Display {
         Node newNode;
 
         if (asChild) {
-            m_folder.unfoldNode(toVisual(cursorNode));
-
             newNode = m_tree.addChild(cursorNode, cursorNode.getChildCount());
+            m_folder.unfoldNode(toVisual(cursorNode));
 
         } else {
             newNode = m_tree.addChild(cursorNode.getParent(), cursorNode.getIndex() + 1);
