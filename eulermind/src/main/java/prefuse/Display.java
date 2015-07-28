@@ -2188,7 +2188,7 @@ public class Display extends JComponent {
 
         Insets margin = m_editor.getMargin();
         r.x -= margin.left;
-        r.width += margin.left + margin.right;
+        r.width += margin.left + margin.right + 5; //5 是插入符的宽度
         r.y -= margin.top;
         r.height += margin.top + margin.bottom;
 

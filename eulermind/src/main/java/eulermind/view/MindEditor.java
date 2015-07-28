@@ -337,6 +337,8 @@ public class MindEditor extends JTextArea {
         int rowHeight = getRowHeight();
         m_logger.info("rowHeight: {}", rowHeight);
 
+        exceptedSize.width += 5; //插入符宽度
+
         Insets margin = getMargin();
         exceptedSize.width += margin.left + margin.right;
         exceptedSize.height += margin.top + margin.bottom;
