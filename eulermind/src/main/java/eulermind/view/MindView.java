@@ -1758,7 +1758,9 @@ public class MindView extends Display {
 
         m_mindController.updateAllMindViews();
         m_mindController.updateMindPropertyComponents(newCursorNode);
-        m_mindController.setNodeInfoLabelText(m_mindModel.getVertexDbIdInheritInfo(MindModel.getDbId(newCursorNode)));
+        if (! isPlaceholder(newCursorNode)) {
+            m_mindController.setNodeInfoLabelText(m_mindModel.getVertexDbIdInheritInfo(MindModel.getDbId(newCursorNode)));
+        }
     }
 
 } // end of class TreeMap
