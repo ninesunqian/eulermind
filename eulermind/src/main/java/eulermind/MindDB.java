@@ -971,7 +971,12 @@ public class MindDB {
     }
 
     private boolean isInTrashIndex(Object dbId) {
+
         for (Vertex trashedRoot : m_trashIndex.get(TRASH_KEY_NAME, TRASH_KEY_NAME)) {
+            //FIXME: 会不会null做为遍历的结尾，有待验证
+            if (trashedRoot == null) {
+                continue;
+            }
             if (dbId.equals(trashedRoot.getId())) {
                 return true;
             }
@@ -982,6 +987,10 @@ public class MindDB {
 	private void cleanTrash ()
 	{
         for (Vertex vertex: m_trashIndex.get(TRASH_KEY_NAME, TRASH_KEY_NAME)) {
+            if (vertex == null) {
+                continue;
+            }
+
             try {
                 removeSubTree(vertex);
             } catch (Exception e) {
