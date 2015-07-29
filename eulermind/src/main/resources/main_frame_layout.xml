@@ -10,6 +10,7 @@
 
         <menu text="Option" mnemonic="VK_O" >
             <checkboxmenuitem id="m_propertyToolBarVisibleCheckMenu" text="PropertyVisible"  Selected="true"/>
+            <checkboxmenuitem id="m_styleBoxVisibleCheckMenu" text="StyleVisible"  Selected="true"/>
             <checkboxmenuitem id="m_alwaysOnTopCheckMenu" text="AlwaysOnTop"  Selected="false"/>
         </menu>
 
@@ -60,7 +61,7 @@
 
     </vbox>
 
-    <vbox constraints="BorderLayout.WEST"  preferredSize="150, 0">
+    <vbox constraints="BorderLayout.WEST"  preferredSize="150, 0" id="m_styleBox">
         <label text="Style"/>
 
         <scrollPane  preferredSize="150, 10000">

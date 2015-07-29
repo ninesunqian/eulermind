@@ -74,7 +74,9 @@ public class MainFrame  extends JFrame {
     MindEditor m_searchInputer;
 
     JToolBar m_propertyToolBar;
+    Box m_styleBox;
     JCheckBoxMenuItem m_propertyToolBarVisibleCheckMenu;
+    JCheckBoxMenuItem m_styleBoxVisibleCheckMenu;
     JCheckBoxMenuItem m_alwaysOnTopCheckMenu;
 
     String m_currentMapName;
@@ -129,6 +131,7 @@ public class MainFrame  extends JFrame {
         m_styleDownButton.addActionListener(m_styleDownAction);
 
         m_propertyToolBarVisibleCheckMenu.addActionListener(m_propertyToolBarVisibleAction);
+        m_styleBoxVisibleCheckMenu.addActionListener(m_styleBoxVisibleAction);
         m_alwaysOnTopCheckMenu.addActionListener(m_alwaysOnTopAction);
 
         int test_ccontrol = 3;
@@ -556,6 +559,14 @@ public class MainFrame  extends JFrame {
         }
     };
 
+    public Action m_styleBoxVisibleAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e)
+        {
+            boolean visible = m_styleBoxVisibleCheckMenu.isSelected();
+            m_styleBox.setVisible(visible);
+        }
+    };
     public Action m_alwaysOnTopAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e)
