@@ -203,7 +203,6 @@ public class MindModel {
         }
 
         sm_propertyClassMap.put(TEXT_PROP_NAME, String.class);
-        sm_propertyClassMap.put(TEXT_PROP_NAME, String.class);
         sm_propertyClassMap.put(STYLE_PROP_NAME, String.class);
 
         sm_propertyClassMap.put(sm_iconPropName, String.class);
@@ -1089,7 +1088,7 @@ public class MindModel {
     }
 
     //not use dbId for argument, becase the node saved the propperty
-    public String getText(Node node)
+    static public String getText(Node node)
     {
         return node.getString(TEXT_PROP_NAME);
     }

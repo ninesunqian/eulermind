@@ -49,7 +49,7 @@ public class MainFrame  extends JFrame {
     MindModel m_mindModel;
     MindController m_mindController;
     StyleList m_styleList;
-    JLabel m_tabInfoLabel;
+    JLabel m_nodeInfoLabel;
     JPanel m_treePanel;
 
     SwingEngine m_swingEngine;
@@ -195,7 +195,7 @@ public class MainFrame  extends JFrame {
 
         String url = Utils.mindMapNameToUrl(name);
         m_mindModel = new MindModel(url);
-        m_mindController = new MindController(m_mindModel, m_dockingCControl, m_tabInfoLabel);
+        m_mindController = new MindController(m_mindModel, m_dockingCControl, m_nodeInfoLabel);
 
         bindComponents();
         setComponentEnabled(true);

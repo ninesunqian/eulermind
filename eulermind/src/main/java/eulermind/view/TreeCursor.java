@@ -130,17 +130,7 @@ public class TreeCursor extends NodeControl {
             }
         }
 
-        //activity是被一个定时器调度的，不是立即执行的。renderTree仅仅是加入到调度器中，所以panToExposeItem不能直接调用。
-        m_mindView.renderTree(new Runnable() {
-            @Override
-            public void run() {
-                m_mindView.panToExposeItem(item);
-            }
-        });
-
-        m_mindView.m_mindController.updateAllMindViews();
-        m_mindView.m_mindController.updateMindPropertyComponents(item);
-
+        m_mindView.renderTreeAfterCursorChanging(item);
     }
 
     private void buildXYAxis(NodeItem originCursor)

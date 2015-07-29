@@ -2,23 +2,20 @@ package eulermind;
 
 import bibliothek.gui.dock.common.CControl;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
-import bibliothek.gui.dock.common.EnableableItem;
 import bibliothek.gui.dock.common.event.*;
 import bibliothek.gui.dock.common.intern.CDockable;
-import bibliothek.gui.dock.common.mode.ExtendedMode;
 import eulermind.component.MindPropertyComponent;
 import eulermind.view.MindView;
 import eulermind.view.NodeControl;
 import prefuse.data.Node;
 import prefuse.data.Table;
 import prefuse.data.Tree;
+import prefuse.data.event.EventConstants;
+import prefuse.data.event.TableListener;
 import prefuse.util.collections.IntIterator;
 
 import javax.swing.*;
 import javax.swing.undo.UndoManager;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.*;
@@ -56,7 +53,7 @@ public class MindController extends UndoManager {
     Hashtable<Tree, DefaultSingleCDockable> m_mindViewDockables = new Hashtable<>();
 
     MindModel m_mindModel;
-    JLabel m_tabInfoLabel;
+    JLabel m_nodeInfoLabel;
     CControl m_dockingCControl;
 
     ArrayList<NodeControl> m_externalMouseContollers = new ArrayList<NodeControl>();
@@ -76,22 +73,7 @@ public class MindController extends UndoManager {
         super();
         m_mindModel = mindModel;
         m_dockingCControl = dockingCControl;
-        m_tabInfoLabel = tabInfoLabel;
-
-        /*TODO 切换时更新显示lable
-        m_treePanel.addChangeListener(new ChangeListener() {
-            public void stateChanged(ChangeEvent e) {
-                if (m_treePanel.getSelectedComponent() != null) {
-                    Component comp = m_treePanel.getSelectedComponent();
-                    comp.requestFocusInWindow();
-                    MindView mindView = (MindView) comp;
-                    m_tabInfoLabel.setText(m_mindModel.getVertexDbIdInheritInfo(mindView.getRootDbId()));
-                } else {
-                    m_tabInfoLabel.setText(" ");
-                }
-            }
-        });
-        */
+        m_nodeInfoLabel = tabInfoLabel;
 
         ArrayList<Object> lastOpenedRootId = m_mindModel.getLastOpenedRootId();
 
@@ -114,8 +96,8 @@ public class MindController extends UndoManager {
                 for (Map.Entry entry : m_mindViewDockables.entrySet()) {
                     if (entry.getValue() == dockable) {
                         m_currentDockable = (DefaultSingleCDockable)dockable;
+                        //其他view，不显示焦点。新的view显示焦点
                         updateAllMindViews();
-                        m_tabInfoLabel.setText(m_mindModel.getVertexDbIdInheritInfo(getCurrentView().getRootDbId()));
                     }
                 }
 
@@ -145,26 +127,54 @@ public class MindController extends UndoManager {
 
     }
 
+    private DefaultSingleCDockable getDockableOfMindView(MindView mindView)
+    {
+        for (Map.Entry entry : m_mindViewDockables.entrySet()) {
+            DefaultSingleCDockable dockable = (DefaultSingleCDockable)entry.getValue();
+            if (getMindViewFromDockable(dockable) == mindView) {
+                return dockable;
+            }
+        }
+
+        assert false;
+        return null;
+    }
+
     public MindView findOrAddMindView(Object rootDBId) {
 
-        Tree tree = m_mindModel.findOrPutTree(rootDBId);
-        DefaultSingleCDockable dockable = m_mindViewDockables.get(tree);
-        if (dockable != null) {
-            return (MindView)getMindViewFromDockable(dockable);
+        final Tree tree = m_mindModel.findOrPutTree(rootDBId);
+        final DefaultSingleCDockable oldDockable = m_mindViewDockables.get(tree);
+        if (oldDockable != null) {
+            return (MindView)getMindViewFromDockable(oldDockable);
         }
 
         MindView mindView = new MindView(m_mindModel, this, tree);
-        dockable = new DefaultSingleCDockable(rootDBId.toString(), mindView);
+        final DefaultSingleCDockable dockable = new DefaultSingleCDockable(rootDBId.toString(), mindView);
 
         dockable.setCloseable(true);
         dockable.setMaximizable(true);
         dockable.setMinimizable(true);
+        dockable.setTitleText(MindModel.getText(tree.getRoot()));
 
         dockable.addVetoClosingListener(m_cVetoClosingListener);
 
         m_dockingCControl.addDockable(dockable);
         dockable.setVisible(true);
         m_mindViewDockables.put(tree, dockable);
+
+        tree.getNodeTable().addTableListener(new TableListener() {
+            @Override
+            public void tableChanged(Table t, int start, int end, int col, int type) {
+                if (type == EventConstants.UPDATE) {
+                    if (col == t.getColumnNumber(MindModel.TEXT_PROP_NAME)) {
+                        int rootRow = tree.getRootRow();
+                        if (start <=rootRow && rootRow <= end ) {
+                            dockable.setTitleText(t.getString(rootRow, col));
+                        }
+                    }
+                }
+            }
+        });
 
         return  mindView;
     }
@@ -512,4 +522,13 @@ public class MindController extends UndoManager {
         m_settingNodePropertyEnabled = true;
     }
 
+    public void setMindViewTitle(MindView mindView, String text)
+    {
+        DefaultSingleCDockable dockable = getDockableOfMindView(mindView);
+        dockable.setTitleText(text);
+    }
+
+    public void setNodeInfoLabelText(String text) {
+        m_nodeInfoLabel.setText(text);
+    }
 }

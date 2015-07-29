@@ -7,6 +7,8 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.*;
 import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,6 +30,7 @@ import prefuse.Visualization;
 
 import prefuse.controls.*;
 import prefuse.data.*;
+import prefuse.data.event.TableListener;
 import prefuse.util.ColorLib;
 import prefuse.util.FontLib;
 import prefuse.util.PrefuseLib;
@@ -1503,7 +1506,7 @@ public class MindView extends Display {
 
         Node node = getCursorSourceNode();
         Object currentVertexId = m_mindModel.getDbId(node);
-        m_popupMenu.add(createMenuItemForOpeningInNewView(currentVertexId, false, "Open in new tab"));
+        m_popupMenu.add(createMenuItemForOpeningInNewView(currentVertexId, false, "Open in new view"));
 
         JMenu ancestorSubMenu = new JMenu("ancestors");
         addSubMenuForOpenAncestors(ancestorSubMenu, false);
@@ -1741,6 +1744,21 @@ public class MindView extends Display {
             }
         }
 
+    }
+
+    public void renderTreeAfterCursorChanging(final NodeItem newCursorNode)
+    {
+        //activity是被一个定时器调度的，不是立即执行的。renderTree仅仅是加入到调度器中，所以panToExposeItem不能直接调用。
+        renderTree(new Runnable() {
+            @Override
+            public void run() {
+                panToExposeItem(newCursorNode);
+            }
+        });
+
+        m_mindController.updateAllMindViews();
+        m_mindController.updateMindPropertyComponents(newCursorNode);
+        m_mindController.setNodeInfoLabelText(m_mindModel.getVertexDbIdInheritInfo(MindModel.getDbId(newCursorNode)));
     }
 
 } // end of class TreeMap
