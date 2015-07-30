@@ -423,9 +423,9 @@ public class MindController extends UndoManager {
             }
 
         } catch (Exception e) {
-            m_logger.error("operator exception: " + e.getMessage());
-            m_logger.error("StackTrace: {}", Utils.getThrowableStackTraceString(e));
+            e.printStackTrace();
             JOptionPane.showMessageDialog(null, e.getMessage(), e.getMessage(), JOptionPane.ERROR_MESSAGE);
+            m_logger.warn("operator exception" + e.getMessage());
         }
 
         if (operatorBornMindView != null) {
@@ -456,9 +456,9 @@ public class MindController extends UndoManager {
             }
 
         } catch (Exception e) {
-            m_logger.error("operator exception: " + e.getMessage());
-            m_logger.error("StackTrace: {}", Utils.getThrowableStackTraceString(e));
+            e.printStackTrace();
             JOptionPane.showMessageDialog(null, e.getMessage(), e.getMessage(), JOptionPane.ERROR_MESSAGE);
+            m_logger.warn("operator exception" + e.getMessage());
         }
 
         if (operatorBornMindView != null) {
