@@ -224,6 +224,8 @@ public class MainFrame  extends JFrame {
             return;
         }
 
+        m_mindModel.saveLastOpenedDbIds();
+
         setComponentEnabled(false);
         unbindComponents();
 

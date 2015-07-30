@@ -259,8 +259,7 @@ public class MindModel {
         return lastOpenedRootId;
     }
 
-    public void close()
-    {
+    public void saveLastOpenedDbIds() {
         Index<Vertex> lastOpenedIndex = m_mindDb.getOrCreateIndex(LAST_OPENED_INDEX_NAME);
 
         //FIXME: 此处不能用 dropIndex来代替
@@ -275,6 +274,10 @@ public class MindModel {
             lastOpenedIndex.put(LAST_OPENED_KEY_NAME, i, vertex);
         }
 
+    }
+
+    public void close()
+    {
         m_mindDb.shutdown();
     }
 
