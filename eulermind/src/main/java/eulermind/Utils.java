@@ -440,8 +440,17 @@ public class Utils {
     }
 
     static boolean isDebugging() {
+        return false;
+        /*
         //在 run/debug configurations --> vm options 中添加 "-Ddebug=true"
         String debugProperty = System.getProperty("debug");
         return debugProperty != null;
+        */
+    }
+
+    static String getThrowableStackTraceString(Throwable t) {
+        StringWriter stringWriter = new StringWriter();
+        t.printStackTrace(new PrintWriter(stringWriter));
+        return stringWriter.toString();
     }
 }
