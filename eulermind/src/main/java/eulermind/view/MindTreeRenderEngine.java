@@ -65,8 +65,8 @@ public class MindTreeRenderEngine {
 
 
     private static final int m_nodeDepthSpacing = 20;
-    private static final int m_nodeBreadthSpacing = 4;
-    private double m_cursorBorderExpand = Math.min(m_nodeBreadthSpacing, m_nodeDepthSpacing);
+    private static final int m_nodeBreadthSpacing = 5;
+    private double m_cursorBorderExpand = Math.min(m_nodeBreadthSpacing, m_nodeDepthSpacing)/2;
 
 
     public static final String sm_layoutAction = "layoutAction";

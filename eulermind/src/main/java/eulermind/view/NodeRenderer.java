@@ -11,6 +11,7 @@ import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
 
 import java.awt.*;
+import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
 import java.awt.geom.RoundRectangle2D;
@@ -217,10 +218,21 @@ public class NodeRenderer extends MyLabelRenderer {
 
         GraphicsLib.expand(bounds, m_cursorBorderExpand);
 
-        RoundRectangle2D borderShape = new RoundRectangle2D.Double(
-                bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight(), m_cursorBorderExpand, m_cursorBorderExpand);
+        BasicStroke stroke = StrokeLib.getStroke(2.0f);
 
-        BasicStroke stroke = StrokeLib.getStroke(3.0f);
-        GraphicsLib.paint(g, borderShape, stroke, color, null, RENDER_TYPE_DRAW);
+        int type = getRenderType(item);
+        if (type==RENDER_TYPE_DRAW || type==RENDER_TYPE_DRAW_AND_FILL) {
+            RoundRectangle2D borderShape = new RoundRectangle2D.Double(
+                    bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight(), m_cursorBorderExpand, m_cursorBorderExpand);
+
+            GraphicsLib.paint(g, borderShape, stroke, color, null, RENDER_TYPE_DRAW);
+
+        } else {
+            Line2D line = new Line2D.Double(bounds.getMinX(), bounds.getMaxY(),
+                    bounds.getMaxX(), bounds.getMaxY());
+
+            GraphicsLib.paint(g, line, stroke, color, null, RENDER_TYPE_DRAW);
+        }
+
     }
 }
