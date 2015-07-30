@@ -64,9 +64,9 @@ public class MindTreeRenderEngine {
     private static final String sm_itemPositionActions = "itemPositionActions";
 
 
-    private static final int m_nodeDepthSpacing = 50;
-    private static final int m_nodeBreadthSpacing = 10;
-    private double m_cursorBorderExpand = Math.min(m_nodeBreadthSpacing, m_nodeDepthSpacing) / 2;
+    private static final int m_nodeDepthSpacing = 20;
+    private static final int m_nodeBreadthSpacing = 4;
+    private double m_cursorBorderExpand = Math.min(m_nodeBreadthSpacing, m_nodeDepthSpacing);
 
 
     public static final String sm_layoutAction = "layoutAction";
@@ -162,8 +162,8 @@ public class MindTreeRenderEngine {
 	    NodeRenderer nodeRenderer = new NodeRenderer(m_mindView, MindModel.TEXT_PROP_NAME, MindModel.sm_iconPropName);
     	nodeRenderer.setRenderType(AbstractShapeRenderer.RENDER_TYPE_FILL);
     	nodeRenderer.setRoundedCorner(10, 10);
-        nodeRenderer.setHorizontalPadding(5);
-        nodeRenderer.setVerticalPadding(5);
+        nodeRenderer.setHorizontalPadding(4);
+        nodeRenderer.setVerticalPadding(2);
         nodeRenderer.setMaxTextWidth(600);
         nodeRenderer.setHorizontalAlignment(Constants.LEFT);
         nodeRenderer.setVerticalTextAlignment(Constants.CENTER);

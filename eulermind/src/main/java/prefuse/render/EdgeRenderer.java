@@ -324,8 +324,13 @@ public class EdgeRenderer extends AbstractShapeRenderer {
                     double x1, double y1, double x2, double y2) 
     {
         double dx = x2-x1, dy = y2-y1;      
-        cp[0].setLocation(x1+2*dx/3,y1);
-        cp[1].setLocation(x2-2*dx/3,y2);
+        cp[0].setLocation(x1+3*dx/5,y1);
+        cp[1].setLocation(x2-dx,y2);
+
+        /*freemind中，dx=20，控制点如下：
+        cp[0].setLocation(x1+12,y1);
+        cp[1].setLocation(x2-20,y2);
+        */
     }
 
     /**
