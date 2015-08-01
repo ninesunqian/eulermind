@@ -184,7 +184,7 @@ public class MindKeyView extends MindView {
     public AbstractAction m_addSiblingAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            addSibling();
+            addSibling(false);
         }
     };
 
@@ -199,7 +199,7 @@ public class MindKeyView extends MindView {
     public AbstractAction m_addSiblingWithPromptAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            addSiblingWithPrompt();
+            addSiblingWithPrompt(false);
         }
     };
 

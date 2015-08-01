@@ -7,8 +7,6 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.*;
 import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,7 +28,6 @@ import prefuse.Visualization;
 
 import prefuse.controls.*;
 import prefuse.data.*;
-import prefuse.data.event.TableListener;
 import prefuse.util.ColorLib;
 import prefuse.util.FontLib;
 import prefuse.util.PrefuseLib;
@@ -453,7 +450,7 @@ public class MindView extends Display {
         requestFocus();
     }
 
-    void beginAdding(final boolean asChild, final boolean hasPrompt)
+    void beginAdding(final boolean asChild, final boolean hasPrompt, boolean asOlder)
     {
         if (! beginChanging()) {
             return;
@@ -483,7 +480,7 @@ public class MindView extends Display {
             }
         }
 
-        addPlaceholder(asChild);
+        addPlaceholder(asChild, asOlder);
 
         renderTree(new Runnable() {
             @Override
@@ -635,7 +632,7 @@ public class MindView extends Display {
         JOptionPane.showMessageDialog(null, msg);
     }
 
-    private void addPlaceholder(boolean asChild)
+    private void addPlaceholder(boolean asChild, boolean asOlder)
     {
         Node cursorNode = getCursorSourceNode();
         m_savedCursor = cursorNode;
@@ -647,8 +644,15 @@ public class MindView extends Display {
             m_folder.unfoldNode(toVisual(cursorNode));
 
         } else {
-            newNode = m_tree.addChild(cursorNode.getParent(), cursorNode.getIndex() + 1);
-            m_logger.info("add sibling at {}", cursorNode.getIndex() + 1);
+            int placeHolderPos;
+            if (asOlder) {
+                placeHolderPos = cursorNode.getIndex();
+            } else {
+                placeHolderPos = cursorNode.getIndex() + 1;
+            }
+
+            newNode = m_tree.addChild(cursorNode.getParent(), placeHolderPos);
+            m_logger.info("add sibling at {}", placeHolderPos);
         }
 
         //NOTE: newNode.setString(MindModel.TEXT_PROP_NAME, "") error
@@ -779,19 +783,19 @@ public class MindView extends Display {
     }
 
     public void addChild() {
-        beginAdding(true, false);
+        beginAdding(true, false, false);
     }
 
-    public void addSibling() {
-        beginAdding(false, false);
+    public void addSibling(boolean asOlder) {
+        beginAdding(false, false, asOlder);
     }
 
     public void addChildWithPrompt() {
-        beginAdding(true, true);
+        beginAdding(true, true, false);
     }
 
-    public void addSiblingWithPrompt() {
-        beginAdding(false, true);
+    public void addSiblingWithPrompt(boolean asOlder) {
+        beginAdding(false, true, asOlder);
     }
 
     public void edit() {
@@ -1296,12 +1300,10 @@ public class MindView extends Display {
                 break;
 
             case KeyEvent.VK_ENTER:
-                if (! e.isShiftDown()) {
-                    if (e.isControlDown()) {
-                        addSiblingWithPrompt();
-                    } else {
-                        addSibling();
-                    }
+                if (e.isControlDown()) {
+                    addSiblingWithPrompt(e.isShiftDown());
+                } else {
+                    addSibling(e.isShiftDown());
                 }
                 break;
 
