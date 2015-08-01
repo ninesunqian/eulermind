@@ -4,7 +4,9 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 import com.orientechnologies.orient.core.exception.ORecordNotFoundException;
+import com.orientechnologies.orient.core.metadata.schema.OClass;
 import com.orientechnologies.orient.core.metadata.schema.OType;
+import com.orientechnologies.orient.core.record.impl.ODocument;
 import com.tinkerpop.blueprints.impls.orient.OrientVertexType;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
@@ -47,6 +49,8 @@ public class MindDB {
 	public final static String EDGE_TYPE_PROP_NAME = "t"; //type
     public final static String EDGE_INNER_ID_PROP_NAME = "i"; //EdgeInnerId
 
+    public final static String CREATE_TIME_PROP_NAME = "c"; //创建时间
+
 	private final static String ROOT_INDEX_NAME = "rootIndex";
 	private final static String ROOT_KEY_NAME = "root";
 
@@ -79,7 +83,10 @@ public class MindDB {
 
     MindDB(String path)
 	{
-		m_graph = new OrientGraph (path, false);
+        //FIXME: 没有试用OrientGraph(final String url, final boolean iAutoStartTx)
+        //FIXME: 需要再那里commit，并测试效率 ?
+
+		m_graph = new OrientGraph (path);
 		m_path = path;
 
         m_rootIndex = getOrCreateIndex(ROOT_INDEX_NAME);
@@ -104,6 +111,7 @@ public class MindDB {
 
 	private Vertex addVertex(Object arg0) {
         Vertex vertex =  m_graph.addVertex(null, MindModel.TEXT_PROP_NAME, "a");
+        vertex.setProperty(CREATE_TIME_PROP_NAME, System.currentTimeMillis());
         return m_graph.getVertex(vertex.getId());
 	}
 
@@ -554,7 +562,7 @@ public class MindDB {
 	
     public EdgeVertexId getParentEdgeId(Object dbId)
     {
-        if (dbId.equals(m_rootId) || isInTrashIndex(dbId)) {
+        if (dbId.equals(m_rootId)) {
             return null;
         }
 
@@ -562,6 +570,9 @@ public class MindDB {
 
         if (edgeParentId == null) {
             EdgeVertex toParent = getParentFromBackDb(getVertex(dbId));
+            if (toParent == null) {
+                int debug = 1;
+            }
             edgeParentId = toParent.getEdgeVertexId();
             m_edgeVertexIdCache.cacheEdge(edgeParentId);
         }
@@ -835,7 +846,7 @@ public class MindDB {
 					}
 				}
 
-                vertex.setProperty(IS_TRASHED_PROP_NAME, true);
+                vertex.setProperty(IS_TRASHED_PROP_NAME, System.currentTimeMillis());
 
 				return true;
 			}
@@ -963,6 +974,15 @@ public class MindDB {
         }
 
         try {
+            Long trashedTime =  root.getProperty(IS_TRASHED_PROP_NAME);
+            if (trashedTime == null) {
+                return;
+            }
+
+            assert trashedTime != null;
+            Date date = new Date(trashedTime);
+
+            m_logger.info("remove vertex trashed at {}",  date);
             m_graph.removeVertex(root);
 
         } catch (ORecordNotFoundException e) {
@@ -975,7 +995,7 @@ public class MindDB {
         for (Vertex trashedRoot : m_trashIndex.get(TRASH_KEY_NAME, TRASH_KEY_NAME)) {
             //FIXME: 会不会null做为遍历的结尾，有待验证
             if (trashedRoot == null) {
-                continue;
+                break;
             }
             if (dbId.equals(trashedRoot.getId())) {
                 return true;
@@ -988,7 +1008,7 @@ public class MindDB {
 	{
         for (Vertex vertex: m_trashIndex.get(TRASH_KEY_NAME, TRASH_KEY_NAME)) {
             if (vertex == null) {
-                continue;
+                break;
             }
 
             try {
@@ -1023,10 +1043,15 @@ public class MindDB {
             }
         }
 
-        OrientVertexType type = m_graph.getVertexBaseType();
-        type.createProperty(key, OType.STRING);
+        OClass type = m_graph.getVertexBaseType();
+        if (!type.existsProperty(key)) {
+            type.createProperty(key, OType.STRING);
+        }
 
-        type.createIndex("V."+key, "FULLTEXT", null, null, "LUCENE", new String[]{key});
+        ODocument metadata = new ODocument();
+        metadata.fromJSON("{\"analyzer\":\"org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer\"}");
+
+        type.createIndex("V."+key, "FULLTEXT", null, metadata, "LUCENE", new String[]{key});
     }
 
     public Iterable<Vertex> getVertices(String key, String value)
@@ -1034,14 +1059,19 @@ public class MindDB {
         return m_graph.getVertices(key, value);
     }
 
-    public Iterable<Vertex> getVertices(final String label, final String[] iKey, Object[] iValue) {
-        return m_graph.getVertices(label, iKey, iValue);
+    public Iterable<Vertex> getVertices(final String iKey, Object iValue) {
+        return m_graph.getVertices(iKey, iValue);
+    }
+
+    public Iterable<Vertex> getVertices() {
+        return m_graph.getVertices();
     }
 
     private void verifyCachedInheritPathValid(Object parentDbId, Object childDbId)
     {
         List childInheritPath = getInheritPath(childDbId);
         List parentInheritPath = getInheritPath(parentDbId);
+        assert childInheritPath.size() > 0;
         assert childInheritPath.get(childInheritPath.size()-1).equals(parentDbId) &&
                 childInheritPath.subList(0, childInheritPath.size()-1).equals(parentInheritPath);
     }
@@ -1123,7 +1153,7 @@ public class MindDB {
     private void setVertexTrashed(Vertex vertex, boolean trashed)
     {
         if (trashed == true)
-            vertex.setProperty(IS_TRASHED_PROP_NAME, true);
+            vertex.setProperty(IS_TRASHED_PROP_NAME, System.currentTimeMillis());
         else
             vertex.removeProperty(IS_TRASHED_PROP_NAME);
     }

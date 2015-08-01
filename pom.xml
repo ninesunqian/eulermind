@@ -31,7 +31,9 @@
 
     <modules>
         <module>eulermind</module>
+        <!--
         <module>orientdb-lucene</module>
+        -->
     </modules>
 
 

@@ -1,6 +1,7 @@
 package eulermind;
 
 import com.orientechnologies.common.listener.OProgressListener;
+import com.orientechnologies.orient.core.metadata.schema.OClass;
 import com.orientechnologies.orient.core.metadata.schema.OType;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
@@ -73,9 +74,10 @@ public class Utils {
         }
         String pathToDatabase = "plocal:/tmp/test/aaa";
 
-        OrientTransactionalGraph graph = new OrientGraph(pathToDatabase, false);
+        //FIXME:
+        OrientTransactionalGraph graph = new OrientGraph(pathToDatabase);
 
-        OrientVertexType type = graph.getVertexBaseType();
+        OClass type = graph.getVertexBaseType();
         type.createProperty("text", OType.STRING);
         OProgressListener oProgressListener = null;
         type.createIndex("textIndex", "FULLTEXT", oProgressListener, null, "LUCENE", new String[]{"text"});
@@ -100,7 +102,7 @@ public class Utils {
         System.out.println(graph.isUseClassForVertexLabel());
         graph.commit();
 
-        Iterable<Vertex> vertexes = graph.getVertices("V", new String[]{"text"}, new Object[]{"(我们 好人)"});
+        Iterable<Vertex> vertexes = graph.getVertices("text", "(我们 好人)");
         for (Vertex v : vertexes) {
             System.out.println(v.getId());
             System.out.println(v.getProperty("text"));
@@ -177,7 +179,7 @@ public class Utils {
     public static String mindMapNameToUrl(String name)
     {
         String path = ConfigDirs.MAPS_DIR + File.separator + name;
-        return "local:" +  path.replace(File.separatorChar, '/');
+        return "plocal:" +  path.replace(File.separatorChar, '/');
     }
 
     public static boolean dirExists(String path)

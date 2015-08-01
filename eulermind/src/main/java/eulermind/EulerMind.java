@@ -85,15 +85,19 @@ public class EulerMind {
             return;
         }
 
+
         //TODO: for debug
         {
+            /*
             String exampleMap = "example";
             if (! Utils.mapExist(exampleMap)) {
                 final String dbUrl = Utils.mindMapNameToUrl(exampleMap);
                 MindDB mindDb = new MindDB(dbUrl);
                 //Utils.createTree(mindDb, 2);
                 mindDb.commit();
+                mindDb.shutdown();
             }
+            */
 
             /*
             String netCrawlerMap = "netCrawler";

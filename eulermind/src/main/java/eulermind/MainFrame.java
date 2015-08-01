@@ -168,7 +168,7 @@ public class MainFrame  extends JFrame {
         } else {
 
             String lastOpenedMap = Utils.getLastOpenedMap();
-            if (lastOpenedMap != null) {
+            if (lastOpenedMap != null && lastOpenedMap.length() > 0) {
                 openMindDb(lastOpenedMap);
             } else {
                 openMindDb("example");

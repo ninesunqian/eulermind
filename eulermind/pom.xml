@@ -14,19 +14,14 @@
     <name>eulermind</name>
 
     <properties>
-        <orient_ver>1.7.5</orient_ver>
+        <orient_ver>2.0.13</orient_ver>
         <libdir>${project.basedir}/lib</libdir>
         <jar.manifest.mainclass>eulermind.EulerMind</jar.manifest.mainclass>
     </properties>
 
     <dependencies>
 
-        <dependency>
-             <groupId>com.orientechnologies</groupId>
-             <artifactId>orientdb-lucene</artifactId>
-              <version>1.7.8</version>
-        </dependency>
-
+        <!--
         <dependency>
             <groupId>com.tinkerpop.blueprints</groupId>
             <artifactId>blueprints-core</artifactId>
@@ -38,6 +33,7 @@
             <artifactId>blueprints-orient-graph</artifactId>
             <version>2.4.0</version>
         </dependency>
+        -->
 
         <dependency>
             <groupId>dom4j</groupId>
@@ -81,20 +77,26 @@
         </dependency>
         -->
 
+        <dependency>
+            <groupId>com.orientechnologies</groupId>
+            <artifactId>orientdb-graphdb</artifactId>
+            <version>${orient_ver}</version>
+        </dependency>
+
+
+        <dependency>
+             <groupId>com.orientechnologies</groupId>
+             <artifactId>orientdb-lucene</artifactId>
+              <version>${orient_ver}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analyzers-smartcn</artifactId>
+            <version>4.7.0</version>
+        </dependency>
+
         <!--
-        <dependency>
-            <groupId>com.orientechnologies</groupId>
-            <artifactId>orientdb-server</artifactId>
-            <version>${orient_ver}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.orientechnologies</groupId>
-            <artifactId>orientdb-enterprise</artifactId>
-            <version>${orient_ver}</version>
-        </dependency>
-        -->
-
         <dependency>
             <groupId>com.orientechnologies</groupId>
             <artifactId>orientdb-tools</artifactId>
@@ -103,15 +105,10 @@
 
         <dependency>
             <groupId>com.orientechnologies</groupId>
-            <artifactId>orient-commons</artifactId>
-            <version>${orient_ver}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.orientechnologies</groupId>
             <artifactId>orientdb-core</artifactId>
             <version>${orient_ver}</version>
         </dependency>
+        -->
 
         <dependency>
             <groupId>com.google.code.gson</groupId>

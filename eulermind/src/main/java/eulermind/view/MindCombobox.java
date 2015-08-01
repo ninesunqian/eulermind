@@ -257,8 +257,7 @@ public class MindCombobox extends JComboBox {
 
             m_logger.info("query vertex: " + inputed);
 
-            for (Vertex vertex : m_mindDb.getVertices("V", new String[]{MindModel.TEXT_PROP_NAME},
-                    new String[]{inputed}))  {
+            for (Vertex vertex : m_mindDb.getVertices(MindModel.TEXT_PROP_NAME, inputed))  {
 
                 if (m_mindDb.isVertexTrashed(vertex)) {
                     continue;
