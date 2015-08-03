@@ -185,10 +185,12 @@ public class MindDB {
 		{
 			ORecordLazyList implArray = (ORecordLazyList)container;
 			implArray.setAutoConvertToRecord(false);
-		}
+            return new ArrayList((implArray));
 
-        //return a copy list, to avoid being clear by Graph.commit
-        return new ArrayList((ArrayList<Object>)container);
+		} else {
+            //return a copy list, to avoid being clear by Graph.commit
+            return new ArrayList((ArrayList<Object>)container);
+        }
 	}
 
     public void setContainerProperty(Vertex source, String propName, ArrayList container)
@@ -225,7 +227,7 @@ public class MindDB {
         {
             Edge outEdge = outEdgeIterator.next();
             String innerId = getOutEdgeInnerId(outEdge);
-            if (innerId != null) {
+            if (innerId != null && innerId.length() > 0) {
                 outEdgeIdPair.add(new EdgeVertexId(outEdge));
             } else {
                 noInnerIdEdges.add(outEdge);
@@ -571,7 +573,10 @@ public class MindDB {
 	
     public EdgeVertexId getParentEdgeId(Object dbId)
     {
-        if (dbId.equals(m_rootId)) {
+        if (dbId.equals(m_rootId) || isInTrashIndex(dbId)) {
+            if (isInTrashIndex(dbId)) {
+                assert isVertexTrashed(getVertex(dbId));
+            }
             return null;
         }
 
@@ -580,7 +585,12 @@ public class MindDB {
         if (edgeParentId == null) {
             EdgeVertex toParent = getParentFromBackDb(getVertex(dbId));
             if (toParent == null) {
-                int debug = 1;
+                assert false;
+                /*若要修复，只能关闭所有MindView才能修复
+                m_logger.warn("meet orphan vertex, move it to root");
+                addEdge(getVertex(m_rootId), getVertex(dbId), -1, EdgeType.INCLUDE);
+                toParent = getParentFromBackDb(getVertex(dbId));
+                */
             }
             edgeParentId = toParent.getEdgeVertexId();
             m_edgeVertexIdCache.cacheEdge(edgeParentId);
@@ -638,6 +648,7 @@ public class MindDB {
     //由于两个节点可能加入多个引用边，只有边能确定是哪个引用
     public EdgeVertex handoverReferent(Edge oldEdge, Vertex toReferrer, int toPos)
     {
+        assert getEdgeType(oldEdge) == EdgeType.REFERENCE;
         Vertex referent = getEdgeTarget(oldEdge);
         removeEdge(oldEdge);
 
@@ -1409,9 +1420,9 @@ public class MindDB {
         void removeInvalidEdge(EdgeVertexId edge) {
             m_edges.remove(edge.m_edgeId);
 
-            if (getEdgeType(m_graph.getEdge(edge.m_edgeId)) == EdgeType.INCLUDE) {
-                m_parentEdgeMap.remove(edge.m_targetId);
-            }
+            //因为不知道是否是父子边，所以直接删除，缓存的父子映射
+            //TODO: EdgeVertexId中加入边的类型，以便提高性能
+            m_parentEdgeMap.remove(edge.m_targetId);
 
             TreeMap<String, EdgeVertexId> outEdgeVertexIds = m_outEdgesMap.get(edge.m_sourceId);
             if (outEdgeVertexIds != null) {
