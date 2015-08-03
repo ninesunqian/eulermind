@@ -162,17 +162,17 @@ public class MindDB {
 		return m_rootId;
 	}
 	
-	public Vertex getEdgeSource (Edge edge)
+	static public Vertex getEdgeSource (Edge edge)
 	{
 		return edge.getVertex(Direction.OUT);
 	}
 	
-	public Vertex getEdgeTarget (Edge edge)
+	static public Vertex getEdgeTarget (Edge edge)
 	{
 		return edge.getVertex(Direction.IN);
 	}
 	
-	public <T> ArrayList<T> getContainerProperty (Element source, String propName)
+	static public <T> ArrayList<T> getContainerProperty (Element source, String propName)
 	{
 		//Because outEdgeArray must be convert to ORecordLazyList, so its type is not ArrayList.
 		Object container = source.getProperty(propName);
@@ -193,7 +193,7 @@ public class MindDB {
         }
 	}
 
-    public void setContainerProperty(Vertex source, String propName, ArrayList container)
+    static public void setContainerProperty(Vertex source, String propName, ArrayList container)
     {
         if (container.isEmpty()) {
             source.removeProperty(propName);
@@ -649,6 +649,7 @@ public class MindDB {
     public EdgeVertex handoverReferent(Edge oldEdge, Vertex toReferrer, int toPos)
     {
         assert getEdgeType(oldEdge) == EdgeType.REFERENCE;
+
         Vertex referent = getEdgeTarget(oldEdge);
         removeEdge(oldEdge);
 
@@ -821,7 +822,7 @@ public class MindDB {
         }
     }
 
-    public int getEdgeIndex(List<EdgeVertexId> edges, Object edgeId)
+    static public int getEdgeIndex(List<EdgeVertexId> edges, Object edgeId)
     {
         for (int i=0; i<edges.size(); i++) {
             if (edges.get(i).m_edgeId.equals(edgeId)) {
@@ -851,10 +852,10 @@ public class MindDB {
                             continue;
                         }
 
-                        //因为重复利用率不高，所以此处不必再加入m_outEdgeInnerIdCache
                         List<EdgeVertexId> outEdgeIdPairsOfReferrer = m_edgeVertexIdCache.getOutEdgesOfOneVertex(referrer.m_source.getId());
                         if (outEdgeIdPairsOfReferrer == null) {
                             outEdgeIdPairsOfReferrer = getOutEdgeVertexIdsFromBackDb(referrer.m_source);
+                            //因为重复利用率不高，所以此处不必再加入m_outEdgeInnerIdCache
                         }
 
                         int edgeIndex = getEdgeIndex(outEdgeIdPairsOfReferrer, referrer.m_edge.getId());
@@ -877,8 +878,8 @@ public class MindDB {
         //而且恢复时，引用边要根据边的位置，防止位置错乱
 
         EdgeVertex edgeParent = getParentEge(removedVertex);
-        List<EdgeVertexId> outEdgeIdPairsOfRemovedVertex = getOutEdgeVertexIds(edgeParent.m_source);
-        int removedVertexIndex = getEdgeIndex(outEdgeIdPairsOfRemovedVertex, edgeParent.m_edge.getId());
+        List<EdgeVertexId> outEdgeIdPairsOfRemovedVertexParent = getOutEdgeVertexIds(edgeParent.m_source);
+        int removedVertexIndex = getEdgeIndex(outEdgeIdPairsOfRemovedVertexParent, edgeParent.m_edge.getId());
 
 		
 		removedVertex.setProperty(SAVED_PARENT_ID_PROP_NAME, edgeParent.m_source.getId());
@@ -1272,17 +1273,16 @@ public class MindDB {
             m_edgeId = edge.getId();
             m_edgeInnerId = getOutEdgeInnerId(edge);
 
-            assert m_targetId.equals(m_rootId) || m_sourceId != null;
+            assert m_targetId != null && m_sourceId != null && m_edgeId != null && m_edgeInnerId != null;
         }
 
-        //用于通过一个EdgeVertexId，修改 edgeInnerId后，重新生成一个EdgeVertexId
         EdgeVertexId(Object sourceId, Object targetId, Object edgeId, String edgeInnerId) {
             m_sourceId = sourceId;
             m_targetId = targetId;
             m_edgeId = edgeId;
             m_edgeInnerId = edgeInnerId;
 
-            assert m_targetId.equals(m_rootId) || m_sourceId != null;
+            assert m_targetId != null && m_sourceId != null && m_edgeId != null && m_edgeInnerId != null;
         }
 
         public int compareTo(EdgeVertexId other) {
@@ -1307,8 +1307,6 @@ public class MindDB {
             if(this.getClass() != other.getClass()){
                 return false;
             }
-
-            EdgeVertexId otherEdgeVertexid = (EdgeVertexId)other;
 
             if (m_edgeId.equals(((EdgeVertexId) other).m_edgeId)) {
                 assert m_sourceId.equals(((EdgeVertexId) other).m_sourceId);
@@ -1416,7 +1414,7 @@ public class MindDB {
             }
         }
 
-        //边已经被删除了，所以就不能简单传一个edgeId了
+        //边已经被删除了，仅仅通过edgeId无法找到对应的source，target。所以要传入一个EdgeVertexId
         void removeInvalidEdge(EdgeVertexId edge) {
             m_edges.remove(edge.m_edgeId);
 
