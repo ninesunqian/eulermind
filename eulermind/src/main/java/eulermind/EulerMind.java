@@ -14,7 +14,10 @@ import javax.swing.*;
 
 import org.swixml.SwingTagLibrary;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Iterator;
 
 /*
@@ -55,7 +58,10 @@ public class EulerMind {
                 OIndexFactory factroy = lookupProviders.next();
                 m_logger.info("======: get index class: {}", factroy.getClass());
             }
+
         }
+
+        Utils.printClassPath();
 
         SwingTagLibrary.getInstance().registerTag("fontFamilyCombobox", FontFamilyCombobox.class);
         SwingTagLibrary.getInstance().registerTag("fontSizeCombobox", FontSizeCombobox.class);

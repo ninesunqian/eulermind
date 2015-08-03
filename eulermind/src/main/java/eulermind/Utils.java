@@ -17,6 +17,8 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.*;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.*;
 import java.util.*;
 
@@ -454,5 +456,24 @@ public class Utils {
         StringWriter stringWriter = new StringWriter();
         t.printStackTrace(new PrintWriter(stringWriter));
         return stringWriter.toString();
+    }
+
+    static void printClassPath() {
+
+        ClassLoader cl = ClassLoader.getSystemClassLoader();
+
+        URL[] urls = ((URLClassLoader)cl).getURLs();
+
+        String jars="";
+
+        for(URL url: urls){
+            String jarFile = url.getFile();
+            if ((! jarFile.contains("jvm")) && jarFile.endsWith(".jar")) {
+                File file = new File(jarFile);
+                jars += ":" + file.getName();
+            }
+        }
+
+        System.out.println(jars);
     }
 }
