@@ -3,10 +3,12 @@ package eulermind;
 import java.nio.ByteBuffer;
 import java.util.*;
 
+import com.orientechnologies.common.util.OCallable;
 import com.orientechnologies.orient.core.exception.ORecordNotFoundException;
 import com.orientechnologies.orient.core.metadata.schema.OClass;
 import com.orientechnologies.orient.core.metadata.schema.OType;
 import com.orientechnologies.orient.core.record.impl.ODocument;
+import com.tinkerpop.blueprints.impls.orient.OrientBaseGraph;
 import com.tinkerpop.blueprints.impls.orient.OrientVertexType;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
@@ -86,7 +88,7 @@ public class MindDB {
         //FIXME: 没有试用OrientGraph(final String url, final boolean iAutoStartTx)
         //FIXME: 需要再那里commit，并测试效率 ?
 
-		m_graph = new OrientGraph (path);
+		m_graph = new OrientGraph (path, true);
 		m_path = path;
 
         m_rootIndex = getOrCreateIndex(ROOT_INDEX_NAME);
@@ -132,12 +134,19 @@ public class MindDB {
 		m_graph.commit();
 	}
 
-    public Index<Vertex> getOrCreateIndex(String indexName)
+    public Index<Vertex> getOrCreateIndex(final String indexName)
 	{
         Index<Vertex> index = m_graph.getIndex(indexName, Vertex.class);
         if (index == null) {
-            index = m_graph.createIndex(indexName, Vertex.class);
+            m_graph.executeOutsideTx(new OCallable<Object, OrientBaseGraph>() {
+                @Override
+                public Object call(OrientBaseGraph iArgument) {
+                    m_graph.createIndex(indexName, Vertex.class);
+                    return null;
+                }
+            });
         }
+        index = m_graph.getIndex(indexName, Vertex.class);
 
         return index;
 	}
@@ -1033,7 +1042,7 @@ public class MindDB {
 		return m_graph.query();
 	}
 
-    public void createFullTextVertexKeyIndex(String key)
+    public void createFullTextVertexKeyIndex(final String key)
     {
         Set<String> indexedKeys = m_graph.getIndexedKeys(Vertex.class);
 
@@ -1043,15 +1052,21 @@ public class MindDB {
             }
         }
 
-        OClass type = m_graph.getVertexBaseType();
-        if (!type.existsProperty(key)) {
-            type.createProperty(key, OType.STRING);
-        }
+        m_graph.executeOutsideTx(new OCallable<Object, OrientBaseGraph>() {
+            @Override
+            public Object call(OrientBaseGraph iArgument) {
+                OClass type = m_graph.getVertexBaseType();
+                if (!type.existsProperty(key)) {
+                    type.createProperty(key, OType.STRING);
+                }
 
-        ODocument metadata = new ODocument();
-        metadata.fromJSON("{\"analyzer\":\"org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer\"}");
+                ODocument metadata = new ODocument();
+                metadata.fromJSON("{\"analyzer\":\"org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer\"}");
 
-        type.createIndex("V."+key, "FULLTEXT", null, metadata, "LUCENE", new String[]{key});
+                type.createIndex("V."+key, "FULLTEXT", null, metadata, "LUCENE", new String[]{key});
+                return null;
+            }
+        });
     }
 
     public Iterable<Vertex> getVertices(String key, String value)
