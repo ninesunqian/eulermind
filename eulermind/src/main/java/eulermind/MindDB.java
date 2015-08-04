@@ -9,6 +9,7 @@ import com.orientechnologies.orient.core.metadata.schema.OClass;
 import com.orientechnologies.orient.core.metadata.schema.OType;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import com.tinkerpop.blueprints.impls.orient.OrientBaseGraph;
+import com.tinkerpop.blueprints.impls.orient.OrientIndex;
 import com.tinkerpop.blueprints.impls.orient.OrientVertexType;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
@@ -892,6 +893,8 @@ public class MindDB {
         removeEdge(edgeParent.m_edge);
 
 		m_trashIndex.put(TRASH_KEY_NAME, TRASH_KEY_NAME, removedVertex);
+        ((OrientIndex)m_trashIndex).getUnderlying().flush();
+        m_graph.commit();
 
         verifyTrashedTree(removedVertex);
 	}
@@ -1016,7 +1019,7 @@ public class MindDB {
         for (Vertex trashedRoot : m_trashIndex.get(TRASH_KEY_NAME, TRASH_KEY_NAME)) {
             //FIXME: 会不会null做为遍历的结尾，有待验证
             if (trashedRoot == null) {
-                break;
+                continue;
             }
             if (dbId.equals(trashedRoot.getId())) {
                 return true;
