@@ -354,7 +354,9 @@ public class MindController extends UndoManager {
 
         MindOperator firstOperator = null;
 
-        assert operators.size() > 0;
+        if (operators.size() == 0) {
+            return;
+        }
 
         ArrayList<NodeItem> newSelectedNodes = new ArrayList<NodeItem>();
         MindView operatorBornMindView = getMindView(operators.get(0).m_rootDbId);
