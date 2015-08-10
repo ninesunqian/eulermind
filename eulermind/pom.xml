@@ -14,7 +14,7 @@
     <name>eulermind</name>
 
     <properties>
-        <orient_ver>2.0.13</orient_ver>
+        <orient_ver>2.1.0</orient_ver>
         <libdir>${project.basedir}/lib</libdir>
         <jar.manifest.mainclass>eulermind.EulerMind</jar.manifest.mainclass>
     </properties>
