@@ -1754,7 +1754,10 @@ public class MindView extends Display {
         renderTree(new Runnable() {
             @Override
             public void run() {
-                panToExposeItem(newCursorNode);
+                //连续操作时，刷新滞后, 有可能该节点已经被删除了
+                if (newCursorNode.isValid()) {
+                    panToExposeItem(newCursorNode);
+                }
             }
         });
 
