@@ -27,19 +27,19 @@
     <orderEntry type="library" name="Maven: com.helger:ph-commons:5.2.0" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.5" level="project" />
     <orderEntry type="library" name="Maven: com.google.code.findbugs:annotations:2.0.3" level="project" />
-    <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-graphdb:2.0.13" level="project" />
-    <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-server:2.0.13" level="project" />
-    <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-client:2.0.13" level="project" />
-    <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-enterprise:2.0.13" level="project" />
-    <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-core:2.0.13" level="project" />
+    <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-graphdb:2.1.0" level="project" />
+    <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-server:2.1.0" level="project" />
+    <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-client:2.1.0" level="project" />
+    <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-enterprise:2.1.0" level="project" />
+    <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-core:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.xerial.snappy:snappy-java:1.1.0.1" level="project" />
     <orderEntry type="library" name="Maven: com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.1" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jna:jna:4.0.0" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jna:jna-platform:4.0.0" level="project" />
     <orderEntry type="library" name="Maven: javax.mail:mail:1.4" level="project" />
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
-    <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-tools:2.0.13" level="project" />
-    <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-object:2.0.13" level="project" />
+    <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-tools:2.1.0" level="project" />
+    <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-object:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.hibernate.javax.persistence:hibernate-jpa-2.0-api:1.0.0.Final" level="project" />
     <orderEntry type="library" name="Maven: org.javassist:javassist:3.16.1-GA" level="project" />
     <orderEntry type="library" name="Maven: com.tinkerpop.blueprints:blueprints-core:2.6.0" level="project" />
@@ -69,7 +69,7 @@
     <orderEntry type="library" name="Maven: org.apache.ant:ant-launcher:1.8.3" level="project" />
     <orderEntry type="library" name="Maven: org.fusesource.jansi:jansi:1.5" level="project" />
     <orderEntry type="library" name="Maven: jline:jline:0.9.94" level="project" />
-    <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-lucene:2.0.13" level="project" />
+    <orderEntry type="library" name="Maven: com.orientechnologies:orientdb-lucene:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-core:4.7.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-common:4.7.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-queryparser:4.7.0" level="project" />
@@ -78,6 +78,7 @@
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-misc:4.7.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-spatial:4.7.0" level="project" />
     <orderEntry type="library" name="Maven: com.spatial4j:spatial4j:0.4.1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-facet:4.7.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-smartcn:4.7.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.code.gson:gson:2.2.4" level="project" />
     <orderEntry type="library" name="Maven: ch.qos.logback:logback-classic:1.0.13" level="project" />

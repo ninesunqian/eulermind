@@ -1580,6 +1580,8 @@ public class Display extends JComponent {
     public void panToExposeItem(VisualItem item) {
         Rectangle bounds = getItemDisplayBounds(item);
 
+        GraphicsLib.expand(bounds, 4);
+
         double dx = 0;
         double dy = 0;
 
@@ -1982,6 +1984,7 @@ public class Display extends JComponent {
                 Control ctrl = (Control) lstnrs[i];
                 if (ctrl == null) {
                     int debug=1;
+                    continue;
                 }
                 if (ctrl.isEnabled())
                     try {
