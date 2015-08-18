@@ -133,7 +133,7 @@ public class MindModel {
     public final static String sm_edgePropNames [] = {
     };
 
-	public MindDB m_mindDb;
+	public OrientMindDb m_mindDb;
 
     //需要记住打开tree的位置，所以不能用HashSet
     private ArrayList<Tree> m_trees = new ArrayList<Tree>();
@@ -222,7 +222,7 @@ public class MindModel {
 	{
         fillPropertyClassMap();
 
-		m_mindDb = new MindDB(dbPath);
+		m_mindDb = new OrientMindDb(dbPath);
         m_favoriteIndex = m_mindDb.getOrCreateIndex(FAVORITE_INDEX_NAME);
 
         Vertex root = m_mindDb.getVertex(m_mindDb.getRootId());

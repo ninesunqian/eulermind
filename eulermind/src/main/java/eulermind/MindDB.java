@@ -3,14 +3,8 @@ package eulermind;
 import java.nio.ByteBuffer;
 import java.util.*;
 
-import com.orientechnologies.common.util.OCallable;
 import com.orientechnologies.orient.core.exception.ORecordNotFoundException;
-import com.orientechnologies.orient.core.metadata.schema.OClass;
-import com.orientechnologies.orient.core.metadata.schema.OType;
-import com.orientechnologies.orient.core.record.impl.ODocument;
-import com.tinkerpop.blueprints.impls.orient.OrientBaseGraph;
 import com.tinkerpop.blueprints.impls.orient.OrientIndex;
-import com.tinkerpop.blueprints.impls.orient.OrientVertexType;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +40,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public class MindDB {
+abstract public class MindDB {
     Logger m_logger = LoggerFactory.getLogger(this.getClass());
 
 	public final static String EDGE_TYPE_PROP_NAME = "t"; //type
@@ -72,7 +66,7 @@ public class MindDB {
 
 	public enum EdgeType {INCLUDE, REFERENCE};
 
-	public OrientGraph m_graph;
+	public TransactionalGraph m_graph;
 
 	private Index<Vertex> m_rootIndex;
 	private Index<Vertex> m_trashIndex;
@@ -89,8 +83,9 @@ public class MindDB {
         //FIXME: 没有试用OrientGraph(final String url, final boolean iAutoStartTx)
         //FIXME: 需要再那里commit，并测试效率 ?
 
-		m_graph = new OrientGraph (path, true);
 		m_path = path;
+
+        initBackGraph(path);
 
         m_rootIndex = getOrCreateIndex(ROOT_INDEX_NAME);
         m_trashIndex = getOrCreateIndex(TRASH_INDEX_NAME);
@@ -102,7 +97,13 @@ public class MindDB {
             root = m_rootIndex.get(ROOT_KEY_NAME, ROOT_KEY_NAME).iterator().next();
 
         } else {
-            root = addVertex(null);
+            if (m_graph instanceof OrientGraph) {
+                root = getVertex(new ORecordId("#9:0"));
+            }
+
+            if (root == null) {
+                root = addVertex(null);
+            }
             m_rootIndex.put(ROOT_KEY_NAME, ROOT_KEY_NAME, root);
 
             //translate the root id from temporary to permanence
@@ -112,8 +113,11 @@ public class MindDB {
         m_rootId = root.getId();
 	}
 
+    abstract void initBackGraph(String path);
+
 	private Vertex addVertex(Object arg0) {
-        Vertex vertex =  m_graph.addVertex(null, MindModel.TEXT_PROP_NAME, "a");
+        Vertex vertex =  m_graph.addVertex(null);
+        vertex.setProperty(MindModel.TEXT_PROP_NAME, "a");
         vertex.setProperty(CREATE_TIME_PROP_NAME, System.currentTimeMillis());
         return m_graph.getVertex(vertex.getId());
 	}
@@ -135,28 +139,9 @@ public class MindDB {
 		m_graph.commit();
 	}
 
-    public Index<Vertex> getOrCreateIndex(final String indexName)
-	{
-        Index<Vertex> index = m_graph.getIndex(indexName, Vertex.class);
-        if (index == null) {
-            m_graph.executeOutsideTx(new OCallable<Object, OrientBaseGraph>() {
-                @Override
-                public Object call(OrientBaseGraph iArgument) {
-                    m_graph.createIndex(indexName, Vertex.class);
-                    return null;
-                }
-            });
-        }
-        index = m_graph.getIndex(indexName, Vertex.class);
+    abstract public Index<Vertex> getOrCreateIndex(final String indexName);
 
-        return index;
-	}
-
-    public void dropIndex(String indexName)
-    {
-        //FIXME: dropIndex后马上 createIndex, 会有bug，提示该index已经存在
-        m_graph.dropIndex(indexName);
-    }
+    abstract public void dropIndex(String indexName);
 
 	public Object getRootId ()
 	{
@@ -893,7 +878,10 @@ public class MindDB {
         removeEdge(edgeParent.m_edge);
 
 		m_trashIndex.put(TRASH_KEY_NAME, TRASH_KEY_NAME, removedVertex);
-        ((OrientIndex)m_trashIndex).getUnderlying().flush();
+
+        if (m_graph instanceof OrientGraph) {
+            ((OrientIndex)m_trashIndex).getUnderlying().flush();
+        }
         m_graph.commit();
 
         verifyTrashedTree(removedVertex);
@@ -1057,32 +1045,7 @@ public class MindDB {
 		return m_graph.query();
 	}
 
-    public void createFullTextVertexKeyIndex(final String key)
-    {
-        Set<String> indexedKeys = m_graph.getIndexedKeys(Vertex.class);
-
-        for (String indexedKey : indexedKeys) {
-            if (indexedKey.equals(key)) {
-                return;
-            }
-        }
-
-        m_graph.executeOutsideTx(new OCallable<Object, OrientBaseGraph>() {
-            @Override
-            public Object call(OrientBaseGraph iArgument) {
-                OClass type = m_graph.getVertexBaseType();
-                if (!type.existsProperty(key)) {
-                    type.createProperty(key, OType.STRING);
-                }
-
-                ODocument metadata = new ODocument();
-                metadata.fromJSON("{\"analyzer\":\"org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer\"}");
-
-                type.createIndex("V."+key, "FULLTEXT", null, metadata, "LUCENE", new String[]{key});
-                return null;
-            }
-        });
-    }
+    abstract public void createFullTextVertexKeyIndex(final String key);
 
     public Iterable<Vertex> getVertices(String key, String value)
     {

@@ -50,7 +50,7 @@ public class TestMindDB extends TestCase {
 
     public void setUp() {
         m_dbPath = System.getProperty("java.io.tmpdir") + File.separator + "eulermind_test";
-        m_mindDB = new MindDB(m_dbPath);
+        m_mindDB = new OrientMindDb(m_dbPath);
 
         m_root = m_mindDB.getVertex(m_mindDB.getRootId());
         m_v0 = m_mindDB.addChild(m_root).m_target;

@@ -250,8 +250,10 @@ public class MindCombobox extends JComboBox {
         @Override
         protected Boolean doInBackground()
         {
+            /*
             //整个数据库查找, 如果打开orientdb的线程与操作数据库的线程不是同一个, 需要调用:
             ODatabaseRecordThreadLocal.INSTANCE.set(m_mindDb.m_graph.getRawGraph());
+            */
 
             String inputed = m_editorComponent.getText();
 
