@@ -302,7 +302,7 @@ public class Style {
     public static void main(String argv[]) {
         Style normalStyle = new Style("normal");
 
-        XStream xstream = new XStream(new DomDriver());
+        XStream xstream = new XStream(new DomDriver("UTF-8"));
         xstream.processAnnotations(Style.class);
         String normalXml = xstream.toXML(normalStyle);
         s_logger.info("normalStyle = {}", normalXml);

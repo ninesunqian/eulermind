@@ -1,9 +1,14 @@
 package eulermind;
 
+import bibliothek.gui.dock.StackDockStation;
 import bibliothek.gui.dock.common.CControl;
+import bibliothek.gui.dock.common.CLocation;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.event.*;
 import bibliothek.gui.dock.common.intern.CDockable;
+import bibliothek.gui.dock.common.location.CMinimizedLocation;
+import bibliothek.gui.dock.common.mode.ExtendedMode;
+import bibliothek.gui.dock.station.stack.tab.layouting.TabPlacement;
 import eulermind.component.MindPropertyComponent;
 import eulermind.view.MindView;
 import eulermind.view.NodeControl;
@@ -73,6 +78,8 @@ public class MindController extends UndoManager {
         super();
         m_mindModel = mindModel;
         m_dockingCControl = dockingCControl;
+        m_dockingCControl.putProperty(StackDockStation.TAB_PLACEMENT, TabPlacement.TOP_OF_DOCKABLE);
+
         m_nodeInfoLabel = tabInfoLabel;
 
         ArrayList<Object> lastOpenedRootId = m_mindModel.getLastOpenedRootId();
@@ -117,14 +124,11 @@ public class MindController extends UndoManager {
                 return true;
             }
         });
-
-
     }
 
     private MindView getMindViewFromDockable(DefaultSingleCDockable dockable)
     {
         return (MindView)dockable.getContentPane().getComponent(0);
-
     }
 
     private DefaultSingleCDockable getDockableOfMindView(MindView mindView)
@@ -158,7 +162,16 @@ public class MindController extends UndoManager {
 
         dockable.addVetoClosingListener(m_cVetoClosingListener);
 
+        if (m_currentDockable != null) {
+            //CLocation location = CLocation.base().normalEast(0.6);
+            CLocation location = m_currentDockable.getBaseLocation();
+            dockable.setLocation(location);
+        }
+
         m_dockingCControl.addDockable(dockable);
+        m_dockingCControl.getController().setFocusedDockable(dockable.intern(), true);
+        m_currentDockable = dockable;
+
         dockable.setVisible(true);
         m_mindViewDockables.put(tree, dockable);
 
