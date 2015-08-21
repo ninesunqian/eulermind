@@ -13,7 +13,10 @@ import prefuse.util.ColorLib;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.*;
 
 /*
@@ -220,34 +223,45 @@ public class Style {
     }
 
     public static void load() {
-        File userStylesFile = new File(ConfigDirs.STYLE_FILE);
+        try {
+            File userStylesFile = new File(ConfigDirs.STYLE_FILE);
+            if (!userStylesFile.exists()) {
 
-        if (!userStylesFile.exists()) {
+                try {
+                    Utils.copyResourceToFile("styles.xml", ConfigDirs.STYLE_FILE);
+                    userStylesFile = new File(ConfigDirs.STYLE_FILE);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
 
+            XStream xstream = createXStream();
+            sm_styles = (ArrayList)xstream.fromXML(userStylesFile);
+
+        } catch (Exception e) {
+            //如果用户自定义的xml加载失败，拷贝一份。
             try {
                 Utils.copyResourceToFile("styles.xml", ConfigDirs.STYLE_FILE);
-            } catch (Exception e) {
+                XStream xstream = createXStream();
+                File userStylesFile = new File(ConfigDirs.STYLE_FILE);
+                sm_styles = (ArrayList)xstream.fromXML(userStylesFile);
+            } catch (Exception e2) {
                 e.printStackTrace();
+                sm_styles = new ArrayList<>();
             }
         }
-
-        XStream xstream = createXStream();
-        sm_styles = (ArrayList)xstream.fromXML(userStylesFile);
 
         initDefaultStyle();
     }
 
     public static void save() {
 
-        File userStylesFile = new File(ConfigDirs.STYLE_FILE);
-
-        XStream xstream = createXStream();
-
-        String xml = xstream.toXML(sm_styles);
-
-        s_logger.info("xml string is {}", xml);
         try {
-            FileUtils.write(userStylesFile, xml);
+            //xstream直接序列号，有bug。http://stackoverflow.com/questions/3642820/xstream-correct-way-to-save-xml-in-utf-8
+            FileOutputStream outputStream = new FileOutputStream(ConfigDirs.STYLE_FILE);
+            OutputStreamWriter writer = new OutputStreamWriter(outputStream, Charset.forName("UTF-8"));
+            XStream xstream = createXStream();
+            xstream.toXML(sm_styles, outputStream);
         } catch (IOException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }

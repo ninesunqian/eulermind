@@ -18,6 +18,8 @@ import prefuse.util.PrefuseLib;
 import com.orientechnologies.orient.core.db.record.ORecordLazyList;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 
+import javax.swing.*;
+
 /*
 The MIT License (MIT)
 Copyright (c) 2012-2014 wangxuguang ninesunqian@163.com
@@ -80,37 +82,43 @@ abstract public class MindDB {
 
     MindDB(String path)
 	{
-        //FIXME: 没有试用OrientGraph(final String url, final boolean iAutoStartTx)
+        //FIXME: 没有试用 OrientGraph(final String url, final boolean iAutoStartTx)
         //FIXME: 需要再那里commit，并测试效率 ?
 
 		m_path = path;
 
-        initBackGraph(path);
+        try {
+            initBackGraph(path);
 
-        m_rootIndex = getOrCreateIndex(ROOT_INDEX_NAME);
-        m_trashIndex = getOrCreateIndex(TRASH_INDEX_NAME);
+            m_rootIndex = getOrCreateIndex(ROOT_INDEX_NAME);
+            m_trashIndex = getOrCreateIndex(TRASH_INDEX_NAME);
 
-        createFullTextVertexKeyIndex(MindModel.TEXT_PROP_NAME);
+            createFullTextVertexKeyIndex(MindModel.TEXT_PROP_NAME);
 
-        Vertex root = null;
-        if (m_rootIndex.get(ROOT_KEY_NAME, ROOT_KEY_NAME).iterator().hasNext()) {
-            root = m_rootIndex.get(ROOT_KEY_NAME, ROOT_KEY_NAME).iterator().next();
+            Vertex root = null;
+            if (m_rootIndex.get(ROOT_KEY_NAME, ROOT_KEY_NAME).iterator().hasNext()) {
+                root = m_rootIndex.get(ROOT_KEY_NAME, ROOT_KEY_NAME).iterator().next();
 
-        } else {
-            if (m_graph instanceof OrientGraph) {
-                root = getVertex(new ORecordId("#9:0"));
+            } else {
+                if (m_graph instanceof OrientGraph) {
+                    root = getVertex(new ORecordId("#9:0"));
+                }
+
+                if (root == null) {
+                    root = addVertex(null);
+                }
+                m_rootIndex.put(ROOT_KEY_NAME, ROOT_KEY_NAME, root);
+
+                //translate the root id from temporary to permanence
+                m_graph.commit();
             }
 
-            if (root == null) {
-                root = addVertex(null);
-            }
-            m_rootIndex.put(ROOT_KEY_NAME, ROOT_KEY_NAME, root);
+            m_rootId = root.getId();
 
-            //translate the root id from temporary to permanence
-            m_graph.commit();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "database error, you must fix it firsly !  " + path, null, JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
         }
-
-        m_rootId = root.getId();
 	}
 
     abstract void initBackGraph(String path);
