@@ -66,7 +66,7 @@ abstract public class MindDB {
 
     public final static int MAX_OUT_EDGES = Short.MAX_VALUE - 1;
 
-	public enum EdgeType {INCLUDE, REFERENCE};
+    public enum EdgeType {INCLUDE, REFERENCE};
 
 	public TransactionalGraph m_graph;
 
@@ -87,8 +87,11 @@ abstract public class MindDB {
 
 		m_path = path;
 
+	}
+    public void startUp()
+    {
         try {
-            initBackGraph(path);
+            initBackGraph();
 
             m_rootIndex = getOrCreateIndex(ROOT_INDEX_NAME);
             m_trashIndex = getOrCreateIndex(TRASH_INDEX_NAME);
@@ -116,12 +119,18 @@ abstract public class MindDB {
             m_rootId = root.getId();
 
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "database error, you must fix it firsly !  " + path, null, JOptionPane.ERROR_MESSAGE);
+            m_logger.error("startup mind db get exception: " + e.getMessage());
+            m_logger.error("StackTrace: {}", Utils.getThrowableStackTraceString(e));
+            JOptionPane.showMessageDialog(null, "database error, you must fix it firsly !  " + m_path, null, JOptionPane.ERROR_MESSAGE);
             System.exit(1);
         }
-	}
+    }
 
-    abstract void initBackGraph(String path);
+
+    abstract void backup(String path);
+    abstract void restore(String path);
+
+    abstract void initBackGraph();
 
 	private Vertex addVertex(Object arg0) {
         Vertex vertex =  m_graph.addVertex(null);

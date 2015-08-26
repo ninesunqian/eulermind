@@ -223,6 +223,7 @@ public class MindModel {
         fillPropertyClassMap();
 
 		m_mindDb = new OrientMindDb(dbPath);
+        m_mindDb.startUp();
         m_favoriteIndex = m_mindDb.getOrCreateIndex(FAVORITE_INDEX_NAME);
 
         Vertex root = m_mindDb.getVertex(m_mindDb.getRootId());

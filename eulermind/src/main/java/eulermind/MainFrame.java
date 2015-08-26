@@ -45,6 +45,7 @@ public class MainFrame  extends JFrame {
 
     JMenu m_ancestorMenu;
     JMenu m_favoriteMenu;
+    JMenu m_backupMenu;
 
     MindModel m_mindModel;
     MindController m_mindController;
@@ -119,6 +120,7 @@ public class MainFrame  extends JFrame {
         m_mindMapMenu.addMenuListener(m_mapMenuListener);
         m_favoriteMenu.addMenuListener(m_favoriteMenuListener);
         m_ancestorMenu.addMenuListener(m_ancestorMenuListener);
+        m_backupMenu.addMenuListener(m_backupMenuListener);
         m_searchInputer.setMindEditorListener(searchInputerListener);
 
         m_nodeColorCombobox.setForBackground(true);
@@ -461,6 +463,67 @@ public class MainFrame  extends JFrame {
         public void menuCanceled(MenuEvent menuEvent)
         {
             m_favoriteMenu.removeAll();
+        }
+    };
+
+    MenuListener m_backupMenuListener = new MenuListener() {
+        @Override
+        public void menuSelected(MenuEvent menuEvent)
+        {
+            if (m_mindController.isChanging()) {
+                return;
+            }
+
+            JMenuItem addingMenuItem = new JMenuItem("backup total mindmap");
+            addingMenuItem.setIcon(Utils.getAppIcon("new.png"));
+            addingMenuItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent)
+                {
+                    int ret = JOptionPane.showConfirmDialog(null, "Do you confirm backup mind data ?", null,
+                            JOptionPane.YES_NO_OPTION);
+                    if (ret == JOptionPane.YES_OPTION) {
+                        String backupName = Utils.getNewBackup(m_currentMapName);
+                        String backupPath = Utils.getMindMapBackupPath(m_currentMapName, backupName);
+                        m_mindModel.m_mindDb.backup(backupPath);
+                    }
+
+                    //TODO: remove old backup
+                }
+            });
+            m_backupMenu.add(addingMenuItem);
+
+            addMenuSeparator(m_backupMenu);
+
+            for (final String backupName : Utils.getMindMapBackups(m_currentMapName)) {
+                JMenuItem restoreMenuItem = new JMenuItem(backupName);
+                restoreMenuItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        int ret = JOptionPane.showConfirmDialog(null,
+                                String.format("Do you confirm restore from mind backup %s ?  can't come back !!! ", backupName),
+                                null, JOptionPane.YES_NO_OPTION);
+                        if (ret == JOptionPane.YES_OPTION) {
+                            String backupPath = Utils.getMindMapBackupPath(m_currentMapName, backupName);
+                            m_mindModel.m_mindDb.restore(backupPath);
+                        }
+                    }
+                });
+
+                m_backupMenu.add(restoreMenuItem);
+            }
+        }
+
+        @Override
+        public void menuDeselected(MenuEvent menuEvent)
+        {
+            m_backupMenu.removeAll();
+        }
+
+        @Override
+        public void menuCanceled(MenuEvent menuEvent)
+        {
+            m_backupMenu.removeAll();
         }
     };
 

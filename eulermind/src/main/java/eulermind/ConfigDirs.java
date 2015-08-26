@@ -34,6 +34,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 public class ConfigDirs {
     static public String TOP_DIR;
     static public String MAPS_DIR;
+    static public String MAPS_BACKUP_DIR;
     static public String STYLE_FILE;
     static public String LAST_OPENED_MAP_RECORD_FILE;
 
@@ -41,7 +42,8 @@ public class ConfigDirs {
 
         //windows的快捷方式只能以.lnk后缀名保存。 手动重命名时开头不能是"."
 
-        String try_dirs [] = {".eulermind", ".eulermind.lnk", "dot_eulermind", "dot_eulermind.lnk"};
+        String try_dirs [] = {".eulermind", ".eulermind.lnk", "dot_eulermind", "dot_eulermind.lnk",
+                "eulermind", "eulermind.lnk"};
         for (String dir : try_dirs) {
             File file = new File(System.getProperty("user.home") + File.separator + dir);
 
@@ -81,6 +83,7 @@ public class ConfigDirs {
         }
 
         MAPS_DIR = TOP_DIR + File.separator + "maps";
+        MAPS_BACKUP_DIR = TOP_DIR + File.separator + "maps_backup";
         STYLE_FILE = TOP_DIR + File.separator + "styles.xml";
         LAST_OPENED_MAP_RECORD_FILE = TOP_DIR + File.separator + "last_opened_map";
     }

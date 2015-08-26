@@ -20,6 +20,7 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -180,8 +181,38 @@ public class Utils {
 
     public static String mindMapNameToUrl(String name)
     {
-        String path = ConfigDirs.MAPS_DIR + File.separator + name;
-        return "plocal:" +  path.replace(File.separatorChar, '/');
+        return ConfigDirs.MAPS_DIR + File.separator + name;
+    }
+
+    public static String[] getMindMapBackups(String mindMapName)
+    {
+        String backupsDirPath = ConfigDirs.MAPS_BACKUP_DIR + File.separator + mindMapName;
+        File backupsDir = new File(backupsDirPath);
+        if (! backupsDir.isDirectory()) {
+            try {
+                mkdir(backupsDirPath);
+            } catch (IOException e) {
+                return new String[0];
+            }
+        }
+
+        return backupsDir.list(DirectoryFileFilter.INSTANCE);
+    }
+
+    public static String getMindMapBackupPath(String mindMapName, String backupName)
+    {
+       return ConfigDirs.MAPS_BACKUP_DIR + File.separator + mindMapName + File.separator + backupName;
+    }
+
+    public static String getNewBackup(String mindMapName)
+    {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+        String backupName = dateFormat.format(new Date());
+            while (dirExists(getMindMapBackupPath(mindMapName, backupName))) {
+                backupName += "_1";
+        }
+
+        return backupName;
     }
 
     public static boolean dirExists(String path)
